@@ -34,6 +34,26 @@ export interface AuditEvent_Key {
   __typename?: 'AuditEvent_Key';
 }
 
+export interface Certification_Key {
+  id: UUIDString;
+  __typename?: 'Certification_Key';
+}
+
+export interface CompanyRole_Key {
+  id: UUIDString;
+  __typename?: 'CompanyRole_Key';
+}
+
+export interface Company_Key {
+  id: UUIDString;
+  __typename?: 'Company_Key';
+}
+
+export interface Contact_Key {
+  id: UUIDString;
+  __typename?: 'Contact_Key';
+}
+
 export interface Country_Key {
   code: string;
   __typename?: 'Country_Key';
@@ -59,6 +79,16 @@ export interface DomainEvent_Key {
   __typename?: 'DomainEvent_Key';
 }
 
+export interface FabricFamily_Key {
+  code: string;
+  __typename?: 'FabricFamily_Key';
+}
+
+export interface Factory_Key {
+  id: UUIDString;
+  __typename?: 'Factory_Key';
+}
+
 export interface Incoterm_Key {
   code: string;
   __typename?: 'Incoterm_Key';
@@ -76,16 +106,81 @@ export interface ListCountriesPublicData {
   } & Country_Key)[];
 }
 
+export interface Location_Key {
+  id: UUIDString;
+  __typename?: 'Location_Key';
+}
+
 export interface NumberSequence_Key {
   prefix: string;
   year: number;
   __typename?: 'NumberSequence_Key';
 }
 
+export interface PriceListItem_Key {
+  id: UUIDString;
+  __typename?: 'PriceListItem_Key';
+}
+
+export interface PriceList_Key {
+  code: string;
+  __typename?: 'PriceList_Key';
+}
+
+export interface ProductVariant_Key {
+  id: UUIDString;
+  __typename?: 'ProductVariant_Key';
+}
+
+export interface Product_Key {
+  code: string;
+  __typename?: 'Product_Key';
+}
+
+export interface PutUp_Key {
+  code: string;
+  __typename?: 'PutUp_Key';
+}
+
 export interface RolePermission_Key {
   role: Role;
   permission: string;
   __typename?: 'RolePermission_Key';
+}
+
+export interface ShadeCollection_Key {
+  code: string;
+  __typename?: 'ShadeCollection_Key';
+}
+
+export interface ShadeStandard_Key {
+  id: UUIDString;
+  __typename?: 'ShadeStandard_Key';
+}
+
+export interface Shade_Key {
+  code: string;
+  __typename?: 'Shade_Key';
+}
+
+export interface Sku_Key {
+  code: string;
+  __typename?: 'Sku_Key';
+}
+
+export interface SupplierItem_Key {
+  id: UUIDString;
+  __typename?: 'SupplierItem_Key';
+}
+
+export interface SupplierPrice_Key {
+  id: UUIDString;
+  __typename?: 'SupplierPrice_Key';
+}
+
+export interface SupplierProfile_Key {
+  id: UUIDString;
+  __typename?: 'SupplierProfile_Key';
 }
 
 export interface Task_Key {

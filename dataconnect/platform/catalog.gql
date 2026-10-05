@@ -1,0 +1,401 @@
+# Catalog operations. Reading the catalog is open to every staff role;
+# changing it belongs to owner, operations and purchasing. Purchase prices and
+# supplier identity sit in their own operations for cost roles only.
+
+query ListFamilies @auth(level: USER) {
+  fabricFamilies(orderBy: { sort: ASC }, limit: 50) {
+    code
+    name
+    slug
+    description
+    specSchema
+    hsCode
+    sort
+    products_on_family(orderBy: { index: ASC }, limit: 100) {
+      code
+      index
+      name
+      slug
+      tagline
+      status
+      isPublic
+    }
+  }
+}
+
+query ListProducts @auth(level: USER) {
+  products(orderBy: { index: ASC }, limit: 500) {
+    code
+    index
+    name
+    slug
+    tagline
+    status
+    isPublic
+    family {
+      code
+      name
+      slug
+    }
+    skus_on_product(limit: 1000) {
+      code
+      status
+      shade {
+        code
+      }
+    }
+  }
+}
+
+query GetProduct($code: String!) @auth(level: USER) {
+  product(key: { code: $code }) {
+    code
+    index
+    name
+    slug
+    tagline
+    description
+    composition
+    construction
+    care
+    specs
+    status
+    isPublic
+    createdAt
+    updatedAt
+    family {
+      code
+      name
+      slug
+      specSchema
+    }
+    productVariants_on_product(orderBy: { sort: ASC }, limit: 100) {
+      id
+      fullCode
+      code
+      name
+      widthCm
+      usableWidthCm
+      gsm
+      stretchWarpPercent
+      stretchWeftPercent
+      finish
+      specs
+      status
+    }
+    skus_on_product(orderBy: { code: ASC }, limit: 1000) {
+      code
+      status
+      isPublic
+      rollTracking
+      salesUom
+      salesMoq
+      variant {
+        fullCode
+        name
+      }
+      shade {
+        code
+        name
+        hex
+        sort
+      }
+      putUp {
+        code
+        name
+      }
+    }
+  }
+}
+
+query ListSkus @auth(level: USER) {
+  skus(orderBy: { code: ASC }, limit: 2000) {
+    code
+    status
+    isPublic
+    rollTracking
+    salesUom
+    product {
+      code
+      name
+      index
+    }
+    variant {
+      fullCode
+      name
+    }
+    shade {
+      code
+      name
+      hex
+      sort
+    }
+    putUp {
+      code
+      name
+    }
+  }
+}
+
+query GetSku($code: String!) @auth(level: USER) {
+  sku(key: { code: $code }) {
+    code
+    status
+    isPublic
+    rollTracking
+    salesUom
+    salesMoq
+    barcode
+    createdAt
+    product {
+      code
+      name
+      index
+      family {
+        code
+        name
+      }
+    }
+    variant {
+      fullCode
+      name
+      widthCm
+      usableWidthCm
+      gsm
+    }
+    shade {
+      code
+      name
+      hex
+    }
+    putUp {
+      code
+      name
+      rollLengthM
+      widthCm
+    }
+  }
+}
+
+# Cost-bearing: supplier identity and purchase prices.
+query GetSkuSourcing($code: String!)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'finance'") {
+  supplierItems(where: { sku: { code: { eq: $code } } }, limit: 50) {
+    id
+    supplierSku
+    moq
+    leadTimeDays
+    isPreferred
+    validFrom
+    validTo
+    supplier {
+      id
+      legalName
+      tradingName
+    }
+    factory {
+      id
+      location {
+        name
+        city
+      }
+    }
+    supplierPrices_on_supplierItem(orderBy: { minQuantity: ASC }, limit: 20) {
+      id
+      minQuantity
+      unitPrice
+      currency
+      validFrom
+      validTo
+    }
+  }
+}
+
+query ListShades @auth(level: USER) {
+  shades(orderBy: { sort: ASC }, limit: 100) {
+    code
+    name
+    slug
+    hex
+    labL
+    labA
+    labB
+    sort
+    status
+    collection {
+      code
+      name
+    }
+    skus_on_shade(limit: 2000) {
+      code
+      status
+      product {
+        code
+      }
+    }
+  }
+}
+
+query ListPutUps @auth(level: USER) {
+  putUps(orderBy: { code: ASC }, limit: 50) {
+    code
+    name
+    rollLengthM
+    widthCm
+    core
+    wrap
+    rollsPerCarton
+  }
+}
+
+mutation UpsertFamily($code: String!, $name: String!, $slug: String!, $description: String, $specSchema: Any, $hsCode: String, $sort: Int!)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing'") {
+  fabricFamily_upsert(
+    data: { code: $code, name: $name, slug: $slug, description: $description, specSchema: $specSchema, hsCode: $hsCode, sort: $sort }
+  )
+}
+
+mutation UpsertProduct(
+  $code: String!
+  $familyCode: String!
+  $index: Int!
+  $name: String!
+  $slug: String!
+  $tagline: String
+  $description: String
+  $composition: Any
+  $construction: String
+  $care: String
+  $specs: Any
+  $status: ProductStatus!
+  $isPublic: Boolean!
+) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing'") {
+  product_upsert(
+    data: {
+      code: $code
+      familyCode: $familyCode
+      index: $index
+      name: $name
+      slug: $slug
+      tagline: $tagline
+      description: $description
+      composition: $composition
+      construction: $construction
+      care: $care
+      specs: $specs
+      status: $status
+      isPublic: $isPublic
+      updatedAt_expr: "request.time"
+    }
+  )
+}
+
+mutation InsertVariant(
+  $productCode: String!
+  $fullCode: String!
+  $code: String!
+  $name: String!
+  $widthCm: Int
+  $usableWidthCm: Int
+  $gsm: Int
+  $stretchWarpPercent: Int
+  $stretchWeftPercent: Int
+  $finish: String
+  $specs: Any
+  $status: ProductStatus!
+  $sort: Int!
+) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing'") {
+  productVariant_insert(
+    data: {
+      productCode: $productCode
+      fullCode: $fullCode
+      code: $code
+      name: $name
+      widthCm: $widthCm
+      usableWidthCm: $usableWidthCm
+      gsm: $gsm
+      stretchWarpPercent: $stretchWarpPercent
+      stretchWeftPercent: $stretchWeftPercent
+      finish: $finish
+      specs: $specs
+      status: $status
+      sort: $sort
+    }
+  )
+}
+
+mutation UpdateVariant(
+  $id: UUID!
+  $name: String!
+  $widthCm: Int
+  $usableWidthCm: Int
+  $gsm: Int
+  $stretchWarpPercent: Int
+  $stretchWeftPercent: Int
+  $finish: String
+  $specs: Any
+  $status: ProductStatus!
+  $sort: Int!
+) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing'") {
+  productVariant_update(
+    id: $id
+    data: {
+      name: $name
+      widthCm: $widthCm
+      usableWidthCm: $usableWidthCm
+      gsm: $gsm
+      stretchWarpPercent: $stretchWarpPercent
+      stretchWeftPercent: $stretchWeftPercent
+      finish: $finish
+      specs: $specs
+      status: $status
+      sort: $sort
+    }
+  )
+}
+
+mutation UpsertShade($code: String!, $collectionCode: String, $name: String!, $slug: String!, $hex: String, $labL: Float, $labA: Float, $labB: Float, $sort: Int!, $status: ShadeStatus!)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing'") {
+  shade_upsert(
+    data: { code: $code, collectionCode: $collectionCode, name: $name, slug: $slug, hex: $hex, labL: $labL, labA: $labA, labB: $labB, sort: $sort, status: $status }
+  )
+}
+
+mutation UpsertPutUp($code: String!, $name: String!, $rollLengthM: Int!, $widthCm: Int!, $core: String, $wrap: String, $rollsPerCarton: Int)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing'") {
+  putUp_upsert(data: { code: $code, name: $name, rollLengthM: $rollLengthM, widthCm: $widthCm, core: $core, wrap: $wrap, rollsPerCarton: $rollsPerCarton })
+}
+
+mutation UpsertSku(
+  $code: String!
+  $productCode: String!
+  $variantId: UUID!
+  $shadeCode: String!
+  $putUpCode: String!
+  $salesUom: String!
+  $salesMoq: Int64
+  $status: SkuStatus!
+  $isPublic: Boolean!
+  $rollTracking: Boolean!
+) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing'") {
+  sku_upsert(
+    data: {
+      code: $code
+      productCode: $productCode
+      variantId: $variantId
+      shadeCode: $shadeCode
+      putUpCode: $putUpCode
+      salesUom: $salesUom
+      salesMoq: $salesMoq
+      status: $status
+      isPublic: $isPublic
+      rollTracking: $rollTracking
+      updatedAt_expr: "request.time"
+    }
+  )
+}
+
+mutation SetSkuStatus($code: String!, $status: SkuStatus!)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing'") {
+  sku_update(key: { code: $code }, data: { status: $status, updatedAt_expr: "request.time" })
+}

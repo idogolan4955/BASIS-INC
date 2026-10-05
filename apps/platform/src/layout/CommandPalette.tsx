@@ -3,6 +3,8 @@ import { cn } from '@basis/ui';
 import { MagnifyingGlass } from '@phosphor-icons/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useCompanies } from '../data/parties';
+import { useProducts, useSkus } from '../data/catalog';
 import { useRequiredSession } from '../session';
 
 // Jump anywhere by name or index number. Records join the list as their
@@ -22,23 +24,37 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   const [query, setQuery] = useState('');
   const [cursor, setCursor] = useState(0);
 
+  const products = useProducts();
+  const skus = useSkus();
+  const companies = useCompanies();
+
   const destinations = useMemo<Destination[]>(
     () => [
       { number: '00', name: 'Gateway', summary: 'What needs attention, what is moving', path: '/' },
       ...modulesFor(session.role).map(({ number, name, summary, path }) => ({ number, name, summary, path })),
+      ...(products.data ?? []).map((product) => ({ number: product.code, name: product.name, summary: `Product · ${product.familyName}`, path: `/products/${product.code}` })),
+      ...(companies.data ?? []).map((company) => ({
+        number: company.countryCode,
+        name: company.name,
+        summary: `Company · ${company.roles.join(', ').replace(/_/g, ' ')}`,
+        path: `${company.roles.includes('customer') && !company.roles.includes('supplier') ? '/customers' : '/suppliers'}/${company.id}`,
+      })),
+      ...(skus.data ?? []).map((sku) => ({ number: sku.code, name: `${sku.productName}, ${sku.shadeName}`, summary: 'SKU', path: `/products/skus/${sku.code}` })),
     ],
-    [session.role],
+    [session.role, products.data, companies.data, skus.data],
   );
 
   const matches = useMemo(() => {
     const text = query.trim().toLowerCase();
     if (!text) return destinations;
-    return destinations.filter(
-      (destination) =>
-        destination.name.toLowerCase().includes(text) ||
-        destination.number.includes(text) ||
-        destination.summary.toLowerCase().includes(text),
-    );
+    return destinations
+      .filter(
+        (destination) =>
+          destination.name.toLowerCase().includes(text) ||
+          destination.number.toLowerCase().includes(text) ||
+          destination.summary.toLowerCase().includes(text),
+      )
+      .slice(0, 40);
   }, [destinations, query]);
 
   useEffect(() => {
@@ -88,8 +104,8 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
               go(matches[cursor]);
             }
           }}
-          placeholder="Module name or index number"
-          aria-label="Module name or index number"
+          placeholder="Module, product, SKU or company"
+          aria-label="Module, product, SKU or company"
           className="h-full flex-1 bg-transparent text-sm outline-none placeholder:text-ink-muted"
         />
         <kbd className="code rounded-xs border border-line px-1.5 py-0.5 text-ink-muted">esc</kbd>
@@ -103,7 +119,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
               onMouseEnter={() => setCursor(index)}
               className={cn('flex h-11 w-full items-center gap-4 px-4 text-left', index === cursor && 'bg-bone')}
             >
-              <span className="code w-5 text-ink-muted">{destination.number}</span>
+              <span className="code w-24 shrink-0 truncate text-ink-muted">{destination.number}</span>
               <span className="w-32 shrink-0 text-sm font-medium">{destination.name}</span>
               <span className="truncate text-[0.8125rem] text-ink-muted">{destination.summary}</span>
             </button>

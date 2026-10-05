@@ -1,0 +1,215 @@
+# Companies, contacts, locations, factories. Everyone but viewers may read
+# the party register; suppliers are managed by owner, operations and
+# purchasing, customers by owner, operations and sales.
+
+query ListCompanies
+  @auth(
+    expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'sales' || auth.token.role == 'marketing' || auth.token.role == 'finance'"
+  ) {
+  companies(where: { archivedAt: { isNull: true } }, orderBy: { legalName: ASC }, limit: 2000) {
+    id
+    legalName
+    tradingName
+    website
+    status
+    country {
+      code
+      name
+    }
+    companyRoles_on_company(limit: 10) {
+      kind
+    }
+    contacts_on_company(where: { status: { eq: active } }, limit: 100) {
+      id
+    }
+  }
+}
+
+query GetCompany($id: UUID!)
+  @auth(
+    expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'sales' || auth.token.role == 'marketing' || auth.token.role == 'finance'"
+  ) {
+  company(id: $id) {
+    id
+    legalName
+    tradingName
+    registrationId
+    taxId
+    website
+    status
+    notes
+    createdAt
+    updatedAt
+    country {
+      code
+      name
+    }
+    defaultCurrency {
+      code
+    }
+    companyRoles_on_company(limit: 10) {
+      id
+      kind
+      since
+    }
+    supplierProfiles_on_company(limit: 1) {
+      id
+      paymentTerms
+      namedPlace
+      standardLeadTimeDays
+      onboardingStatus
+      defaultIncoterm {
+        code
+      }
+    }
+    contacts_on_company(orderBy: { isPrimary: DESC }, limit: 200) {
+      id
+      name
+      title
+      email
+      phone
+      messaging
+      language
+      isPrimary
+      status
+    }
+    locations_on_company(orderBy: { name: ASC }, limit: 200) {
+      id
+      type
+      name
+      addressLine1
+      city
+      region
+      postalCode
+      timeZone
+      locationCode
+      country {
+        code
+        name
+      }
+    }
+    factories_on_operator(limit: 100) {
+      id
+      capabilities
+      auditStatus
+      location {
+        id
+        name
+        city
+        country {
+          code
+          name
+        }
+      }
+    }
+  }
+}
+
+query ListFactories
+  @auth(
+    expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'finance'"
+  ) {
+  factories(limit: 500) {
+    id
+    capabilities
+    auditStatus
+    operator {
+      id
+      legalName
+      tradingName
+    }
+    location {
+      id
+      name
+      city
+      region
+      country {
+        code
+        name
+      }
+    }
+  }
+}
+
+mutation InsertCompany($legalName: String!, $tradingName: String, $countryCode: String, $website: String, $status: CompanyStatus!, $notes: String)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'sales'") {
+  company_insert(
+    data: { legalName: $legalName, tradingName: $tradingName, countryCode: $countryCode, website: $website, status: $status, notes: $notes }
+  )
+}
+
+mutation UpdateCompany($id: UUID!, $legalName: String!, $tradingName: String, $countryCode: String, $website: String, $status: CompanyStatus!, $notes: String)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'sales'") {
+  company_update(
+    id: $id
+    data: { legalName: $legalName, tradingName: $tradingName, countryCode: $countryCode, website: $website, status: $status, notes: $notes, updatedAt_expr: "request.time" }
+  )
+}
+
+mutation ArchiveCompany($id: UUID!) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations'") {
+  company_update(id: $id, data: { archivedAt_expr: "request.time" })
+}
+
+mutation AddCompanyRole($companyId: UUID!, $kind: CompanyRoleKind!, $since: Date)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'sales'") {
+  companyRole_insert(data: { companyId: $companyId, kind: $kind, since: $since })
+}
+
+mutation RemoveCompanyRole($id: UUID!) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations'") {
+  companyRole_delete(id: $id)
+}
+
+mutation InsertContact($companyId: UUID!, $name: String!, $title: String, $email: String, $phone: String, $messaging: String, $language: String, $isPrimary: Boolean!, $notes: String)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'sales' || auth.token.role == 'logistics'") {
+  contact_insert(
+    data: { companyId: $companyId, name: $name, title: $title, email: $email, phone: $phone, messaging: $messaging, language: $language, isPrimary: $isPrimary, status: active, notes: $notes }
+  )
+}
+
+mutation UpdateContact($id: UUID!, $name: String!, $title: String, $email: String, $phone: String, $messaging: String, $language: String, $isPrimary: Boolean!, $status: ContactStatus!, $notes: String)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'sales' || auth.token.role == 'logistics'") {
+  contact_update(
+    id: $id
+    data: { name: $name, title: $title, email: $email, phone: $phone, messaging: $messaging, language: $language, isPrimary: $isPrimary, status: $status, notes: $notes }
+  )
+}
+
+mutation InsertLocation($companyId: UUID, $type: LocationType!, $name: String!, $addressLine1: String, $addressLine2: String, $city: String, $region: String, $postalCode: String, $countryCode: String, $timeZone: String, $locationCode: String, $notes: String)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'logistics' || auth.token.role == 'sales'") {
+  location_insert(
+    data: {
+      companyId: $companyId
+      type: $type
+      name: $name
+      addressLine1: $addressLine1
+      addressLine2: $addressLine2
+      city: $city
+      region: $region
+      postalCode: $postalCode
+      countryCode: $countryCode
+      timeZone: $timeZone
+      locationCode: $locationCode
+      notes: $notes
+    }
+  )
+}
+
+mutation InsertFactory($locationId: UUID!, $operatorId: UUID!, $capabilities: Any, $auditStatus: String, $notes: String)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing'") {
+  factory_insert(data: { locationId: $locationId, operatorId: $operatorId, capabilities: $capabilities, auditStatus: $auditStatus, notes: $notes })
+}
+
+mutation UpsertSupplierProfile($id: UUID, $companyId: UUID!, $paymentTerms: String, $defaultIncotermCode: String, $namedPlace: String, $standardLeadTimeDays: Int, $onboardingStatus: String)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing'") {
+  supplierProfile_upsert(
+    data: {
+      id: $id
+      companyId: $companyId
+      paymentTerms: $paymentTerms
+      defaultIncotermCode: $defaultIncotermCode
+      namedPlace: $namedPlace
+      standardLeadTimeDays: $standardLeadTimeDays
+      onboardingStatus: $onboardingStatus
+    }
+  )
+}

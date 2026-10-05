@@ -1,0 +1,231 @@
+import {
+  SKU_STATUSES,
+  SKU_STATUS_LABEL,
+  SKU_STATUS_TONE,
+  canViewCosts,
+  formatMoney,
+  formatQuantity,
+  moneyFromStored,
+  quantityFromStored,
+  type SkuStatus,
+} from '@basis/shared';
+import { LabelHeader, Ledger, Panel, SelectField, ShadeDot, SheetTabs, StatusChip, Td, TextField, Th, Tr, sheetTabClass } from '@basis/ui';
+import { useMemo, useState } from 'react';
+import { Link, NavLink, useParams } from 'react-router';
+import { useProducts, useSku, useSkuSourcing, useSkus } from '../../data/catalog';
+import { useRequiredSession } from '../../session';
+import { NotFound } from '../NotFound';
+import { ModuleTitle, ProductsTabs } from './ProductsIndex';
+
+export function SkuLedger() {
+  const skus = useSkus();
+  const products = useProducts();
+  const [query, setQuery] = useState('');
+  const [product, setProduct] = useState('');
+  const [status, setStatus] = useState<'' | SkuStatus>('');
+
+  const rows = useMemo(() => {
+    const text = query.trim().toLowerCase();
+    return (skus.data ?? [])
+      .filter((sku) => (!product || sku.productCode === product) && (!status || sku.status === status))
+      .filter((sku) => !text || sku.code.toLowerCase().includes(text) || sku.productName.toLowerCase().includes(text) || sku.shadeName.toLowerCase().includes(text))
+      .sort((a, b) => a.productIndex - b.productIndex || a.variantCode.localeCompare(b.variantCode) || a.shadeSort - b.shadeSort);
+  }, [skus.data, query, product, status]);
+
+  return (
+    <>
+      <ModuleTitle number="02" title="Products">
+        Every sellable unit: a variant, in a shade, in a put-up.
+      </ModuleTitle>
+      <ProductsTabs active="skus" />
+      <div className="px-5 py-6 lg:px-8">
+        <Panel title="SKUs" count={rows.length} flush>
+          <div className="grid gap-3 border-b border-line px-5 py-4 sm:grid-cols-3">
+            <TextField label="Search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Code, product or shade" />
+            <SelectField label="Product" value={product} onChange={(event) => setProduct(event.target.value)}>
+              <option value="">All products</option>
+              {products.data?.map((candidate) => (
+                <option key={candidate.code} value={candidate.code}>
+                  {candidate.name}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField label="Status" value={status} onChange={(event) => setStatus(event.target.value as '' | SkuStatus)}>
+              <option value="">All statuses</option>
+              {SKU_STATUSES.map((candidate) => (
+                <option key={candidate} value={candidate}>
+                  {SKU_STATUS_LABEL[candidate]}
+                </option>
+              ))}
+            </SelectField>
+          </div>
+          {skus.isPending ? (
+            <p className="px-5 py-8 text-ink-muted">Loading SKUs</p>
+          ) : rows.length === 0 ? (
+            <p className="px-5 py-8 text-ink-muted">No SKUs match. Clear a filter, or create SKUs from a product sheet.</p>
+          ) : (
+            <Ledger caption="SKUs">
+              <thead>
+                <tr>
+                  <Th>SKU</Th>
+                  <Th>Product</Th>
+                  <Th>Variant</Th>
+                  <Th>Shade</Th>
+                  <Th>Put-up</Th>
+                  <Th>Status</Th>
+                  <Th>Public</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((sku) => (
+                  <Tr key={sku.code}>
+                    <Td>
+                      <Link to={`/products/skus/${sku.code}`} className="code underline decoration-line-strong underline-offset-4 hover:decoration-ink">
+                        {sku.code}
+                      </Link>
+                    </Td>
+                    <Td className="whitespace-nowrap font-medium">{sku.productName}</Td>
+                    <Td>{sku.variantName}</Td>
+                    <Td>
+                      <span className="flex items-center gap-2.5 whitespace-nowrap">
+                        <ShadeDot hex={sku.shadeHex} name={sku.shadeName} code={sku.shadeCode} size="sm" />
+                        {sku.shadeName}
+                      </span>
+                    </Td>
+                    <Td className="whitespace-nowrap text-ink-soft">{sku.putUpName}</Td>
+                    <Td>
+                      <StatusChip tone={SKU_STATUS_TONE[sku.status]}>{SKU_STATUS_LABEL[sku.status]}</StatusChip>
+                    </Td>
+                    <Td className="text-ink-soft">{sku.isPublic ? 'Yes' : 'No'}</Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </Ledger>
+          )}
+        </Panel>
+      </div>
+    </>
+  );
+}
+
+function Sourcing({ code }: { code: string }) {
+  const sourcing = useSkuSourcing(code, true);
+  if (sourcing.isPending) return <p className="text-ink-muted">Loading sourcing</p>;
+  if (sourcing.error) return <p className="text-critical">Sourcing could not be loaded. {sourcing.error.message}</p>;
+  const items = sourcing.data?.supplierItems ?? [];
+  if (items.length === 0) return <p className="text-ink-muted">No supplier is mapped to this SKU yet. Sourcing is added from a quotation.</p>;
+  return (
+    <ul className="space-y-4">
+      {items.map((item) => (
+        <li key={item.id} className="rounded-xs border border-line">
+          <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-line px-4 py-3">
+            <div>
+              <Link to={`/suppliers/${item.supplierId}`} className="font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink">
+                {item.supplierName}
+              </Link>
+              {item.factoryName && <span className="ml-3 text-[0.8125rem] text-ink-muted">{item.factoryName}</span>}
+            </div>
+            <div className="flex items-center gap-4 text-[0.8125rem] text-ink-soft">
+              {item.isPreferred && <StatusChip tone="positive">Preferred</StatusChip>}
+              <span>
+                Supplier SKU <span className="code text-ink">{item.supplierSku || '—'}</span>
+              </span>
+              <span>MOQ {item.moq ? formatQuantity(quantityFromStored(item.moq, 'm')) : '—'}</span>
+              <span>Lead time {item.leadTimeDays ?? '—'} days</span>
+            </div>
+          </div>
+          <Ledger caption={`Purchase prices from ${item.supplierName}`}>
+            <thead>
+              <tr>
+                <Th numeric>From quantity</Th>
+                <Th numeric>Unit price</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {item.prices.map((price, index) => (
+                <Tr key={index}>
+                  <Td numeric>{formatQuantity(quantityFromStored(price.minQuantity, 'm'))}</Td>
+                  <Td numeric>{formatMoney(moneyFromStored(price.unitPrice, price.currency), 4)} / m</Td>
+                </Tr>
+              ))}
+            </tbody>
+          </Ledger>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export function SkuSheet({ tab }: { tab: 'overview' | 'sourcing' }) {
+  const session = useRequiredSession();
+  const { code = '' } = useParams();
+  const sku = useSku(code);
+  const costs = canViewCosts(session.role);
+
+  if (sku.isPending) return <p className="px-5 py-10 text-ink-muted lg:px-8">Loading SKU</p>;
+  if (sku.error) return <p className="px-5 py-10 text-critical lg:px-8">The SKU could not be loaded. {sku.error.message}</p>;
+  if (!sku.data) return <NotFound what="SKU" />;
+  const data = sku.data;
+  const base = `/products/skus/${data.code}`;
+
+  return (
+    <>
+      <LabelHeader
+        code={data.code}
+        title={`${data.productName}, ${data.shadeName}`}
+        subtitle={
+          <span className="flex items-center gap-3">
+            <ShadeDot hex={data.shadeHex} name={data.shadeName} code={data.shadeCode} />
+            {data.variantName}, {data.putUpName}
+          </span>
+        }
+        status={
+          <>
+            <StatusChip tone={SKU_STATUS_TONE[data.status]}>{SKU_STATUS_LABEL[data.status]}</StatusChip>
+            <span className="text-[0.8125rem] text-ink-muted">{data.isPublic ? 'Published' : 'Not published'}</span>
+            <span className="text-[0.8125rem] text-ink-muted">{data.rollTracking ? 'Tracked by roll' : 'Tracked by lot'}</span>
+          </>
+        }
+        facts={[
+          { label: 'Product', value: <Link to={`/products/${data.productCode}`} className="underline decoration-line-strong underline-offset-4">{data.productName}</Link> },
+          { label: 'Family', value: data.familyName },
+          { label: 'Shade', value: `${data.shadeName} (${data.shadeCode})` },
+          { label: 'Width', value: data.widthCm === null ? 'tbc' : `${data.widthCm} cm` },
+          { label: 'Roll', value: `${data.rollLengthM} m` },
+          { label: 'Sales unit', value: data.salesUom },
+        ]}
+      />
+      <SheetTabs>
+        <NavLink to={base} end className={({ isActive }) => sheetTabClass(isActive)}>
+          Overview
+        </NavLink>
+        {costs && (
+          <NavLink to={`${base}/sourcing`} className={({ isActive }) => sheetTabClass(isActive)}>
+            Sourcing
+          </NavLink>
+        )}
+      </SheetTabs>
+      <div className="px-5 py-6 lg:px-8">
+        {tab === 'overview' && (
+          <Panel title="Specification">
+            <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-3">
+              <div>
+                <dt className="caps text-ink-muted">Barcode</dt>
+                <dd className="code mt-1">{data.barcode || <span className="text-ink-muted">none</span>}</dd>
+              </div>
+              <div>
+                <dt className="caps text-ink-muted">Sales MOQ</dt>
+                <dd className="mt-1 text-sm">{data.salesMoq ? formatQuantity(quantityFromStored(data.salesMoq, 'm')) : <span className="text-ink-muted">none</span>}</dd>
+              </div>
+              <div>
+                <dt className="caps text-ink-muted">GSM</dt>
+                <dd className="mt-1 text-sm">{data.gsm ?? <span className="text-ink-muted">tbc</span>}</dd>
+              </div>
+            </dl>
+          </Panel>
+        )}
+        {tab === 'sourcing' && (costs ? <Panel title="Sourcing"><Sourcing code={data.code} /></Panel> : <NotFound what="page" />)}
+      </div>
+    </>
+  );
+}

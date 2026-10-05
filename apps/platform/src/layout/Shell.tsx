@@ -69,7 +69,7 @@ export function Shell() {
             className="hidden h-9 w-full max-w-sm items-center gap-2.5 rounded-xs border border-line bg-panel px-3 text-left text-ink-muted transition-colors duration-150 hover:border-line-strong md:flex"
           >
             <MagnifyingGlass size={16} aria-hidden="true" />
-            <span className="flex-1 truncate">Jump to a module</span>
+            <span className="flex-1 truncate">Jump to a module, product, SKU or company</span>
             <kbd className="code rounded-xs border border-line px-1.5 py-0.5">⌘K</kbd>
           </button>
           <div className="ml-auto flex items-center gap-2">

@@ -1,0 +1,179 @@
+# Catalog: Fabric Family → Product → Variant → (Shade) → SKU.
+# The range and the shade language follow the brand booklet
+# (docs/PRODUCT_BLUEPRINT.md §2a). Lots and rolls arrive with manufacturing.
+
+enum ProductStatus {
+  draft
+  active
+  discontinued
+}
+
+enum SkuStatus {
+  development
+  sampling
+  active
+  phase_out
+  discontinued
+}
+
+enum ShadeStatus {
+  active
+  inactive
+}
+
+type FabricFamily @table(key: "code") {
+  code: String! @col(dataType: "varchar(8)")
+  name: String! @col(dataType: "varchar(80)")
+  slug: String! @col(dataType: "varchar(80)") @unique
+  description: String
+  # Family-specific specification attributes: [{ key, label, kind, unit?, options? }]
+  specSchema: Any
+  hsCode: String @col(dataType: "varchar(16)")
+  sort: Int!
+  archivedAt: Timestamp
+}
+
+type Product @table(key: "code") {
+  code: String! @col(dataType: "varchar(8)")
+  family: FabricFamily!
+  # The brand index: 01 Powermesh ... 05 Bridal Tulle.
+  index: Int!
+  name: String! @col(dataType: "varchar(80)")
+  slug: String! @col(dataType: "varchar(80)") @unique
+  tagline: String @col(dataType: "varchar(120)")
+  description: String
+  # [{ fibre, percent }]
+  composition: Any
+  construction: String @col(dataType: "varchar(80)")
+  care: String
+  # Values for the family's specification schema, keyed by field.
+  specs: Any
+  status: ProductStatus!
+  isPublic: Boolean!
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type ProductVariant @table {
+  product: Product!
+  # "PWM-160": product code and variant code, unique across the catalog.
+  fullCode: String! @col(dataType: "varchar(24)") @unique
+  code: String! @col(dataType: "varchar(16)")
+  name: String! @col(dataType: "varchar(80)")
+  widthCm: Int
+  usableWidthCm: Int
+  gsm: Int
+  stretchWarpPercent: Int
+  stretchWeftPercent: Int
+  finish: String @col(dataType: "varchar(80)")
+  specs: Any
+  status: ProductStatus!
+  sort: Int!
+}
+
+type ShadeCollection @table(key: "code") {
+  code: String! @col(dataType: "varchar(8)")
+  name: String! @col(dataType: "varchar(80)")
+  sort: Int!
+}
+
+type Shade @table(key: "code") {
+  code: String! @col(dataType: "varchar(8)")
+  collection: ShadeCollection
+  name: String! @col(dataType: "varchar(40)")
+  slug: String! @col(dataType: "varchar(40)") @unique
+  # Reference values under D65; the hex is a screen approximation only.
+  labL: Float
+  labA: Float
+  labB: Float
+  hex: String @col(dataType: "varchar(9)")
+  sort: Int!
+  status: ShadeStatus!
+}
+
+# The approved reference a lot is matched against, per shade, product and factory.
+type ShadeStandard @table {
+  shade: Shade!
+  product: Product!
+  factory: Factory
+  reference: String @col(dataType: "varchar(120)")
+  approvedOn: Date
+  approvedByUid: String @col(dataType: "varchar(128)")
+  toleranceDeltaE: Float
+  physicalLocation: String @col(dataType: "varchar(160)")
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# How the fabric is presented: roll length, width, core, wrap, carton.
+type PutUp @table(key: "code") {
+  code: String! @col(dataType: "varchar(16)")
+  name: String! @col(dataType: "varchar(80)")
+  rollLengthM: Int!
+  widthCm: Int!
+  core: String @col(dataType: "varchar(40)")
+  wrap: String @col(dataType: "varchar(80)")
+  rollsPerCarton: Int
+  cartonLengthCm: Int
+  cartonWidthCm: Int
+  cartonHeightCm: Int
+  labelSpec: String
+}
+
+type Sku @table(key: "code") {
+  code: String! @col(dataType: "varchar(32)")
+  product: Product!
+  variant: ProductVariant!
+  shade: Shade!
+  putUp: PutUp!
+  barcode: String @col(dataType: "varchar(32)")
+  salesUom: String! @col(dataType: "varchar(8)")
+  # Fixed-point thousandths of the sales unit.
+  salesMoq: Int64
+  status: SkuStatus!
+  isPublic: Boolean!
+  rollTracking: Boolean!
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+# How a SKU is bought from one source. Cost-bearing: read only by cost roles.
+type SupplierItem @table {
+  sku: Sku!
+  supplier: Company!
+  factory: Factory
+  supplierSku: String @col(dataType: "varchar(80)")
+  moq: Int64
+  leadTimeDays: Int
+  isPreferred: Boolean!
+  validFrom: Date
+  validTo: Date
+  notes: String
+}
+
+type SupplierPrice @table {
+  supplierItem: SupplierItem!
+  minQuantity: Int64!
+  # Fixed-point ten-thousandths of the currency unit, per sales unit.
+  unitPrice: Int64!
+  currency: String! @col(dataType: "varchar(3)")
+  validFrom: Date
+  validTo: Date
+  quotationRef: String @col(dataType: "varchar(80)")
+}
+
+type PriceList @table(key: "code") {
+  code: String! @col(dataType: "varchar(16)")
+  name: String! @col(dataType: "varchar(80)")
+  currency: String! @col(dataType: "varchar(3)")
+  tier: String @col(dataType: "varchar(40)")
+  validFrom: Date
+  validTo: Date
+  isDefault: Boolean!
+}
+
+type PriceListItem @table {
+  priceList: PriceList!
+  sku: Sku!
+  minQuantity: Int64!
+  unitPrice: Int64!
+}

@@ -91,7 +91,21 @@ Goal: the things everything else refers to.
 | Module UI | 02 Products and the party parts of 03 Suppliers: ledgers, sheets, forms; global search and command palette over these records |
 | Data entry | Import path (CSV) for initial catalog and supplier data; the three launch families entered as data |
 
-Exit: Powermesh, Shanel Lining and Bridal Tulle exist as real catalog data down to SKU, with shades, specifications, supplier mappings and documents. No business data lives in component code.
+Exit: the five launch products exist as real catalog data down to SKU, with shades, specifications, supplier mappings and documents. No business data lives in component code.
+
+#### Phase 2 progress (2026-10-06)
+
+| Done | Remaining |
+|---|---|
+| Schema: `parties.gql` (companies with roles, supplier terms, contacts, locations, factories, certifications) and `catalog.gql` (families with specification schemas, products, variants, shade collections and shades, shade standards, put-ups, SKUs, supplier items and tiered purchase prices, price lists) | Media assets; CSV import |
+| Connector operations for the catalog and the party register; purchase prices and supplier identity in cost-only operations | Supplier item and price mutations; shade standard mutations |
+| The launch range as data (`packages/shared/src/launch-catalog.json`): three families, five products, six shades, the 160 cm × 50 m put-up, 30 SKUs; seeded into the emulator | First production seed (after Blaze) |
+| Screens: Products (families, products ledger, new product), product sheet (overview, variants, SKUs, shade availability), SKU ledger and sheet with cost-gated sourcing, Shade System; Suppliers and Customers ledgers, company sheet (overview, contacts with new contact, factories and locations), new company | Edit forms for product, variant, SKU and company; new variant and SKU flows; shade standards screen |
+| Command palette reaches products, SKUs and companies | Global search over document numbers and references |
+| Form primitives: button, text, select, textarea, checkbox, dialog; label header, sheet tabs, empty state, shade circle | Menu, tabs as components, table virtualisation |
+| | Documents: upload through Storage, links on records, signed access (the Storage emulator needs Java on this machine) |
+| | Timeline on master records (events are written; the panel is not on the sheets yet) |
+
 
 Depends on: Phase 1; decisions D3, D4.
 

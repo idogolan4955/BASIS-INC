@@ -1,0 +1,146 @@
+{
+  "$comment": "The launch range as the brand booklet (v3) defines it. Seeded into the catalog; never typed into a screen. Technical values the booklet leaves open (composition, GSM, stretch percent) stay empty until confirmed per production standard.",
+  "putUps": [
+    { "code": "R160-50", "name": "160 cm × 50 m roll", "rollLengthM": 50, "widthCm": 160, "core": "Cardboard core", "wrap": "Shade-matched matte wrap, end-cap label", "rollsPerCarton": null }
+  ],
+  "shadeCollections": [
+    { "code": "SKIN", "name": "Skin tones", "sort": 1 },
+    { "code": "NEUTRAL", "name": "Neutrals", "sort": 2 }
+  ],
+  "shades": [
+    { "code": "SK01", "collection": "SKIN", "name": "Skin 01", "slug": "skin-01", "hex": "#DDB99F", "sort": 1 },
+    { "code": "SK02", "collection": "SKIN", "name": "Skin 02", "slug": "skin-02", "hex": "#CFA585", "sort": 2 },
+    { "code": "SK03", "collection": "SKIN", "name": "Skin 03", "slug": "skin-03", "hex": "#B88C6B", "sort": 3 },
+    { "code": "MLK", "collection": "NEUTRAL", "name": "Milk", "slug": "milk", "hex": "#F2E9DC", "sort": 4 },
+    { "code": "BNE", "collection": "NEUTRAL", "name": "Bone", "slug": "bone", "hex": "#E6DBC8", "sort": 5 },
+    { "code": "PUR", "collection": "NEUTRAL", "name": "Pure", "slug": "pure", "hex": "#F8F5EF", "sort": 6 }
+  ],
+  "families": [
+    {
+      "code": "MSH",
+      "name": "Mesh",
+      "slug": "mesh",
+      "sort": 1,
+      "description": "Three distinct mesh tools for different construction goals: shaping, illusion and controlled support.",
+      "specSchema": [
+        { "key": "primaryRole", "label": "Primary role", "kind": "text" },
+        { "key": "stretchBehaviour", "label": "Stretch behaviour", "kind": "text" },
+        { "key": "transparency", "label": "Transparency", "kind": "select", "options": ["Low", "Medium", "High"] },
+        { "key": "supportLevel", "label": "Support level", "kind": "select", "options": ["Low", "Low to medium", "Medium", "Medium to high", "High"] },
+        { "key": "handFeel", "label": "Hand feel", "kind": "text" },
+        { "key": "bestUse", "label": "Best use", "kind": "text" }
+      ]
+    },
+    {
+      "code": "LIN",
+      "name": "Lining",
+      "slug": "lining",
+      "sort": 2,
+      "description": "Refined foundation layers: smooth, soft and breathable.",
+      "specSchema": [
+        { "key": "handFeel", "label": "Hand feel", "kind": "text" },
+        { "key": "breathability", "label": "Breathability", "kind": "select", "options": ["Low", "Medium", "High"] },
+        { "key": "bestUse", "label": "Best use", "kind": "text" }
+      ]
+    },
+    {
+      "code": "TUL",
+      "name": "Tulle",
+      "slug": "tulle",
+      "sort": 3,
+      "description": "Fine tulle for layering, volume and veils.",
+      "specSchema": [
+        { "key": "drape", "label": "Drape", "kind": "text" },
+        { "key": "stiffness", "label": "Stiffness", "kind": "select", "options": ["Soft", "Medium", "Crisp"] },
+        { "key": "bestUse", "label": "Best use", "kind": "text" }
+      ]
+    }
+  ],
+  "products": [
+    {
+      "code": "PWM",
+      "family": "MSH",
+      "index": 1,
+      "name": "Powermesh",
+      "slug": "powermesh",
+      "tagline": "Shaping / support mesh",
+      "description": "High support, strong recovery, smooth foundation for structured bridal construction.",
+      "specs": {
+        "primaryRole": "Shaping / structure",
+        "stretchBehaviour": "High / multidirectional",
+        "transparency": "Medium",
+        "supportLevel": "High",
+        "handFeel": "Firm + smooth",
+        "bestUse": "Corsetry, support zones"
+      }
+    },
+    {
+      "code": "ILM",
+      "family": "MSH",
+      "index": 2,
+      "name": "Illusion Stretch Mesh",
+      "slug": "illusion-stretch-mesh",
+      "tagline": "Transparent stretch mesh",
+      "description": "Fine, lightweight and highly transparent mesh for illusion areas and refined second-skin effects.",
+      "specs": {
+        "primaryRole": "Invisible illusion areas",
+        "stretchBehaviour": "High / soft stretch",
+        "transparency": "High",
+        "supportLevel": "Low to medium",
+        "handFeel": "Soft + lightweight",
+        "bestUse": "Necklines, sleeves, backs"
+      }
+    },
+    {
+      "code": "N58",
+      "family": "MSH",
+      "index": 3,
+      "name": "N58 Semi-Stretch Mesh",
+      "slug": "n58",
+      "tagline": "Controlled semi-stretch mesh",
+      "description": "Balanced stretch and stability for controlled support, coverage and versatile construction.",
+      "specs": {
+        "primaryRole": "Controlled support / coverage",
+        "stretchBehaviour": "Semi-stretch / controlled",
+        "transparency": "Medium",
+        "supportLevel": "Medium to high",
+        "handFeel": "Smooth + stable",
+        "bestUse": "Coverage, control, versatile construction"
+      }
+    },
+    {
+      "code": "SHL",
+      "family": "LIN",
+      "index": 4,
+      "name": "Shanel Lining",
+      "slug": "shanel-lining",
+      "tagline": "Premium lining fabric",
+      "description": "Smooth, soft and breathable lining designed as a refined foundation layer.",
+      "specs": {
+        "handFeel": "Smooth + soft",
+        "breathability": "High",
+        "bestUse": "Foundation layer, coverage with lightness for all-day wear"
+      }
+    },
+    {
+      "code": "BTL",
+      "family": "TUL",
+      "index": 5,
+      "name": "Bridal Tulle",
+      "slug": "bridal-tulle",
+      "tagline": "Fine bridal tulle",
+      "description": "Lightweight, ethereal tulle for layering, volume, veils and bridal applications.",
+      "specs": {
+        "drape": "Soft drape, luminous finish",
+        "bestUse": "Layering, volume, veils"
+      }
+    }
+  ],
+  "variants": [
+    { "product": "PWM", "code": "160", "name": "160 cm", "widthCm": 160 },
+    { "product": "ILM", "code": "160", "name": "160 cm", "widthCm": 160 },
+    { "product": "N58", "code": "160", "name": "160 cm", "widthCm": 160 },
+    { "product": "SHL", "code": "160", "name": "160 cm", "widthCm": 160 },
+    { "product": "BTL", "code": "160", "name": "160 cm", "widthCm": 160 }
+  ]
+}

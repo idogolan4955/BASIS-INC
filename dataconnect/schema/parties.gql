@@ -1,0 +1,117 @@
+# Parties and places: one Company table for every organisation BASIS deals
+# with; what a company is to BASIS is a role. Locations are physical places;
+# a factory is a location run by an operator.
+
+enum CompanyRoleKind {
+  supplier
+  factory_operator
+  customer
+  freight_forwarder
+  customs_broker
+  carrier
+  inspection_agency
+  warehouse_operator
+}
+
+enum CompanyStatus {
+  prospect
+  active
+  inactive
+}
+
+enum ContactStatus {
+  active
+  left
+}
+
+enum LocationType {
+  factory
+  warehouse
+  consolidation_hub
+  port
+  airport
+  office
+  customer_site
+}
+
+type Company @table {
+  legalName: String! @col(dataType: "varchar(200)")
+  tradingName: String @col(dataType: "varchar(200)")
+  country: Country
+  registrationId: String @col(dataType: "varchar(80)")
+  taxId: String @col(dataType: "varchar(80)")
+  website: String @col(dataType: "varchar(200)")
+  defaultCurrency: Currency
+  status: CompanyStatus!
+  notes: String
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+  archivedAt: Timestamp
+}
+
+type CompanyRole @table {
+  company: Company!
+  kind: CompanyRoleKind!
+  since: Date
+}
+
+# Supplier-specific terms on a company with the supplier role.
+type SupplierProfile @table {
+  company: Company!
+  paymentTerms: String @col(dataType: "varchar(120)")
+  defaultIncoterm: Incoterm
+  namedPlace: String @col(dataType: "varchar(120)")
+  standardLeadTimeDays: Int
+  onboardingStatus: String @col(dataType: "varchar(40)")
+}
+
+type Contact @table {
+  company: Company!
+  name: String! @col(dataType: "varchar(160)")
+  title: String @col(dataType: "varchar(120)")
+  email: String @col(dataType: "varchar(255)")
+  phone: String @col(dataType: "varchar(64)")
+  messaging: String @col(dataType: "varchar(120)")
+  language: String @col(dataType: "varchar(16)")
+  isPrimary: Boolean!
+  status: ContactStatus!
+  notes: String
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type Location @table {
+  company: Company
+  type: LocationType!
+  name: String! @col(dataType: "varchar(160)")
+  addressLine1: String @col(dataType: "varchar(200)")
+  addressLine2: String @col(dataType: "varchar(200)")
+  city: String @col(dataType: "varchar(120)")
+  region: String @col(dataType: "varchar(120)")
+  postalCode: String @col(dataType: "varchar(32)")
+  country: Country
+  timeZone: String @col(dataType: "varchar(64)")
+  # UN/LOCODE or IATA code for ports and airports.
+  locationCode: String @col(dataType: "varchar(8)")
+  notes: String
+}
+
+type Factory @table {
+  location: Location!
+  operator: Company!
+  # What the factory can make: [{ familyCode, processes[], capacityNote }]
+  capabilities: Any
+  auditStatus: String @col(dataType: "varchar(40)")
+  notes: String
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type Certification @table {
+  company: Company
+  factory: Factory
+  type: String! @col(dataType: "varchar(80)")
+  number: String @col(dataType: "varchar(80)")
+  issuer: String @col(dataType: "varchar(160)")
+  validFrom: Date
+  validTo: Date
+  document: Document
+}
