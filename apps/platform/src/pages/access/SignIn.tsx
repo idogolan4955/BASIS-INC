@@ -104,7 +104,7 @@ export function SignIn() {
     <main className="grid min-h-dvh place-items-center bg-surface px-5 py-10">
       <div className="w-full max-w-sm">
         <Wordmark className="text-lg text-ink" />
-        <h1 className="mt-10 font-display text-[2.5rem] leading-none tracking-[-0.015em]">Sign in</h1>
+        <h1 className="mt-10 font-display text-[2.5rem] font-medium leading-none tracking-[-0.01em]">Sign in</h1>
         <p className="mt-3 text-ink-muted">Accounts are created by invitation from an owner.</p>
 
         <form onSubmit={submit} noValidate className="mt-8 space-y-4" aria-busy={busy}>
@@ -158,7 +158,7 @@ export function NoRole({ email, signOut }: { email: string; signOut: () => Promi
     <main className="grid min-h-dvh place-items-center bg-surface px-5">
       <div className="w-full max-w-md">
         <Wordmark className="text-lg text-ink" />
-        <h1 className="mt-10 font-display text-[2.25rem] leading-tight">No role assigned yet</h1>
+        <h1 className="mt-10 font-display text-[2.25rem] font-medium leading-tight">No role assigned yet</h1>
         <p className="mt-4 text-ink-soft">
           {email} is signed in, but an owner has not given this account a role. Nothing can be opened until one is set.
         </p>

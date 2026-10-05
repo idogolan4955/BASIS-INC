@@ -86,8 +86,8 @@ function Band({ asOf }: { asOf: LocalDate }) {
       </div>
       <div className="relative flex items-end justify-between gap-6 px-5 py-8 lg:px-8 lg:py-10">
         <div>
-          <h1 className="font-display text-[2.75rem] leading-none tracking-[-0.015em] text-ink lg:text-[3.25rem]">Gateway</h1>
-          <p className="caps mt-3.5 text-ink-soft">Bridal fabric supply chain</p>
+          <h1 className="font-display text-[2.875rem] font-medium leading-none tracking-[-0.01em] text-ink lg:text-[3.5rem]">Gateway</h1>
+          <p className="caps mt-3 text-ink-soft">Bridal fabric supply chain</p>
         </div>
         <div className="hidden flex-col items-end gap-2 sm:flex">
           <p className="code bg-sunken px-2 py-1 uppercase text-ink">
@@ -444,7 +444,7 @@ function Loading() {
           <FigureTileSkeleton key={index} />
         ))}
       </div>
-      <div className="h-56 rounded-xs border border-line bg-panel" />
+      <div className="h-56 rounded-[var(--radius-panel)] border border-line bg-panel" />
     </div>
   );
 }
@@ -452,7 +452,7 @@ function Loading() {
 function Unavailable({ message }: { message: string }) {
   return (
     <div className="px-5 py-10 lg:px-8">
-      <div className="max-w-xl rounded-xs border border-line bg-panel p-6">
+      <div className="max-w-xl rounded-[var(--radius-panel)] border border-line bg-panel p-6">
         <h2 className="text-base font-semibold">The Gateway could not load</h2>
         <p className="mt-2 text-ink-soft">{message}</p>
         <p className="mt-4 text-ink-muted">Reload the page to try again. If it keeps failing, the data connection needs attention.</p>

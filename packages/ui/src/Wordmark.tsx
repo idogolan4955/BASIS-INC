@@ -6,7 +6,7 @@ import { cn } from './cn';
 export function Wordmark({ className }: { className?: string }) {
   return (
     <span
-      className={cn('inline-flex items-baseline gap-[0.5em] font-sans uppercase leading-none', className)}
+      className={cn('inline-flex items-baseline gap-[0.5em] font-brand uppercase leading-none', className)}
       aria-label="BASIS INC."
     >
       <span aria-hidden="true" className="font-bold tracking-[0.3em] [font-stretch:118%]">

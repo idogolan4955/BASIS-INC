@@ -34,7 +34,7 @@ export function LabelHeader({
               {index && <span className="text-ink">{index}</span>}
               <span>{code}</span>
             </p>
-            <h1 className="mt-1.5 font-display text-[2.25rem] leading-none tracking-[-0.015em] text-ink lg:text-[2.75rem]">{title}</h1>
+            <h1 className="mt-1.5 font-display text-[2.375rem] font-medium leading-none tracking-[-0.01em] text-ink lg:text-[2.875rem]">{title}</h1>
             {subtitle && <p className="mt-2 text-ink-soft">{subtitle}</p>}
             {status && <div className="mt-3 flex flex-wrap items-center gap-4">{status}</div>}
           </div>
@@ -72,7 +72,7 @@ export function sheetTabClass(active: boolean): string {
 
 export function EmptyState({ title, children, action }: { title: string; children?: ReactNode; action?: ReactNode }) {
   return (
-    <div className="rounded-xs border border-line bg-panel px-6 py-10 text-center">
+    <div className="rounded-[var(--radius-panel)] border border-line bg-panel px-6 py-10 text-center">
       <p className="font-medium">{title}</p>
       {children && <p className="mx-auto mt-2 max-w-md text-[0.8125rem] text-ink-muted">{children}</p>}
       {action && <div className="mt-5 flex justify-center">{action}</div>}

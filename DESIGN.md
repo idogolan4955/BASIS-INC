@@ -18,19 +18,20 @@ Restrained strategy. Tokens live in `packages/ui/src/theme.css` and nowhere else
 
 ## Type
 
-- Sans (Archivo, variable width): the wordmark, interface text, tracked capitals for titles of panels and columns.
-- Display serif (Bodoni Moda): page titles and business figures only.
+- Display serif (EB Garamond): page titles, business figures, tracked capitals of panel titles and figure labels.
+- Interface sans (Source Sans 3): all interface text, column heads, navigation, forms.
+- Brand sans (Archivo, variable width): the wordmark only.
 - Mono (Martian Mono): codes, document numbers, dates, measurements.
 
 All three are stand-ins behind the font tokens until the brand faces are licensed.
 
 ## Shape
 
-Radius 2 px. No shadows on surfaces. Squares for states; circles only for avatars, shade swatches and material windows.
+Panels and tiles 6 px, controls 2 px. No shadows on surfaces. Status dots, shade circles, round timeline nodes, rounded progress bars; avatars round.
 
 ## Signatures
 
-The index number. The swatch (status by shape, fill and colour). The selvedge (navigation state only). The label. The hand (product names, public site).
+The index number. The swatch (status dot; shade circle). The selvedge (navigation state only). The label. The hand (product names, public site).
 
 ## Components
 

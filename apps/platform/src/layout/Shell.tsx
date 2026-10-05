@@ -66,7 +66,7 @@ export function Shell() {
           <button
             type="button"
             onClick={() => setPaletteOpen(true)}
-            className="hidden h-9 w-full max-w-sm items-center gap-2.5 rounded-xs border border-line bg-panel px-3 text-left text-ink-muted transition-colors duration-150 hover:border-line-strong md:flex"
+            className="hidden h-9 w-full max-w-sm items-center gap-2.5 rounded-[var(--radius-panel)] border border-line bg-panel px-3 text-left text-ink-muted transition-colors duration-150 hover:border-line-strong md:flex"
           >
             <MagnifyingGlass size={16} aria-hidden="true" />
             <span className="flex-1 truncate">Jump to a module, product, SKU or company</span>

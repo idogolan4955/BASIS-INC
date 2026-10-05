@@ -42,8 +42,8 @@ The sans remains the brand's identity, as the original brief requires. The serif
 
 - Navigation shows **icon and label together**, never an icon alone. Icons come from one family (Phosphor, light weight).
 - The selvedge marks **navigation state only**. Rows and alerts state their severity with a swatch chip and a word, not a coloured edge.
-- Status swatches differ by **shape and fill** as well as colour: solid square (positive), half-filled (in progress), hatched (warning), diamond (critical), outline (neutral).
-- Panels are hairline-framed regions of milk on a bone page, 2 px radius, no shadow.
+- Status is a **dot and a word**, as the reference draws it; the word carries the meaning, so nothing depends on colour alone.
+- Panels are hairline-framed regions of milk on a bone page with a soft 6 px corner, no shadow. Progress is a rounded bar filled from nude to cocoa; timeline nodes are circles: solid cocoa when done, warm nude when current, hollow when pending, critical when late.
 - Phones get their own layout: attention first, three thumb-reach destinations in a bottom bar, the index as a full-screen palette.
 
 ## 1. The idea: Soft Industrial Luxury

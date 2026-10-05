@@ -162,7 +162,7 @@ function ShadeAvailability({ product, shades }: { product: ProductDetail; shades
           const active = skus.some((sku) => sku.status === 'active');
           const state = active ? 'Available' : skus.length > 0 ? SKU_STATUS_LABEL[skus[0]!.status] : 'Not offered';
           return (
-            <li key={shade.code} className="flex items-center gap-4 rounded-xs border border-line bg-panel px-4 py-3">
+            <li key={shade.code} className="flex items-center gap-4 rounded-[var(--radius-panel)] border border-line bg-panel px-4 py-3">
               <ShadeDot hex={shade.hex} name={shade.name} code={shade.code} size="lg" className={active ? '' : 'opacity-50'} />
               <div className="min-w-0">
                 <p className="font-medium">{shade.name}</p>

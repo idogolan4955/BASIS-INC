@@ -26,7 +26,7 @@ export function Shades() {
               {shades.data
                 ?.filter((shade) => shade.collection === collection)
                 .map((shade) => (
-                  <li key={shade.code} className="flex gap-5 rounded-xs border border-line bg-panel p-5">
+                  <li key={shade.code} className="flex gap-5 rounded-[var(--radius-panel)] border border-line bg-panel p-5">
                     <ShadeDot hex={shade.hex} name={shade.name} code={shade.code} size="lg" className="size-20" />
                     <div className="min-w-0 flex-1">
                       <p className="flex items-baseline justify-between gap-3">

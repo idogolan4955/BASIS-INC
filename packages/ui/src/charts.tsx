@@ -26,7 +26,9 @@ export function Sparkline({
     return [x, y] as const;
   });
   const path = points.map(([x, y], index) => `${index === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+  const first = points[0] ?? [pad, height - pad];
   const last = points[points.length - 1] ?? [0, 0];
+  const area = `${path} L${last[0].toFixed(1)},${height - pad} L${first[0].toFixed(1)},${height - pad} Z`;
   return (
     <svg
       role="img"
@@ -34,9 +36,9 @@ export function Sparkline({
       viewBox={`0 0 ${width} ${height}`}
       className={cn('h-9 w-[4.5rem] overflow-visible', className)}
     >
-      <line x1={pad} x2={width - pad} y1={height - pad} y2={height - pad} className="stroke-line" strokeWidth="1" />
-      <path d={path} fill="none" className="stroke-accent" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
-      <rect x={last[0] - 2.5} y={last[1] - 2.5} width="5" height="5" className="fill-ink" />
+      <path d={area} className="fill-nude/25" />
+      <path d={path} fill="none" className="stroke-nude-deep" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+      <circle cx={last[0]} cy={last[1]} r="2.5" className="fill-cocoa" />
     </svg>
   );
 }
@@ -47,14 +49,15 @@ export function Ring({ percent, label, className }: { percent: number; label: st
   const filled = (Math.max(0, Math.min(100, percent)) / 100) * circumference;
   return (
     <svg role="img" aria-label={label} viewBox="0 0 48 48" className={cn('size-11 -rotate-90', className)}>
-      <circle cx="24" cy="24" r={radius} fill="none" className="stroke-line" strokeWidth="5" />
+      <circle cx="24" cy="24" r={radius} fill="none" className="stroke-sand" strokeWidth="6" />
       <circle
         cx="24"
         cy="24"
         r={radius}
         fill="none"
-        className="stroke-accent"
-        strokeWidth="5"
+        className="stroke-cocoa"
+        strokeWidth="6"
+        strokeLinecap="round"
         strokeDasharray={`${filled} ${circumference}`}
       />
     </svg>
@@ -75,7 +78,7 @@ export function Bars({
     <div role="img" aria-label={label} className={cn('flex h-11 items-end gap-1.5', className)}>
       {items.map((item) => (
         <div key={item.code} title={item.title} className="flex h-full w-5 flex-col items-center justify-end gap-1">
-          <div className="w-full bg-accent" style={{ height: `${Math.max(8, (item.value / max) * 100)}%` }} />
+          <div className="w-full rounded-t-sm bg-nude" style={{ height: `${Math.max(8, (item.value / max) * 100)}%` }} />
           <span className="code text-[0.5625rem] leading-none text-ink-muted">{item.code}</span>
         </div>
       ))}
@@ -90,7 +93,7 @@ export function Lanes({ progress, label, className }: { progress: readonly numbe
       {progress.map((value, index) => (
         <div key={index} className="relative h-px bg-line-strong">
           <span
-            className="absolute top-1/2 size-[5px] -translate-x-1/2 -translate-y-1/2 bg-ink"
+            className="absolute top-1/2 size-[6px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cocoa"
             style={{ left: `${Math.max(0, Math.min(1, value)) * 100}%` }}
           />
         </div>

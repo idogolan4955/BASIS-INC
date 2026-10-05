@@ -59,7 +59,7 @@ export function ModuleTitle({ number, title, children, actions }: { number: stri
   return (
     <div className="flex flex-wrap items-end justify-between gap-4 bg-panel px-5 pb-5 pt-7 lg:px-8">
       <div>
-        <h1 className="font-display text-[2.25rem] leading-none tracking-[-0.015em] lg:text-[2.75rem]">
+        <h1 className="font-display text-[2.375rem] font-medium leading-none tracking-[-0.01em] lg:text-[2.75rem]">
           {title}
           <span className="code ml-3 align-top text-ink-muted">{number}</span>
         </h1>
@@ -194,7 +194,7 @@ export function ProductsIndex() {
         {families.data && families.data.length > 0 && (
           <section aria-label="Fabric families" className="grid gap-4 sm:grid-cols-3">
             {families.data.map((family) => (
-              <div key={family.code} className="rounded-xs border border-line bg-panel">
+              <div key={family.code} className="rounded-[var(--radius-panel)] border border-line bg-panel">
                 <div className="aspect-[3/1] overflow-hidden border-b border-line bg-sunken text-nude-deep">
                   <Structure kind={STRUCTURE[family.code] ?? 'mesh'} scale={1.1} label={`${family.name} structure`} />
                 </div>

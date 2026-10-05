@@ -25,8 +25,8 @@ export function Panel({
 }) {
   const headingId = id ? `${id}-title` : undefined;
   return (
-    <section id={id} aria-labelledby={headingId} className={cn('rounded-xs border border-line bg-panel', className)}>
-      <header className="flex min-h-12 items-center justify-between gap-4 border-b border-line px-5">
+    <section id={id} aria-labelledby={headingId} className={cn('rounded-[var(--radius-panel)] border border-line bg-panel', className)}>
+      <header className="flex min-h-[3.25rem] items-center justify-between gap-4 border-b border-line px-5">
         <h2 id={headingId} className="caps flex items-baseline gap-2.5 text-ink">
           {title}
           {count !== undefined && <span className="code text-ink-muted">{String(count).padStart(2, '0')}</span>}

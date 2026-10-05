@@ -7,7 +7,7 @@ import { cn } from './cn';
 export function Ledger({ caption, children, className }: { caption: string; children: ReactNode; className?: string }) {
   return (
     <div className="overflow-x-auto">
-      <table className={cn('w-full border-collapse text-[0.8125rem]', className)}>
+      <table className={cn('w-full border-collapse text-[0.9rem]', className)}>
         <caption className="sr-only">{caption}</caption>
         {children}
       </table>
@@ -25,7 +25,7 @@ export function Th({
     <th
       scope="col"
       className={cn(
-        'caps h-10 whitespace-nowrap border-b border-line-strong px-3 font-semibold text-ink-soft first:pl-5 last:pr-5',
+        'label h-10 whitespace-nowrap border-b border-line-strong px-3 text-ink first:pl-5 last:pr-5',
         numeric ? 'text-right' : 'text-left',
         className,
       )}

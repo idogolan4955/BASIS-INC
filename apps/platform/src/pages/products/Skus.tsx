@@ -117,7 +117,7 @@ function Sourcing({ code }: { code: string }) {
   return (
     <ul className="space-y-4">
       {items.map((item) => (
-        <li key={item.id} className="rounded-xs border border-line">
+        <li key={item.id} className="rounded-[var(--radius-panel)] border border-line">
           <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-line px-4 py-3">
             <div>
               <Link to={`/suppliers/${item.supplierId}`} className="font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink">
