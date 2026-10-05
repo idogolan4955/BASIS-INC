@@ -17,7 +17,8 @@ What must be remembered even without opening the docs:
 - **Money and quantities** are fixed-point integers, never floats. Arithmetic happens only in the value types in `packages/shared`.
 - **No business data in components**, no mock structures that cannot become real tables, no demo-only paths.
 - **Design.** `docs/DESIGN_SYSTEM.md` is binding: tokens only, the five signatures, and the "never" list. No generic SaaS dashboard patterns.
-- **Interface checks** run on emulators or sample data, not on production data.
+- **Interface checks** run on emulators or sample data, not on production data. `pnpm --filter @basis/platform dev:sample` (port 5180) runs the platform on sample records with no backend; `.claude/launch.json` has it as `platform-sample`.
+- **Design work** is done with the owner's design skills: impeccable, ui-ux-pro-max and design-taste-frontend. The owner's reference for the back office and how it was read are in `docs/DESIGN_SYSTEM.md` §0.
 - **Documents stay true.** When the build diverges from a document in `docs/`, update the document in the same change.
 - **BASIS is independent of Fabrica.** Never touch the `fabrica-erp-il` project or the Fabrica repository from here.
 - Before an action that is hard to reverse — deletion, migration, production settings, anything that costs money — stop and confirm with the owner.

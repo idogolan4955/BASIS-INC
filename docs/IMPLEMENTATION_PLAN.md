@@ -61,6 +61,18 @@ Exit: a signed-in manager sees an empty Gateway in production; a schema migratio
 
 Depends on: F1 and F2 (§6) for the first deploy and push. Local work on the emulators is not blocked.
 
+#### Phase 1 progress (2026-10-06)
+
+| Done | Remaining |
+|---|---|
+| Git repository, pnpm workspace, TypeScript strict | GitHub push (waiting for the repository to be made private) |
+| Firebase project `basis-inc`, Hosting sites and targets | Blaze plan; Data Connect service and Cloud SQL |
+| `@basis/shared`: fixed-point money and quantity, local dates, business numbers, roles and module access, error taxonomy, Gateway read models. 25 tests | Data Connect foundation schema, `platform` and `public` connectors, seed |
+| `@basis/ui`: tokens with contrast tests, typefaces, status chip, panel, figure tile, charts, timeline, ledger, fabric structure drawings | Buttons, inputs, select, dialog, menu, tabs, label header |
+| `apps/platform`: shell (index rail, top bar, command palette, phone layout), Gateway with all zones, role-filtered, running in sample mode | Firebase Auth sign-in, invitation function, route guard, live Gateway queries |
+| | `functions` plumbing; `apps/web` with the prerendered holding page; ESLint; first deploy |
+
+
 ### Phase 2 — Master data and catalog (L)
 
 Goal: the things everything else refers to.

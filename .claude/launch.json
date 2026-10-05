@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "platform-sample",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@basis/platform", "dev:sample"],
+      "port": 5180
+    }
+  ]
+}

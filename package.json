@@ -1,0 +1,19 @@
+{
+  "name": "basis",
+  "private": true,
+  "version": "0.1.0",
+  "description": "BASIS INC. — brand site and operating platform",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev:platform": "pnpm --filter @basis/platform dev",
+    "dev:web": "pnpm --filter @basis/web dev",
+    "emulators": "firebase emulators:start --only auth,functions,dataconnect",
+    "sdk": "firebase dataconnect:sdk:generate",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test"
+  }
+}

@@ -1,11 +1,48 @@
 # BASIS INC. — Design System
 
-Status: v0.1 · 2026-10-06 · Phase 0 foundation document
+Status: v0.2 · 2026-10-06 · Foundation document, revised after the owner's reference for the platform
 Related: [PRODUCT_BLUEPRINT](PRODUCT_BLUEPRINT.md) · [INFORMATION_ARCHITECTURE](INFORMATION_ARCHITECTURE.md) · [SYSTEM_ARCHITECTURE](SYSTEM_ARCHITECTURE.md)
 
 This document defines the direction and the rules. Token **values** given here are v0 proposals: they will be tuned against real BASIS fabric photography and verified for contrast when the token package is built (Phase 1). The **structure** of the system is the commitment.
 
 ---
+
+## 0. Revision v0.2: the owner's reference for the platform
+
+On 2026-10-06 the owner supplied a reference image for the management platform and asked for the design to be made with the design skills in use on his projects (impeccable, ui-ux-pro-max, design-taste-frontend). The reference fixes the composition and mood of the back office; this section records how it was read. **Where it conflicts with a later section of this document, this section wins.**
+
+**What the reference shows.** A dark espresso sidebar with the wordmark, icons and labels, the open page marked by a nude strip on its edge. A top bar with a search field, alerts and an avatar. A low band with the page title in a display serif over fabric imagery. A row of figure tiles, each with a small data drawing. A production timeline of stages. Shipment status. A recent-orders table. A strip of fabrics.
+
+**What was adopted.**
+
+| From the reference | In BASIS |
+|---|---|
+| Dark sidebar, icons and labels, edge strip on the open page | The index rail: espresso ground, one light-weight icon and a label per module, the **selvedge** on the open page, and the module's index number at the row end |
+| Serif page title and serif figures | A **display serif** joins the system as its third voice, for page titles and business figures only |
+| Title band over fabric | The band is kept; the fabric is **drawn from its own construction** (see §10) instead of a stock photograph of a fabric BASIS does not sell |
+| Figure tiles with small charts | Kept, on one condition: every drawing carries the data behind the number and has a text alternative |
+| Production timeline | The shared timeline component, one row per active run, with planned and moved dates |
+| Shipment status with a world map | Route **lanes** instead of a map: origin code, destination code, position along the route, dates. More precise, and the same grammar as the production timeline |
+| Recent orders, fabric strip | Kept as a ledger and as family swatches |
+| Not in the reference | A **Requires attention** ledger directly under the figures, first on phones. The Gateway exists to say what needs a decision |
+
+**The three voices.**
+
+| Voice | Face (stand-in) | Used for | Never for |
+|---|---|---|---|
+| Architectural sans | Archivo, variable width | The wordmark, all interface text, tracked capitals for panel titles and column heads | — |
+| Display serif | Bodoni Moda, optical size | Page titles and business figures | Labels, buttons, table cells, body text |
+| Mono | Martian Mono, semi-condensed | Codes, document numbers, dates, measurements | Decoration; panel titles |
+
+The sans remains the brand's identity, as the original brief requires. The serif is the soft counterpart the reference asked for.
+
+**Operating-interface rules that changed.**
+
+- Navigation shows **icon and label together**, never an icon alone. Icons come from one family (Phosphor, light weight).
+- The selvedge marks **navigation state only**. Rows and alerts state their severity with a swatch chip and a word, not a coloured edge.
+- Status swatches differ by **shape and fill** as well as colour: solid square (positive), half-filled (in progress), hatched (warning), diamond (critical), outline (neutral).
+- Panels are hairline-framed regions of milk on a bone page, 2 px radius, no shadow.
+- Phones get their own layout: attention first, three thumb-reach destinations in a bottom bar, the index as a full-screen palette.
 
 ## 1. The idea: Soft Industrial Luxury
 
@@ -48,15 +85,23 @@ Both share palette, typefaces, borders, radii, the five signatures and iconograp
 
 ### 3.1 Material palette (primitives)
 
-| Token | v0 value | Character |
+| Token | Value | Character |
 |---|---|---|
-| `milk` | `#FBF8F3` | Lightest surface. Paper, lining |
-| `bone` | `#F1ECE3` | Secondary surface |
-| `sand` | `#DDD0BE` | Tertiary surface, strong dividers |
-| `nude` | `#C9AD93` | Brand skin tone. Accent, imagery harmony |
-| `cocoa` | `#6B4F3F` | Warm dark. Secondary text, accents |
-| `charcoal` | `#2B2927` | Primary text, dark surfaces |
-| `black` | `#0E0D0C` | Restrained. Display type, deepest surface |
+| `milk` | `#FBF8F3` | Panels. Paper, lining |
+| `bone` | `#F3EEE6` | The page |
+| `linen` | `#ECE5D9` | Sunken areas, the title band |
+| `sand` | `#E3D8C8` | Selection, strong tints |
+| `nude` | `#C4A88E` | Brand skin tone. The selvedge, avatars, fabric drawings |
+| `nude-deep` | `#9F7A5C` | The accent wherever it must be seen as a graphic on a light surface |
+| `cocoa` | `#6B4F3F` | Secondary text |
+| `charcoal` | `#2B2724` | Primary text |
+| `black` | `#171310` | Restrained. Deepest tone |
+| `stone` | `#6F655C` | Muted text |
+| `rail` / `rail-raised` / `rail-line` | `#2B2522` / `#3B322D` / `#453B35` | The index rail and its open row |
+| `rail-ink` / `rail-muted` | `#EFE6DA` / `#A8998B` | Text on the rail |
+| `line` / `line-strong` | `#E2DACD` / `#C9BDAD` | Hairlines |
+
+The source of truth is `packages/ui/src/theme.css`; `theme.test.ts` fails the build when a text pair drops below 4.5:1.
 
 Each primitive gets a short tonal ramp generated in OKLCH for hover / pressed / tint needs. There is no blue, no purple and no pure white or pure grey in the system — all neutrals are warm.
 
@@ -86,7 +131,7 @@ Status colours are earth pigments, not traffic lights. They sit beside the mater
 | Token | v0 value | Meaning |
 |---|---|---|
 | `status.positive` — *moss* | `#56633F` | Pass, released, on track, delivered, paid |
-| `status.caution` — *ochre* | `#9A6B1F` | Conditional pass, at risk, expiring, awaiting |
+| `status.caution` — *ochre* | `#875C14` | Conditional pass, at risk, expiring, awaiting |
 | `status.critical` — *madder* | `#8F3A2B` | Fail, delayed, blocked, rejected, overdue |
 | `status.transit` — *slate* | `#4B5661` | In progress, in transit, in production |
 | `status.neutral` — *stone* | `#857D74` | Draft, planned, archived, not started |
@@ -193,8 +238,8 @@ The most important component in the platform.
 - Identity column (number / code) in mono, sticky, links to the sheet.
 - Numbers right-aligned, tabular figures, unit in muted text (`1,240.5 m`). Money shows currency code.
 - Dates in one unambiguous format (`06 Oct 2026`); relative time only as a secondary hint.
-- Status as swatch chip + label. A row with a critical health state carries a madder selvedge.
-- Hover is a bone tint; selection a sand tint with a charcoal selvedge.
+- Status as swatch chip + label. Severity is never shown as a coloured row edge.
+- Hover is a bone tint; selection a sand tint.
 - Empty state: one sentence and the primary action. No illustration.
 - Totals row for numeric columns. Keyboard: arrows move, `Enter` opens, `Space` selects, `/` focuses filter.
 
@@ -209,7 +254,7 @@ The most important component in the platform.
 
 ### 7.3 Navigation
 
-- Index rail: numbered modules, sans labels, mono numbers; active item marked with a selvedge, not a filled pill.
+- Index rail: espresso ground; icon, sans label and mono index number per module; the open page marked with a selvedge, not a filled pill.
 - Tabs: text with an underline rule; saved views use the same pattern.
 - Breadcrumbs in the masthead, mono for codes.
 - Command palette: the fastest path everywhere; results grouped by type with codes in mono.
@@ -233,7 +278,7 @@ Milestones and legs share one timeline component: a horizontal or vertical track
 
 - Text first. An icon never replaces a label in navigation or in a primary action.
 - One small set, drawn on a 16 px grid with a 1.5 px stroke, square caps and joins, no fills, no two-tone.
-- A base open-source set is restricted to an approved list and supplemented by custom BASIS icons for domain objects (roll, lot, swatch, container, leg, inspection).
+- The base set is Phosphor at light weight, one family across the product, supplemented later by custom BASIS icons for domain objects (roll, lot, swatch, container, leg, inspection).
 - No decorative icons on the public site. No emoji anywhere.
 - Status is shown by swatch chips, not icons.
 
@@ -277,6 +322,8 @@ Motion is taken from how fabric behaves. Each principle has a defined technique 
 
 ## 10. Imagery
 
+- **Structure drawings.** Until real photography exists, and wherever a small fabric image is needed in the platform, the fabric is drawn from its construction: powermesh as a hexagonal knit, tulle as two sheer nets laid over each other, lining as a satin face with its sheen. These are diagrams of the real material, not illustrations, and a media asset replaces them wherever one exists.
+
 - Macro material photography is the primary imagery: weave, mesh structure, edge, fold, layering on skin tones.
 - Lit softly, colour-accurate, on palette-toned grounds. No stock imagery; no generic bridal lifestyle scenes.
 - Delivered as modern formats with responsive renditions and defined focal points; art-directed crops per breakpoint.
@@ -306,9 +353,9 @@ Motion is taken from how fabric behaves. Each principle has a defined technique 
 | Rounded cards with drop shadows everywhere | Ruled regions on a grid |
 | Gradients, glows, glass panels | Flat material tones; translucency only as material |
 | Blue or purple interface accents | Charcoal for action; earth pigments for status |
-| Icon-led navigation, decorative icons | Numbered text index |
+| Icon-only navigation, decorative icons | Icon and label together, with the index number |
 | Pills and circular buttons | Square geometry, 0–2 px radius |
-| KPI tiles with sparkline confetti | A small set of figures in a ruled row; detail lives in ledgers |
+| Figure tiles whose charts are decoration | Figure tiles whose drawings carry the data and a text alternative; detail lives in ledgers |
 | Inconsistent spacing | The 4-based scale only |
 | Template hero + three feature columns + testimonial slider | Editorial sequences composed for the specific content |
 | Handwriting used as a general font | The hand reserved for product names |
@@ -316,16 +363,20 @@ Motion is taken from how fabric behaves. Each principle has a defined technique 
 ## 14. Implementation
 
 ```
-packages/ui/
-├─ tokens/        primitives.css · semantic.css · registers.css · motion.css   (CSS variables; the source of truth)
-├─ tailwind/      preset mapping tokens to Tailwind 4 theme
-├─ primitives/    accessible headless-based building blocks (button, input, dialog, menu, tabs…)
-├─ operational/   ledger table, label header, timeline, status chip, filter bar, command palette, form sections
-├─ editorial/     display type, hand lettering, swatch, reveal, layered media, spec block
-├─ status/        the single mapping from domain enums to status tokens
-└─ icons/         approved set + custom domain icons
+packages/ui/src/
+├─ theme.css        tokens: material palette, semantic roles, typefaces, base rules (the source of truth)
+├─ theme.test.ts    contrast assertions for every text and graphic pair
+├─ fonts.ts         self-hosted typefaces
+├─ StatusChip.tsx   swatch + word; shapes per tone
+├─ Panel.tsx        ruled region with title and one action
+├─ Figure.tsx       figure tile
+├─ charts.tsx       sparkline, ring, bars, lanes, meter (each with a text alternative)
+├─ Track.tsx        the one timeline for milestones and legs
+├─ Ledger.tsx       table language
+├─ Structure.tsx    fabric drawn from its construction
+└─ Wordmark.tsx     BASIS in the architectural sans
 ```
 
-- Tokens are plain CSS custom properties, consumed by both apps and by Tailwind.
+- Tokens are declared once in a Tailwind `@theme` block, so they are both CSS custom properties and utilities. The default Tailwind palette is removed; only BASIS colours exist.
 - Components are documented in a living catalogue with every state, in both registers and both themes.
 - Design tokens are the contract with any design tool: values are exported from code, not maintained twice.

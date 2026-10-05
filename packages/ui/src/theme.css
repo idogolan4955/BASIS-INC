@@ -1,0 +1,133 @@
+/*
+  BASIS design tokens. The single source of truth for colour, type and motion.
+  Imported after `@import "tailwindcss"`; every utility in both apps resolves here.
+  Values are checked for contrast by theme.test.ts.
+*/
+
+@theme {
+  /* Only BASIS colours exist. The default palette is removed on purpose. */
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* Material palette */
+  --color-milk: #fbf8f3;
+  --color-bone: #f3eee6;
+  --color-linen: #ece5d9;
+  --color-sand: #e3d8c8;
+  --color-nude: #c4a88e;
+  --color-nude-deep: #9f7a5c;
+  --color-cocoa: #6b4f3f;
+  --color-charcoal: #2b2724;
+  --color-black: #171310;
+  --color-stone: #6f655c;
+
+  /* Earth pigments for status */
+  --color-moss: #56633f;
+  --color-ochre: #875c14;
+  --color-madder: #8f3a2b;
+  --color-slate: #4b5661;
+
+  /* The index rail */
+  --color-rail: #2b2522;
+  --color-rail-raised: #3b322d;
+  --color-rail-line: #453b35;
+  --color-rail-ink: #efe6da;
+  --color-rail-muted: #a8998b;
+
+  /* Hairlines */
+  --color-line: #e2dacd;
+  --color-line-strong: #c9bdad;
+
+  --font-sans: 'Archivo Variable', 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Bodoni Moda Variable', 'Bodoni Moda', 'Didot', 'Bodoni 72', serif;
+  --font-mono: 'Martian Mono Variable', 'Martian Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-drape: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* Semantic roles. Components use these, not the material names. */
+@theme inline {
+  --color-surface: var(--color-bone);
+  --color-panel: var(--color-milk);
+  --color-sunken: var(--color-linen);
+  --color-ink: var(--color-charcoal);
+  --color-ink-soft: var(--color-cocoa);
+  --color-ink-muted: var(--color-stone);
+  --color-accent: var(--color-nude-deep);
+  --color-positive: var(--color-moss);
+  --color-caution: var(--color-ochre);
+  --color-critical: var(--color-madder);
+  --color-transit: var(--color-slate);
+  --color-neutral: var(--color-stone);
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    color: var(--color-charcoal);
+    background: var(--color-bone);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-optical-sizing: auto;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
+
+  /* Figures in tables and labels never jump width. */
+  .tabular {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  /* Small capitals for panel titles and column heads: the sans, tracked. */
+  .caps {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    line-height: 1rem;
+    text-transform: uppercase;
+  }
+
+  /* Codes, document numbers, dates and measurements. */
+  .code {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-stretch: 87.5%;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-charcoal);
+    outline-offset: 2px;
+  }
+
+  .on-rail :focus-visible {
+    outline-color: var(--color-nude);
+  }
+
+  ::selection {
+    background: var(--color-sand);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
+}

@@ -265,7 +265,7 @@ The platform is a single-page application: every path is rewritten to `index.htm
 ## 4. Code layout
 
 ```
-apps/web/                                   React Router 7 framework mode, prerendered to static HTML
+apps/web/                                   React Router framework mode, prerendered to static HTML
 ├─ react-router.config.ts                   no server; prerender every published path (read from the public connector)
 └─ app/
    ├─ root.tsx                              document shell, editorial register

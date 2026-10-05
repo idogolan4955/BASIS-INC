@@ -1,0 +1,19 @@
+@import 'tailwindcss';
+@import '../../../packages/ui/src/theme.css';
+@source '../../../packages/ui/src';
+
+/* The command palette is a native dialog: it escapes every container. */
+dialog.palette {
+  margin: 12vh auto auto;
+  padding: 0;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 2px;
+  background: var(--color-milk);
+  color: var(--color-charcoal);
+  width: min(34rem, calc(100vw - 2rem));
+  box-shadow: 0 24px 60px -24px rgb(43 39 36 / 0.45);
+}
+
+dialog.palette::backdrop {
+  background: rgb(43 37 34 / 0.42);
+}

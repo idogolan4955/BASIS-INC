@@ -17,7 +17,7 @@ The repository was audited on 2026-10-06 before this document was written.
 | Layer | Fabrica pattern | Adopted for BASIS |
 |---|---|---|
 | Workspace | pnpm monorepo: `apps/*`, `packages/*`, `functions` | Same |
-| Interface | React 19 + Vite + Tailwind CSS 4 + TanStack Query + React Router 7 | Same |
+| Interface | React 19 + Vite + Tailwind CSS 4 + TanStack Query + React Router | Same |
 | Database | PostgreSQL through Firebase Data Connect; schema in GraphQL | Same |
 | Queries and mutations | Data Connect connector, each operation with `@auth` by role | Same |
 | Generated SDK | Typed functions generated into `packages/shared` | Same |
@@ -102,8 +102,8 @@ basis/
 |---|---|
 | Language | TypeScript, `strict` |
 | Workspace | pnpm workspaces |
-| Platform app | React 19, Vite, React Router 7 (SPA, lazy module chunks), TanStack Query over the generated SDK |
-| Public site | React 19, Vite, React Router 7 framework mode with full prerendering (static output, no server) |
+| Platform app | React 19, Vite, React Router (SPA, lazy module chunks), TanStack Query over the generated SDK |
+| Public site | React 19, Vite, React Router framework mode with full prerendering (static output, no server) |
 | Styling | Tailwind CSS 4 over CSS-variable design tokens from `@basis/ui` |
 | Component primitives | Headless accessible primitives wrapped as BASIS components; no pre-themed UI kit |
 | Database | PostgreSQL (Cloud SQL) through Firebase Data Connect |
@@ -281,6 +281,7 @@ WebGL, video and long scroll sequences are lazy, capability-gated and have stati
 ## 15. Environments and delivery
 
 - **Local.** Firebase emulators (Auth, Functions, Data Connect, Storage) with seeded data — reference data plus a realistic demo dataset kept as typed fixtures. Business data is never embedded in components.
+- **Sample mode.** `pnpm --filter @basis/platform dev:sample` runs the interface on typed sample records with no backend, for design review. The sample module is loaded only in that mode and is absent from production builds.
 - **Production.** One Firebase project. There is no staging environment, as in the owner's other projects; the emulators and the schema-diff review are the safety net.
 - **The working chain** — every change ends deployed, committed and pushed:
   1. Schema or connector changed → the Data Connect chain in §6.
