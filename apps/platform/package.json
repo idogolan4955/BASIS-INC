@@ -8,7 +8,8 @@
     "dev:sample": "vite --mode sample --port 5180",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:demo": "tsc --noEmit && vite build --mode sample"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
