@@ -65,13 +65,16 @@ Depends on: F1 and F2 (§6) for the first deploy and push. Local work on the emu
 
 | Done | Remaining |
 |---|---|
-| Git repository, pnpm workspace, TypeScript strict | GitHub push (waiting for the repository to be made private) |
-| Firebase project `basis-inc`, Hosting sites and targets | Blaze plan; Data Connect service and Cloud SQL |
-| `@basis/shared`: fixed-point money and quantity, local dates, business numbers, roles and module access, error taxonomy, Gateway read models. 25 tests | Data Connect foundation schema, `platform` and `public` connectors, seed |
-| `@basis/ui`: tokens with contrast tests, typefaces, status chip, panel, figure tile, charts, timeline, ledger, fabric structure drawings | Buttons, inputs, select, dialog, menu, tabs, label header |
-| `apps/platform`: shell (index rail, top bar, command palette, phone layout), Gateway with all zones, role-filtered, running in sample mode | Firebase Auth sign-in, invitation function, route guard, live Gateway queries |
-| | `functions` plumbing; `apps/web` with the prerendered holding page; ESLint; first deploy |
+| Git repository, pnpm workspace, TypeScript strict, ESLint with dependency-boundary rules | Push to GitHub (the owner runs it) |
+| Firebase project `basis-inc`, Hosting sites and targets, web app registration | Blaze plan; Email/Password sign-in enabled in the console; Data Connect service and Cloud SQL on first deploy |
+| `@basis/shared`: fixed-point money and quantity, local dates, business numbers, roles and module access, entity map, error taxonomy, Gateway read models. 25 tests | |
+| `dataconnect/`: foundation schema (identity, permission matrix, reference data, legal entities, number sequences, documents, timeline, tasks, alerts, audit, outbox); `platform` and `public` connectors; SDKs generated; emulator seed with a test owner and reference data | Module schemas, one file per module, as each phase lands |
+| `functions/`: `api` (health), `inviteUser`, `setUserRole` with audit and outbox records, `sweepEvents` skeleton; bundled with the shared domain code; exercised against the emulators | First deploy (needs Blaze); email delivery of invitations |
+| `@basis/ui`: tokens with contrast tests, typefaces, status chip, panel, figure tile, charts, timeline, ledger, fabric structure drawings | Buttons, inputs, select, dialog, menu, tabs, label header as reusable components (the sign-in form has the first field and button styles) |
+| `apps/platform`: Firebase Auth sign-in with role from the custom claim, no-role and loading states, sign-out; shell, command palette, phone layout; Gateway reads open alerts live and shows true empty states elsewhere; full sample mode for design review | Live figures and panels as their modules land |
+| `apps/web`: holding page prerendered to static HTML | Brand design (B3) and site build (B4) |
 
+Local workflow: `pnpm emulators` (Auth, Data Connect, Functions), `pnpm seed:emulator`, then `pnpm dev:platform` for the live interface or `pnpm --filter @basis/platform dev:sample` for sample records.
 
 ### Phase 2 — Master data and catalog (L)
 

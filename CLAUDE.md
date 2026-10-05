@@ -19,6 +19,8 @@ What must be remembered even without opening the docs:
 - **Design.** `docs/DESIGN_SYSTEM.md` is binding: tokens only, the five signatures, and the "never" list. No generic SaaS dashboard patterns.
 - **Interface checks** run on emulators or sample data, not on production data. `pnpm --filter @basis/platform dev:sample` (port 5180) runs the platform on sample records with no backend; `.claude/launch.json` has it as `platform-sample`.
 - **Design work** is done with the owner's design skills: impeccable, ui-ux-pro-max and design-taste-frontend. The owner's reference for the back office and how it was read are in `docs/DESIGN_SYSTEM.md` §0.
+- **Local loop.** `pnpm emulators` starts Auth, Data Connect and Functions; `pnpm seed:emulator` creates the test owner (credentials in `functions/scripts/seed-emulator.mjs`) and reference data; `pnpm dev:platform` runs the live interface against them. After a schema or connector change run `pnpm sdk` to regenerate the SDKs in `packages/shared/src/dataconnect-generated` (never edited by hand).
+- **Tooling notes.** TypeScript 7 compiles the packages; the root keeps TypeScript 6 only so typescript-eslint can run. `functions` lists `@google-cloud/firestore` because the Admin SDK requires it at load time. Functions are bundled with tsup so `@basis/shared` ships inside the bundle.
 - **Documents stay true.** When the build diverges from a document in `docs/`, update the document in the same change.
 - **BASIS is independent of Fabrica.** Never touch the `fabrica-erp-il` project or the Fabrica repository from here.
 - Before an action that is hard to reverse — deletion, migration, production settings, anything that costs money — stop and confirm with the owner.
