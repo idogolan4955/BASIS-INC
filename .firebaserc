@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "basis-inc"
+  },
+  "targets": {
+    "basis-inc": {
+      "hosting": {
+        "web": [
+          "basis-inc"
+        ],
+        "platform": [
+          "basis-inc-hq"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

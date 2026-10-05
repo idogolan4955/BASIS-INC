@@ -1,0 +1,10 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Deny by default. Each module adds its own paths with explicit role checks.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

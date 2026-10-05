@@ -309,8 +309,8 @@ WebGL, video and long scroll sequences are lazy, capability-gated and have stati
 
 | # | Decision | Default if not decided | Blocks |
 |---|---|---|---|
-| O1 | Firebase project: ID and creation; Blaze billing (required for Data Connect and Functions; Cloud SQL has a monthly cost) | Project ID `basis-inc`, region `europe-west1` | First deploy. Local development runs on emulators without it |
-| O2 | GitHub repository | `idogolan4955/basis`, private | First push |
+| O1 | Blaze billing on the Firebase project (required for Data Connect and Functions; the Cloud SQL instance has a monthly cost). The project itself exists: **`basis-inc`**, created 2026-10-06, with Hosting sites `basis-inc` (target `web`) and `basis-inc-hq` (target `platform`) | Owner upgrades the plan in the Firebase console | First Data Connect or Functions deploy. Local development runs on emulators without it |
+| O2 | GitHub repository — to be created by the owner | `idogolan4955/basis`, private. `origin` already points there | First push |
 | O3 | Region | `europe-west1`, as in the other projects. The Data Connect location cannot be changed after creation | First Data Connect deploy |
 | O4 | Second factor for staff (requires Identity Platform upgrade) | Email + password at first; TOTP when enabled | Nothing |
 | O5 | Reachability from mainland China: Google services are generally blocked there, which affects factory-side users (inspectors, suppliers) | Verify with a real factory-side user before the QC phase. Fallback: factory-side flows served entirely through the site's own origin (`/api/**` → functions), with no direct Google endpoints in the browser | Factory-side QC rollout |

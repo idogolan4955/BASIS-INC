@@ -10,7 +10,7 @@ Proposed URLs for the public website and the management platform. Domains are pl
 | Public website | `www.{brand-domain}` | `web` | `apps/web` |
 | Management platform | `hq.{brand-domain}` | `platform` | `apps/platform` |
 
-Until the brand domain is connected, each site is served on its Firebase Hosting address. Route parameters are written `[name]` in this document; in code they are React Router parameters (`:name`).
+Until the brand domain is connected, each site is served on its Firebase Hosting address: `basis-inc.web.app` (website) and `basis-inc-hq.web.app` (platform), in Firebase project `basis-inc`. Route parameters are written `[name]` in this document; in code they are React Router parameters (`:name`).
 
 ---
 
