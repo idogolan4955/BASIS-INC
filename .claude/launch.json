@@ -4,8 +4,34 @@
     {
       "name": "platform-sample",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@basis/platform", "dev:sample"],
+      "runtimeArgs": [
+        "--filter",
+        "@basis/platform",
+        "dev:sample"
+      ],
       "port": 5180
+    },
+    {
+      "name": "emulators",
+      "runtimeExecutable": "firebase",
+      "runtimeArgs": [
+        "emulators:start",
+        "--only",
+        "auth,dataconnect,functions",
+        "--project",
+        "basis-inc"
+      ],
+      "port": 4000
+    },
+    {
+      "name": "platform-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@basis/platform",
+        "dev"
+      ],
+      "port": 5173
     }
   ]
 }

@@ -1,0 +1,42 @@
+# Platform connector: mutations staff may run directly. Anything with
+# multi-step rules or privileged effects (inviting a person, changing a role,
+# issuing documents) runs in a Cloud Function through the Admin SDK instead.
+
+mutation AcknowledgeAlert($id: UUID!)
+  @auth(
+    expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'sales' || auth.token.role == 'marketing' || auth.token.role == 'finance'"
+  ) {
+  alert_update(id: $id, data: { state: acknowledged, acknowledgedAt_expr: "request.time", acknowledgedByUid_expr: "auth.uid" })
+}
+
+mutation CreateTask($title: String!, $details: String, $assigneeUid: String, $dueOn: Date, $entityType: String, $entityId: String)
+  @auth(
+    expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'sales' || auth.token.role == 'marketing' || auth.token.role == 'finance'"
+  ) {
+  task_insert(
+    data: {
+      title: $title
+      details: $details
+      assigneeUid: $assigneeUid
+      dueOn: $dueOn
+      state: open
+      entityType: $entityType
+      entityId: $entityId
+      createdByUid_expr: "auth.uid"
+    }
+  )
+}
+
+mutation CompleteTask($id: UUID!) @auth(level: USER) {
+  task_update(id: $id, data: { state: done, completedAt_expr: "request.time" })
+}
+
+mutation AddNote($entityType: String!, $entityId: String!, $note: String!) @auth(level: USER) {
+  timelineEvent_insert(
+    data: { entityType: $entityType, entityId: $entityId, kind: "note", note: $note, actorUid_expr: "auth.uid" }
+  )
+}
+
+mutation UpdateMyPreferences($locale: String, $timeZone: String) @auth(level: USER) {
+  user_update(key: { uid_expr: "auth.uid" }, data: { locale: $locale, timeZone: $timeZone, updatedAt_expr: "request.time" })
+}

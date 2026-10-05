@@ -7,12 +7,16 @@ import { createRoot } from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router';
 import { Shell } from './layout/Shell';
 import { ModulePending } from './pages/ModulePending';
-import { NotConnected } from './pages/NotConnected';
+import { Loading, NoRole, SignIn } from './pages/access/SignIn';
 import { Gateway } from './pages/gateway/Gateway';
-import { SessionProvider, useSession } from './session';
+import { SessionProvider, useSessionState } from './session';
 
 function Root() {
-  return useSession() ? <Shell /> : <NotConnected />;
+  const state = useSessionState();
+  if (state.status === 'loading') return <Loading />;
+  if (state.status === 'signed_out') return <SignIn />;
+  if (state.status === 'no_role') return <NoRole email={state.email} signOut={state.signOut} />;
+  return <Shell />;
 }
 
 const router = createBrowserRouter([

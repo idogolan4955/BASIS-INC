@@ -15,3 +15,4 @@ coverage/
 .react-router/
 graphify-out/
 .claude/settings.local.json
+.dataconnect-data/

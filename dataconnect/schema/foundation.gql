@@ -1,0 +1,236 @@
+# Foundation: identity, reference data, and the cross-cutting records every
+# module attaches to (documents, timeline, tasks, alerts, audit, events).
+# Module schemas (catalog, sourcing, manufacturing, ...) live in their own files.
+# Conventions: docs/DOMAIN_MODEL.md §1. Money and quantities are Int64 fixed-point.
+
+enum Role {
+  owner
+  operations
+  purchasing
+  qc
+  logistics
+  sales
+  marketing
+  finance
+  viewer
+  supplier
+  customer
+}
+
+enum PrincipalType {
+  staff
+  supplier
+  customer
+}
+
+enum UserStatus {
+  invited
+  active
+  suspended
+}
+
+enum UomDimension {
+  length
+  mass
+  count
+}
+
+enum DocumentKind {
+  commercial_invoice
+  packing_list
+  bill_of_lading
+  air_waybill
+  certificate_of_origin
+  certificate
+  inspection_report
+  technical_sheet
+  quotation
+  purchase_order
+  contract
+  photo
+  other
+}
+
+enum TaskState {
+  open
+  done
+  cancelled
+}
+
+enum AlertSeverity {
+  info
+  caution
+  critical
+}
+
+enum AlertState {
+  open
+  acknowledged
+  resolved
+}
+
+# ---------------------------------------------------------------- identity
+
+# Mirrors the Firebase Auth account. The role here is a copy of the custom
+# claim; the claim is what @auth checks, this row is what screens read.
+type User @table(key: "uid") {
+  uid: String! @col(dataType: "varchar(128)")
+  email: String! @col(dataType: "varchar(255)") @unique
+  name: String! @col(dataType: "varchar(160)")
+  role: Role!
+  principalType: PrincipalType!
+  # Set for supplier and customer principals once parties exist.
+  companyId: UUID
+  locale: String @col(dataType: "varchar(16)")
+  timeZone: String @col(dataType: "varchar(64)")
+  status: UserStatus!
+  invitedByUid: String @col(dataType: "varchar(128)")
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+# The permission matrix. @auth on each operation is the hard limit per role;
+# this matrix narrows within it and drives navigation.
+type RolePermission @table(key: ["role", "permission"]) {
+  role: Role!
+  permission: String! @col(dataType: "varchar(64)")
+  granted: Boolean!
+}
+
+# ---------------------------------------------------------------- reference data
+
+type Country @table(key: "code") {
+  code: String! @col(dataType: "varchar(2)")
+  name: String! @col(dataType: "varchar(120)")
+  region: String @col(dataType: "varchar(40)")
+}
+
+type Currency @table(key: "code") {
+  code: String! @col(dataType: "varchar(3)")
+  name: String! @col(dataType: "varchar(80)")
+  minorUnits: Int!
+}
+
+type Uom @table(key: "code") {
+  code: String! @col(dataType: "varchar(8)")
+  name: String! @col(dataType: "varchar(40)")
+  dimension: UomDimension!
+  # Factor to the canonical unit of the dimension, as a decimal string (yd = "0.9144").
+  toCanonical: String! @col(dataType: "varchar(24)")
+}
+
+type Incoterm @table(key: "code") {
+  code: String! @col(dataType: "varchar(3)")
+  name: String! @col(dataType: "varchar(80)")
+  version: Int!
+}
+
+# A BASIS company acting as buyer or importer of record.
+type LegalEntity @table {
+  name: String! @col(dataType: "varchar(160)")
+  country: Country!
+  baseCurrency: Currency!
+  taxId: String @col(dataType: "varchar(64)")
+  isDefault: Boolean!
+}
+
+# Human-readable document numbers: PO-26-0041. The next value is taken inside
+# the transaction that creates the document.
+type NumberSequence @table(key: ["prefix", "year"]) {
+  prefix: String! @col(dataType: "varchar(4)")
+  year: Int!
+  nextValue: Int!
+}
+
+# ---------------------------------------------------------------- cross-cutting
+
+type Document @table {
+  kind: DocumentKind!
+  title: String! @col(dataType: "varchar(200)")
+  number: String @col(dataType: "varchar(80)")
+  issuedOn: Date
+  expiresOn: Date
+  storagePath: String! @col(dataType: "varchar(400)")
+  mimeType: String! @col(dataType: "varchar(120)")
+  sizeBytes: Int!
+  checksum: String @col(dataType: "varchar(80)")
+  uploadedBy: User
+  createdAt: Timestamp! @default(expr: "request.time")
+  archivedAt: Timestamp
+}
+
+# Attaches a document to any record: one commercial invoice can be linked to
+# a shipment and to each purchase order it covers.
+type DocumentLink @table {
+  document: Document!
+  entityType: String! @col(dataType: "varchar(40)")
+  entityId: String! @col(dataType: "varchar(80)")
+  role: String @col(dataType: "varchar(40)")
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# Append-only. Something that happened to a record: a transition, a note,
+# a delay with its reason, an attachment.
+type TimelineEvent @table {
+  entityType: String! @col(dataType: "varchar(40)")
+  entityId: String! @col(dataType: "varchar(80)")
+  kind: String! @col(dataType: "varchar(40)")
+  occurredAt: Timestamp! @default(expr: "request.time")
+  actor: User
+  note: String
+  payload: Any
+}
+
+type Task @table {
+  title: String! @col(dataType: "varchar(200)")
+  details: String
+  assignee: User
+  dueOn: Date
+  state: TaskState!
+  entityType: String @col(dataType: "varchar(40)")
+  entityId: String @col(dataType: "varchar(80)")
+  createdBy: User
+  createdAt: Timestamp! @default(expr: "request.time")
+  completedAt: Timestamp
+}
+
+# Produced by alert rules over facts. Resolves itself when the fact changes.
+type Alert @table {
+  ruleKey: String! @col(dataType: "varchar(64)")
+  entityType: String! @col(dataType: "varchar(40)")
+  entityId: String! @col(dataType: "varchar(80)")
+  severity: AlertSeverity!
+  state: AlertState!
+  title: String! @col(dataType: "varchar(200)")
+  detail: String
+  ownerRole: Role
+  dedupeKey: String! @col(dataType: "varchar(200)") @unique
+  firstSeen: Timestamp! @default(expr: "request.time")
+  lastSeen: Timestamp! @default(expr: "request.time")
+  acknowledgedBy: User
+  acknowledgedAt: Timestamp
+  resolvedAt: Timestamp
+}
+
+# Append-only. Who did what, with before and after.
+type AuditEvent @table {
+  actor: User
+  action: String! @col(dataType: "varchar(80)")
+  entityType: String! @col(dataType: "varchar(40)")
+  entityId: String! @col(dataType: "varchar(80)")
+  before: Any
+  after: Any
+  occurredAt: Timestamp! @default(expr: "request.time")
+  ip: String @col(dataType: "varchar(64)")
+}
+
+# The outbox. Written in the same transaction as the change it describes and
+# consumed by the scheduled sweep.
+type DomainEvent @table {
+  type: String! @col(dataType: "varchar(80)")
+  aggregateType: String! @col(dataType: "varchar(40)")
+  aggregateId: String! @col(dataType: "varchar(80)")
+  payload: Any
+  occurredAt: Timestamp! @default(expr: "request.time")
+  processedAt: Timestamp
+}

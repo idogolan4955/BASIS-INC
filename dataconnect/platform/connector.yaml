@@ -1,0 +1,5 @@
+connectorId: platform
+generate:
+  javascriptSdk:
+    outputDir: ../../packages/shared/src/dataconnect-generated/platform
+    package: "@basis/dataconnect-platform"

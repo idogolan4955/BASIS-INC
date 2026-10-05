@@ -1,0 +1,147 @@
+# Platform connector: queries for staff. Every operation names its roles.
+# Role expressions are written from packages/shared/src/access.ts.
+
+# The signed-in person's own record.
+query GetMe @auth(level: USER) {
+  user(key: { uid_expr: "auth.uid" }) {
+    uid
+    email
+    name
+    role
+    principalType
+    locale
+    timeZone
+    status
+  }
+}
+
+query ListUsers @auth(expr: "auth.token.role == 'owner'") {
+  users(orderBy: { name: ASC }, limit: 500) {
+    uid
+    email
+    name
+    role
+    principalType
+    status
+    createdAt
+  }
+}
+
+query ListOpenAlerts
+  @auth(
+    expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'sales' || auth.token.role == 'marketing' || auth.token.role == 'finance' || auth.token.role == 'viewer'"
+  ) {
+  alerts(where: { state: { ne: resolved } }, orderBy: [{ severity: DESC }, { firstSeen: ASC }], limit: 200) {
+    id
+    ruleKey
+    entityType
+    entityId
+    severity
+    state
+    title
+    detail
+    ownerRole
+    firstSeen
+    lastSeen
+    acknowledgedAt
+  }
+}
+
+query ListMyTasks @auth(level: USER) {
+  tasks(where: { assignee: { uid: { eq_expr: "auth.uid" } }, state: { eq: open } }, orderBy: { dueOn: ASC }, limit: 200) {
+    id
+    title
+    details
+    dueOn
+    state
+    entityType
+    entityId
+    createdAt
+  }
+}
+
+query ListTimeline($entityType: String!, $entityId: String!) @auth(level: USER) {
+  timelineEvents(
+    where: { entityType: { eq: $entityType }, entityId: { eq: $entityId } }
+    orderBy: { occurredAt: DESC }
+    limit: 500
+  ) {
+    id
+    kind
+    occurredAt
+    note
+    payload
+    actor {
+      uid
+      name
+    }
+  }
+}
+
+query ListDocumentsFor($entityType: String!, $entityId: String!) @auth(level: USER) {
+  documentLinks(where: { entityType: { eq: $entityType }, entityId: { eq: $entityId } }, limit: 500) {
+    id
+    role
+    document {
+      id
+      kind
+      title
+      number
+      issuedOn
+      expiresOn
+      storagePath
+      mimeType
+      sizeBytes
+      createdAt
+    }
+  }
+}
+
+query ListCountries @auth(level: USER) {
+  countries(orderBy: { name: ASC }, limit: 300) {
+    code
+    name
+    region
+  }
+}
+
+query ListCurrencies @auth(level: USER) {
+  currencies(orderBy: { code: ASC }, limit: 200) {
+    code
+    name
+    minorUnits
+  }
+}
+
+query ListUoms @auth(level: USER) {
+  uoms(orderBy: { code: ASC }, limit: 50) {
+    code
+    name
+    dimension
+    toCanonical
+  }
+}
+
+query ListIncoterms @auth(level: USER) {
+  incoterms(orderBy: { code: ASC }, limit: 20) {
+    code
+    name
+    version
+  }
+}
+
+query ListLegalEntities @auth(level: USER) {
+  legalEntities(orderBy: { name: ASC }, limit: 20) {
+    id
+    name
+    taxId
+    isDefault
+    country {
+      code
+      name
+    }
+    baseCurrency {
+      code
+    }
+  }
+}

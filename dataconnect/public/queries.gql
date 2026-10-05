@@ -1,0 +1,9 @@
+# Public connector: what the website may read without signing in.
+# Only published content and harmless reference data ever appear here.
+
+query ListCountriesPublic @auth(level: PUBLIC) {
+  countries(orderBy: { name: ASC }, limit: 300) {
+    code
+    name
+  }
+}

@@ -65,9 +65,18 @@ export function Rail({ className }: { className?: string }) {
           </span>
           <div className="min-w-0">
             <p className="truncate text-sm">{session.name}</p>
-            <p className="code text-[0.625rem] uppercase text-rail-muted">{session.setRole ? 'Sample session' : 'Signed in'}</p>
+            <p className="code text-[0.625rem] uppercase text-rail-muted">{session.setRole ? 'Sample session' : ROLE_LABELS[session.role]}</p>
           </div>
         </div>
+        {!session.setRole && (
+          <button
+            type="button"
+            onClick={() => void session.signOut()}
+            className="mt-3 h-8 w-full rounded-xs border border-rail-line text-[0.8125rem] text-rail-ink/85 transition-colors duration-150 hover:bg-rail-raised hover:text-rail-ink"
+          >
+            Sign out
+          </button>
+        )}
         {session.setRole && (
           <label className="mt-3 block">
             <span className="caps text-[0.625rem] text-rail-muted">View as</span>

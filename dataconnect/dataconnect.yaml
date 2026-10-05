@@ -1,0 +1,14 @@
+specVersion: v1
+serviceId: basis
+location: europe-west1
+schema:
+  source: ./schema
+  datasource:
+    postgresql:
+      database: basis
+      schemaValidation: STRICT
+      cloudSql:
+        instanceId: basis-db
+connectorDirs:
+  - ./platform
+  - ./public

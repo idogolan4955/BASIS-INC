@@ -1,37 +1,74 @@
 {
+  "dataconnect": {
+    "source": "dataconnect"
+  },
   "hosting": [
     {
       "target": "web",
       "public": "apps/web/build/client",
-      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
       "cleanUrls": true,
       "headers": [
         {
           "source": "**",
-          "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, must-revalidate"
+            }
+          ]
         },
         {
           "source": "/assets/**/*.@(js|css|woff|woff2|png|jpg|jpeg|webp|avif|svg|mp4|webm|map)",
-          "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=31536000, immutable"
+            }
+          ]
         }
       ]
     },
     {
       "target": "platform",
       "public": "apps/platform/dist",
-      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-      "rewrites": [{ "source": "**", "destination": "/index.html" }],
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ],
       "headers": [
         {
           "source": "**",
           "headers": [
-            { "key": "Cache-Control", "value": "no-cache, must-revalidate" },
-            { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, must-revalidate"
+            },
+            {
+              "key": "X-Robots-Tag",
+              "value": "noindex, nofollow"
+            }
           ]
         },
         {
           "source": "/assets/**/*.@(js|css|woff|woff2|png|jpg|jpeg|webp|avif|svg|map)",
-          "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=31536000, immutable"
+            }
+          ]
         }
       ]
     }
@@ -40,8 +77,23 @@
     "rules": "storage.rules"
   },
   "emulators": {
-    "auth": { "port": 9099 },
-    "storage": { "port": 9199 },
-    "ui": { "enabled": true, "port": 4000 }
+    "auth": {
+      "port": 9099
+    },
+    "functions": {
+      "port": 5001
+    },
+    "dataconnect": {
+      "port": 9399,
+      "dataDir": ".dataconnect-data"
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    }
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs20"
   }
 }

@@ -1,5 +1,6 @@
 export * from './access';
 export * from './business-number';
+export * from './entities';
 export * from './errors';
 export * from './fixed-point';
 export * from './function-names';
