@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.firebase/
+firebase-debug.log
+dataconnect/.dataconnect/
+functions/lib/
+coverage/
+.vite/
+.react-router/
+graphify-out/
+.claude/settings.local.json
