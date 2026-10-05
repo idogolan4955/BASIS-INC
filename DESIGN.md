@@ -26,7 +26,7 @@ All three are stand-ins behind the font tokens until the brand faces are license
 
 ## Shape
 
-Radius 2 px. No shadows on surfaces. Squares, not circles; the avatar is the one exception.
+Radius 2 px. No shadows on surfaces. Squares for states; circles only for avatars, shade swatches and material windows.
 
 ## Signatures
 

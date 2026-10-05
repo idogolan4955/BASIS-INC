@@ -133,7 +133,7 @@ export interface OrderRow {
   readonly stage: OrderStage;
 }
 
-export type FabricStructure = 'powermesh' | 'lining' | 'tulle';
+export type FabricStructure = 'mesh' | 'lining' | 'tulle';
 
 export interface FabricFamilyCard {
   readonly code: string;

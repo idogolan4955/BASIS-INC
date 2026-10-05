@@ -82,7 +82,7 @@ function Band({ asOf }: { asOf: LocalDate }) {
         aria-hidden="true"
         className="pointer-events-none absolute inset-y-0 right-0 w-[72%] text-nude [mask-image:linear-gradient(to_left,black_8%,transparent_92%)]"
       >
-        <Structure kind="powermesh" scale={2.4} />
+        <Structure kind="mesh" scale={2.4} />
       </div>
       <div className="relative flex items-end justify-between gap-6 px-5 py-8 lg:px-8 lg:py-10">
         <div>

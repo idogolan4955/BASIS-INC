@@ -126,11 +126,11 @@ erDiagram
 
 | Entity | Purpose | Key fields |
 |---|---|---|
-| `fabric_family` | Top-level category. Unlimited | code, name, slug, description, `spec_schema` (definition of family-specific specifications), default process template, default HS code, sort, status |
-| `product` | A construction within a family (*powermesh 02*) | family_id, code, name, slug, composition (list of fibre + percent), construction, care, status (`draft` / `active` / `discontinued`) |
+| `fabric_family` | Top-level category: Mesh, Lining, Tulle at launch. Unlimited | code, name, slug, description, `spec_schema` (definition of family-specific specifications), default process template, default HS code, sort, status |
+| `product` | A named fabric within a family (Powermesh, Illusion Stretch Mesh, N58 Semi-Stretch Mesh, Shanel Lining, Bridal Tulle) | family_id, code, name, slug, composition (list of fibre + percent), construction, care, status (`draft` / `active` / `discontinued`) |
 | `product_variant` | Width / weight / finish version | product_id, code, overall width, usable width, GSM, stretch (warp %, weft %, recovery), finish, `specs` (validated against family schema), nominal roll length, status |
-| `shade_collection` | A group in the Shade System (*CORE*) | code, name, sort |
-| `shade` | A named colour (*WARM NUDE*) | collection_id, code, name, reference L\*a\*b\*, display colour (derived, for screens), sort, status |
+| `shade_collection` | An optional grouping in the Shade System (skin tones, neutrals) | code, name, sort |
+| `shade` | A named colour (Skin 01, Skin 02, Skin 03, Milk, Bone, Pure) | collection_id, code, name, reference L\*a\*b\*, display colour (derived, for screens), sort, status |
 | `shade_standard` | The approved reference for a shade at a factory | shade_id, variant_id, factory_id, lab-dip reference, approved_on, approved_by, tolerance ΔE, physical standard location |
 | `put_up` | Presentation / packaging specification | nominal roll length, core, wrap, rolls per carton, carton dimensions, label spec |
 | `sku` | The sellable unit: variant × shade × put-up | internal SKU code (unique), barcode, sales UoM, sales MOQ, lifecycle (`development` → `sampling` → `active` → `phase_out` → `discontinued`), public visibility |
@@ -145,7 +145,10 @@ Notes:
 - **Properties from the brief map to levels**: composition → product; width, GSM, stretch → variant; shade, colour code → shade; packaging, roll length → put-up; internal SKU, wholesale price, status → SKU; supplier SKU, supplier, factory, MOQ, purchase cost → supplier item / price; landed cost → lot cost (§9); images and technical documentation → media and document links at product, variant or SKU.
 - **Family-specific specifications** (e.g. hole shape and denier for tulle, power and recovery for powermesh, hand and opacity for lining) are defined per family in `spec_schema` and stored on the variant. Adding a family or a property is data.
 - **A SKU can have several supplier items.** Second-sourcing is first-class.
-- **SKU code grammar** is a proposal pending owner confirmation: `{family}-{product}-{variant}-{shade}` → e.g. `PWM-02-150-C014`.
+- **Shade availability is product-specific.** A shade exists once in the Shade System; it becomes available for a product only when a SKU for that product and shade reaches `active`. Until then the shade is listed as inactive for that product, as the brand booklet requires.
+- **Family specification schemas** start from the booklet's mesh comparison: primary role, stretch behaviour, transparency, support level, hand feel, best use; plus GSM, width, stretch percent and composition confirmed per production standard.
+- **Roll label** (from the packaging design): shade, product code, lot on one line; width, length, origin on the next. The put-up shown is 160 cm × 50 m.
+- **SKU code grammar** is a proposal pending owner confirmation: `{product}-{variant}-{shade}` → e.g. `PWM-160-SK02` (Powermesh, 160 cm, Skin 02).
 
 ## 5. Sourcing
 
@@ -411,8 +414,8 @@ These do not block the foundation build; each has a working default.
 |---|---|---|
 | M1 | Sales unit: metres, yards, or whole rolls only? | Metres canonical; yards as a display/price option; roll-only sale as a SKU setting |
 | M2 | Roll-level tracking for all families or some? | Setting per SKU; on by default |
-| M3 | Is the Shade System brand-wide or per family? | Brand-wide collections; availability per variant through SKUs |
-| M4 | SKU code grammar | `{family}-{product}-{variant}-{shade}` |
+| M3 | Is the Shade System brand-wide or per family? | Brand-wide, as the booklet states; availability per product through SKUs |
+| M4 | SKU code grammar | `{product}-{variant}-{shade}`, e.g. `PWM-160-SK02` |
 | M5 | Base (reporting) currency | USD, with per-legal-entity base currency supported |
 | M6 | Shade tolerance policy (ΔE formula and threshold) | Stored per standard; formula configurable |
 | M7 | One or several BASIS legal entities (e.g. a trading entity and an importing entity) | Model supports several; seed one |

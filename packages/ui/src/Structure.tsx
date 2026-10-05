@@ -2,12 +2,12 @@ import type { FabricStructure } from '@basis/shared';
 import { useId } from 'react';
 import { cn } from './cn';
 
-// The fabric drawn at macro scale from its own construction: powermesh as a
+// The fabric drawn at macro scale from its own construction: mesh as a
 // hexagonal knit, tulle as two sheer nets laid over each other, lining as a
 // satin face with its sheen. A structure drawing, not a photograph; real
 // material photography replaces it wherever a media asset exists.
 
-function Powermesh({ id, scale }: { id: string; scale: number }) {
+function Mesh({ id, scale }: { id: string; scale: number }) {
   const side = 7 * scale;
   const height = Math.sqrt(3) * side;
   const d = `M0,${height / 2} L${side / 2},0 L${side * 1.5},0 L${side * 2},${height / 2} L${side * 1.5},${height} L${
@@ -87,7 +87,7 @@ export function Structure({
       className={cn('block size-full', className)}
       preserveAspectRatio="xMidYMid slice"
     >
-      {kind === 'powermesh' && <Powermesh id={id} scale={scale} />}
+      {kind === 'mesh' && <Mesh id={id} scale={scale} />}
       {kind === 'tulle' && <Tulle id={id} scale={scale} />}
       {kind === 'lining' && <Lining id={id} scale={scale} />}
     </svg>

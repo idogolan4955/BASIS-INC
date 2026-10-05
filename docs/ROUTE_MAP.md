@@ -17,8 +17,8 @@ Until the brand domain is connected, each site is served on its Firebase Hosting
 ## 1. Conventions
 
 - Lowercase, kebab-case, plural collection names, no trailing slash.
-- **Public site**: slugs come from the published catalog (`/fabrics/powermesh/02`). Slugs are stable; a changed slug leaves a permanent redirect.
-- **Platform**: transactional documents are addressed by their business number (`/manufacturing/purchase-orders/PO-26-0041`); master data by code where one exists (`/products/skus/PWM-02-150-C014`), otherwise by id.
+- **Public site**: slugs come from the published catalog (`/fabrics/mesh/powermesh`). Slugs are stable; a changed slug leaves a permanent redirect.
+- **Platform**: transactional documents are addressed by their business number (`/manufacturing/purchase-orders/PO-26-0041`); master data by code where one exists (`/products/skus/PWM-02-150-C014`), otherwise by id. Example SKU: `/products/skus/PWM-160-SK02`.
 - Ledger state (view, filters, sort, page) lives in the query string, so any view is a shareable link.
 - Sheet tabs are path segments (`/logistics/shipments/SHP-26-0014/documents`), so a tab is linkable and loads independently.
 - `new` is a reserved segment for creation flows.
@@ -32,11 +32,10 @@ Until the brand domain is connected, each site is served on its Firebase Hosting
 |---|---|---|
 | `/` | Brand Home | Static (prerendered; rebuilt on publish) |
 | `/fabrics` | Fabrics index | Static |
-| `/fabrics/[family]` | Fabric family — `/fabrics/powermesh`, `/fabrics/shanel-lining`, `/fabrics/bridal-tulle` | Static per published family |
-| `/fabrics/[family]/[product]` | Product — e.g. `/fabrics/powermesh/02` | Static per published product |
+| `/fabrics/[family]` | Fabric family — `/fabrics/mesh`, `/fabrics/lining`, `/fabrics/tulle` | Static per published family |
+| `/fabrics/[family]/[product]` | Product — `/fabrics/mesh/powermesh`, `/fabrics/mesh/illusion-stretch-mesh`, `/fabrics/mesh/n58`, `/fabrics/lining/shanel-lining`, `/fabrics/tulle/bridal-tulle` | Static per published product |
 | `/shades` | Shade System | Static |
-| `/shades/[collection]` | Shade collection — e.g. `/shades/core` | Static |
-| `/shades/[collection]/[shade]` | Shade — e.g. `/shades/core/warm-nude` | Static |
+| `/shades/[shade]` | Shade — `/shades/skin-02`, `/shades/milk` | Static |
 | `/applications` | Applications index | Static |
 | `/applications/[application]` | Application | Static |
 | `/material` | Technology / Material Story | Static |
@@ -50,7 +49,7 @@ Until the brand domain is connected, each site is served on its Firebase Hosting
 | `/legal/terms` | Terms | Static |
 | `/legal/cookies` | Cookies | Static |
 
-The three launch families are data: `[family]` resolves any family published from the platform. A context can be passed to conversion pages without personal data, e.g. `/samples?fabric=powermesh-02&shade=warm-nude`.
+The three launch families are data: `[family]` resolves any family published from the platform. A context can be passed to conversion pages without personal data, e.g. `/samples?product=powermesh&shade=skin-02`.
 
 ### 2.2 Endpoints and system routes
 
@@ -113,7 +112,7 @@ Everything below requires an authenticated session; each route additionally requ
 | `/products/[product]/variants/[variant]` | Variant sheet |
 | `/products/skus` · `/products/skus/[sku]` | SKU ledger and sheet (tabs: `/sourcing`, `/stock`, `/pricing`, `/history`) |
 | `/products/shades` | Shade System |
-| `/products/shades/[collection]` · `/products/shades/[collection]/[shade]` | Collection and shade |
+| `/products/shades/[shade]` | Shade sheet: reference values, standards by factory, products in this shade |
 | `/products/shades/standards` | Shade standards |
 | `/products/put-ups` | Put-ups |
 

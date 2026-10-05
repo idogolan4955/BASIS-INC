@@ -26,6 +26,8 @@ On 2026-10-06 the owner supplied a reference image for the management platform a
 | Recent orders, fabric strip | Kept as a ledger and as family swatches |
 | Not in the reference | A **Requires attention** ledger directly under the figures, first on phones. The Gateway exists to say what needs a decision |
 
+**The brand booklet (v3).** Received after the first build; pages are in `docs/brand/`. It settles three things the reference left open: the brand's own display face is a high-contrast serif set with tracked small capitals, so the display serif in the platform is the brand's voice and not a borrowing; product names are written in a bold marker hand on packaging and in the catalogue; and **shade and material are shown in circles** (circular material windows, circular shade swatches) as "a functional signature across the complete range". The platform therefore draws **shades as circles and statuses as squares**: a circle is always a colour or a material, a square is always a state.
+
 **The three voices.**
 
 | Voice | Face (stand-in) | Used for | Never for |
@@ -60,7 +62,7 @@ These recur across the public site and the platform and are what make both unmis
 | Signature | What it is | Where it appears |
 |---|---|---|
 | **The index number** | Two-digit numerals in mono — `01`, `02` — as on a swatch book | Product names, module numbers, section numbering, steps |
-| **The swatch** | A flat rectangular chip of colour or material | Shades, status indicators, filters, legends |
+| **The swatch** | A square chip for a state; a round swatch for a shade or material | Status indicators, filters, legends; shades and material windows |
 | **The selvedge** | A thin strip along one edge carrying identity, like the woven edge of a fabric | Active navigation, row state, section markers, page edges |
 | **The label** | A bordered block of key facts set in mono and caps, like a roll label | Record headers in the platform; specification blocks on the site |
 | **The hand** | A bold marker-written word | Product names on the site; nowhere in operational UI except the product's own name |
@@ -159,7 +161,7 @@ Colours of BASIS shades are **data**, not design tokens. They come from the Shad
 |---|---|---|
 | **Architectural sans** | A neo-grotesque with a strong, wide uppercase and a full weight range, ideally variable with a width axis | The BASIS wordmark, display headlines, all UI text |
 | **Mono** | A plain, slightly technical monospace with tabular figures | Index numbers, SKU and document codes, measurements, dates, table figures, labels |
-| **The hand** | Bold marker lettering | Product names only: *powermesh*, *shanel lining*, *bridal tulle* |
+| **The hand** | Bold marker lettering | Product names only: *powermesh*, *illusion stretch mesh*, *n58 semi-stretch mesh*, *shanel lining*, *bridal tulle* |
 
 Typeface selection is an open decision (licensed foundry face vs. open-source). Until decided, tokens reference roles (`font.sans`, `font.mono`, `font.hand`) and the build uses an open-source stand-in for each. All fonts are **self-hosted** — no third-party font CDN.
 
@@ -219,7 +221,7 @@ The system is drawn with **lines, not boxes with shadows**.
 | Hairline | 1 px, `border.hairline`. The primary structuring device: rows, columns, sections |
 | Strong rule | 1 px, `border.strong`. Table headers, label frames, section starts |
 | Selvedge | 3 px strip on the leading edge. State and identity |
-| Radius | `0` by default. `2 px` on inputs and chips. Nothing rounder; no pills, no circles except avatars |
+| Radius | `0` by default. `2 px` on panels, inputs and chips. No pills. Circles only for avatars, shade swatches and material windows |
 | Shadows | None on surfaces. One soft shadow token exists for floating layers only (menus, dialogs, palette) |
 | Surfaces | Separated by tone (milk → bone → sand) and hairlines, not by elevation |
 | Texture | On the site, material photography and a very fine paper grain may be used on large surfaces. No gradients as decoration; a gradient appears only as a shade transition with meaning |
@@ -322,7 +324,7 @@ Motion is taken from how fabric behaves. Each principle has a defined technique 
 
 ## 10. Imagery
 
-- **Structure drawings.** Until real photography exists, and wherever a small fabric image is needed in the platform, the fabric is drawn from its construction: powermesh as a hexagonal knit, tulle as two sheer nets laid over each other, lining as a satin face with its sheen. These are diagrams of the real material, not illustrations, and a media asset replaces them wherever one exists.
+- **Structure drawings.** Until real photography exists, and wherever a small fabric image is needed in the platform, the fabric is drawn from its construction: mesh as a hexagonal knit, tulle as two sheer nets laid over each other, lining as a satin face with its sheen. These are diagrams of the real material, not illustrations, and a media asset replaces them wherever one exists.
 
 - Macro material photography is the primary imagery: weave, mesh structure, edge, fold, layering on skin tones.
 - Lit softly, colour-accurate, on palette-toned grounds. No stock imagery; no generic bridal lifestyle scenes.

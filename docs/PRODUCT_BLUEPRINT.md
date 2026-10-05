@@ -31,6 +31,23 @@ The software ecosystem described here is the company's operating system and its 
 | Customers | Bridal designers, bridal salons, ateliers, dress manufacturers, fashion manufacturers, distributors, wholesalers | Confidence in the material, exact shade and spec information, samples, a professional wholesale relationship |
 | Partners | Supplier companies, factories, freight forwarders, customs brokers, carriers | Clear orders, clear requirements, clear documents |
 
+## 2a. The range, as the brand booklet defines it
+
+The owner's brand booklet (*BASIS INC. Foundation Fabrics, Brand / Product Architecture / Digital System / Physical Catalogue*, v3; pages kept in `docs/brand/`) is the source of truth for the product range and the brand language.
+
+| Index | Family | Product | Role |
+|---|---|---|---|
+| 01 | Mesh | **Powermesh** | Shaping / support mesh: high support, strong recovery, smooth foundation for structured bridal construction |
+| 02 | Mesh | **Illusion Stretch Mesh** | Transparent stretch mesh: fine, lightweight, highly transparent, for illusion areas and second-skin effects |
+| 03 | Mesh | **N58 Semi-Stretch Mesh** | Controlled semi-stretch mesh: balanced stretch and stability for controlled support and coverage |
+| 04 | Lining | **Shanel Lining** | Premium lining: smooth, soft, breathable foundation layer |
+| 05 | Tulle | **Bridal Tulle** | Fine bridal tulle: lightweight, ethereal, for layering, volume and veils |
+
+- **Shade System.** One shared shade language across products, packaging, samples, website and operations: **Skin 01, Skin 02, Skin 03, Milk, Bone, Pure**. A shade exists globally; its availability is product-specific until that fabric is approved in production.
+- **Put-up.** Shade-matched matte rolls with the product name in the hand on the roll and an end-cap label: shade / product code / lot, width / length / origin. The booklet shows 160 cm width and 50 m rolls.
+- **Naming rules.** BASIS is the master brand; product names are functional, memorable and international; mesh products form a visible family but stay distinct; the same names and codes run through packaging, website, catalogue and back office; technical attributes live in the system while public language stays concise and editorial.
+- **Mesh comparison.** The three meshes are compared on primary role, stretch behaviour, transparency, support level, hand feel and best use. GSM, width, stretch percent, composition and exact shade availability are confirmed per production standard before publication.
+
 ## 3. The five layers
 
 BASIS is built as five connected layers over one shared data foundation.
@@ -73,7 +90,7 @@ BASIS is built as five connected layers over one shared data foundation.
 
 **Purpose.** Everything about what BASIS sells and how it is made.
 
-- **Products** — the catalog as a strict hierarchy: Fabric Family → Product → Variant → Shade → SKU → Batch/Lot → Roll. Launching with Powermesh, Shanel Lining and Bridal Tulle; structured so a new family is data, not a code change.
+- **Products** — the catalog as a strict hierarchy: Fabric Family → Product → Variant → Shade → SKU → Batch/Lot → Roll. Launching with three families holding five products (see §2a); structured so a new family or product is data, not a code change.
 - **Suppliers & factories** — companies, their factories, contacts, capabilities, terms, quotations, certifications and a performance history that is computed from real outcomes.
 - **Manufacturing** — Purchase Order → Production Run → Milestones → QC → Packaging → Ready to Ship, on an extensible timeline rather than a single status.
 - **Quality control** — inspections with shade matching, dimensional checks, defect logging, quantity and packaging verification, photographic evidence, a three-way result (pass / conditional pass / fail) and corrective actions.
@@ -116,9 +133,9 @@ Lead → Company → Contact → Sample Request → Qualification → Quote → 
 
 The layers are connected by the physical object. Following one roll shows why they cannot be built separately.
 
-1. **Growth.** A bridal designer finds *powermesh 02* on the website and requests a sample kit. A lead is created with its source.
-2. **Brand.** The page they read — composition, width, GSM, stretch, the CORE / WARM NUDE shade — was published from the operational catalog.
-3. **Operations · Products.** *Powermesh → 02 → 150 cm variant → Warm Nude* resolves to one internal SKU, mapped to a supplier SKU at a specific factory with a MOQ, a lead time and a purchase price.
+1. **Growth.** A bridal designer finds *Powermesh* on the website and requests a sample kit. A lead is created with its source.
+2. **Brand.** The page they read — composition, width, GSM, stretch, the Skin 02 shade — was published from the operational catalog.
+3. **Operations · Products.** *Mesh → Powermesh → 160 cm variant → Skin 02* resolves to one internal SKU, mapped to a supplier SKU at a specific factory with a MOQ, a lead time and a purchase price.
 4. **Operations · Suppliers.** The factory was chosen on the strength of a quotation and its history: on-time rate, first-pass QC rate, shade accuracy.
 5. **Operations · Manufacturing.** A purchase order is issued. A production run opens with its milestones: materials, knitting, lab-dip approval against the shade standard, dyeing, finishing, inspection, packing. A dyeing delay moves the forecast; the Gateway shows it.
 6. **Operations · QC.** A pre-shipment inspection measures shade deviation, usable width and GSM, scores defects, verifies quantity and packaging. Result: conditional pass, with a corrective action for relabelling. The lot is released when the action is verified.
@@ -164,10 +181,10 @@ Deliberately **not** part of the first versions:
 
 | Term | Meaning at BASIS |
 |---|---|
-| Fabric family | Top-level category of fabric (Powermesh, Shanel Lining, Bridal Tulle) |
-| Product | A specific construction within a family (e.g. *powermesh 02*) |
+| Fabric family | Top-level category of fabric (Mesh, Lining, Tulle) |
+| Product | A named fabric within a family (Powermesh, Illusion Stretch Mesh, N58 Semi-Stretch Mesh, Shanel Lining, Bridal Tulle) |
 | Variant | A width / weight / finish version of a product |
-| Shade | A named, coded colour in the BASIS Shade System (e.g. CORE / WARM NUDE) |
+| Shade | A named, coded colour in the BASIS Shade System (Skin 01, Skin 02, Skin 03, Milk, Bone, Pure) |
 | SKU | A sellable unit: variant × shade × put-up |
 | Put-up | How the fabric is presented: roll length, core, wrap, carton |
 | Lot (batch, dye lot) | Fabric produced and dyed together; the unit of shade consistency |

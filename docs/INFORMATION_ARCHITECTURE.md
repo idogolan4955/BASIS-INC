@@ -228,14 +228,16 @@ Every fabric page must satisfy both in one scroll, with the path to a sample req
 ```
 Brand Home
 ├─ Fabrics                              (index of families)
-│   ├─ Powermesh                        (family)
-│   │   └─ powermesh 02 …               (product)
-│   ├─ Shanel Lining
-│   │   └─ …
-│   └─ Bridal Tulle
-│       └─ …
-├─ Shade System                         (the system; collections)
-│   └─ CORE …                           (collection → shades)
+│   ├─ Mesh                             (family, with the mesh comparison guide)
+│   │   ├─ Powermesh                    (product)
+│   │   ├─ Illusion Stretch Mesh
+│   │   └─ N58 Semi-Stretch Mesh
+│   ├─ Lining
+│   │   └─ Shanel Lining
+│   └─ Tulle
+│       └─ Bridal Tulle
+├─ Shade System                         (Skin 01, Skin 02, Skin 03, Milk, Bone, Pure)
+│   └─ Shade                            (which products come in it)
 ├─ Applications                         (index)
 │   └─ Application                      (e.g. corsetry, illusion, lining, veils)
 ├─ Material                             (Technology / Material Story)
@@ -246,7 +248,7 @@ Brand Home
 └─ Legal (privacy, terms, cookies)
 ```
 
-New fabric families appear under Fabrics automatically when published from the platform; nothing in the navigation is hardcoded to the three launch families.
+New families and products appear under Fabrics automatically when published from the platform; nothing in the navigation is hardcoded to the launch range.
 
 ### B3. Navigation
 
@@ -269,9 +271,9 @@ New fabric families appear under Fabrics automatically when published from the p
 |---|---|---|
 | **Brand Home** | State what BASIS is in one screen; lead into the fabrics | Brand statement · the three families as material moments · Shade System teaser · applications · wholesale invitation |
 | **Fabrics** | Orient | Families as an index: name, one-line role in a gown, material image |
-| **Family** (Powermesh, Shanel Lining, Bridal Tulle) | Make the material understood and wanted | Material hero · what it does in a gown · products in the family · shade availability · applications · specifications summary · sample CTA |
-| **Product** (*powermesh 02*) | Let a professional specify | Handwritten product mark · full specification (composition, width, GSM, stretch, put-up) · shades available · close-up media · applications · technical sheet download · sample CTA |
-| **Shade System** | Establish shade as a BASIS strength | The system and its logic · collections · every shade with name and code · which fabrics come in each shade · note on screen vs. physical colour → sample kit |
+| **Family** (Mesh, Lining, Tulle) | Make the material understood and wanted | Material hero · what it does in a gown · products in the family (for Mesh, the comparison guide) · shade availability · applications · sample CTA |
+| **Product** (*Powermesh*) | Let a professional specify | Handwritten product mark · full specification (composition, width, GSM, stretch, put-up) · shades available as circular swatches · close-up media · applications · technical sheet download · sample CTA |
+| **Shade System** | Establish shade as a BASIS strength | The system and its logic · the six shades with name and code · which products come in each shade · note on screen vs. physical colour → sample kit |
 | **Applications** | Start from the garment problem | Each application: the problem, the recommended fabrics, construction notes |
 | **Material** | Prove expertise | How the fabrics are made, tested and controlled: shade control, lot consistency, QC |
 | **About** | Who stands behind it | Brand idea, standards, international reach |
