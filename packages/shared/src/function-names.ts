@@ -33,6 +33,8 @@ export const FUNCTION_NAMES = {
   revokeApiToken: 'revokeApiToken',
   saveConnector: 'saveConnector',
   connectorStatus: 'connectorStatus',
+  /** Callable, commercial roles: an inquiry from the site has been answered. */
+  markInquiry: 'markInquiry',
   /** Callable, owner and operations: run the alert rules now. */
   evaluateAlerts: 'evaluateAlerts',
   /** Scheduled: consume domain events, evaluate alert rules. */

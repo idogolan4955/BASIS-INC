@@ -234,3 +234,24 @@ query ListMessagesFor($entityType: String!, $entityId: String!) @auth(level: USE
     sentAt
   }
 }
+
+query ListInquiries @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'sales' || auth.token.role == 'marketing'") {
+  inquiries(orderBy: { createdAt: DESC }, limit: 500) {
+    id
+    reference
+    kind
+    name
+    company
+    email
+    phone
+    country
+    customerType
+    topic
+    message
+    details
+    context
+    state
+    handledAt
+    createdAt
+  }
+}

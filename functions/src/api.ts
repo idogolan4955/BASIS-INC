@@ -1,6 +1,7 @@
 import { HttpsError, onRequest } from 'firebase-functions/v2/https';
 import { REGION, httpCallerOf, requireRole } from './lib';
 import { exportRows, renderExport } from './exports';
+import { receiveInquiry } from './intake';
 import { renderPackingList, renderPurchaseOrder, renderRollLabels } from './pdf';
 import { EXPORT_FORMATS, isAssistantCommand, isExportLedger, type ExportFormat } from '@basis/shared';
 import type { CallableFunction, CallableRequest } from 'firebase-functions/v2/https';
@@ -22,6 +23,12 @@ const STATUS: Record<string, number> = { 'invalid-argument': 400, 'not-found': 4
 
 export const api = onRequest({ region: REGION, cors: [/^http:\/\/localhost:\d+$/, /\.web\.app$/, /\.firebaseapp\.com$/], memory: '512MiB' }, async (request, response) => {
   const path = request.path.replace(/^\/api/, '') || '/';
+
+  // Public intake from the site. Sample requests share the endpoint with a kind.
+  if (request.method === 'POST' && (path === '/inquiries' || path === '/sample-requests')) {
+    await receiveInquiry(request, response);
+    return;
+  }
 
   if (request.method === 'GET' && path === '/health') {
     response.json({ ok: true, service: 'basis', region: REGION, time: new Date().toISOString() });

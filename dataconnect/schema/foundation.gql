@@ -276,3 +276,28 @@ type Message @table {
   sentByUid: String! @col(dataType: "varchar(128)")
   sentAt: Timestamp! @default(expr: "request.time")
 }
+
+# ---------------------------------------------------------------- intake
+
+# What the public site sends in: a sample request, a wholesale application,
+# a contact message. Each becomes a lead's first contact once a person reads it.
+type Inquiry @table {
+  reference: String! @col(dataType: "varchar(16)") @unique
+  kind: String! @col(dataType: "varchar(24)")
+  name: String! @col(dataType: "varchar(160)")
+  company: String @col(dataType: "varchar(200)")
+  email: String! @col(dataType: "varchar(255)")
+  phone: String @col(dataType: "varchar(64)")
+  country: String @col(dataType: "varchar(120)")
+  customerType: String @col(dataType: "varchar(80)")
+  topic: String @col(dataType: "varchar(80)")
+  message: String
+  # Codes chosen on the site: products, shades, volume, address.
+  details: Any
+  # Where it came from: page, referrer, campaign.
+  context: Any
+  state: String! @col(dataType: "varchar(16)")
+  handledByUid: String @col(dataType: "varchar(128)")
+  handledAt: Timestamp
+  createdAt: Timestamp! @default(expr: "request.time")
+}

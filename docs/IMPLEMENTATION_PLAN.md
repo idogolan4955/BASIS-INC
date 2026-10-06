@@ -269,6 +269,14 @@ Depends on: Phase 1; decisions D5, D6; brand assets.
 Exit: all launch pages built from published catalog and content; budgets met on mobile; a sample request on the site becomes a lead in the platform.
 Depends on: Phase 2, B3, P8-lite.
 
+#### Track B progress (2026-10-06)
+
+| Done | Remaining |
+|---|---|
+| The launch site built as static pages from the launch catalog in `@basis/shared` (`apps/web`): Brand Home, Fabrics, the three families with the mesh comparison, the five products with the hand-written mark, specification label, shades and applications, the Shade System and each shade, Applications, Material, About, Wholesale with its application, Sample request with the shade kit, Contact, Legal. Every path prerendered; sitemap and robots written at build; metadata, Open Graph and Product JSON-LD per page | Publishing workflow (module 11) and the public connector so the site reads published tables instead of the typed launch catalog; real material photography and film replacing the structure drawings; motion choreography per section; the technical sheet PDF per product |
+| Editorial component set in the site (`app/site/ui.tsx`): the hand, the index number, round shade swatches, the label block, the material window, the selvedge; mobile designed on its own: wordmark and index trigger, full-screen typographic index, bottom-anchored Request samples | Moving the set into `@basis/ui` once a second consumer exists |
+| Intake: `POST /api/inquiries` (and `/api/sample-requests`) validates, rate-limits per address, drops honeypot hits, stores an `Inquiry` with its context and raises `customers.inquiry_new` on the Gateway; `/customers/inquiries` lists them with the detail and a handled state (`markInquiry`). Hosting rewrites `/api/**` on the public site too | Leads: an inquiry becoming a customer record (P8-lite); email acknowledgement to the sender through the email connector |
+
 ### B5 — Launch (M)
 
 - Content entry and review; real photography and film in place.

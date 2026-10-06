@@ -1,7 +1,9 @@
 import '@basis/ui/fonts';
+import '@fontsource/permanent-marker/latin-400.css';
 import './app.css';
 
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
+import { SiteShell } from './site/shell';
 
 // The document shell of the public site: editorial register.
 
@@ -25,5 +27,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function Root() {
-  return <Outlet />;
+  return (
+    <SiteShell>
+      <Outlet />
+    </SiteShell>
+  );
 }

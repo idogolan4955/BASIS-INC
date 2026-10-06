@@ -106,6 +106,9 @@ importers:
       '@basis/ui':
         specifier: workspace:^
         version: link:../../packages/ui
+      '@fontsource/permanent-marker':
+        specifier: ^5.3.0
+        version: 5.3.0
       isbot:
         specifier: ^5
         version: 5.2.2
@@ -779,6 +782,9 @@ packages:
 
   '@fontsource/martian-mono@5.3.0':
     resolution: {integrity: sha512-0iTnU6SZi6j5z4ymwlZGep6akvp/xWm+r+WyZO9hMfDJWX+dsFLipQp9zO02S0lkUQ+zAahcZNy3XLiNP+gVqQ==}
+
+  '@fontsource/permanent-marker@5.3.0':
+    resolution: {integrity: sha512-ZO/NtYW4SCc/iY8N3dmjWyDITcXJ/vhWZFgnwRcvzwCKKnScMrM/a2/6VHlsjCVuIgmPzNrCFbedEYhv+/jJBg==}
 
   '@fontsource/source-sans-3@5.3.0':
     resolution: {integrity: sha512-VrWixSgF93kOVSEkwjs9ImnAbxrBew4PgcnaJYEitG9TyJSwxjFUNJIgzB1XFP/acyAWcTDg7+sWe7JI8LTB9w==}
@@ -4165,6 +4171,8 @@ snapshots:
   '@fontsource/eb-garamond@5.3.0': {}
 
   '@fontsource/martian-mono@5.3.0': {}
+
+  '@fontsource/permanent-marker@5.3.0': {}
 
   '@fontsource/source-sans-3@5.3.0': {}
 

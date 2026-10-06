@@ -57,8 +57,8 @@ All pages are static files. `/api/**` is rewritten by Firebase Hosting to the `a
 
 | Route | Method | Purpose |
 |---|---|---|
-| `/api/inquiries` | POST | Contact and wholesale submissions → intake |
-| `/api/sample-requests` | POST | Sample request submissions → intake |
+| `/api/inquiries` | POST | Contact, wholesale and sample submissions → `Inquiry` (`/api/sample-requests` is the same endpoint) |
+| `/api/sample-requests` | POST | Alias of `/api/inquiries` for sample requests |
 | `/sitemap.xml`, `/robots.txt` | GET | Generated at build from the published catalog |
 | `/fabrics/[family]/[product]/technical-sheet.pdf` | GET | Technical data sheet, generated on publish and stored as a static file |
 | Open Graph images | GET | Generated at build, per page |

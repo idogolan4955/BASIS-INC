@@ -114,6 +114,11 @@ export interface Incoterm_Key {
   __typename?: 'Incoterm_Key';
 }
 
+export interface Inquiry_Key {
+  id: UUIDString;
+  __typename?: 'Inquiry_Key';
+}
+
 export interface LegalEntity_Key {
   id: UUIDString;
   __typename?: 'LegalEntity_Key';

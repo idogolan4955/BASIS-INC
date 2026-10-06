@@ -104,7 +104,7 @@ async function seedReference() {
   const year = new Date().getFullYear();
   // Sequences start at 1 once and are never reset: a re-seed must not hand
   // out a number that is already taken.
-  for (const prefix of ['PO', 'RUN', 'INS', 'CAR', 'SHP', 'QTN', 'RFQ', 'QUO', 'SO', 'SMP', 'LOT', 'CTN', 'PLT']) {
+  for (const prefix of ['PO', 'RUN', 'INS', 'CAR', 'SHP', 'QTN', 'RFQ', 'QUO', 'SO', 'SMP', 'LOT', 'CTN', 'PLT', 'INQ']) {
     const { numberSequence } = await gql(`query ($prefix: String!, $year: Int!) { numberSequence(key: { prefix: $prefix, year: $year }) { nextValue } }`, { prefix, year });
     if (!numberSequence) await gql(`mutation ($prefix: String!, $year: Int!) { numberSequence_insert(data: { prefix: $prefix, year: $year, nextValue: 1 }) }`, { prefix, year });
   }

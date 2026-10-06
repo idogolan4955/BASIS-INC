@@ -246,6 +246,24 @@ export const RULES: Rule[] = [
         }));
     },
   },
+  {
+    key: 'customers.inquiry_new',
+    async evaluate() {
+      const { inquiries } = await graphql<{ inquiries: { reference: string; kind: string; name: string; company: string | null; country: string | null; createdAt: string }[] }>(
+        `query { inquiries(where: { state: { eq: "new" } }, orderBy: { createdAt: DESC }, limit: 200) { reference kind name company country createdAt } }`,
+      );
+      const words: Record<string, string> = { sample_request: 'Sample request', wholesale: 'Wholesale application', contact: 'Message' };
+      return inquiries.map((inquiry) => ({
+        entityType: 'inquiry',
+        entityId: inquiry.reference,
+        title: `${words[inquiry.kind] ?? 'Inquiry'} from ${inquiry.company || inquiry.name}${inquiry.country ? `, ${inquiry.country}` : ''}`,
+        detail: `Received ${inquiry.createdAt.slice(0, 10)} on the website; nobody has answered yet.`,
+        severity: (inquiry.kind === 'contact' ? 'info' : 'caution') as Severity,
+        ownerRole: 'sales' as Role,
+        dedupeKey: `customers.inquiry_new:${inquiry.reference}`,
+      }));
+    },
+  },
 ];
 
 interface ExistingAlert {
