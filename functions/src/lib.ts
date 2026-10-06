@@ -52,6 +52,22 @@ export function callerOf(request: CallableRequest<unknown>): Caller {
   return typeof token.email === 'string' ? { ...caller, email: token.email } : caller;
 }
 
+/** The caller of a plain HTTP request, from its bearer ID token. */
+export async function httpCallerOf(authorization: string | undefined): Promise<Caller> {
+  const token = authorization?.match(/^Bearer (.+)$/i)?.[1];
+  if (!token) throw failure('forbidden', 'Sign in first.');
+  let claims: Awaited<ReturnType<typeof auth.verifyIdToken>>;
+  try {
+    claims = await auth.verifyIdToken(token);
+  } catch {
+    throw failure('forbidden', 'The session has expired; sign in again.');
+  }
+  const role = claims['role'];
+  if (!isRole(role)) throw failure('forbidden', 'This account has no role yet.');
+  const caller: Caller = { uid: claims.uid, role };
+  return typeof claims.email === 'string' ? { ...caller, email: claims.email } : caller;
+}
+
 export function requireRole(caller: Caller, allowed: readonly Role[], action: string): void {
   if (!allowed.includes(caller.role)) {
     throw failure('forbidden', `${action} is not available to the ${caller.role} role.`);

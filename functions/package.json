@@ -12,13 +12,19 @@
     "serve": "pnpm build && firebase emulators:start --only functions,auth,dataconnect"
   },
   "dependencies": {
+    "@fontsource/archivo": "^5.3.0",
+    "@fontsource/eb-garamond": "^5.3.0",
+    "@fontsource/martian-mono": "^5.3.0",
+    "@fontsource/source-sans-3": "^5.3.0",
     "@google-cloud/firestore": "^9.3.1",
     "firebase-admin": "^14.5.0",
     "firebase-functions": "^7.4.0",
+    "pdfkit": "^0.20.2",
     "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",
+    "@types/pdfkit": "^0.17.6",
     "tsup": "^8.5.1",
     "typescript": "^7.0.2"
   }

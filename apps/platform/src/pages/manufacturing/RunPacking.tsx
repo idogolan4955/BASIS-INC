@@ -3,6 +3,8 @@ import { Button, CheckField, Dialog, Ledger, Panel, SelectField, Td, TextField, 
 import { useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import { usePackHandlingUnit } from '../../data/manufacturing';
+import { isSample } from '../../data/source';
+import { useDocument } from '../../lib/documents';
 
 // Packing: rolls go into cartons, cartons onto pallets. Each unit carries
 // its marks, dimensions and weights, so the packing list and the shipment
@@ -138,6 +140,7 @@ export function PackDialog({ run, open, onClose }: { run: RunDetail; open: boole
 
 export function PackingPanel({ run, manage }: { run: RunDetail; manage: boolean }) {
   const [packing, setPacking] = useState(false);
+  const pdf = useDocument();
   const units = run.handlingUnits;
   const rolls = units.reduce((total, unit) => total + unit.contents.filter((content) => content.rollNumber).length, 0);
   const quantity = units.reduce((total, unit) => total + BigInt(unit.quantity), 0n).toString();
@@ -151,11 +154,25 @@ export function PackingPanel({ run, manage }: { run: RunDetail; manage: boolean 
         title="Packing"
         count={units.length}
         flush
-        action={manage && run.state !== 'cancelled' && (
-          <Button size="sm" onClick={() => setPacking(true)} disabled={unpacked === 0}>
-            Pack carton
-          </Button>
-        )}
+        action={
+          <span className="flex items-center gap-2">
+            {pdf.error && (
+              <span role="alert" className="text-[0.8125rem] font-medium text-critical">
+                {pdf.error}
+              </span>
+            )}
+            {!isSample && units.length > 0 && (
+              <Button size="sm" onClick={() => pdf.open('packing-list', run.number)} busy={pdf.busy === 'packing-list'} busyLabel="Rendering">
+                Packing list
+              </Button>
+            )}
+            {manage && run.state !== 'cancelled' && (
+              <Button size="sm" variant="primary" onClick={() => setPacking(true)} disabled={unpacked === 0}>
+                Pack carton
+              </Button>
+            )}
+          </span>
+        }
       >
         {units.length === 0 ? (
           <p className="px-5 py-6 text-ink-muted">

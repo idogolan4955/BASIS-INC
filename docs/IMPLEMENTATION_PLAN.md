@@ -160,6 +160,15 @@ Depends on: Phase 2, P3.
 | Interface: Lots and Packing tabs on the run sheet with the record-lot dialog (count and nominal length, or measured lengths pasted from the winder) and the pack dialog (rolls chosen from the lot, carton dimensions from the put-up, marks, weights, CBM derived); a lot sheet at `/inventory/lots/[lot]` with its rolls and where each is packed, the quality record and its timeline | Inventory module proper: stock by SKU, locations, movements, receiving from a shipment |
 | Verified against the emulators: two lots recorded on RUN-26-0001 (six rolls), three rolls packed into CTN-26-0001 with packing started on the run, a repack refused, LOT-26-0001 released, a second carton across two lots; the run reports 200.1 m ready to ship | |
 
+#### Phase 4 progress, third slice (2026-10-06)
+
+| Done | Remaining |
+|---|---|
+| Generated documents behind `/api/pdf/<kind>/<number>` on the `api` function (Hosting rewrites `/api/**` on the platform site; development reaches the emulator directly): the purchase order for cost roles, the packing list and roll labels for production and logistics roles. Rendered on demand from the records with PDFKit in the brand's type (EB Garamond, Source Sans 3, Martian Mono, Archivo), never stored retyped; a draft order has no document until it is issued | Filing a generated PDF as a `document` record once Storage is available (needs Java locally, Blaze in production) |
+| Purchase order: parties, delivery terms, lines with tolerances, prices and amounts, the payment schedule, notes, terms and signature lines. Packing list (landscape): carton ledger with marks, lots, rolls, metres, dimensions, CBM and weights, the lots with their quality, and the roll detail per carton. Roll labels: one 100 × 60 mm label per roll — shade, product code and lot; width, measured length and origin | Technical sheets; the sales documents (quotation, order confirmation, invoice) with their modules |
+| Interface: PDF on the order sheet, Packing list on the run's packing tab, Roll labels on the lot sheet; the browser fetches with the session token and saves the file. Sample mode has no functions, so the actions are not shown there | A print view for sample mode, if the demo needs one |
+| The emulator seed now survives an Auth-emulator restart: the owner account is recreated under the uid the Data Connect record already carries | |
+
 ### P5 — Quality (L)
 
 - Inspection templates and sampling rules; inspections for lab dip, inline, pre-shipment, receiving.

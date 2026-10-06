@@ -3,7 +3,9 @@ import { Button, Dialog, LabelHeader, Ledger, Panel, SelectField, ShadeDot, Shee
 import { useState, type FormEvent } from 'react';
 import { Link, NavLink, useParams } from 'react-router';
 import { useLot, useSetLotQuality } from '../../data/manufacturing';
+import { isSample } from '../../data/source';
 import { useRecordNote, useTimeline } from '../../data/timeline';
+import { useDocument } from '../../lib/documents';
 import { useRequiredSession } from '../../session';
 import { NotFound } from '../NotFound';
 
@@ -70,6 +72,7 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'timeline' }) {
   const { number = '' } = useParams();
   const lot = useLot(number);
   const [editing, setEditing] = useState(false);
+  const pdf = useDocument();
   const quality = session.role === 'owner' || session.role === 'qc';
 
   if (lot.isPending) return <p className="px-5 py-10 text-ink-muted lg:px-8">Loading lot</p>;
@@ -97,7 +100,16 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'timeline' }) {
             , {data.supplierName}
           </>
         }
-        status={<StatusChip tone={LOT_QUALITY_TONE[data.qualityState]}>{LOT_QUALITY_LABEL[data.qualityState]}</StatusChip>}
+        status={
+          <>
+            <StatusChip tone={LOT_QUALITY_TONE[data.qualityState]}>{LOT_QUALITY_LABEL[data.qualityState]}</StatusChip>
+            {pdf.error && (
+              <span role="alert" className="text-[0.8125rem] font-medium text-critical">
+                {pdf.error}
+              </span>
+            )}
+          </>
+        }
         facts={[
           { label: 'Reported', value: metres(data.producedQuantity) },
           { label: 'Measured', value: data.rollCount > 0 ? metres(data.measuredQuantity) : '—' },
@@ -106,7 +118,20 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'timeline' }) {
           { label: 'Produced', value: dateOrDash(data.producedOn) },
           { label: 'Ready to ship', value: <span className={ready !== '0' ? 'text-positive' : undefined}>{metres(ready)}</span> },
         ]}
-        actions={quality && <Button variant="primary" onClick={() => setEditing(true)}>Record quality</Button>}
+        actions={
+          <>
+            {!isSample && data.rollCount > 0 && (
+              <Button onClick={() => pdf.open('roll-labels', data.number)} busy={pdf.busy === 'roll-labels'} busyLabel="Rendering">
+                Roll labels
+              </Button>
+            )}
+            {quality && (
+              <Button variant="primary" onClick={() => setEditing(true)}>
+                Record quality
+              </Button>
+            )}
+          </>
+        }
       />
       <SheetTabs>
         <NavLink to={base} end className={({ isActive }) => sheetTabClass(isActive)}>

@@ -21,7 +21,9 @@ import { Button, Dialog, LabelHeader, Ledger, Panel, ShadeDot, SheetTabs, Status
 import { useState, type FormEvent } from 'react';
 import { Link, NavLink, useNavigate, useParams } from 'react-router';
 import { useCancelPurchaseOrder, useConfirmPurchaseOrder, useCreateProductionRun, useIssuePurchaseOrder, usePurchaseOrder, usePurchaseOrderCosts } from '../../data/manufacturing';
+import { isSample } from '../../data/source';
 import { useRecordNote, useTimeline } from '../../data/timeline';
+import { useDocument } from '../../lib/documents';
 import { useRequiredSession } from '../../session';
 import { NotFound } from '../NotFound';
 
@@ -274,6 +276,7 @@ export function PurchaseOrderSheet({ tab }: { tab: 'overview' | 'production' | '
   const confirm = useConfirmPurchaseOrder();
   const [dialog, setDialog] = useState<'run' | 'cancel' | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const pdf = useDocument();
   const manage = canManageModule(session.role, 'manufacturing');
   const costs = canViewCosts(session.role);
 
@@ -300,9 +303,9 @@ export function PurchaseOrderSheet({ tab }: { tab: 'overview' | 'production' | '
         status={
           <>
             <StatusChip tone={PO_STATE_TONE[data.state]}>{PO_STATE_LABEL[data.state]}</StatusChip>
-            {actionError && (
+            {(actionError || pdf.error) && (
               <span role="alert" className="text-[0.8125rem] font-medium text-critical">
-                {actionError}
+                {actionError ?? pdf.error}
               </span>
             )}
           </>
@@ -316,7 +319,13 @@ export function PurchaseOrderSheet({ tab }: { tab: 'overview' | 'production' | '
           { label: 'Ex-factory', value: dateOrDash(data.requestedExFactory) },
         ]}
         actions={
-          manage && (
+          <>
+            {costs && !isSample && data.state !== 'draft' && (
+              <Button onClick={() => pdf.open('purchase-order', data.number)} busy={pdf.busy === 'purchase-order'} busyLabel="Rendering">
+                PDF
+              </Button>
+            )}
+            {manage && (
             <>
               {(data.state === 'draft' || data.state === 'issued') && (
                 <Button variant="destructive" onClick={() => setDialog('cancel')}>
@@ -339,7 +348,8 @@ export function PurchaseOrderSheet({ tab }: { tab: 'overview' | 'production' | '
                 </Button>
               )}
             </>
-          )
+            )}
+          </>
         }
       />
       <SheetTabs>

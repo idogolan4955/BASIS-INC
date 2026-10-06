@@ -31,9 +31,17 @@ async function gql(query, variables) {
 const OWNER = { email: 'owner@basis.test', password: 'basis-owner-sample-2026', name: 'Sample Owner' };
 
 async function seedOwner() {
+  // The Auth emulator forgets its users on restart while Data Connect keeps
+  // its data, so the account is recreated under the uid the record already has.
+  const { users } = await gql(`query ($email: String!) { users(where: { email: { eq: $email } }, limit: 1) { uid } }`, { email: OWNER.email });
+  const storedUid = users[0]?.uid;
   let user = await auth.getUserByEmail(OWNER.email).catch(() => null);
+  if (user && storedUid && user.uid !== storedUid) {
+    await auth.deleteUser(user.uid);
+    user = null;
+  }
   if (!user) {
-    user = await auth.createUser({ email: OWNER.email, password: OWNER.password, displayName: OWNER.name, emailVerified: true });
+    user = await auth.createUser({ ...(storedUid ? { uid: storedUid } : {}), email: OWNER.email, password: OWNER.password, displayName: OWNER.name, emailVerified: true });
   }
   await auth.setCustomUserClaims(user.uid, { role: 'owner' });
   await gql(
