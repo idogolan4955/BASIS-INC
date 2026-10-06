@@ -117,6 +117,17 @@ Exit: the five launch products exist as real catalog data down to SKU, with shad
 Exit: the Gateway is the real landing screen, entirely derived, with at least the first alert rules live.
 Depends on: Phase 2.
 
+#### Phase 3 progress (2026-10-06)
+
+| Done | Remaining |
+|---|---|
+| Alert engine in `functions/src/alerts.ts`: a rule is a pure function from facts to findings; the engine raises, refreshes, revives and resolves alerts by dedupe key. Seven rules live: product without SKUs, published product without an active SKU, active SKU not published, variant specification incomplete, document expiring or expired, task overdue, supplier without a contact | Rules for production, QC, logistics and stock arrive with those modules |
+| Evaluation runs in the scheduled sweep and on demand through `evaluateAlerts` (owner and operations), with a Run checks action on the Gateway | Event-driven evaluation narrowed to the rules an event touches |
+| Alert lifecycle on the Gateway: acknowledge, dismiss; acknowledged items sink and fade | |
+| Tasks: open-task ledger at `/operations/tasks`, new task from the Gateway or the ledger, assignee from the staff directory, mark done; tasks due within a week join the attention ledger and the overdue rule raises what is late | Tasks created from a record's sheet |
+| Gateway live: attention from alerts and tasks; figures and panels show their true empty state until their modules land. Verified against the emulators: 12 alerts raised from the seeded catalog, idempotent on re-run, acknowledgement and a task recorded | |
+
+
 ### P4 — Sourcing and manufacturing (XL)
 
 - RFQs and quotations; supplier terms; certifications.

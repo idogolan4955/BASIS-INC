@@ -523,6 +523,34 @@ exports.recordEvent = function recordEvent(dcOrVars, vars) {
 }
 ;
 
+const resolveAlertRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ResolveAlert', inputVars);
+}
+resolveAlertRef.operationName = 'ResolveAlert';
+exports.resolveAlertRef = resolveAlertRef;
+
+exports.resolveAlert = function resolveAlert(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(resolveAlertRef(dcInstance, inputVars));
+}
+;
+
+const reopenTaskRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ReopenTask', inputVars);
+}
+reopenTaskRef.operationName = 'ReopenTask';
+exports.reopenTaskRef = reopenTaskRef;
+
+exports.reopenTask = function reopenTask(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(reopenTaskRef(dcInstance, inputVars));
+}
+;
+
 const listCompaniesRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
@@ -870,5 +898,35 @@ exports.listLegalEntities = function listLegalEntities(dcOrOptions, options) {
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(listLegalEntitiesRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const listStaffRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListStaff');
+}
+listStaffRef.operationName = 'ListStaff';
+exports.listStaffRef = listStaffRef;
+
+exports.listStaff = function listStaff(dcOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(listStaffRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const listOpenTasksRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListOpenTasks');
+}
+listOpenTasksRef.operationName = 'ListOpenTasks';
+exports.listOpenTasksRef = listOpenTasksRef;
+
+exports.listOpenTasks = function listOpenTasks(dcOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(listOpenTasksRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;

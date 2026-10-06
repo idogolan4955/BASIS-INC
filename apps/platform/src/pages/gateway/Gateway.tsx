@@ -23,6 +23,7 @@ import {
 } from '@basis/shared';
 import {
   Bars,
+  Button,
   FigureTile,
   FigureTileSkeleton,
   Lanes,
@@ -41,11 +42,14 @@ import {
   cn,
   type TrackStep,
 } from '@basis/ui';
-import { ArrowRight } from '@phosphor-icons/react';
-import { useEffect, type ReactNode } from 'react';
+import { ArrowRight, Plus } from '@phosphor-icons/react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
+import { useAcknowledgeAlert, useResolveAlert, useRunChecks } from '../../data/alerts';
 import { isSample, useGateway } from '../../data/source';
+import { useCompleteTask } from '../../data/tasks';
 import { useRequiredSession } from '../../session';
+import { NewTaskDialog } from '../operations/Tasks';
 
 const whole = new Intl.NumberFormat('en-US');
 const metres = (stored: string) => formatQuantity(quantityFromStored(stored, 'm'));
@@ -193,9 +197,64 @@ function Figures({ data, can }: { data: GatewayData; can: (module: ModuleKey) =>
   );
 }
 
-function Attention({ items }: { items: GatewayData['attention'] }) {
+function ItemActions({ item }: { item: GatewayData['attention'][number] }) {
+  const acknowledge = useAcknowledgeAlert();
+  const resolve = useResolveAlert();
+  const complete = useCompleteTask();
+  if (item.kind === 'task') {
+    return (
+      <Button size="sm" variant="quiet" onClick={() => complete.mutate(item.id)} disabled={complete.isPending}>
+        Mark done
+      </Button>
+    );
+  }
   return (
-    <Panel id="attention" title="Requires attention" count={items.length} flush className="scroll-mt-20 max-lg:order-first">
+    <span className="flex items-center gap-4">
+      {item.state === 'open' ? (
+        <Button size="sm" variant="quiet" onClick={() => acknowledge.mutate(item.id)} disabled={acknowledge.isPending}>
+          Acknowledge
+        </Button>
+      ) : (
+        <span className="text-[0.8125rem] text-ink-muted">Acknowledged</span>
+      )}
+      <Button size="sm" variant="quiet" onClick={() => resolve.mutate(item.id)} disabled={resolve.isPending}>
+        Dismiss
+      </Button>
+    </span>
+  );
+}
+
+function Attention({ items, canRun }: { items: GatewayData['attention']; canRun: boolean }) {
+  const run = useRunChecks();
+  const [creating, setCreating] = useState(false);
+  const sorted = [...items].sort((a, b) => (a.state === b.state ? 0 : a.state === 'open' ? -1 : 1));
+  return (
+    <Panel
+      id="attention"
+      title="Requires attention"
+      count={items.length}
+      flush
+      className="scroll-mt-20 max-lg:order-first"
+      action={
+        <span className="flex items-center gap-4">
+          {run.data && (
+            <span className="text-[0.8125rem] text-ink-muted">
+              {run.data.raised} raised, {run.data.resolved} resolved
+            </span>
+          )}
+          {canRun && !isSample && (
+            <Button size="sm" variant="quiet" onClick={() => run.mutate()} busy={run.isPending} busyLabel="Checking">
+              Run checks
+            </Button>
+          )}
+          <Button size="sm" onClick={() => setCreating(true)}>
+            <Plus size={14} aria-hidden="true" />
+            New task
+          </Button>
+        </span>
+      }
+    >
+      <NewTaskDialog open={creating} onClose={() => setCreating(false)} />
       {items.length === 0 ? (
         <PanelEmpty>
           Nothing needs a decision right now. Delays, pending inspections and missing documents appear here as they arise.
@@ -204,7 +263,7 @@ function Attention({ items }: { items: GatewayData['attention'] }) {
         <>
           {/* Phones read each item as a block; wider screens get the ledger. */}
           <ul className="md:hidden">
-            {items.map((item) => (
+            {sorted.map((item) => (
               <li key={item.id} className="border-b border-line px-5 py-4 last:border-b-0">
                 <div className="flex items-start justify-between gap-3">
                   <p className="font-medium">{item.title}</p>
@@ -214,6 +273,9 @@ function Attention({ items }: { items: GatewayData['attention'] }) {
                 <p className="mt-2.5 flex items-center justify-between gap-3">
                   <RecordLink to={item.path}>{item.subject}</RecordLink>
                   <span className="text-[0.8125rem] text-ink-muted">{item.owner}</span>
+                </p>
+                <p className="mt-2">
+                  <ItemActions item={item} />
                 </p>
               </li>
             ))}
@@ -227,13 +289,16 @@ function Attention({ items }: { items: GatewayData['attention'] }) {
                 <Th>Record</Th>
                 <Th>Detail</Th>
                 <Th>Owner</Th>
+                <Th>Action</Th>
               </tr>
             </thead>
             <tbody>
-              {items.map((item) => (
-                <Tr key={item.id}>
+              {sorted.map((item) => (
+                <Tr key={item.id} className={item.state === 'acknowledged' ? 'opacity-60' : undefined}>
                   <Td>
-                    <StatusChip tone={SEVERITY_TONE[item.severity]}>{SEVERITY_LABEL[item.severity]}</StatusChip>
+                    <StatusChip tone={item.kind === 'task' ? 'transit' : SEVERITY_TONE[item.severity]}>
+                      {item.kind === 'task' ? 'Task' : SEVERITY_LABEL[item.severity]}
+                    </StatusChip>
                   </Td>
                   <Td className="min-w-56 font-medium">{item.title}</Td>
                   <Td>
@@ -241,6 +306,9 @@ function Attention({ items }: { items: GatewayData['attention'] }) {
                   </Td>
                   <Td className="min-w-64 text-ink-soft">{item.detail}</Td>
                   <Td className="whitespace-nowrap text-ink-soft">{item.owner}</Td>
+                  <Td className="whitespace-nowrap">
+                    <ItemActions item={item} />
+                  </Td>
                 </Tr>
               ))}
             </tbody>
@@ -482,7 +550,7 @@ export function Gateway() {
       {data && (
         <div className="flex flex-col gap-4 px-5 py-6 lg:px-8">
           <Figures data={data} can={can} />
-          <Attention items={data.attention.filter((item) => can(item.module))} />
+          <Attention items={data.attention.filter((item) => can(item.module))} canRun={session.role === 'owner' || session.role === 'operations'} />
           <div className="grid gap-4 *:min-w-0 xl:grid-cols-12">
             {can('manufacturing') && <Production runs={data.runs} asOf={data.asOf} />}
             {can('logistics') && <Shipments shipments={data.shipments} />}

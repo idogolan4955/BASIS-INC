@@ -46,3 +46,16 @@ mutation UpdateMyPreferences($locale: String, $timeZone: String) @auth(level: US
 mutation RecordEvent($entityType: String!, $entityId: String!, $kind: String!, $note: String, $payload: Any) @auth(level: USER) {
   timelineEvent_insert(data: { entityType: $entityType, entityId: $entityId, kind: $kind, note: $note, payload: $payload, actorUid_expr: "auth.uid" })
 }
+
+# A person decides an alert needs no further action; the rule may raise it
+# again if the fact persists after the dedupe key changes.
+mutation ResolveAlert($id: UUID!)
+  @auth(
+    expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'sales' || auth.token.role == 'marketing' || auth.token.role == 'finance'"
+  ) {
+  alert_update(id: $id, data: { state: resolved, resolvedAt_expr: "request.time" })
+}
+
+mutation ReopenTask($id: UUID!) @auth(level: USER) {
+  task_update(id: $id, data: { state: open, completedAt: null })
+}

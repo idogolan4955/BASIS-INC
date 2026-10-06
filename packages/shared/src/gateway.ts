@@ -40,6 +40,9 @@ export interface GatewayFigures {
 
 export interface AttentionItem {
   readonly id: string;
+  /** An alert raised by a rule, or a task someone owes. */
+  readonly kind: 'alert' | 'task';
+  readonly state: 'open' | 'acknowledged';
   readonly severity: AlertSeverity;
   readonly module: ModuleKey;
   readonly title: string;

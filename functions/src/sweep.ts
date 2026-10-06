@@ -1,4 +1,5 @@
 import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { evaluateRules } from './alerts';
 import { REGION, graphql } from './lib';
 
 // The sweep consumes the outbox. Each handler is a small pure decision over
@@ -41,4 +42,5 @@ export async function sweepOnce(): Promise<{ processed: number }> {
 
 export const sweepEvents = onSchedule({ region: REGION, schedule: 'every 10 minutes' }, async () => {
   await sweepOnce();
+  await evaluateRules();
 });

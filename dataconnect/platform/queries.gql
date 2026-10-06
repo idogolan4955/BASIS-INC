@@ -145,3 +145,33 @@ query ListLegalEntities @auth(level: USER) {
     }
   }
 }
+
+# Staff directory for assigning work: no emails, no roles beyond the label.
+query ListStaff @auth(level: USER) {
+  users(where: { principalType: { eq: staff }, status: { ne: suspended } }, orderBy: { name: ASC }, limit: 500) {
+    uid
+    name
+    role
+  }
+}
+
+query ListOpenTasks @auth(level: USER) {
+  tasks(where: { state: { eq: open } }, orderBy: [{ dueOn: ASC }, { createdAt: ASC }], limit: 500) {
+    id
+    title
+    details
+    dueOn
+    state
+    entityType
+    entityId
+    createdAt
+    assignee {
+      uid
+      name
+    }
+    createdBy {
+      uid
+      name
+    }
+  }
+}

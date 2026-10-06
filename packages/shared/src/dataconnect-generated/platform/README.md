@@ -31,6 +31,8 @@ This README will guide you through the process of using the generated JavaScript
   - [*ListUoms*](#listuoms)
   - [*ListIncoterms*](#listincoterms)
   - [*ListLegalEntities*](#listlegalentities)
+  - [*ListStaff*](#liststaff)
+  - [*ListOpenTasks*](#listopentasks)
 - [**Mutations**](#mutations)
   - [*UpsertFamily*](#upsertfamily)
   - [*UpsertProduct*](#upsertproduct)
@@ -51,6 +53,8 @@ This README will guide you through the process of using the generated JavaScript
   - [*AddNote*](#addnote)
   - [*UpdateMyPreferences*](#updatemypreferences)
   - [*RecordEvent*](#recordevent)
+  - [*ResolveAlert*](#resolvealert)
+  - [*ReopenTask*](#reopentask)
   - [*InsertCompany*](#insertcompany)
   - [*UpdateCompany*](#updatecompany)
   - [*ArchiveCompany*](#archivecompany)
@@ -2764,6 +2768,209 @@ executeQuery(ref).then((response) => {
 });
 ```
 
+## ListStaff
+You can execute the `ListStaff` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+listStaff(options?: ExecuteQueryOptions): QueryPromise<ListStaffData, undefined>;
+
+interface ListStaffRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListStaffData, undefined>;
+}
+export const listStaffRef: ListStaffRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+listStaff(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListStaffData, undefined>;
+
+interface ListStaffRef {
+  ...
+  (dc: DataConnect): QueryRef<ListStaffData, undefined>;
+}
+export const listStaffRef: ListStaffRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the listStaffRef:
+```typescript
+const name = listStaffRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ListStaff` query has no variables.
+### Return Type
+Recall that executing the `ListStaff` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ListStaffData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ListStaffData {
+  users: ({
+    uid: string;
+    name: string;
+    role: Role;
+  } & User_Key)[];
+}
+```
+### Using `ListStaff`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, listStaff } from '@basis/dataconnect-platform';
+
+
+// Call the `listStaff()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await listStaff();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await listStaff(dataConnect);
+
+console.log(data.users);
+
+// Or, you can use the `Promise` API.
+listStaff().then((response) => {
+  const data = response.data;
+  console.log(data.users);
+});
+```
+
+### Using `ListStaff`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, listStaffRef } from '@basis/dataconnect-platform';
+
+
+// Call the `listStaffRef()` function to get a reference to the query.
+const ref = listStaffRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = listStaffRef(dataConnect);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.users);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.users);
+});
+```
+
+## ListOpenTasks
+You can execute the `ListOpenTasks` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+listOpenTasks(options?: ExecuteQueryOptions): QueryPromise<ListOpenTasksData, undefined>;
+
+interface ListOpenTasksRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListOpenTasksData, undefined>;
+}
+export const listOpenTasksRef: ListOpenTasksRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+listOpenTasks(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListOpenTasksData, undefined>;
+
+interface ListOpenTasksRef {
+  ...
+  (dc: DataConnect): QueryRef<ListOpenTasksData, undefined>;
+}
+export const listOpenTasksRef: ListOpenTasksRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the listOpenTasksRef:
+```typescript
+const name = listOpenTasksRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ListOpenTasks` query has no variables.
+### Return Type
+Recall that executing the `ListOpenTasks` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ListOpenTasksData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ListOpenTasksData {
+  tasks: ({
+    id: UUIDString;
+    title: string;
+    details?: string | null;
+    dueOn?: DateString | null;
+    state: TaskState;
+    entityType?: string | null;
+    entityId?: string | null;
+    createdAt: TimestampString;
+    assignee?: {
+      uid: string;
+      name: string;
+    } & User_Key;
+    createdBy?: {
+      uid: string;
+      name: string;
+    } & User_Key;
+  } & Task_Key)[];
+}
+```
+### Using `ListOpenTasks`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, listOpenTasks } from '@basis/dataconnect-platform';
+
+
+// Call the `listOpenTasks()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await listOpenTasks();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await listOpenTasks(dataConnect);
+
+console.log(data.tasks);
+
+// Or, you can use the `Promise` API.
+listOpenTasks().then((response) => {
+  const data = response.data;
+  console.log(data.tasks);
+});
+```
+
+### Using `ListOpenTasks`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, listOpenTasksRef } from '@basis/dataconnect-platform';
+
+
+// Call the `listOpenTasksRef()` function to get a reference to the query.
+const ref = listOpenTasksRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = listOpenTasksRef(dataConnect);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.tasks);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.tasks);
+});
+```
+
 # Mutations
 
 There are two ways to execute a Data Connect Mutation using the generated Web SDK:
@@ -5172,6 +5379,224 @@ console.log(data.timelineEvent_insert);
 executeMutation(ref).then((response) => {
   const data = response.data;
   console.log(data.timelineEvent_insert);
+});
+```
+
+## ResolveAlert
+You can execute the `ResolveAlert` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+resolveAlert(vars: ResolveAlertVariables): MutationPromise<ResolveAlertData, ResolveAlertVariables>;
+
+interface ResolveAlertRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ResolveAlertVariables): MutationRef<ResolveAlertData, ResolveAlertVariables>;
+}
+export const resolveAlertRef: ResolveAlertRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+resolveAlert(dc: DataConnect, vars: ResolveAlertVariables): MutationPromise<ResolveAlertData, ResolveAlertVariables>;
+
+interface ResolveAlertRef {
+  ...
+  (dc: DataConnect, vars: ResolveAlertVariables): MutationRef<ResolveAlertData, ResolveAlertVariables>;
+}
+export const resolveAlertRef: ResolveAlertRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the resolveAlertRef:
+```typescript
+const name = resolveAlertRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ResolveAlert` mutation requires an argument of type `ResolveAlertVariables`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface ResolveAlertVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `ResolveAlert` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ResolveAlertData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ResolveAlertData {
+  alert_update?: Alert_Key | null;
+}
+```
+### Using `ResolveAlert`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, resolveAlert, ResolveAlertVariables } from '@basis/dataconnect-platform';
+
+// The `ResolveAlert` mutation requires an argument of type `ResolveAlertVariables`:
+const resolveAlertVars: ResolveAlertVariables = {
+  id: ..., 
+};
+
+// Call the `resolveAlert()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await resolveAlert(resolveAlertVars);
+// Variables can be defined inline as well.
+const { data } = await resolveAlert({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await resolveAlert(dataConnect, resolveAlertVars);
+
+console.log(data.alert_update);
+
+// Or, you can use the `Promise` API.
+resolveAlert(resolveAlertVars).then((response) => {
+  const data = response.data;
+  console.log(data.alert_update);
+});
+```
+
+### Using `ResolveAlert`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, resolveAlertRef, ResolveAlertVariables } from '@basis/dataconnect-platform';
+
+// The `ResolveAlert` mutation requires an argument of type `ResolveAlertVariables`:
+const resolveAlertVars: ResolveAlertVariables = {
+  id: ..., 
+};
+
+// Call the `resolveAlertRef()` function to get a reference to the mutation.
+const ref = resolveAlertRef(resolveAlertVars);
+// Variables can be defined inline as well.
+const ref = resolveAlertRef({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = resolveAlertRef(dataConnect, resolveAlertVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.alert_update);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.alert_update);
+});
+```
+
+## ReopenTask
+You can execute the `ReopenTask` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+reopenTask(vars: ReopenTaskVariables): MutationPromise<ReopenTaskData, ReopenTaskVariables>;
+
+interface ReopenTaskRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ReopenTaskVariables): MutationRef<ReopenTaskData, ReopenTaskVariables>;
+}
+export const reopenTaskRef: ReopenTaskRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+reopenTask(dc: DataConnect, vars: ReopenTaskVariables): MutationPromise<ReopenTaskData, ReopenTaskVariables>;
+
+interface ReopenTaskRef {
+  ...
+  (dc: DataConnect, vars: ReopenTaskVariables): MutationRef<ReopenTaskData, ReopenTaskVariables>;
+}
+export const reopenTaskRef: ReopenTaskRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the reopenTaskRef:
+```typescript
+const name = reopenTaskRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ReopenTask` mutation requires an argument of type `ReopenTaskVariables`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface ReopenTaskVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `ReopenTask` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ReopenTaskData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ReopenTaskData {
+  task_update?: Task_Key | null;
+}
+```
+### Using `ReopenTask`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, reopenTask, ReopenTaskVariables } from '@basis/dataconnect-platform';
+
+// The `ReopenTask` mutation requires an argument of type `ReopenTaskVariables`:
+const reopenTaskVars: ReopenTaskVariables = {
+  id: ..., 
+};
+
+// Call the `reopenTask()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await reopenTask(reopenTaskVars);
+// Variables can be defined inline as well.
+const { data } = await reopenTask({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await reopenTask(dataConnect, reopenTaskVars);
+
+console.log(data.task_update);
+
+// Or, you can use the `Promise` API.
+reopenTask(reopenTaskVars).then((response) => {
+  const data = response.data;
+  console.log(data.task_update);
+});
+```
+
+### Using `ReopenTask`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, reopenTaskRef, ReopenTaskVariables } from '@basis/dataconnect-platform';
+
+// The `ReopenTask` mutation requires an argument of type `ReopenTaskVariables`:
+const reopenTaskVars: ReopenTaskVariables = {
+  id: ..., 
+};
+
+// Call the `reopenTaskRef()` function to get a reference to the mutation.
+const ref = reopenTaskRef(reopenTaskVars);
+// Variables can be defined inline as well.
+const ref = reopenTaskRef({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = reopenTaskRef(dataConnect, reopenTaskVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.task_update);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.task_update);
 });
 ```
 

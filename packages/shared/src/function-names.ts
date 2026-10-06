@@ -9,6 +9,8 @@ export const FUNCTION_NAMES = {
   inviteUser: 'inviteUser',
   /** Callable, owner only: change a person's role. */
   setUserRole: 'setUserRole',
+  /** Callable, owner and operations: run the alert rules now. */
+  evaluateAlerts: 'evaluateAlerts',
   /** Scheduled: consume domain events, evaluate alert rules. */
   sweepEvents: 'sweepEvents',
 } as const;

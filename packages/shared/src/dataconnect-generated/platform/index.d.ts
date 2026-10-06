@@ -763,6 +763,27 @@ export interface ListOpenAlertsData {
   } & Alert_Key)[];
 }
 
+export interface ListOpenTasksData {
+  tasks: ({
+    id: UUIDString;
+    title: string;
+    details?: string | null;
+    dueOn?: DateString | null;
+    state: TaskState;
+    entityType?: string | null;
+    entityId?: string | null;
+    createdAt: TimestampString;
+    assignee?: {
+      uid: string;
+      name: string;
+    } & User_Key;
+    createdBy?: {
+      uid: string;
+      name: string;
+    } & User_Key;
+  } & Task_Key)[];
+}
+
 export interface ListProductsData {
   products: ({
     code: string;
@@ -880,6 +901,14 @@ export interface ListSkusData {
   } & Sku_Key)[];
 }
 
+export interface ListStaffData {
+  users: ({
+    uid: string;
+    name: string;
+    role: Role;
+  } & User_Key)[];
+}
+
 export interface ListTimelineData {
   timelineEvents: ({
     id: UUIDString;
@@ -973,6 +1002,22 @@ export interface RemoveCompanyRoleData {
 }
 
 export interface RemoveCompanyRoleVariables {
+  id: UUIDString;
+}
+
+export interface ReopenTaskData {
+  task_update?: Task_Key | null;
+}
+
+export interface ReopenTaskVariables {
+  id: UUIDString;
+}
+
+export interface ResolveAlertData {
+  alert_update?: Alert_Key | null;
+}
+
+export interface ResolveAlertVariables {
   id: UUIDString;
 }
 
@@ -1563,6 +1608,30 @@ export const recordEventRef: RecordEventRef;
 export function recordEvent(vars: RecordEventVariables): MutationPromise<RecordEventData, RecordEventVariables>;
 export function recordEvent(dc: DataConnect, vars: RecordEventVariables): MutationPromise<RecordEventData, RecordEventVariables>;
 
+interface ResolveAlertRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ResolveAlertVariables): MutationRef<ResolveAlertData, ResolveAlertVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ResolveAlertVariables): MutationRef<ResolveAlertData, ResolveAlertVariables>;
+  operationName: string;
+}
+export const resolveAlertRef: ResolveAlertRef;
+
+export function resolveAlert(vars: ResolveAlertVariables): MutationPromise<ResolveAlertData, ResolveAlertVariables>;
+export function resolveAlert(dc: DataConnect, vars: ResolveAlertVariables): MutationPromise<ResolveAlertData, ResolveAlertVariables>;
+
+interface ReopenTaskRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ReopenTaskVariables): MutationRef<ReopenTaskData, ReopenTaskVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ReopenTaskVariables): MutationRef<ReopenTaskData, ReopenTaskVariables>;
+  operationName: string;
+}
+export const reopenTaskRef: ReopenTaskRef;
+
+export function reopenTask(vars: ReopenTaskVariables): MutationPromise<ReopenTaskData, ReopenTaskVariables>;
+export function reopenTask(dc: DataConnect, vars: ReopenTaskVariables): MutationPromise<ReopenTaskData, ReopenTaskVariables>;
+
 interface ListCompaniesRef {
   /* Allow users to create refs without passing in DataConnect */
   (): QueryRef<ListCompaniesData, undefined>;
@@ -1850,4 +1919,28 @@ export const listLegalEntitiesRef: ListLegalEntitiesRef;
 
 export function listLegalEntities(options?: ExecuteQueryOptions): QueryPromise<ListLegalEntitiesData, undefined>;
 export function listLegalEntities(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListLegalEntitiesData, undefined>;
+
+interface ListStaffRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListStaffData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListStaffData, undefined>;
+  operationName: string;
+}
+export const listStaffRef: ListStaffRef;
+
+export function listStaff(options?: ExecuteQueryOptions): QueryPromise<ListStaffData, undefined>;
+export function listStaff(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListStaffData, undefined>;
+
+interface ListOpenTasksRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListOpenTasksData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListOpenTasksData, undefined>;
+  operationName: string;
+}
+export const listOpenTasksRef: ListOpenTasksRef;
+
+export function listOpenTasks(options?: ExecuteQueryOptions): QueryPromise<ListOpenTasksData, undefined>;
+export function listOpenTasks(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListOpenTasksData, undefined>;
 

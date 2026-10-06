@@ -7,6 +7,7 @@ import { createRoot } from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router';
 import { Shell } from './layout/Shell';
 import { ModulePending } from './pages/ModulePending';
+import { Tasks } from './pages/operations/Tasks';
 import { Companies } from './pages/parties/Companies';
 import { CompanySheet } from './pages/parties/CompanySheet';
 import { ProductSheet } from './pages/products/ProductSheet';
@@ -31,6 +32,7 @@ const router = createBrowserRouter([
     element: <Root />,
     children: [
       { index: true, element: <Gateway /> },
+      { path: 'operations/tasks', element: <Tasks /> },
       { path: 'products', element: <ProductsIndex /> },
       { path: 'products/skus', element: <SkuLedger /> },
       { path: 'products/skus/:code', element: <SkuSheet tab="overview" /> },

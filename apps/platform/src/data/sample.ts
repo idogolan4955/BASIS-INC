@@ -37,6 +37,8 @@ export function sampleGateway(today: LocalDate): GatewayData {
     attention: [
       {
         id: 'a1',
+        kind: 'alert',
+        state: 'open',
         severity: 'critical',
         module: 'manufacturing',
         title: 'Dyeing is running 5 days late',
@@ -47,6 +49,8 @@ export function sampleGateway(today: LocalDate): GatewayData {
       },
       {
         id: 'a2',
+        kind: 'alert',
+        state: 'open',
         severity: 'critical',
         module: 'logistics',
         title: 'Arrival slipped by 6 days',
@@ -57,6 +61,8 @@ export function sampleGateway(today: LocalDate): GatewayData {
       },
       {
         id: 'a3',
+        kind: 'alert',
+        state: 'open',
         severity: 'caution',
         module: 'qc',
         title: 'Inspection waiting 3 days for sign-off',
@@ -67,6 +73,8 @@ export function sampleGateway(today: LocalDate): GatewayData {
       },
       {
         id: 'a4',
+        kind: 'alert',
+        state: 'open',
         severity: 'caution',
         module: 'documents',
         title: 'Packing list missing before departure',
@@ -77,6 +85,8 @@ export function sampleGateway(today: LocalDate): GatewayData {
       },
       {
         id: 'a5',
+        kind: 'alert',
+        state: 'open',
         severity: 'info',
         module: 'inventory',
         title: 'Stock below reorder point',
