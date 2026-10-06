@@ -5,7 +5,10 @@ import { connectDataConnectEmulator, getDataConnect } from 'firebase/data-connec
 
 // Public web configuration of Firebase project basis-inc. These identifiers
 // ship to every browser; access is governed by Auth and by @auth on every
-// Data Connect operation, never by hiding this file.
+// Data Connect operation, never by hiding this file. The browser key is
+// restricted in Google Cloud to the BASIS origins and to the Firebase APIs,
+// so it cannot be used from elsewhere. GitHub's secret scanner flags it
+// anyway: close that alert as a false positive, do not rotate the key.
 const config = {
   projectId: 'basis-inc',
   appId: '1:355671529737:web:881299c4ce1984a02f1bd8',

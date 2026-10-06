@@ -11,6 +11,7 @@ What must be remembered even without opening the docs:
 - **Firebase project** `basis-inc`. Hosting targets: `web` → site `basis-inc` (public brand site), `platform` → site `basis-inc-hq` (management platform).
 - **Working chain.** Every change ends deployed, committed and pushed to `main`: `tsc --noEmit` → build → `firebase deploy` (dataconnect / functions / hosting, according to what changed) → commit → push. Vite builds even with type errors, so `tsc` comes first. Commit messages in English, explaining why.
 - **Schema.** `firebase dataconnect:sql:diff` and read the SQL. Only `CREATE` and `ADD COLUMN`. Never `DROP` without the owner's explicit approval.
+- **The Firebase web API key** in `apps/platform/src/lib/firebase.ts` is public by design and referrer-restricted in Google Cloud; a new hosting domain must be added to its allowed referrers (`gcloud services api-keys update`). It is not a secret.
 - **Secrets** are set only by the owner in his terminal (`firebase functions:secrets:set`). Never in chat, never in code, never printed.
 - **Cost confidentiality is a data rule.** Roles without cost access must not receive purchase prices, landed costs or supplier identity — in the query, not only in the interface.
 - **Status is derived.** Health and progress come from facts (milestones, legs, inspections, movements). Never add a hand-edited status for them.
