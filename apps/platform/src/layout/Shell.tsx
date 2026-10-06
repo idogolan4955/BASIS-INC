@@ -1,8 +1,8 @@
 import { canOpenModule } from '@basis/shared';
 import { Wordmark, cn } from '@basis/ui';
-import { Bell, HouseSimple, ListMagnifyingGlass, MagnifyingGlass } from '@phosphor-icons/react';
-import { useEffect, useState } from 'react';
-import { Link, NavLink, Outlet } from 'react-router';
+import { Bell, HouseSimple, List, MagnifyingGlass, X } from '@phosphor-icons/react';
+import { useEffect, useRef, useState } from 'react';
+import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { useGateway } from '../data/source';
 import { useRequiredSession } from '../session';
 import { CommandPalette } from './CommandPalette';
@@ -31,9 +31,46 @@ function AlertsLink({ count, className }: { count: number; className?: string })
   );
 }
 
+/** The rail as a drawer on phones: the same index, opened from the bottom bar, closed by navigating. */
+function MenuDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const location = useLocation();
+  useEffect(() => {
+    const element = dialog.current;
+    if (!element) return;
+    if (open && !element.open) element.showModal();
+    else if (!open && element.open) element.close();
+  }, [open]);
+  useEffect(() => {
+    onClose();
+    // Close whenever the route changes, which is what a tap on a module does.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+  return (
+    <dialog
+      ref={dialog}
+      onClose={onClose}
+      onClick={(event) => event.target === dialog.current && onClose()}
+      aria-label="Modules"
+      className="m-0 h-dvh max-h-none w-[min(18rem,85vw)] max-w-none -translate-x-full bg-rail p-0 text-rail-ink transition-transform duration-200 ease-out open:translate-x-0 backdrop:bg-charcoal/45 starting:open:-translate-x-full lg:hidden"
+    >
+      <Rail className="h-dvh" />
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Close menu"
+        className="absolute right-2 top-3 grid size-10 place-items-center rounded-xs text-rail-ink/80 hover:bg-rail-raised hover:text-rail-ink"
+      >
+        <X size={18} aria-hidden="true" />
+      </button>
+    </dialog>
+  );
+}
+
 export function Shell() {
   const session = useRequiredSession();
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const attention = useAttentionCount();
 
   useEffect(() => {
@@ -88,10 +125,10 @@ export function Shell() {
         </main>
       </div>
 
-      {/* Phones: three thumb-reach destinations instead of a compressed rail. */}
+      {/* Phones: four thumb-reach destinations; the full index opens as a drawer. */}
       <nav
         aria-label="Primary"
-        className="on-rail fixed inset-x-0 bottom-0 z-30 grid h-16 grid-cols-3 border-t border-rail-line bg-rail text-rail-ink lg:hidden"
+        className="on-rail fixed inset-x-0 bottom-0 z-30 grid h-16 grid-cols-4 border-t border-rail-line bg-rail text-rail-ink lg:hidden"
       >
         <NavLink
           to="/"
@@ -117,11 +154,21 @@ export function Shell() {
           onClick={() => setPaletteOpen(true)}
           className="flex flex-col items-center justify-center gap-1 text-xs text-rail-ink/75"
         >
-          <ListMagnifyingGlass size={20} weight="light" aria-hidden="true" />
-          Index
+          <MagnifyingGlass size={20} weight="light" aria-hidden="true" />
+          Search
+        </button>
+        <button
+          type="button"
+          onClick={() => setMenuOpen(true)}
+          aria-haspopup="dialog"
+          className="flex flex-col items-center justify-center gap-1 text-xs text-rail-ink/75"
+        >
+          <List size={20} weight="light" aria-hidden="true" />
+          Menu
         </button>
       </nav>
 
+      <MenuDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );
