@@ -189,6 +189,14 @@ Depends on: Phase 2, P3.
 | Machine surface on the `api` function: `GET /api/attention`, `GET /api/export/<ledger>.json`, `POST /api/commands/<name>` running the same callable functions (`CallableFunction.run`) with the same role checks | Rate limits per token |
 | `apps/assistant`: an MCP server (`@modelcontextprotocol/sdk`, stdio) with `basis_attention`, `basis_ledger`, `basis_document`, `basis_command`; configured with a token and the API URL; README with the client configuration. Verified against the emulators through an MCP client: tools listed, attention and lots read, packing list saved locally, a command refused with the function's own message | Resources (ledgers as MCP resources); a hosted (HTTP) transport once Functions are deployed |
 
+#### Phase 4 progress, sixth slice: Operations (2026-10-06)
+
+| Done | Remaining |
+|---|---|
+| Module 01 Operations at `/operations`: the pipeline of goods as one strip (in production, in QC, ready to ship, in transit, in customs, in stock) with metres and record counts, derived in `packages/shared/src/operations.ts` from runs, lots and packing; transit, customs and stock report as pending until logistics and inventory land | Shipments, customs and stock feeding the last three stages (P6, P7) |
+| The calendar of the next 30 days: open milestones at their expected date (moved ones marked), requested ex-factory dates, unpaid payments due, tasks due; overdue items lead. The ETA rail marks each day that carries something | A month view; export of the calendar |
+| The Gateway's second zone, "In motion" and "Next 30 days", reads the same derivation; Tasks sits under Operations as a tab | |
+
 ### P5 — Quality (L)
 
 - Inspection templates and sampling rules; inspections for lab dip, inline, pre-shipment, receiving.

@@ -49,6 +49,9 @@ import { useAcknowledgeAlert, useResolveAlert, useRunChecks } from '../../data/a
 import { isSample, useGateway } from '../../data/source';
 import { useCompleteTask } from '../../data/tasks';
 import { useRequiredSession } from '../../session';
+import { EtaRail } from '../../components/EtaRail';
+import { Pipeline } from '../../components/Pipeline';
+import { useOperations } from '../../data/operations';
 import { NewTaskDialog } from '../operations/Tasks';
 
 const whole = new Intl.NumberFormat('en-US');
@@ -341,6 +344,21 @@ function runSteps(run: RunTimeline, asOf: LocalDate): TrackStep[] {
   });
 }
 
+function InMotion() {
+  const operations = useOperations();
+  const data = operations.data;
+  return (
+    <>
+      <Panel id="in-motion" title="In motion" action={<ViewAll to="/operations">Operations</ViewAll>} className="scroll-mt-20 xl:col-span-7">
+        {data ? <Pipeline cells={data.pipeline} /> : <p className="text-ink-muted">{operations.error ? operations.error.message : 'Reading the pipeline'}</p>}
+      </Panel>
+      <Panel title="Next 30 days" count={data?.calendar.length} action={<ViewAll to="/operations">Calendar</ViewAll>} className="xl:col-span-5">
+        {data ? <EtaRail entries={data.calendar} asOf={data.asOf} limit={8} /> : <p className="text-ink-muted">Reading the calendar</p>}
+      </Panel>
+    </>
+  );
+}
+
 function Production({ runs, asOf }: { runs: readonly RunTimeline[]; asOf: LocalDate }) {
   return (
     <Panel id="production" title="Production timeline" action={<ViewAll to="/manufacturing/runs">All runs</ViewAll>} className="scroll-mt-20 xl:col-span-7">
@@ -552,6 +570,7 @@ export function Gateway() {
           <Figures data={data} can={can} />
           <Attention items={data.attention.filter((item) => can(item.module))} canRun={session.role === 'owner' || session.role === 'operations'} />
           <div className="grid gap-4 *:min-w-0 xl:grid-cols-12">
+            {can('operations') && <InMotion />}
             {can('manufacturing') && <Production runs={data.runs} asOf={data.asOf} />}
             {can('logistics') && <Shipments shipments={data.shipments} />}
             {can('orders') && <Orders orders={data.orders} />}

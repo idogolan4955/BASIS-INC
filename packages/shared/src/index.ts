@@ -16,3 +16,4 @@ export * from './status';
 export * from './timeline';
 export * from './exports';
 export * from './connectors';
+export * from './operations';

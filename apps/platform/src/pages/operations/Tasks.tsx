@@ -6,6 +6,7 @@ import { Link } from 'react-router';
 import { useCompleteTask, useCreateTask, useOpenTasks, useStaff, type TaskView } from '../../data/tasks';
 import { useRequiredSession } from '../../session';
 import { ModuleTitle } from '../products/ProductsIndex';
+import { OperationsTabs } from './Operations';
 
 // What people owe. A task can point at a record; the Gateway lists what is
 // due and the overdue rule raises what is late.
@@ -80,7 +81,7 @@ export function Tasks() {
     <>
       <ModuleTitle
         number="01"
-        title="Tasks"
+        title="Operations"
         actions={
           <Button variant="primary" onClick={() => setCreating(true)}>
             <Plus size={16} aria-hidden="true" />
@@ -90,6 +91,7 @@ export function Tasks() {
       >
         Open tasks across the company, soonest due first.
       </ModuleTitle>
+      <OperationsTabs active="tasks" />
       <div className="px-5 py-6 lg:px-8">
         <Panel title="Open tasks" count={rows.length} flush>
           {tasks.isPending ? (

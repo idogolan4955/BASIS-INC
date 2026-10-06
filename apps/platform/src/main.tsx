@@ -15,6 +15,7 @@ import { Documents } from './pages/documents/Documents';
 import { Settings } from './pages/settings/Settings';
 import { Inquiries } from './pages/customers/Inquiries';
 import { Tasks } from './pages/operations/Tasks';
+import { Operations } from './pages/operations/Operations';
 import { Companies } from './pages/parties/Companies';
 import { CompanySheet } from './pages/parties/CompanySheet';
 import { ProductSheet } from './pages/products/ProductSheet';
@@ -39,6 +40,7 @@ const router = createBrowserRouter([
     element: <Root />,
     children: [
       { index: true, element: <Gateway /> },
+      { path: 'operations', element: <Operations /> },
       { path: 'operations/tasks', element: <Tasks /> },
       { path: 'manufacturing', element: <PurchaseOrders /> },
       { path: 'manufacturing/purchase-orders', element: <PurchaseOrders /> },

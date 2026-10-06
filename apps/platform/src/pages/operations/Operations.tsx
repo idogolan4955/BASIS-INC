@@ -1,0 +1,53 @@
+import { Panel, cn } from '@basis/ui';
+import { NavLink } from 'react-router';
+import { EtaRail } from '../../components/EtaRail';
+import { Pipeline } from '../../components/Pipeline';
+import { useOperations } from '../../data/operations';
+import { ModuleTitle } from '../products/ProductsIndex';
+
+// Module 01: the pipeline of goods and the calendar of what is coming,
+// read from runs, lots, payments and tasks.
+
+export function OperationsTabs({ active }: { active: 'pipeline' | 'tasks' }) {
+  const tab = (key: typeof active, to: string, label: string) => (
+    <NavLink key={key} to={to} end className={cn('-mb-px flex h-11 items-center border-b-2 text-sm transition-colors duration-150', active === key ? 'border-charcoal font-medium text-ink' : 'border-transparent text-ink-muted hover:text-ink')}>
+      {label}
+    </NavLink>
+  );
+  return (
+    <nav aria-label="Operations sections" className="flex gap-6 border-b border-line bg-panel px-5 lg:px-8">
+      {tab('pipeline', '/operations', 'Pipeline and calendar')}
+      {tab('tasks', '/operations/tasks', 'Tasks')}
+    </nav>
+  );
+}
+
+export function Operations() {
+  const operations = useOperations();
+  const data = operations.data;
+  return (
+    <>
+      <ModuleTitle number="01" title="Operations">
+        Goods in motion, dates coming up, work owed. Nothing here is set by hand.
+      </ModuleTitle>
+      <OperationsTabs active="pipeline" />
+      <div className="flex flex-col gap-4 px-5 py-6 lg:px-8">
+        {operations.isPending ? (
+          <p className="text-ink-muted">Reading the pipeline</p>
+        ) : operations.error ? (
+          <p className="text-critical">Operations could not be loaded. {operations.error.message}</p>
+        ) : data ? (
+          <>
+            <Panel title="In motion">
+              <Pipeline cells={data.pipeline} />
+              <p className="mt-3 text-[0.8125rem] text-ink-muted">Metres by stage. Production counts what is planned and not yet produced; QC the lots awaiting inspection; ready to ship what is released and packed.</p>
+            </Panel>
+            <Panel title="Next 30 days" count={data.calendar.length}>
+              <EtaRail entries={data.calendar} asOf={data.asOf} />
+            </Panel>
+          </>
+        ) : null}
+      </div>
+    </>
+  );
+}

@@ -419,3 +419,66 @@ query ListProcessTemplates @auth(level: USER) {
     }
   }
 }
+
+# What Operations reads: open runs with the facts the pipeline and the
+# calendar are derived from. No prices.
+query OperationsFacts
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'finance' || auth.token.role == 'sales'") {
+  productionRuns(where: { state: { in: [planned, active] } }, orderBy: { plannedEnd: ASC }, limit: 500) {
+    number
+    state
+    health
+    plannedEnd
+    forecastEnd
+    purchaseOrder {
+      number
+      requestedExFactory
+      supplier {
+        tradingName
+        legalName
+      }
+      paymentMilestones_on_purchaseOrder(limit: 20) {
+        label
+        dueOn
+        paidOn
+      }
+    }
+    productionRunLines_on_run(limit: 50) {
+      plannedQuantity
+      purchaseOrderLine {
+        sku {
+          product {
+            name
+          }
+          shade {
+            name
+          }
+        }
+      }
+    }
+    productionMilestones_on_run(orderBy: { sequence: ASC }, limit: 50) {
+      key
+      name
+      state
+      plannedEnd
+      forecastEnd
+      actualEnd
+    }
+    lots_on_run(limit: 100) {
+      number
+      qualityState
+      producedQuantity
+      rolls_on_lot(limit: 500) {
+        measuredLength
+        handlingUnitContents_on_roll(limit: 1) {
+          handlingUnit {
+            number
+          }
+        }
+      }
+      handlingUnitContents_on_lot(limit: 100) {
+        quantity
+      }
+    }
+  }
+}
