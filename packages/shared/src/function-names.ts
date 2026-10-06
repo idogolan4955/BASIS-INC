@@ -26,6 +26,13 @@ export const FUNCTION_NAMES = {
   setLotQuality: 'setLotQuality',
   /** Callable: file a generated document (purchase order, packing list, labels) as a document record of its entity. */
   fileGeneratedDocument: 'fileGeneratedDocument',
+  /** Callable: email a generated document through the email connector. */
+  sendDocumentEmail: 'sendDocumentEmail',
+  /** Callable, owner only: connectors and tokens. */
+  createApiToken: 'createApiToken',
+  revokeApiToken: 'revokeApiToken',
+  saveConnector: 'saveConnector',
+  connectorStatus: 'connectorStatus',
   /** Callable, owner and operations: run the alert rules now. */
   evaluateAlerts: 'evaluateAlerts',
   /** Scheduled: consume domain events, evaluate alert rules. */

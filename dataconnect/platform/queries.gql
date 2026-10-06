@@ -201,3 +201,36 @@ query ListOpenTasks @auth(level: USER) {
     }
   }
 }
+
+query ListApiTokens @auth(expr: "auth.token.role == 'owner'") {
+  apiTokens(orderBy: { createdAt: DESC }, limit: 100) {
+    id
+    name
+    prefix
+    role
+    createdAt
+    expiresAt
+    lastUsedAt
+    revokedAt
+  }
+}
+
+query ListConnectors @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations'") {
+  connectors(limit: 20) {
+    key
+    settings
+    updatedAt
+  }
+}
+
+query ListMessagesFor($entityType: String!, $entityId: String!) @auth(level: USER) {
+  messages(where: { entityType: { eq: $entityType }, entityId: { eq: $entityId } }, orderBy: { sentAt: DESC }, limit: 200) {
+    id
+    channel
+    recipient
+    subject
+    status
+    error
+    sentAt
+  }
+}

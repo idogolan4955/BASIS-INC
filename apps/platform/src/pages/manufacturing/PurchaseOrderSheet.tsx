@@ -22,6 +22,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, NavLink, useNavigate, useParams } from 'react-router';
 import { useCancelPurchaseOrder, useConfirmPurchaseOrder, useCreateProductionRun, useIssuePurchaseOrder, usePurchaseOrder, usePurchaseOrderCosts } from '../../data/manufacturing';
 import { DocumentsPanel } from '../../components/DocumentsPanel';
+import { EmailDialog } from '../../components/EmailDialog';
 import { isSample } from '../../data/source';
 import { useRecordNote, useTimeline } from '../../data/timeline';
 import { useDocument } from '../../lib/documents';
@@ -275,7 +276,7 @@ export function PurchaseOrderSheet({ tab }: { tab: 'overview' | 'production' | '
   const po = usePurchaseOrder(number);
   const issue = useIssuePurchaseOrder();
   const confirm = useConfirmPurchaseOrder();
-  const [dialog, setDialog] = useState<'run' | 'cancel' | null>(null);
+  const [dialog, setDialog] = useState<'run' | 'cancel' | 'email' | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const pdf = useDocument();
   const manage = canManageModule(session.role, 'manufacturing');
@@ -329,6 +330,7 @@ export function PurchaseOrderSheet({ tab }: { tab: 'overview' | 'production' | '
                 <Button onClick={() => pdf.share('purchase-order', data.number, `Purchase order ${data.number} from BASIS INC. for ${data.supplierName}`)} busy={pdf.busy === 'share:purchase-order'} busyLabel="Sharing">
                   WhatsApp
                 </Button>
+                <Button onClick={() => setDialog('email')}>Email</Button>
               </>
             )}
             {manage && (
@@ -416,6 +418,7 @@ export function PurchaseOrderSheet({ tab }: { tab: 'overview' | 'production' | '
           <CancelDialog po={data} open={dialog === 'cancel'} onClose={() => setDialog(null)} />
         </>
       )}
+      {costs && !isSample && <EmailDialog key={dialog === 'email' ? 'open' : 'closed'} kind="purchase-order" number={data.number} subject={`Purchase order ${data.number} from BASIS INC.`} open={dialog === 'email'} onClose={() => setDialog(null)} />}
     </>
   );
 }

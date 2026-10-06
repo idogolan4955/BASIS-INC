@@ -253,7 +253,8 @@ Rules write to `Alert` with a dedupe key, severity and state (`open`, `acknowled
 | FX rates | Daily rates for costing | Costing |
 | Carrier / container tracking | Tracking events for shipment legs | Logistics, later |
 | Accounting system | Export invoices, costs, payments | After orders |
-| Messaging (email, WhatsApp) | Customer and supplier interaction history | Growth |
+| Messaging (email, WhatsApp) | Customer and supplier interaction history. Today: documents emailed through the email connector (Resend or Postmark) and logged as `Message`; WhatsApp through the share sheet | Growth |
+| Personal AI assistant (MCP) | `apps/assistant`: an MCP server acting through `/api/**` with an API token issued in Settings; the same functions and role checks as the screens | Phase 4 |
 | Document generation | Purchase orders, packing lists, roll labels, technical sheets as PDF | Manufacturing / Logistics |
 
 Each is a module in `functions/src` behind an interface typed in `@basis/shared`, so a provider can be replaced without touching screens.

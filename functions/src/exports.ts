@@ -232,6 +232,13 @@ async function xlsx(title: string, columns: readonly ExportColumn[], rows: reado
   return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 
+/** The rows and the columns a role receives, for machines reading JSON. */
+export async function exportRows(ledger: ExportLedger, caller: Caller, scope: ExportScope): Promise<{ columns: readonly ExportColumn[]; rows: ExportRow[] }> {
+  const columns = columnsFor(ledger, caller.role);
+  const rows = (await SOURCES[ledger](scope)).map((row) => Object.fromEntries(columns.map((column) => [column.key, row[column.key] ?? null])));
+  return { columns, rows };
+}
+
 export async function renderExport(ledger: ExportLedger, format: ExportFormat, caller: Caller, scope: ExportScope): Promise<{ body: Buffer; filename: string; contentType: string }> {
   const definition = LEDGERS[ledger];
   for (const key of ['run', 'po', 'lot'] as const) {

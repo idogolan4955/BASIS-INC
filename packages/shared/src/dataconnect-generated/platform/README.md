@@ -41,6 +41,9 @@ This README will guide you through the process of using the generated JavaScript
   - [*ListLegalEntities*](#listlegalentities)
   - [*ListStaff*](#liststaff)
   - [*ListOpenTasks*](#listopentasks)
+  - [*ListApiTokens*](#listapitokens)
+  - [*ListConnectors*](#listconnectors)
+  - [*ListMessagesFor*](#listmessagesfor)
 - [**Mutations**](#mutations)
   - [*UpsertFamily*](#upsertfamily)
   - [*UpsertProduct*](#upsertproduct)
@@ -4222,6 +4225,321 @@ console.log(data.tasks);
 executeQuery(ref).then((response) => {
   const data = response.data;
   console.log(data.tasks);
+});
+```
+
+## ListApiTokens
+You can execute the `ListApiTokens` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+listApiTokens(options?: ExecuteQueryOptions): QueryPromise<ListApiTokensData, undefined>;
+
+interface ListApiTokensRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListApiTokensData, undefined>;
+}
+export const listApiTokensRef: ListApiTokensRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+listApiTokens(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListApiTokensData, undefined>;
+
+interface ListApiTokensRef {
+  ...
+  (dc: DataConnect): QueryRef<ListApiTokensData, undefined>;
+}
+export const listApiTokensRef: ListApiTokensRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the listApiTokensRef:
+```typescript
+const name = listApiTokensRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ListApiTokens` query has no variables.
+### Return Type
+Recall that executing the `ListApiTokens` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ListApiTokensData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ListApiTokensData {
+  apiTokens: ({
+    id: UUIDString;
+    name: string;
+    prefix: string;
+    role: Role;
+    createdAt: TimestampString;
+    expiresAt?: TimestampString | null;
+    lastUsedAt?: TimestampString | null;
+    revokedAt?: TimestampString | null;
+  } & ApiToken_Key)[];
+}
+```
+### Using `ListApiTokens`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, listApiTokens } from '@basis/dataconnect-platform';
+
+
+// Call the `listApiTokens()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await listApiTokens();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await listApiTokens(dataConnect);
+
+console.log(data.apiTokens);
+
+// Or, you can use the `Promise` API.
+listApiTokens().then((response) => {
+  const data = response.data;
+  console.log(data.apiTokens);
+});
+```
+
+### Using `ListApiTokens`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, listApiTokensRef } from '@basis/dataconnect-platform';
+
+
+// Call the `listApiTokensRef()` function to get a reference to the query.
+const ref = listApiTokensRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = listApiTokensRef(dataConnect);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.apiTokens);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.apiTokens);
+});
+```
+
+## ListConnectors
+You can execute the `ListConnectors` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+listConnectors(options?: ExecuteQueryOptions): QueryPromise<ListConnectorsData, undefined>;
+
+interface ListConnectorsRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListConnectorsData, undefined>;
+}
+export const listConnectorsRef: ListConnectorsRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+listConnectors(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListConnectorsData, undefined>;
+
+interface ListConnectorsRef {
+  ...
+  (dc: DataConnect): QueryRef<ListConnectorsData, undefined>;
+}
+export const listConnectorsRef: ListConnectorsRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the listConnectorsRef:
+```typescript
+const name = listConnectorsRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ListConnectors` query has no variables.
+### Return Type
+Recall that executing the `ListConnectors` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ListConnectorsData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ListConnectorsData {
+  connectors: ({
+    key: string;
+    settings?: unknown | null;
+    updatedAt: TimestampString;
+  } & Connector_Key)[];
+}
+```
+### Using `ListConnectors`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, listConnectors } from '@basis/dataconnect-platform';
+
+
+// Call the `listConnectors()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await listConnectors();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await listConnectors(dataConnect);
+
+console.log(data.connectors);
+
+// Or, you can use the `Promise` API.
+listConnectors().then((response) => {
+  const data = response.data;
+  console.log(data.connectors);
+});
+```
+
+### Using `ListConnectors`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, listConnectorsRef } from '@basis/dataconnect-platform';
+
+
+// Call the `listConnectorsRef()` function to get a reference to the query.
+const ref = listConnectorsRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = listConnectorsRef(dataConnect);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.connectors);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.connectors);
+});
+```
+
+## ListMessagesFor
+You can execute the `ListMessagesFor` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+listMessagesFor(vars: ListMessagesForVariables, options?: ExecuteQueryOptions): QueryPromise<ListMessagesForData, ListMessagesForVariables>;
+
+interface ListMessagesForRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListMessagesForVariables): QueryRef<ListMessagesForData, ListMessagesForVariables>;
+}
+export const listMessagesForRef: ListMessagesForRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+listMessagesFor(dc: DataConnect, vars: ListMessagesForVariables, options?: ExecuteQueryOptions): QueryPromise<ListMessagesForData, ListMessagesForVariables>;
+
+interface ListMessagesForRef {
+  ...
+  (dc: DataConnect, vars: ListMessagesForVariables): QueryRef<ListMessagesForData, ListMessagesForVariables>;
+}
+export const listMessagesForRef: ListMessagesForRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the listMessagesForRef:
+```typescript
+const name = listMessagesForRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ListMessagesFor` query requires an argument of type `ListMessagesForVariables`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface ListMessagesForVariables {
+  entityType: string;
+  entityId: string;
+}
+```
+### Return Type
+Recall that executing the `ListMessagesFor` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ListMessagesForData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ListMessagesForData {
+  messages: ({
+    id: UUIDString;
+    channel: string;
+    recipient: string;
+    subject?: string | null;
+    status: string;
+    error?: string | null;
+    sentAt: TimestampString;
+  } & Message_Key)[];
+}
+```
+### Using `ListMessagesFor`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, listMessagesFor, ListMessagesForVariables } from '@basis/dataconnect-platform';
+
+// The `ListMessagesFor` query requires an argument of type `ListMessagesForVariables`:
+const listMessagesForVars: ListMessagesForVariables = {
+  entityType: ..., 
+  entityId: ..., 
+};
+
+// Call the `listMessagesFor()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await listMessagesFor(listMessagesForVars);
+// Variables can be defined inline as well.
+const { data } = await listMessagesFor({ entityType: ..., entityId: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await listMessagesFor(dataConnect, listMessagesForVars);
+
+console.log(data.messages);
+
+// Or, you can use the `Promise` API.
+listMessagesFor(listMessagesForVars).then((response) => {
+  const data = response.data;
+  console.log(data.messages);
+});
+```
+
+### Using `ListMessagesFor`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, listMessagesForRef, ListMessagesForVariables } from '@basis/dataconnect-platform';
+
+// The `ListMessagesFor` query requires an argument of type `ListMessagesForVariables`:
+const listMessagesForVars: ListMessagesForVariables = {
+  entityType: ..., 
+  entityId: ..., 
+};
+
+// Call the `listMessagesForRef()` function to get a reference to the query.
+const ref = listMessagesForRef(listMessagesForVars);
+// Variables can be defined inline as well.
+const ref = listMessagesForRef({ entityType: ..., entityId: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = listMessagesForRef(dataConnect, listMessagesForVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.messages);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.messages);
 });
 ```
 

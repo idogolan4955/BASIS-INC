@@ -179,6 +179,16 @@ Depends on: Phase 2, P3.
 | Phones have a menu: the bottom bar carries Gateway, Attention, Search and Menu; Menu opens the rail as a drawer | |
 | Seed: number sequences are never reset by a re-seed | |
 
+#### Phase 4 progress, fifth slice: connectors (2026-10-06)
+
+| Done | Remaining |
+|---|---|
+| Settings › Connectors (module 15): Email (provider Resend or Postmark, sender, reply-to; the API key is a Functions secret `EMAIL_API_KEY` the owner sets in the terminal — the screen only shows whether the functions can see it), WhatsApp (share sheet today; business number kept for documents), Assistant and API (tokens) | Users and roles screen on the existing `inviteUser` / `setUserRole`; legal entities, reference data, sequences, templates, alert thresholds, audit log |
+| Email: `sendDocumentEmail` renders a purchase order, packing list or roll labels and sends it as an attachment through the connector; every attempt is a `Message` on the record (sent or failed, with the provider's answer) and a timeline entry. Email buttons on the order sheet and the packing tab | Inbound email; templates per document; WhatsApp Business API delivery |
+| API tokens (`ApiToken`: name, prefix, SHA-256 hash, role, expiry, revocation; shown once): `createApiToken`, `revokeApiToken`. A `bsk_…` bearer on `/api/**` acts as the person who issued it, with the token's role, named on the request | Scopes narrower than a role |
+| Machine surface on the `api` function: `GET /api/attention`, `GET /api/export/<ledger>.json`, `POST /api/commands/<name>` running the same callable functions (`CallableFunction.run`) with the same role checks | Rate limits per token |
+| `apps/assistant`: an MCP server (`@modelcontextprotocol/sdk`, stdio) with `basis_attention`, `basis_ledger`, `basis_document`, `basis_command`; configured with a token and the API URL; README with the client configuration. Verified against the emulators through an MCP client: tools listed, attention and lots read, packing list saved locally, a command refused with the function's own message | Resources (ledgers as MCP resources); a hosted (HTTP) transport once Functions are deployed |
+
 ### P5 — Quality (L)
 
 - Inspection templates and sampling rules; inspections for lab dip, inline, pre-shipment, receiving.

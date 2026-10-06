@@ -240,7 +240,7 @@ Everything below requires an authenticated session; each route additionally requ
 
 | Route | Purpose |
 |---|---|
-| `/settings` | Settings index |
+| `/settings` | Settings index: Connectors (email, WhatsApp, assistant and API tokens) |
 | `/settings/users` · `/settings/roles` | Users and roles |
 | `/settings/legal-entities` | BASIS legal entities |
 | `/settings/reference` · `/settings/reference/[dataset]` | Reference data (units, currencies, ports, HS codes, defect types, delay reasons, document types) |
@@ -257,8 +257,10 @@ The platform is a single-page application: every path is rewritten to `index.htm
 |---|---|
 | `/api/webhooks/tracking` | Carrier / forwarder tracking events |
 | `/api/webhooks/email` | Email delivery events |
-| `/api/export/[ledger]` | CSV / XLSX export of a ledger view |
-| `/api/pdf/[document]` | Generated PDFs (purchase order, packing list, labels) |
+| `/api/export/[ledger].[csv|xlsx|json]` | Export of a ledger view; JSON for machines |
+| `/api/pdf/[document]/[number]` | Generated PDFs (purchase order, packing list, labels) |
+| `/api/attention` | Open alerts and tasks, for machines |
+| `/api/commands/[name]` | The callable commands over plain HTTP, for API tokens (the owner's assistant) |
 | `/api/health` | Health check |
 
 ## 4. Code layout

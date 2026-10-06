@@ -1,8 +1,10 @@
 import { HttpsError, onRequest } from 'firebase-functions/v2/https';
 import { REGION, httpCallerOf, requireRole } from './lib';
-import { renderExport } from './exports';
+import { exportRows, renderExport } from './exports';
 import { renderPackingList, renderPurchaseOrder, renderRollLabels } from './pdf';
-import { EXPORT_FORMATS, isExportLedger, type ExportFormat } from '@basis/shared';
+import { EXPORT_FORMATS, isAssistantCommand, isExportLedger, type ExportFormat } from '@basis/shared';
+import type { CallableFunction, CallableRequest } from 'firebase-functions/v2/https';
+import { graphql } from './lib';
 
 // Plain HTTP, behind Hosting's /api/** rewrite. Public intake, webhooks,
 // exports and PDFs join this router as their modules are built.
@@ -53,18 +55,24 @@ export const api = onRequest({ region: REGION, cors: [/^http:\/\/localhost:\d+$/
     return;
   }
 
-  // /export/<ledger>.<csv|xlsx>?run=&po=&lot=: a ledger as a file, cost columns for cost roles only.
-  const exported = path.match(/^\/export\/([a-z-]+)\.(csv|xlsx)$/);
+  // /export/<ledger>.<csv|xlsx|json>?run=&po=&lot=: a ledger as a file, cost columns for cost roles only.
+  const exported = path.match(/^\/export\/([a-z-]+)\.(csv|xlsx|json)$/);
   if (request.method === 'GET' && exported) {
     const ledger = exported[1]!;
-    const format = exported[2] as ExportFormat;
-    if (!isExportLedger(ledger) || !EXPORT_FORMATS.includes(format)) {
+    const format = exported[2] as ExportFormat | 'json';
+    if (!isExportLedger(ledger) || (format !== 'json' && !EXPORT_FORMATS.includes(format))) {
       response.status(404).json({ error: 'not_found', message: `No export ${ledger}.${format}.` });
       return;
     }
     try {
       const caller = await httpCallerOf(request.get('authorization'));
       const scope = Object.fromEntries((['run', 'po', 'lot'] as const).map((key) => [key, typeof request.query[key] === 'string' && /^[A-Z]{2,4}-\d{2}-\d{4}$/.test(request.query[key] as string) ? (request.query[key] as string) : undefined]));
+      if (format === 'json') {
+        const { rows, columns } = await exportRows(ledger, caller, scope);
+        response.set('Cache-Control', 'private, no-store');
+        response.json({ ledger, columns, rows });
+        return;
+      }
       const { body, filename, contentType } = await renderExport(ledger, format, caller, scope);
       response.set('Content-Type', contentType);
       response.set('Content-Disposition', `attachment; filename="${filename}"`);
@@ -77,6 +85,52 @@ export const api = onRequest({ region: REGION, cors: [/^http:\/\/localhost:\d+$/
       }
       console.error('export', error);
       response.status(500).json({ error: 'internal', message: 'The export could not be produced.' });
+    }
+    return;
+  }
+
+  // /attention: what the Gateway shows, for a machine.
+  if (request.method === 'GET' && path === '/attention') {
+    try {
+      await httpCallerOf(request.get('authorization'));
+      const data = await graphql<{ alerts: unknown[]; tasks: unknown[] }>(
+        `query { alerts(where: { state: { in: [open, acknowledged] } }, orderBy: { lastSeen: DESC }, limit: 200) { id ruleKey entityType entityId severity state title detail ownerRole firstSeen lastSeen }
+                 tasks(where: { state: { eq: open } }, orderBy: { dueOn: ASC }, limit: 200) { id title details dueOn entityType entityId assignee { name } } }`,
+      );
+      response.set('Cache-Control', 'private, no-store');
+      response.json(data);
+    } catch (error) {
+      const status = error instanceof HttpsError ? (STATUS[error.code] ?? 500) : 500;
+      response.status(status).json({ error: error instanceof HttpsError ? error.code : 'internal', message: error instanceof Error ? error.message : 'Failed.' });
+    }
+    return;
+  }
+
+  // /commands/<name>: the callable commands, for a token or a session. The
+  // same function runs, with the same role checks; only the transport differs.
+  const command = path.match(/^\/commands\/([A-Za-z]+)$/);
+  if (request.method === 'POST' && command) {
+    const name = command[1]!;
+    if (!isAssistantCommand(name)) {
+      response.status(404).json({ error: 'not_found', message: `No command ${name}.` });
+      return;
+    }
+    try {
+      const caller = await httpCallerOf(request.get('authorization'));
+      const functions = (await import('./index')) as unknown as Record<string, CallableFunction<unknown, unknown>>;
+      const callable = functions[name]!;
+      const synthetic = { data: request.body, auth: { uid: caller.uid, token: { role: caller.role, ...(caller.email ? { email: caller.email } : {}) } }, rawRequest: request, acceptsStreaming: false } as unknown as CallableRequest<unknown>;
+      const result = await callable.run(synthetic);
+      if (caller.via) console.info('command', name, 'by', caller.uid, 'via', caller.via);
+      response.set('Cache-Control', 'private, no-store');
+      response.json({ result });
+    } catch (error) {
+      if (error instanceof HttpsError) {
+        response.status(STATUS[error.code] ?? 500).json({ error: error.code, message: error.message, details: error.details ?? null });
+        return;
+      }
+      console.error('command', name, error);
+      response.status(500).json({ error: 'internal', message: 'The command failed.' });
     }
     return;
   }

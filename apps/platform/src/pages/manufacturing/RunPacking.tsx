@@ -2,6 +2,7 @@ import { HANDLING_UNIT_KIND_LABEL, formatLocalDate, formatQuantity, metresNumber
 import { Button, CheckField, Dialog, Ledger, Panel, SelectField, Td, TextField, Th, Tr, cn } from '@basis/ui';
 import { useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
+import { EmailDialog } from '../../components/EmailDialog';
 import { ExportMenu } from '../../components/ExportMenu';
 import { usePackHandlingUnit } from '../../data/manufacturing';
 import { isSample } from '../../data/source';
@@ -162,6 +163,7 @@ function unitRows(run: RunDetail): ExportRow[] {
 
 export function PackingPanel({ run, manage }: { run: RunDetail; manage: boolean }) {
   const [packing, setPacking] = useState(false);
+  const [emailing, setEmailing] = useState(false);
   const pdf = useDocument();
   const units = run.handlingUnits;
   const rolls = units.reduce((total, unit) => total + unit.contents.filter((content) => content.rollNumber).length, 0);
@@ -191,6 +193,9 @@ export function PackingPanel({ run, manage }: { run: RunDetail; manage: boolean 
                 </Button>
                 <Button size="sm" onClick={() => pdf.share('packing-list', run.number, `Packing list ${run.number} from BASIS INC.`)} busy={pdf.busy === 'share:packing-list'} busyLabel="Sharing">
                   WhatsApp
+                </Button>
+                <Button size="sm" onClick={() => setEmailing(true)}>
+                  Email
                 </Button>
               </>
             )}
@@ -270,6 +275,7 @@ export function PackingPanel({ run, manage }: { run: RunDetail; manage: boolean 
         )}
       </Panel>
       {manage && <PackDialog key={packing ? 'open' : 'closed'} run={run} open={packing} onClose={() => setPacking(false)} />}
+      {!isSample && <EmailDialog key={emailing ? 'open' : 'closed'} kind="packing-list" number={run.number} subject={`Packing list ${run.number} from BASIS INC.`} open={emailing} onClose={() => setEmailing(false)} />}
     </>
   );
 }

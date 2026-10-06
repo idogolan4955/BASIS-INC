@@ -1,0 +1,25 @@
+{
+  "name": "@basis/assistant",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "MCP server that lets an AI assistant act on the BASIS platform with an API token.",
+  "bin": {
+    "basis-assistant": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc --noEmit && tsup",
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@basis/shared": "workspace:^",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "tsup": "^8.5.1",
+    "typescript": "^7.0.2"
+  }
+}

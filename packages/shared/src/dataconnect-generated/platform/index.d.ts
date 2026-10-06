@@ -189,6 +189,11 @@ export interface Alert_Key {
   __typename?: 'Alert_Key';
 }
 
+export interface ApiToken_Key {
+  id: UUIDString;
+  __typename?: 'ApiToken_Key';
+}
+
 export interface ArchiveCompanyData {
   company_update?: Company_Key | null;
 }
@@ -223,6 +228,11 @@ export interface CompleteTaskData {
 
 export interface CompleteTaskVariables {
   id: UUIDString;
+}
+
+export interface Connector_Key {
+  key: string;
+  __typename?: 'Connector_Key';
 }
 
 export interface Contact_Key {
@@ -1005,6 +1015,19 @@ export interface LegalEntity_Key {
   __typename?: 'LegalEntity_Key';
 }
 
+export interface ListApiTokensData {
+  apiTokens: ({
+    id: UUIDString;
+    name: string;
+    prefix: string;
+    role: Role;
+    createdAt: TimestampString;
+    expiresAt?: TimestampString | null;
+    lastUsedAt?: TimestampString | null;
+    revokedAt?: TimestampString | null;
+  } & ApiToken_Key)[];
+}
+
 export interface ListCompaniesData {
   companies: ({
     id: UUIDString;
@@ -1023,6 +1046,14 @@ export interface ListCompaniesData {
       id: UUIDString;
     } & Contact_Key)[];
   } & Company_Key)[];
+}
+
+export interface ListConnectorsData {
+  connectors: ({
+    key: string;
+    settings?: unknown | null;
+    updatedAt: TimestampString;
+  } & Connector_Key)[];
 }
 
 export interface ListCountriesData {
@@ -1157,6 +1188,23 @@ export interface ListLegalEntitiesData {
       code: string;
     } & Currency_Key;
   } & LegalEntity_Key)[];
+}
+
+export interface ListMessagesForData {
+  messages: ({
+    id: UUIDString;
+    channel: string;
+    recipient: string;
+    subject?: string | null;
+    status: string;
+    error?: string | null;
+    sentAt: TimestampString;
+  } & Message_Key)[];
+}
+
+export interface ListMessagesForVariables {
+  entityType: string;
+  entityId: string;
 }
 
 export interface ListMyTasksData {
@@ -1506,6 +1554,11 @@ export interface Location_Key {
 export interface Lot_Key {
   id: UUIDString;
   __typename?: 'Lot_Key';
+}
+
+export interface Message_Key {
+  id: UUIDString;
+  __typename?: 'Message_Key';
 }
 
 export interface NumberSequence_Key {
@@ -2638,4 +2691,40 @@ export const listOpenTasksRef: ListOpenTasksRef;
 
 export function listOpenTasks(options?: ExecuteQueryOptions): QueryPromise<ListOpenTasksData, undefined>;
 export function listOpenTasks(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListOpenTasksData, undefined>;
+
+interface ListApiTokensRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListApiTokensData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListApiTokensData, undefined>;
+  operationName: string;
+}
+export const listApiTokensRef: ListApiTokensRef;
+
+export function listApiTokens(options?: ExecuteQueryOptions): QueryPromise<ListApiTokensData, undefined>;
+export function listApiTokens(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListApiTokensData, undefined>;
+
+interface ListConnectorsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListConnectorsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListConnectorsData, undefined>;
+  operationName: string;
+}
+export const listConnectorsRef: ListConnectorsRef;
+
+export function listConnectors(options?: ExecuteQueryOptions): QueryPromise<ListConnectorsData, undefined>;
+export function listConnectors(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListConnectorsData, undefined>;
+
+interface ListMessagesForRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListMessagesForVariables): QueryRef<ListMessagesForData, ListMessagesForVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListMessagesForVariables): QueryRef<ListMessagesForData, ListMessagesForVariables>;
+  operationName: string;
+}
+export const listMessagesForRef: ListMessagesForRef;
+
+export function listMessagesFor(vars: ListMessagesForVariables, options?: ExecuteQueryOptions): QueryPromise<ListMessagesForData, ListMessagesForVariables>;
+export function listMessagesFor(dc: DataConnect, vars: ListMessagesForVariables, options?: ExecuteQueryOptions): QueryPromise<ListMessagesForData, ListMessagesForVariables>;
 

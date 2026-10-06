@@ -40,6 +40,8 @@ export interface Caller {
   readonly uid: string;
   readonly role: Role;
   readonly email?: string;
+  /** Set when a machine acts with a token issued by `uid`. */
+  readonly via?: string;
 }
 
 /** The signed-in caller with a known role, or a `forbidden` failure. */
@@ -52,10 +54,15 @@ export function callerOf(request: CallableRequest<unknown>): Caller {
   return typeof token.email === 'string' ? { ...caller, email: token.email } : caller;
 }
 
-/** The caller of a plain HTTP request, from its bearer ID token. */
+/** The caller of a plain HTTP request: a session's ID token, or an API token issued in Settings. */
 export async function httpCallerOf(authorization: string | undefined): Promise<Caller> {
   const token = authorization?.match(/^Bearer (.+)$/i)?.[1];
   if (!token) throw failure('forbidden', 'Sign in first.');
+  if (token.startsWith('bsk_')) {
+    const { tokenCallerOf } = await import('./connectors');
+    const caller = await tokenCallerOf(token);
+    if (caller) return caller;
+  }
   let claims: Awaited<ReturnType<typeof auth.verifyIdToken>>;
   try {
     claims = await auth.verifyIdToken(token);

@@ -234,3 +234,45 @@ type DomainEvent @table {
   occurredAt: Timestamp! @default(expr: "request.time")
   processedAt: Timestamp
 }
+
+# ---------------------------------------------------------------- connectors
+
+# A long-lived credential for a machine: the owner's assistant, an
+# integration. Only the hash is kept; the token itself is shown once.
+type ApiToken @table {
+  name: String! @col(dataType: "varchar(120)")
+  prefix: String! @col(dataType: "varchar(16)") @unique
+  hash: String! @col(dataType: "varchar(64)")
+  role: Role!
+  createdByUid: String! @col(dataType: "varchar(128)")
+  createdAt: Timestamp! @default(expr: "request.time")
+  expiresAt: Timestamp
+  lastUsedAt: Timestamp
+  revokedAt: Timestamp
+}
+
+# How the platform reaches the outside: email, WhatsApp, the assistant.
+# Settings hold what is not secret; secrets live in Functions secrets and are
+# only ever referred to by name.
+type Connector @table(key: "key") {
+  key: String! @col(dataType: "varchar(32)")
+  settings: Any
+  updatedByUid: String @col(dataType: "varchar(128)")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+# Every message the platform sends on someone's behalf, with what it carried.
+type Message @table {
+  channel: String! @col(dataType: "varchar(16)")
+  recipient: String! @col(dataType: "varchar(255)")
+  subject: String @col(dataType: "varchar(200)")
+  body: String
+  documentId: UUID
+  entityType: String @col(dataType: "varchar(40)")
+  entityId: String @col(dataType: "varchar(80)")
+  status: String! @col(dataType: "varchar(16)")
+  providerRef: String @col(dataType: "varchar(120)")
+  error: String
+  sentByUid: String! @col(dataType: "varchar(128)")
+  sentAt: Timestamp! @default(expr: "request.time")
+}

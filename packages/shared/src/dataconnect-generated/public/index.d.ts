@@ -29,6 +29,11 @@ export interface Alert_Key {
   __typename?: 'Alert_Key';
 }
 
+export interface ApiToken_Key {
+  id: UUIDString;
+  __typename?: 'ApiToken_Key';
+}
+
 export interface AuditEvent_Key {
   id: UUIDString;
   __typename?: 'AuditEvent_Key';
@@ -47,6 +52,11 @@ export interface CompanyRole_Key {
 export interface Company_Key {
   id: UUIDString;
   __typename?: 'Company_Key';
+}
+
+export interface Connector_Key {
+  key: string;
+  __typename?: 'Connector_Key';
 }
 
 export interface Contact_Key {
@@ -124,6 +134,11 @@ export interface Location_Key {
 export interface Lot_Key {
   id: UUIDString;
   __typename?: 'Lot_Key';
+}
+
+export interface Message_Key {
+  id: UUIDString;
+  __typename?: 'Message_Key';
 }
 
 export interface NumberSequence_Key {

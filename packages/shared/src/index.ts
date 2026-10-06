@@ -15,3 +15,4 @@ export * from './quantity';
 export * from './status';
 export * from './timeline';
 export * from './exports';
+export * from './connectors';

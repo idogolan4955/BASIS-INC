@@ -12,6 +12,7 @@ import { PurchaseOrderSheet } from './pages/manufacturing/PurchaseOrderSheet';
 import { RunSheet } from './pages/manufacturing/RunSheet';
 import { LotSheet } from './pages/inventory/LotSheet';
 import { Documents } from './pages/documents/Documents';
+import { Settings } from './pages/settings/Settings';
 import { Tasks } from './pages/operations/Tasks';
 import { Companies } from './pages/parties/Companies';
 import { CompanySheet } from './pages/parties/CompanySheet';
@@ -56,6 +57,7 @@ const router = createBrowserRouter([
       { path: 'inventory/lots/:number/documents', element: <LotSheet tab="documents" /> },
       { path: 'inventory/lots/:number/timeline', element: <LotSheet tab="timeline" /> },
       { path: 'documents', element: <Documents /> },
+      { path: 'settings', element: <Settings /> },
       { path: 'products', element: <ProductsIndex /> },
       { path: 'products/skus', element: <SkuLedger /> },
       { path: 'products/skus/:code', element: <SkuSheet tab="overview" /> },
