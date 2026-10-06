@@ -1,6 +1,7 @@
-import type { CompanyDetail, CompanyRoleKind, CompanySummary, ContactView, FactoryView } from '@basis/shared';
+import type { CompanyDetail, CompanyRoleKind, CompanyStatus, CompanySummary, ContactView, FactoryOption, FactoryView } from '@basis/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { isSample } from './source';
+import { recordEvent } from './timeline';
 
 // Companies, contacts, locations and factories for the screens.
 
@@ -158,6 +159,7 @@ export function useCreateCompany() {
       });
       const id = data.company_insert.id;
       for (const kind of input.roles) await sdk.addCompanyRole(dc, { companyId: id, kind: sdk.CompanyRoleKind[kind], since: null });
+      await recordEvent('company', id, 'created', undefined, { summary: input.tradingName || input.legalName });
       return id;
     },
     onSuccess: () => client.invalidateQueries({ queryKey: ['parties'] }),
@@ -183,8 +185,67 @@ export function useAddContact(companyId: string) {
         isPrimary: input.isPrimary,
         notes: null,
       });
+      await recordEvent('company', companyId, 'contact_added', undefined, { summary: input.name });
       return data.contact_insert.id;
     },
-    onSuccess: () => client.invalidateQueries({ queryKey: ['parties', 'company', companyId] }),
+    onSuccess: async () => {
+      await client.invalidateQueries({ queryKey: ['parties', 'company', companyId] });
+      await client.invalidateQueries({ queryKey: ['timeline', 'company', companyId] });
+    },
+  });
+}
+
+export interface UpdateCompanyInput {
+  id: string;
+  legalName: string;
+  tradingName: string;
+  countryCode: string;
+  countryName: string;
+  website: string;
+  status: CompanyStatus;
+  notes: string;
+}
+
+export function useUpdateCompany() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: UpdateCompanyInput): Promise<void> => {
+      if (isSample) {
+        await (await sample()).updateCompany(input);
+      } else {
+        const { dc, sdk } = await live();
+        await sdk.updateCompany(dc, {
+          id: input.id,
+          legalName: input.legalName,
+          tradingName: input.tradingName || null,
+          countryCode: input.countryCode || null,
+          website: input.website || null,
+          status: sdk.CompanyStatus[input.status],
+          notes: input.notes || null,
+        });
+      }
+      await recordEvent('company', input.id, 'updated');
+    },
+    onSuccess: async (_, input) => {
+      await client.invalidateQueries({ queryKey: ['parties'] });
+      await client.invalidateQueries({ queryKey: ['timeline', 'company', input.id] });
+    },
+  });
+}
+
+export function useFactories() {
+  return useQuery({
+    queryKey: ['parties', 'factories'],
+    queryFn: async (): Promise<FactoryOption[]> => {
+      if (isSample) return (await sample()).factories();
+      const { dc, sdk } = await live();
+      const { data } = await sdk.listFactories(dc);
+      return data.factories.map((factory) => ({
+        id: factory.id,
+        name: `${factory.location.name}${factory.location.city ? `, ${factory.location.city}` : ''}`,
+        companyId: factory.operator.id,
+        companyName: factory.operator.tradingName || factory.operator.legalName,
+      }));
+    },
   });
 }

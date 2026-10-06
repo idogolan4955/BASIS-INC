@@ -399,3 +399,98 @@ mutation SetSkuStatus($code: String!, $status: SkuStatus!)
   @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing'") {
   sku_update(key: { code: $code }, data: { status: $status, updatedAt_expr: "request.time" })
 }
+
+# ---------------------------------------------------------------- editing
+
+mutation UpdateProductDetails(
+  $code: String!
+  $name: String!
+  $slug: String!
+  $tagline: String
+  $description: String
+  $composition: Any
+  $construction: String
+  $care: String
+  $specs: Any
+  $status: ProductStatus!
+  $isPublic: Boolean!
+) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing'") {
+  product_update(
+    key: { code: $code }
+    data: {
+      name: $name
+      slug: $slug
+      tagline: $tagline
+      description: $description
+      composition: $composition
+      construction: $construction
+      care: $care
+      specs: $specs
+      status: $status
+      isPublic: $isPublic
+      updatedAt_expr: "request.time"
+    }
+  )
+}
+
+mutation SetSkuPublic($code: String!, $isPublic: Boolean!)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'marketing'") {
+  sku_update(key: { code: $code }, data: { isPublic: $isPublic, updatedAt_expr: "request.time" })
+}
+
+# ---------------------------------------------------------------- sourcing (cost roles)
+
+mutation InsertSupplierItem($skuCode: String!, $supplierId: UUID!, $factoryId: UUID, $supplierSku: String, $moq: Int64, $leadTimeDays: Int, $isPreferred: Boolean!, $notes: String)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing'") {
+  supplierItem_insert(
+    data: { skuCode: $skuCode, supplierId: $supplierId, factoryId: $factoryId, supplierSku: $supplierSku, moq: $moq, leadTimeDays: $leadTimeDays, isPreferred: $isPreferred, notes: $notes }
+  )
+}
+
+mutation InsertSupplierPrice($supplierItemId: UUID!, $minQuantity: Int64!, $unitPrice: Int64!, $currency: String!, $validFrom: Date, $validTo: Date, $quotationRef: String)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing'") {
+  supplierPrice_insert(
+    data: { supplierItemId: $supplierItemId, minQuantity: $minQuantity, unitPrice: $unitPrice, currency: $currency, validFrom: $validFrom, validTo: $validTo, quotationRef: $quotationRef }
+  )
+}
+
+# ---------------------------------------------------------------- shade standards
+
+query ListShadeStandards($productCode: String!) @auth(level: USER) {
+  shadeStandards(where: { product: { code: { eq: $productCode } } }, limit: 200) {
+    id
+    reference
+    approvedOn
+    approvedByUid
+    toleranceDeltaE
+    physicalLocation
+    createdAt
+    shade {
+      code
+      name
+    }
+    factory {
+      id
+      location {
+        name
+        city
+      }
+    }
+  }
+}
+
+mutation InsertShadeStandard($shadeCode: String!, $productCode: String!, $factoryId: UUID, $reference: String, $approvedOn: Date, $toleranceDeltaE: Float, $physicalLocation: String)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc'") {
+  shadeStandard_insert(
+    data: {
+      shadeCode: $shadeCode
+      productCode: $productCode
+      factoryId: $factoryId
+      reference: $reference
+      approvedOn: $approvedOn
+      approvedByUid_expr: "auth.uid"
+      toleranceDeltaE: $toleranceDeltaE
+      physicalLocation: $physicalLocation
+    }
+  )
+}

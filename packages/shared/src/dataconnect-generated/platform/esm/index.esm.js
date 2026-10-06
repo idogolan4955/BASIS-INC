@@ -306,6 +306,79 @@ export function setSkuStatus(dcOrVars, vars) {
   return executeMutation(setSkuStatusRef(dcInstance, inputVars));
 }
 
+export const updateProductDetailsRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'UpdateProductDetails', inputVars);
+}
+updateProductDetailsRef.operationName = 'UpdateProductDetails';
+
+export function updateProductDetails(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(updateProductDetailsRef(dcInstance, inputVars));
+}
+
+export const setSkuPublicRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SetSkuPublic', inputVars);
+}
+setSkuPublicRef.operationName = 'SetSkuPublic';
+
+export function setSkuPublic(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(setSkuPublicRef(dcInstance, inputVars));
+}
+
+export const insertSupplierItemRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'InsertSupplierItem', inputVars);
+}
+insertSupplierItemRef.operationName = 'InsertSupplierItem';
+
+export function insertSupplierItem(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(insertSupplierItemRef(dcInstance, inputVars));
+}
+
+export const insertSupplierPriceRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'InsertSupplierPrice', inputVars);
+}
+insertSupplierPriceRef.operationName = 'InsertSupplierPrice';
+
+export function insertSupplierPrice(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(insertSupplierPriceRef(dcInstance, inputVars));
+}
+
+export const listShadeStandardsRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListShadeStandards', inputVars);
+}
+listShadeStandardsRef.operationName = 'ListShadeStandards';
+
+export function listShadeStandards(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(listShadeStandardsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const insertShadeStandardRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'InsertShadeStandard', inputVars);
+}
+insertShadeStandardRef.operationName = 'InsertShadeStandard';
+
+export function insertShadeStandard(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(insertShadeStandardRef(dcInstance, inputVars));
+}
+
 export const acknowledgeAlertRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -364,6 +437,18 @@ updateMyPreferencesRef.operationName = 'UpdateMyPreferences';
 export function updateMyPreferences(dcOrVars, vars) {
   const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars);
   return executeMutation(updateMyPreferencesRef(dcInstance, inputVars));
+}
+
+export const recordEventRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RecordEvent', inputVars);
+}
+recordEventRef.operationName = 'RecordEvent';
+
+export function recordEvent(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(recordEventRef(dcInstance, inputVars));
 }
 
 export const listCompaniesRef = (dc) => {

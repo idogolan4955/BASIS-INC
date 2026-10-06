@@ -1,15 +1,35 @@
 import {
   PRODUCT_STATUS_LABEL,
   PRODUCT_STATUS_TONE,
+  SKU_STATUSES,
   SKU_STATUS_LABEL,
   SKU_STATUS_TONE,
+  canManageModule,
+  formatLocalDate,
+  isLocalDate,
   type ProductDetail,
   type ShadeView,
+  type SkuStatus,
 } from '@basis/shared';
-import { EmptyState, LabelHeader, Ledger, Panel, ShadeDot, SheetTabs, StatusChip, Structure, Td, Th, Tr, sheetTabClass } from '@basis/ui';
+import { Button, EmptyState, LabelHeader, Ledger, Panel, ShadeDot, SheetTabs, StatusChip, Structure, Td, Th, Timeline, Tr, sheetTabClass } from '@basis/ui';
+import { Plus } from '@phosphor-icons/react';
+import { useState } from 'react';
 import { Link, NavLink, useParams } from 'react-router';
-import { useProduct, useShades } from '../../data/catalog';
+import { useProduct, useSetSkuPublic, useSetSkuStatus, useShadeStandards, useShades } from '../../data/catalog';
+import { useRecordNote, useTimeline } from '../../data/timeline';
+import { useRequiredSession } from '../../session';
 import { NotFound } from '../NotFound';
+import { EditProductDialog, NewSkusDialog, NewVariantDialog, StandardDialog } from './ProductDialogs';
+
+function ProductTimeline({ code }: { code: string }) {
+  const timeline = useTimeline('product', code);
+  const note = useRecordNote('product', code);
+  return (
+    <Panel title="Timeline" count={timeline.data?.length} className="xl:col-span-12">
+      <Timeline events={timeline.data ?? []} onAddNote={(text) => note.mutateAsync(text)} busy={note.isPending} />
+    </Panel>
+  );
+}
 
 const STRUCTURE: Record<string, 'mesh' | 'lining' | 'tulle'> = { MSH: 'mesh', LIN: 'lining', TUL: 'tulle' };
 const pad = (index: number) => String(index).padStart(2, '0');
@@ -96,12 +116,16 @@ function Overview({ product }: { product: ProductDetail }) {
           </Ledger>
         )}
       </Panel>
+
+      <ProductTimeline code={product.code} />
     </div>
   );
 }
 
-function Skus({ product }: { product: ProductDetail }) {
+function Skus({ product, manage }: { product: ProductDetail; manage: boolean }) {
   const skus = [...product.skus].sort((a, b) => a.variantCode.localeCompare(b.variantCode) || a.shadeSort - b.shadeSort);
+  const setStatus = useSetSkuStatus();
+  const setPublic = useSetSkuPublic();
   return (
     <Panel title="SKUs" count={skus.length} flush>
       {skus.length === 0 ? (
@@ -136,15 +160,109 @@ function Skus({ product }: { product: ProductDetail }) {
                 </Td>
                 <Td className="text-ink-soft">{sku.putUpName}</Td>
                 <Td>
-                  <StatusChip tone={SKU_STATUS_TONE[sku.status]}>{SKU_STATUS_LABEL[sku.status]}</StatusChip>
+                  {manage ? (
+                    <label className="flex items-center gap-2">
+                      <StatusChip tone={SKU_STATUS_TONE[sku.status]}>{''}</StatusChip>
+                      <select
+                        aria-label={`Status of ${sku.code}`}
+                        value={sku.status}
+                        disabled={setStatus.isPending}
+                        onChange={(event) => setStatus.mutate({ code: sku.code, productCode: product.code, status: event.target.value as SkuStatus, previous: sku.status })}
+                        className="-ml-2 h-8 rounded-xs border border-transparent bg-transparent pr-1 text-[0.875rem] font-medium hover:border-line-strong focus:border-charcoal"
+                      >
+                        {SKU_STATUSES.map((status) => (
+                          <option key={status} value={status}>
+                            {SKU_STATUS_LABEL[status]}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : (
+                    <StatusChip tone={SKU_STATUS_TONE[sku.status]}>{SKU_STATUS_LABEL[sku.status]}</StatusChip>
+                  )}
                 </Td>
-                <Td className="text-ink-soft">{sku.isPublic ? 'Published' : 'Not published'}</Td>
+                <Td>
+                  {manage ? (
+                    <Button
+                      size="sm"
+                      variant="quiet"
+                      disabled={!sku.isPublic && sku.status !== 'active'}
+                      title={!sku.isPublic && sku.status !== 'active' ? 'Only active SKUs can be published' : undefined}
+                      onClick={() => setPublic.mutate({ code: sku.code, productCode: product.code, isPublic: !sku.isPublic })}
+                    >
+                      {sku.isPublic ? 'Published' : 'Publish'}
+                    </Button>
+                  ) : (
+                    <span className="text-ink-soft">{sku.isPublic ? 'Published' : 'Not published'}</span>
+                  )}
+                </Td>
               </Tr>
             ))}
           </tbody>
         </Ledger>
       )}
     </Panel>
+  );
+}
+
+function Standards({ product, shades, manage }: { product: ProductDetail; shades: readonly ShadeView[]; manage: boolean }) {
+  const standards = useShadeStandards(product.code);
+  const [recording, setRecording] = useState(false);
+  const rows = standards.data ?? [];
+  return (
+    <>
+      <Panel
+        title="Shade standards"
+        count={rows.length}
+        flush
+        action={
+          manage && (
+            <Button size="sm" onClick={() => setRecording(true)}>
+              <Plus size={14} aria-hidden="true" />
+              Record standard
+            </Button>
+          )
+        }
+      >
+        {rows.length === 0 ? (
+          <p className="px-5 py-6 text-ink-muted">No approved standards yet. A standard is the lab dip a lot is matched against, per shade and factory.</p>
+        ) : (
+          <Ledger caption={`Shade standards of ${product.name}`}>
+            <thead>
+              <tr>
+                <Th>Shade</Th>
+                <Th>Factory</Th>
+                <Th>Reference</Th>
+                <Th>Approved</Th>
+                <Th numeric>Tolerance</Th>
+                <Th>Kept at</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((standard) => {
+                const shade = shades.find((candidate) => candidate.code === standard.shadeCode);
+                return (
+                  <Tr key={standard.id}>
+                    <Td>
+                      <span className="flex items-center gap-2.5">
+                        {shade && <ShadeDot hex={shade.hex} name={shade.name} code={shade.code} size="sm" />}
+                        {standard.shadeName}
+                      </span>
+                    </Td>
+                    <Td className="text-ink-soft">{standard.factoryName || 'Any'}</Td>
+                    <Td className="code">{standard.reference || '\u2014'}</Td>
+                    <Td className="code text-ink-soft">{isLocalDate(standard.approvedOn) ? formatLocalDate(standard.approvedOn) : '\u2014'}</Td>
+                    <Td numeric>{standard.toleranceDeltaE === null ? '\u2014' : `ΔE ${standard.toleranceDeltaE}`}</Td>
+                    <Td className="text-ink-soft">{standard.physicalLocation || '\u2014'}</Td>
+                  </Tr>
+                );
+              })}
+            </tbody>
+          </Ledger>
+        )}
+      </Panel>
+      <StandardDialog product={product} shades={shades} open={recording} onClose={() => setRecording(false)} />
+    </>
   );
 }
 
@@ -178,9 +296,12 @@ function ShadeAvailability({ product, shades }: { product: ProductDetail; shades
 }
 
 export function ProductSheet({ tab }: { tab: 'overview' | 'skus' | 'shades' }) {
+  const session = useRequiredSession();
   const { code = '' } = useParams();
   const product = useProduct(code);
   const shades = useShades();
+  const [dialog, setDialog] = useState<'edit' | 'variant' | 'skus' | null>(null);
+  const manage = canManageModule(session.role, 'products');
 
   if (product.isPending) return <p className="px-5 py-10 text-ink-muted lg:px-8">Loading product</p>;
   if (product.error) return <p className="px-5 py-10 text-critical lg:px-8">The product could not be loaded. {product.error.message}</p>;
@@ -213,6 +334,17 @@ export function ProductSheet({ tab }: { tab: 'overview' | 'skus' | 'shades' }) {
             <Structure kind={STRUCTURE[data.familyCode] ?? 'mesh'} scale={0.8} />
           </div>
         }
+        actions={
+          manage && (
+            <>
+              <Button onClick={() => setDialog('variant')}>New variant</Button>
+              <Button onClick={() => setDialog('skus')}>New SKUs</Button>
+              <Button variant="primary" onClick={() => setDialog('edit')}>
+                Edit
+              </Button>
+            </>
+          )
+        }
       />
       <SheetTabs>
         <NavLink to={base} end className={({ isActive }) => sheetTabClass(isActive)}>
@@ -227,9 +359,21 @@ export function ProductSheet({ tab }: { tab: 'overview' | 'skus' | 'shades' }) {
       </SheetTabs>
       <div className="px-5 py-6 lg:px-8">
         {tab === 'overview' && <Overview product={data} />}
-        {tab === 'skus' && <Skus product={data} />}
-        {tab === 'shades' && (shades.data ? <ShadeAvailability product={data} shades={shades.data} /> : <EmptyState title="Loading shades" />)}
+        {tab === 'skus' && <Skus product={data} manage={manage} />}
+        {tab === 'shades' && (
+          <div className="flex flex-col gap-4">
+            {shades.data ? <ShadeAvailability product={data} shades={shades.data} /> : <EmptyState title="Loading shades" />}
+            <Standards product={data} shades={shades.data ?? []} manage={manage || session.role === 'qc'} />
+          </div>
+        )}
       </div>
+      {manage && (
+        <>
+          <EditProductDialog key={`edit-${data.name}-${data.status}-${String(dialog === 'edit')}`} product={data} open={dialog === 'edit'} onClose={() => setDialog(null)} />
+          <NewVariantDialog product={data} open={dialog === 'variant'} onClose={() => setDialog(null)} />
+          <NewSkusDialog product={data} shades={shades.data ?? []} open={dialog === 'skus'} onClose={() => setDialog(null)} />
+        </>
+      )}
     </>
   );
 }

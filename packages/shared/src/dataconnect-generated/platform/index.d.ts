@@ -537,6 +537,49 @@ export interface InsertLocationVariables {
   notes?: string | null;
 }
 
+export interface InsertShadeStandardData {
+  shadeStandard_insert: ShadeStandard_Key;
+}
+
+export interface InsertShadeStandardVariables {
+  shadeCode: string;
+  productCode: string;
+  factoryId?: UUIDString | null;
+  reference?: string | null;
+  approvedOn?: DateString | null;
+  toleranceDeltaE?: number | null;
+  physicalLocation?: string | null;
+}
+
+export interface InsertSupplierItemData {
+  supplierItem_insert: SupplierItem_Key;
+}
+
+export interface InsertSupplierItemVariables {
+  skuCode: string;
+  supplierId: UUIDString;
+  factoryId?: UUIDString | null;
+  supplierSku?: string | null;
+  moq?: Int64String | null;
+  leadTimeDays?: number | null;
+  isPreferred: boolean;
+  notes?: string | null;
+}
+
+export interface InsertSupplierPriceData {
+  supplierPrice_insert: SupplierPrice_Key;
+}
+
+export interface InsertSupplierPriceVariables {
+  supplierItemId: UUIDString;
+  minQuantity: Int64String;
+  unitPrice: Int64String;
+  currency: string;
+  validFrom?: DateString | null;
+  validTo?: DateString | null;
+  quotationRef?: string | null;
+}
+
 export interface InsertVariantData {
   productVariant_insert: ProductVariant_Key;
 }
@@ -756,6 +799,33 @@ export interface ListPutUpsData {
   } & PutUp_Key)[];
 }
 
+export interface ListShadeStandardsData {
+  shadeStandards: ({
+    id: UUIDString;
+    reference?: string | null;
+    approvedOn?: DateString | null;
+    approvedByUid?: string | null;
+    toleranceDeltaE?: number | null;
+    physicalLocation?: string | null;
+    createdAt: TimestampString;
+    shade: {
+      code: string;
+      name: string;
+    } & Shade_Key;
+    factory?: {
+      id: UUIDString;
+      location: {
+        name: string;
+        city?: string | null;
+      };
+    } & Factory_Key;
+  } & ShadeStandard_Key)[];
+}
+
+export interface ListShadeStandardsVariables {
+  productCode: string;
+}
+
 export interface ListShadesData {
   shades: ({
     code: string;
@@ -886,6 +956,18 @@ export interface PutUp_Key {
   __typename?: 'PutUp_Key';
 }
 
+export interface RecordEventData {
+  timelineEvent_insert: TimelineEvent_Key;
+}
+
+export interface RecordEventVariables {
+  entityType: string;
+  entityId: string;
+  kind: string;
+  note?: string | null;
+  payload?: unknown | null;
+}
+
 export interface RemoveCompanyRoleData {
   companyRole_delete?: CompanyRole_Key | null;
 }
@@ -898,6 +980,15 @@ export interface RolePermission_Key {
   role: Role;
   permission: string;
   __typename?: 'RolePermission_Key';
+}
+
+export interface SetSkuPublicData {
+  sku_update?: Sku_Key | null;
+}
+
+export interface SetSkuPublicVariables {
+  code: string;
+  isPublic: boolean;
 }
 
 export interface SetSkuStatusData {
@@ -997,6 +1088,24 @@ export interface UpdateMyPreferencesData {
 export interface UpdateMyPreferencesVariables {
   locale?: string | null;
   timeZone?: string | null;
+}
+
+export interface UpdateProductDetailsData {
+  product_update?: Product_Key | null;
+}
+
+export interface UpdateProductDetailsVariables {
+  code: string;
+  name: string;
+  slug: string;
+  tagline?: string | null;
+  description?: string | null;
+  composition?: unknown | null;
+  construction?: string | null;
+  care?: string | null;
+  specs?: unknown | null;
+  status: ProductStatus;
+  isPublic: boolean;
 }
 
 export interface UpdateVariantData {
@@ -1310,6 +1419,78 @@ export const setSkuStatusRef: SetSkuStatusRef;
 export function setSkuStatus(vars: SetSkuStatusVariables): MutationPromise<SetSkuStatusData, SetSkuStatusVariables>;
 export function setSkuStatus(dc: DataConnect, vars: SetSkuStatusVariables): MutationPromise<SetSkuStatusData, SetSkuStatusVariables>;
 
+interface UpdateProductDetailsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdateProductDetailsVariables): MutationRef<UpdateProductDetailsData, UpdateProductDetailsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: UpdateProductDetailsVariables): MutationRef<UpdateProductDetailsData, UpdateProductDetailsVariables>;
+  operationName: string;
+}
+export const updateProductDetailsRef: UpdateProductDetailsRef;
+
+export function updateProductDetails(vars: UpdateProductDetailsVariables): MutationPromise<UpdateProductDetailsData, UpdateProductDetailsVariables>;
+export function updateProductDetails(dc: DataConnect, vars: UpdateProductDetailsVariables): MutationPromise<UpdateProductDetailsData, UpdateProductDetailsVariables>;
+
+interface SetSkuPublicRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetSkuPublicVariables): MutationRef<SetSkuPublicData, SetSkuPublicVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SetSkuPublicVariables): MutationRef<SetSkuPublicData, SetSkuPublicVariables>;
+  operationName: string;
+}
+export const setSkuPublicRef: SetSkuPublicRef;
+
+export function setSkuPublic(vars: SetSkuPublicVariables): MutationPromise<SetSkuPublicData, SetSkuPublicVariables>;
+export function setSkuPublic(dc: DataConnect, vars: SetSkuPublicVariables): MutationPromise<SetSkuPublicData, SetSkuPublicVariables>;
+
+interface InsertSupplierItemRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: InsertSupplierItemVariables): MutationRef<InsertSupplierItemData, InsertSupplierItemVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: InsertSupplierItemVariables): MutationRef<InsertSupplierItemData, InsertSupplierItemVariables>;
+  operationName: string;
+}
+export const insertSupplierItemRef: InsertSupplierItemRef;
+
+export function insertSupplierItem(vars: InsertSupplierItemVariables): MutationPromise<InsertSupplierItemData, InsertSupplierItemVariables>;
+export function insertSupplierItem(dc: DataConnect, vars: InsertSupplierItemVariables): MutationPromise<InsertSupplierItemData, InsertSupplierItemVariables>;
+
+interface InsertSupplierPriceRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: InsertSupplierPriceVariables): MutationRef<InsertSupplierPriceData, InsertSupplierPriceVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: InsertSupplierPriceVariables): MutationRef<InsertSupplierPriceData, InsertSupplierPriceVariables>;
+  operationName: string;
+}
+export const insertSupplierPriceRef: InsertSupplierPriceRef;
+
+export function insertSupplierPrice(vars: InsertSupplierPriceVariables): MutationPromise<InsertSupplierPriceData, InsertSupplierPriceVariables>;
+export function insertSupplierPrice(dc: DataConnect, vars: InsertSupplierPriceVariables): MutationPromise<InsertSupplierPriceData, InsertSupplierPriceVariables>;
+
+interface ListShadeStandardsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListShadeStandardsVariables): QueryRef<ListShadeStandardsData, ListShadeStandardsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListShadeStandardsVariables): QueryRef<ListShadeStandardsData, ListShadeStandardsVariables>;
+  operationName: string;
+}
+export const listShadeStandardsRef: ListShadeStandardsRef;
+
+export function listShadeStandards(vars: ListShadeStandardsVariables, options?: ExecuteQueryOptions): QueryPromise<ListShadeStandardsData, ListShadeStandardsVariables>;
+export function listShadeStandards(dc: DataConnect, vars: ListShadeStandardsVariables, options?: ExecuteQueryOptions): QueryPromise<ListShadeStandardsData, ListShadeStandardsVariables>;
+
+interface InsertShadeStandardRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: InsertShadeStandardVariables): MutationRef<InsertShadeStandardData, InsertShadeStandardVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: InsertShadeStandardVariables): MutationRef<InsertShadeStandardData, InsertShadeStandardVariables>;
+  operationName: string;
+}
+export const insertShadeStandardRef: InsertShadeStandardRef;
+
+export function insertShadeStandard(vars: InsertShadeStandardVariables): MutationPromise<InsertShadeStandardData, InsertShadeStandardVariables>;
+export function insertShadeStandard(dc: DataConnect, vars: InsertShadeStandardVariables): MutationPromise<InsertShadeStandardData, InsertShadeStandardVariables>;
+
 interface AcknowledgeAlertRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: AcknowledgeAlertVariables): MutationRef<AcknowledgeAlertData, AcknowledgeAlertVariables>;
@@ -1369,6 +1550,18 @@ export const updateMyPreferencesRef: UpdateMyPreferencesRef;
 
 export function updateMyPreferences(vars?: UpdateMyPreferencesVariables): MutationPromise<UpdateMyPreferencesData, UpdateMyPreferencesVariables>;
 export function updateMyPreferences(dc: DataConnect, vars?: UpdateMyPreferencesVariables): MutationPromise<UpdateMyPreferencesData, UpdateMyPreferencesVariables>;
+
+interface RecordEventRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RecordEventVariables): MutationRef<RecordEventData, RecordEventVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RecordEventVariables): MutationRef<RecordEventData, RecordEventVariables>;
+  operationName: string;
+}
+export const recordEventRef: RecordEventRef;
+
+export function recordEvent(vars: RecordEventVariables): MutationPromise<RecordEventData, RecordEventVariables>;
+export function recordEvent(dc: DataConnect, vars: RecordEventVariables): MutationPromise<RecordEventData, RecordEventVariables>;
 
 interface ListCompaniesRef {
   /* Allow users to create refs without passing in DataConnect */

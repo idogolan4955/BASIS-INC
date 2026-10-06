@@ -9,5 +9,6 @@ export * from './Panel';
 export * from './Sheet';
 export * from './StatusChip';
 export * from './Structure';
+export * from './Timeline';
 export * from './Track';
 export * from './Wordmark';

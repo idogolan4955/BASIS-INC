@@ -4,24 +4,28 @@ import {
   slugify,
   type CompanyDetail,
   type CompanyRoleKind,
+  type CompanyStatus,
   type CompanySummary,
   type ContactView,
+  type FactoryOption,
   type FamilyView,
   type ProductDetail,
   type ProductStatus,
   type ProductSummary,
   type PutUpView,
+  type ShadeStandardView,
   type ShadeView,
   type SkuDetail,
   type SkuRow,
   type SkuSourcing,
   type SkuStatus,
+  type VariantView,
 } from '@basis/shared';
 
 // SAMPLE DATA for `--mode sample`. The catalog is the real launch range from
-// the brand booklet; SKU statuses, companies and contacts are invented so the
-// screens can be reviewed. Writes change this in-memory store for the session
-// and nothing else.
+// the brand booklet; SKU statuses, companies, contacts, prices and standards
+// are invented so the screens can be reviewed. Writes change this in-memory
+// store for the session and nothing else.
 
 interface SkuRecord {
   code: string;
@@ -40,14 +44,23 @@ interface ProductRecord {
   slug: string;
   tagline: string;
   description: string;
+  composition: ProductDetail['composition'];
+  construction: string;
+  care: string;
   specs: Record<string, string>;
   status: ProductStatus;
   isPublic: boolean;
 }
 
+interface VariantRecord extends VariantView {
+  productCode: string;
+}
+
 interface CompanyRecord extends Omit<CompanyDetail, 'name' | 'contactCount' | 'contacts'> {
   contacts: ContactView[];
 }
+
+type SourcingItem = SkuSourcing['supplierItems'][number];
 
 const putUp = LAUNCH_CATALOG.putUps[0]!;
 
@@ -66,8 +79,25 @@ const store = {
   products: LAUNCH_CATALOG.products.map<ProductRecord>((product) => ({
     ...product,
     specs: { ...product.specs },
+    composition: [],
+    construction: '',
+    care: '',
     status: 'active',
     isPublic: true,
+  })),
+  variants: LAUNCH_CATALOG.variants.map<VariantRecord>((variant) => ({
+    id: `${variant.product}-${variant.code}`,
+    productCode: variant.product,
+    fullCode: `${variant.product}-${variant.code}`,
+    code: variant.code,
+    name: variant.name,
+    widthCm: variant.widthCm,
+    usableWidthCm: null,
+    gsm: null,
+    stretchWarpPercent: null,
+    stretchWeftPercent: null,
+    finish: '',
+    status: 'active',
   })),
   skus: LAUNCH_CATALOG.products.flatMap((product) =>
     LAUNCH_CATALOG.shades.map<SkuRecord>((shade) => ({
@@ -80,6 +110,8 @@ const store = {
     })),
   ),
   companies: [] as CompanyRecord[],
+  sourcing: new Map<string, SourcingItem[]>(),
+  standards: [] as ShadeStandardView[],
 };
 
 function company(
@@ -152,24 +184,57 @@ store.companies = [
   company('co-novia', 'Novia Estudio S.L.', 'Novia Estudio', 'ES', 'Spain', ['customer'], [
     { name: 'Marta Oliván', title: 'Buyer', email: 'marta@example.invalid', phone: '', messaging: '', language: 'es', isPrimary: true },
   ]),
-  company('co-halden', 'Halden Bridal Ltd', 'Halden Bridal', 'GB', 'United Kingdom', ['customer', 'distributor' as CompanyRoleKind], [
+  company('co-halden', 'Halden Bridal Ltd', 'Halden Bridal', 'GB', 'United Kingdom', ['customer'], [
     { name: 'Priya Dhillon', title: 'Production manager', email: 'priya@example.invalid', phone: '', messaging: '', language: 'en', isPrimary: true },
   ]),
   company('co-lorena', 'Casa Lorena Atelier LLC', 'Casa Lorena Atelier', 'US', 'United States', ['customer'], [
     { name: 'Lorena Castañeda', title: 'Owner', email: 'lorena@example.invalid', phone: '', messaging: '', language: 'es', isPrimary: true },
   ]),
 ];
-// 'distributor' is a customer type, not a company role; keep the role list clean.
-store.companies = store.companies.map((c) => ({ ...c, roles: c.roles.filter((role) => role !== ('distributor' as CompanyRoleKind)) }));
+
+// Sourcing for the sample: meshes from Jinyu, lining and tulle from Lanrui.
+for (const sku of store.skus) {
+  const mesh = ['PWM', 'ILM', 'N58'].includes(sku.productCode);
+  const supplier = store.companies.find((c) => c.id === (mesh ? 'co-jinyu' : 'co-lanrui'))!;
+  store.sourcing.set(sku.code, [
+    {
+      id: `si-${sku.code}`,
+      supplierId: supplier.id,
+      supplierName: supplier.tradingName,
+      factoryName: supplier.factories[0]?.name ?? '',
+      supplierSku: `${mesh ? 'JY' : 'LR'}-${sku.productCode}-${sku.shadeCode}`,
+      moq: '1000000',
+      leadTimeDays: mesh ? 45 : 35,
+      isPreferred: true,
+      prices: [
+        { minQuantity: '1000000', unitPrice: mesh ? '28500' : '19800', currency: 'USD' },
+        { minQuantity: '5000000', unitPrice: mesh ? '26900' : '18400', currency: 'USD' },
+      ],
+    },
+  ]);
+}
+
+store.standards = store.skus
+  .filter((sku) => sku.status === 'active' && sku.productCode === 'PWM')
+  .map((sku, index) => ({
+    id: `std-${sku.code}`,
+    shadeCode: sku.shadeCode,
+    shadeName: LAUNCH_CATALOG.shades.find((shade) => shade.code === sku.shadeCode)?.name ?? sku.shadeCode,
+    factoryId: 'fac-jinyu-1',
+    factoryName: 'Jinyu mill',
+    reference: `LD-26-0${31 + index}`,
+    approvedOn: '2026-09-18',
+    toleranceDeltaE: 0.8,
+    physicalLocation: 'Shade cabinet, drawer PWM',
+  }));
 
 const shadeByCode = new Map(LAUNCH_CATALOG.shades.map((shade) => [shade.code, shade]));
 const familyByCode = new Map(LAUNCH_CATALOG.families.map((family) => [family.code, family]));
-const variantFor = (productCode: string) => LAUNCH_CATALOG.variants.find((variant) => variant.product === productCode);
 
 function skuRow(sku: SkuRecord): SkuRow {
   const product = store.products.find((candidate) => candidate.code === sku.productCode)!;
   const shade = shadeByCode.get(sku.shadeCode)!;
-  const variant = variantFor(sku.productCode);
+  const variant = store.variants.find((candidate) => candidate.productCode === sku.productCode && candidate.code === sku.variantCode);
   return {
     code: sku.code,
     productCode: product.code,
@@ -207,6 +272,8 @@ function productSummary(product: ProductRecord): ProductSummary {
   };
 }
 
+const toSummary = (c: CompanyRecord): CompanySummary => ({ ...c, name: c.tradingName || c.legalName, contactCount: c.contacts.length });
+
 export const sampleCatalog = {
   async families(): Promise<FamilyView[]> {
     return LAUNCH_CATALOG.families.map((family) => ({
@@ -221,30 +288,15 @@ export const sampleCatalog = {
     const product = store.products.find((candidate) => candidate.code === code);
     if (!product) return null;
     const family = familyByCode.get(product.family)!;
-    const variant = variantFor(product.code);
     return {
       ...productSummary(product),
       description: product.description,
-      composition: [],
-      construction: '',
-      care: '',
+      composition: product.composition,
+      construction: product.construction,
+      care: product.care,
       specs: product.specs,
       specSchema: family.specSchema,
-      variants: variant
-        ? [{
-            id: `${product.code}-${variant.code}`,
-            fullCode: `${product.code}-${variant.code}`,
-            code: variant.code,
-            name: variant.name,
-            widthCm: variant.widthCm,
-            usableWidthCm: null,
-            gsm: null,
-            stretchWarpPercent: null,
-            stretchWeftPercent: null,
-            finish: '',
-            status: 'active',
-          }]
-        : [],
+      variants: store.variants.filter((variant) => variant.productCode === product.code).map(({ productCode: _p, ...variant }) => variant),
       skus: store.skus.filter((sku) => sku.productCode === product.code).map(skuRow),
     };
   },
@@ -256,7 +308,7 @@ export const sampleCatalog = {
     if (!record) return null;
     const row = skuRow(record);
     const family = familyByCode.get(store.products.find((p) => p.code === record.productCode)!.family)!;
-    const variant = variantFor(record.productCode);
+    const variant = store.variants.find((candidate) => candidate.productCode === record.productCode && candidate.code === record.variantCode);
     return {
       ...row,
       familyCode: family.code,
@@ -264,34 +316,13 @@ export const sampleCatalog = {
       barcode: '',
       salesMoq: null,
       widthCm: variant?.widthCm ?? null,
-      usableWidthCm: null,
-      gsm: null,
+      usableWidthCm: variant?.usableWidthCm ?? null,
+      gsm: variant?.gsm ?? null,
       rollLengthM: putUp.rollLengthM,
     };
   },
   async skuSourcing(code: string): Promise<SkuSourcing> {
-    const record = store.skus.find((candidate) => candidate.code === code);
-    if (!record) return { supplierItems: [] };
-    const mesh = ['PWM', 'ILM', 'N58'].includes(record.productCode);
-    const supplier = store.companies.find((c) => c.id === (mesh ? 'co-jinyu' : 'co-lanrui'))!;
-    return {
-      supplierItems: [
-        {
-          id: `si-${record.code}`,
-          supplierId: supplier.id,
-          supplierName: supplier.tradingName,
-          factoryName: supplier.factories[0]?.name ?? '',
-          supplierSku: `${mesh ? 'JY' : 'LR'}-${record.productCode}-${record.shadeCode}`,
-          moq: '1000000',
-          leadTimeDays: mesh ? 45 : 35,
-          isPreferred: true,
-          prices: [
-            { minQuantity: '1000000', unitPrice: mesh ? '28500' : '19800', currency: 'USD' },
-            { minQuantity: '5000000', unitPrice: mesh ? '26900' : '18400', currency: 'USD' },
-          ],
-        },
-      ],
-    };
+    return { supplierItems: store.sourcing.get(code) ?? [] };
   },
   async shades(): Promise<ShadeView[]> {
     return LAUNCH_CATALOG.shades.map((shade) => {
@@ -301,8 +332,8 @@ export const sampleCatalog = {
         ...shade,
         collection: collection?.name ?? '',
         status: 'active',
-        availableIn: skus.filter((sku) => sku.status === 'active').map((sku) => sku.productCode),
-        pendingIn: skus.filter((sku) => sku.status !== 'active' && sku.status !== 'discontinued').map((sku) => sku.productCode),
+        availableIn: [...new Set(skus.filter((sku) => sku.status === 'active').map((sku) => sku.productCode))],
+        pendingIn: [...new Set(skus.filter((sku) => sku.status !== 'active' && sku.status !== 'discontinued').map((sku) => sku.productCode))],
       };
     });
   },
@@ -311,20 +342,128 @@ export const sampleCatalog = {
   },
   async createProduct(input: { code: string; family: string; index: number; name: string; tagline: string; description: string; status: ProductStatus }): Promise<string> {
     if (store.products.some((product) => product.code === input.code)) throw new Error(`Product code ${input.code} already exists.`);
-    store.products.push({ ...input, slug: slugify(input.name), specs: {}, isPublic: false });
+    store.products.push({ ...input, slug: slugify(input.name), specs: {}, composition: [], construction: '', care: '', isPublic: false });
     return input.code;
   },
+  async updateProduct(input: {
+    code: string;
+    name: string;
+    tagline: string;
+    description: string;
+    construction: string;
+    care: string;
+    specs: Record<string, string>;
+    status: ProductStatus;
+    isPublic: boolean;
+  }): Promise<void> {
+    const product = store.products.find((candidate) => candidate.code === input.code);
+    if (!product) throw new Error('No such product.');
+    Object.assign(product, { ...input, slug: slugify(input.name), specs: { ...input.specs } });
+  },
+  async createVariant(input: {
+    productCode: string;
+    code: string;
+    name: string;
+    widthCm: number | null;
+    usableWidthCm: number | null;
+    gsm: number | null;
+    stretchWarpPercent: number | null;
+    stretchWeftPercent: number | null;
+    finish: string;
+  }): Promise<string> {
+    const fullCode = `${input.productCode}-${input.code}`.toUpperCase();
+    if (store.variants.some((variant) => variant.fullCode === fullCode)) throw new Error(`Variant ${fullCode} already exists.`);
+    store.variants.push({ id: fullCode, fullCode, status: 'active', ...input, code: input.code.toUpperCase() });
+    return fullCode;
+  },
+  async createSkus(input: { productCode: string; variantCode: string; shadeCodes: string[]; status: SkuStatus; rollTracking: boolean }): Promise<string[]> {
+    const created: string[] = [];
+    for (const shadeCode of input.shadeCodes) {
+      const code = skuCode(input.productCode, input.variantCode, shadeCode);
+      if (store.skus.some((sku) => sku.code === code)) continue;
+      store.skus.push({ code, productCode: input.productCode, variantCode: input.variantCode, shadeCode, status: input.status, isPublic: false });
+      created.push(code);
+    }
+    return created;
+  },
+  async setSkuStatus(code: string, status: SkuStatus): Promise<void> {
+    const sku = store.skus.find((candidate) => candidate.code === code);
+    if (!sku) throw new Error('No such SKU.');
+    sku.status = status;
+    if (status !== 'active') sku.isPublic = false;
+  },
+  async setSkuPublic(code: string, isPublic: boolean): Promise<void> {
+    const sku = store.skus.find((candidate) => candidate.code === code);
+    if (!sku) throw new Error('No such SKU.');
+    sku.isPublic = isPublic;
+  },
+  async addSourcing(input: {
+    skuCode: string;
+    supplierId: string;
+    factoryId: string;
+    supplierSku: string;
+    moq: string | null;
+    leadTimeDays: number | null;
+    isPreferred: boolean;
+    price: { minQuantity: string; unitPrice: string; currency: string };
+  }): Promise<string> {
+    const supplier = store.companies.find((c) => c.id === input.supplierId);
+    if (!supplier) throw new Error('No such supplier.');
+    const factory = store.companies.flatMap((c) => c.factories).find((f) => f.id === input.factoryId);
+    const list = store.sourcing.get(input.skuCode) ?? [];
+    const id = `si-${input.skuCode}-${list.length + 1}`;
+    list.push({
+      id,
+      supplierId: supplier.id,
+      supplierName: supplier.tradingName || supplier.legalName,
+      factoryName: factory?.name ?? '',
+      supplierSku: input.supplierSku,
+      moq: input.moq,
+      leadTimeDays: input.leadTimeDays,
+      isPreferred: input.isPreferred,
+      prices: [input.price],
+    });
+    store.sourcing.set(input.skuCode, list);
+    return id;
+  },
+  async shadeStandards(productCode: string): Promise<ShadeStandardView[]> {
+    return store.standards.filter((standard) => store.skus.some((sku) => sku.productCode === productCode && sku.shadeCode === standard.shadeCode) && (productCode === 'PWM' || standard.id.includes(`-${productCode}-`)));
+  },
+  async addShadeStandard(input: { productCode: string; shadeCode: string; factoryId: string; reference: string; approvedOn: string; toleranceDeltaE: number | null; physicalLocation: string }): Promise<string> {
+    const factory = store.companies.flatMap((c) => c.factories).find((f) => f.id === input.factoryId);
+    const id = `std-${input.productCode}-${input.shadeCode}-${store.standards.length + 1}`;
+    store.standards.push({
+      id,
+      shadeCode: input.shadeCode,
+      shadeName: shadeByCode.get(input.shadeCode)?.name ?? input.shadeCode,
+      factoryId: input.factoryId,
+      factoryName: factory?.name ?? '',
+      reference: input.reference,
+      approvedOn: input.approvedOn,
+      toleranceDeltaE: input.toleranceDeltaE,
+      physicalLocation: input.physicalLocation,
+    });
+    return id;
+  },
   async companies(): Promise<CompanySummary[]> {
-    return store.companies.map((c) => ({ ...c, name: c.tradingName || c.legalName, contactCount: c.contacts.length }));
+    return store.companies.map(toSummary);
   },
   async company(id: string): Promise<CompanyDetail | null> {
     const record = store.companies.find((candidate) => candidate.id === id);
     return record ? { ...record, name: record.tradingName || record.legalName, contactCount: record.contacts.length } : null;
   },
+  async factories(): Promise<FactoryOption[]> {
+    return store.companies.flatMap((c) => c.factories.map((factory) => ({ id: factory.id, name: factory.name, companyId: c.id, companyName: c.tradingName || c.legalName })));
+  },
   async createCompany(input: { legalName: string; tradingName: string; countryCode: string; countryName: string; roles: CompanyRoleKind[]; website: string }): Promise<string> {
     const id = `co-${slugify(input.tradingName || input.legalName)}-${store.companies.length + 1}`;
     store.companies.push(company(id, input.legalName, input.tradingName, input.countryCode, input.countryName, input.roles, [], { website: input.website, status: 'prospect' }));
     return id;
+  },
+  async updateCompany(input: { id: string; legalName: string; tradingName: string; countryCode: string; countryName: string; website: string; status: CompanyStatus; notes: string }): Promise<void> {
+    const record = store.companies.find((candidate) => candidate.id === input.id);
+    if (!record) throw new Error('No such company.');
+    Object.assign(record, input);
   },
   async addContact(companyId: string, input: Omit<ContactView, 'id' | 'status'>): Promise<string> {
     const record = store.companies.find((candidate) => candidate.id === companyId);

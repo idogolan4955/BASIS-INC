@@ -6,11 +6,13 @@ import {
   canManageModule,
   type CompanyDetail,
 } from '@basis/shared';
-import { Button, CheckField, Dialog, LabelHeader, Ledger, Panel, SheetTabs, StatusChip, Td, TextField, Th, Tr, sheetTabClass } from '@basis/ui';
+import { Button, CheckField, Dialog, LabelHeader, Ledger, Panel, SheetTabs, StatusChip, Td, TextField, Th, Timeline, Tr, sheetTabClass } from '@basis/ui';
 import { Plus } from '@phosphor-icons/react';
 import { useState, type FormEvent } from 'react';
 import { NavLink, useParams } from 'react-router';
 import { useAddContact, useCompany } from '../../data/parties';
+import { useRecordNote, useTimeline } from '../../data/timeline';
+import { EditCompanyDialog } from './EditCompanyDialog';
 import { useRequiredSession } from '../../session';
 import { NotFound } from '../NotFound';
 
@@ -59,6 +61,16 @@ function NewContactDialog({ companyId, open, onClose }: { companyId: string; ope
   );
 }
 
+function CompanyTimeline({ id }: { id: string }) {
+  const timeline = useTimeline('company', id);
+  const note = useRecordNote('company', id);
+  return (
+    <Panel title="Timeline" count={timeline.data?.length} className="xl:col-span-12">
+      <Timeline events={timeline.data ?? []} onAddNote={(text) => note.mutateAsync(text)} busy={note.isPending} />
+    </Panel>
+  );
+}
+
 function Overview({ company }: { company: CompanyDetail }) {
   const profile = company.supplierProfile;
   return (
@@ -103,6 +115,7 @@ function Overview({ company }: { company: CompanyDetail }) {
           </p>
         )}
       </Panel>
+      <CompanyTimeline id={company.id} />
     </div>
   );
 }
@@ -221,6 +234,7 @@ export function CompanySheet({ tab, base }: { tab: 'overview' | 'contacts' | 'pl
   const { id = '' } = useParams();
   const company = useCompany(id);
   const manage = canManageModule(session.role, base === '/suppliers' ? 'suppliers' : 'customers');
+  const [editing, setEditing] = useState(false);
 
   if (company.isPending) return <p className="px-5 py-10 text-ink-muted lg:px-8">Loading company</p>;
   if (company.error) return <p className="px-5 py-10 text-critical lg:px-8">The company could not be loaded. {company.error.message}</p>;
@@ -235,6 +249,13 @@ export function CompanySheet({ tab, base }: { tab: 'overview' | 'contacts' | 'pl
         title={data.name}
         subtitle={data.tradingName && data.tradingName !== data.legalName ? data.legalName : undefined}
         status={<StatusChip tone={COMPANY_STATUS_TONE[data.status]}>{COMPANY_STATUS_LABEL[data.status]}</StatusChip>}
+        actions={
+          manage && (
+            <Button variant="primary" onClick={() => setEditing(true)}>
+              Edit
+            </Button>
+          )
+        }
         facts={[
           { label: 'Country', value: data.countryName || '—' },
           { label: 'Contacts', value: data.contactCount },
@@ -260,6 +281,7 @@ export function CompanySheet({ tab, base }: { tab: 'overview' | 'contacts' | 'pl
         {tab === 'contacts' && <Contacts company={data} manage={manage} />}
         {tab === 'places' && <Places company={data} />}
       </div>
+      {manage && <EditCompanyDialog key={`${data.id}-${editing}`} company={data} open={editing} onClose={() => setEditing(false)} />}
     </>
   );
 }

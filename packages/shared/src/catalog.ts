@@ -170,6 +170,18 @@ export interface PutUpView {
   readonly rollsPerCarton: number | null;
 }
 
+export interface ShadeStandardView {
+  readonly id: string;
+  readonly shadeCode: string;
+  readonly shadeName: string;
+  readonly factoryId: string;
+  readonly factoryName: string;
+  readonly reference: string;
+  readonly approvedOn: string;
+  readonly toleranceDeltaE: number | null;
+  readonly physicalLocation: string;
+}
+
 /** Proposed SKU code grammar: product, variant, shade. */
 export function skuCode(productCode: string, variantCode: string, shadeCode: string): string {
   return `${productCode}-${variantCode}-${shadeCode}`.toUpperCase();

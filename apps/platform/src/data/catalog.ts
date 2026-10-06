@@ -1,4 +1,6 @@
 import {
+  SKU_STATUS_LABEL,
+  skuCode,
   slugify,
   type CompositionPart,
   type FamilyView,
@@ -6,14 +8,17 @@ import {
   type ProductStatus,
   type ProductSummary,
   type PutUpView,
+  type ShadeStandardView,
   type ShadeView,
   type SkuDetail,
   type SkuRow,
   type SkuSourcing,
+  type SkuStatus,
   type SpecField,
 } from '@basis/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { isSample } from './source';
+import { recordEvent } from './timeline';
 
 // Catalog data for the screens. Live mode maps the platform connector's
 // result types onto the read models; sample mode serves the fixtures.
@@ -316,8 +321,299 @@ export function useCreateProduct() {
         status: sdk.ProductStatus[input.status],
         isPublic: false,
       });
+      await recordEvent('product', input.code, 'created', undefined, { summary: input.name });
       return input.code;
     },
     onSuccess: () => client.invalidateQueries({ queryKey: ['catalog'] }),
+  });
+}
+
+// ---------------------------------------------------------------- editing
+
+export interface UpdateProductInput {
+  code: string;
+  name: string;
+  tagline: string;
+  description: string;
+  construction: string;
+  care: string;
+  specs: Record<string, string>;
+  status: ProductStatus;
+  isPublic: boolean;
+}
+
+export function useUpdateProduct() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: UpdateProductInput): Promise<void> => {
+      if (isSample) {
+        await (await sample()).updateProduct(input);
+      } else {
+        const { dc, sdk } = await live();
+        await sdk.updateProductDetails(dc, {
+          code: input.code,
+          name: input.name,
+          slug: slugify(input.name),
+          tagline: input.tagline || null,
+          description: input.description || null,
+          composition: null,
+          construction: input.construction || null,
+          care: input.care || null,
+          specs: input.specs,
+          status: sdk.ProductStatus[input.status],
+          isPublic: input.isPublic,
+        });
+      }
+      await recordEvent('product', input.code, 'updated');
+    },
+    onSuccess: async (_, input) => {
+      await client.invalidateQueries({ queryKey: ['catalog'] });
+      await client.invalidateQueries({ queryKey: ['timeline', 'product', input.code] });
+    },
+  });
+}
+
+export interface NewVariantInput {
+  productCode: string;
+  code: string;
+  name: string;
+  widthCm: number | null;
+  usableWidthCm: number | null;
+  gsm: number | null;
+  stretchWarpPercent: number | null;
+  stretchWeftPercent: number | null;
+  finish: string;
+}
+
+export function useCreateVariant() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: NewVariantInput): Promise<string> => {
+      const fullCode = `${input.productCode}-${input.code}`.toUpperCase();
+      if (isSample) {
+        await (await sample()).createVariant(input);
+      } else {
+        const { dc, sdk } = await live();
+        await sdk.insertVariant(dc, {
+          productCode: input.productCode,
+          fullCode,
+          code: input.code.toUpperCase(),
+          name: input.name,
+          widthCm: input.widthCm,
+          usableWidthCm: input.usableWidthCm,
+          gsm: input.gsm,
+          stretchWarpPercent: input.stretchWarpPercent,
+          stretchWeftPercent: input.stretchWeftPercent,
+          finish: input.finish || null,
+          specs: null,
+          status: sdk.ProductStatus.active,
+          sort: 99,
+        });
+      }
+      await recordEvent('product', input.productCode, 'variant_added', undefined, { summary: `${input.name} (${fullCode})` });
+      return fullCode;
+    },
+    onSuccess: async (_, input) => {
+      await client.invalidateQueries({ queryKey: ['catalog'] });
+      await client.invalidateQueries({ queryKey: ['timeline', 'product', input.productCode] });
+    },
+  });
+}
+
+export interface NewSkusInput {
+  productCode: string;
+  variantId: string;
+  variantCode: string;
+  shadeCodes: string[];
+  putUpCode: string;
+  status: SkuStatus;
+  rollTracking: boolean;
+}
+
+export function useCreateSkus() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: NewSkusInput): Promise<string[]> => {
+      let created: string[];
+      if (isSample) {
+        created = await (await sample()).createSkus(input);
+      } else {
+        const { dc, sdk } = await live();
+        created = [];
+        for (const shadeCode of input.shadeCodes) {
+          const code = skuCode(input.productCode, input.variantCode, shadeCode);
+          await sdk.upsertSku(dc, {
+            code,
+            productCode: input.productCode,
+            variantId: input.variantId,
+            shadeCode,
+            putUpCode: input.putUpCode,
+            salesUom: 'm',
+            salesMoq: null,
+            status: sdk.SkuStatus[input.status],
+            isPublic: false,
+            rollTracking: input.rollTracking,
+          });
+          created.push(code);
+        }
+      }
+      if (created.length > 0) {
+        await recordEvent('product', input.productCode, 'skus_added', undefined, { summary: created.join(', ') });
+      }
+      return created;
+    },
+    onSuccess: async (_, input) => {
+      await client.invalidateQueries({ queryKey: ['catalog'] });
+      await client.invalidateQueries({ queryKey: ['timeline', 'product', input.productCode] });
+    },
+  });
+}
+
+export function useSetSkuStatus() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { code: string; productCode: string; status: SkuStatus; previous: SkuStatus }): Promise<void> => {
+      if (isSample) {
+        await (await sample()).setSkuStatus(input.code, input.status);
+      } else {
+        const { dc, sdk } = await live();
+        await sdk.setSkuStatus(dc, { code: input.code, status: sdk.SkuStatus[input.status] });
+      }
+      await recordEvent('product', input.productCode, 'status_changed', undefined, {
+        summary: `${input.code}: ${SKU_STATUS_LABEL[input.previous]} to ${SKU_STATUS_LABEL[input.status]}`,
+      });
+    },
+    onSuccess: async (_, input) => {
+      await client.invalidateQueries({ queryKey: ['catalog'] });
+      await client.invalidateQueries({ queryKey: ['timeline', 'product', input.productCode] });
+    },
+  });
+}
+
+export function useSetSkuPublic() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { code: string; productCode: string; isPublic: boolean }): Promise<void> => {
+      if (isSample) {
+        await (await sample()).setSkuPublic(input.code, input.isPublic);
+      } else {
+        const { dc, sdk } = await live();
+        await sdk.setSkuPublic(dc, { code: input.code, isPublic: input.isPublic });
+      }
+      await recordEvent('product', input.productCode, input.isPublic ? 'published' : 'unpublished', undefined, { summary: input.code });
+    },
+    onSuccess: async (_, input) => {
+      await client.invalidateQueries({ queryKey: ['catalog'] });
+      await client.invalidateQueries({ queryKey: ['timeline', 'product', input.productCode] });
+    },
+  });
+}
+
+export interface NewSourcingInput {
+  skuCode: string;
+  productCode: string;
+  supplierId: string;
+  factoryId: string;
+  supplierSku: string;
+  /** Fixed-point thousandths of a metre, or null. */
+  moq: string | null;
+  leadTimeDays: number | null;
+  isPreferred: boolean;
+  price: { minQuantity: string; unitPrice: string; currency: string };
+}
+
+export function useAddSourcing() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: NewSourcingInput): Promise<void> => {
+      if (isSample) {
+        await (await sample()).addSourcing(input);
+      } else {
+        const { dc, sdk } = await live();
+        const { data } = await sdk.insertSupplierItem(dc, {
+          skuCode: input.skuCode,
+          supplierId: input.supplierId,
+          factoryId: input.factoryId || null,
+          supplierSku: input.supplierSku || null,
+          moq: input.moq,
+          leadTimeDays: input.leadTimeDays,
+          isPreferred: input.isPreferred,
+          notes: null,
+        });
+        await sdk.insertSupplierPrice(dc, {
+          supplierItemId: data.supplierItem_insert.id,
+          minQuantity: input.price.minQuantity,
+          unitPrice: input.price.unitPrice,
+          currency: input.price.currency,
+          validFrom: null,
+          validTo: null,
+          quotationRef: null,
+        });
+      }
+      await recordEvent('product', input.productCode, 'sourcing_added', undefined, { summary: input.skuCode });
+    },
+    onSuccess: async (_, input) => {
+      await client.invalidateQueries({ queryKey: ['catalog', 'sku-sourcing', input.skuCode] });
+      await client.invalidateQueries({ queryKey: ['timeline', 'product', input.productCode] });
+    },
+  });
+}
+
+export function useShadeStandards(productCode: string) {
+  return useQuery({
+    queryKey: ['catalog', 'standards', productCode],
+    queryFn: async (): Promise<ShadeStandardView[]> => {
+      if (isSample) return (await sample()).shadeStandards(productCode);
+      const { dc, sdk } = await live();
+      const { data } = await sdk.listShadeStandards(dc, { productCode });
+      return data.shadeStandards.map((standard) => ({
+        id: standard.id,
+        shadeCode: standard.shade.code,
+        shadeName: standard.shade.name,
+        factoryId: standard.factory?.id ?? '',
+        factoryName: standard.factory ? `${standard.factory.location.name}${standard.factory.location.city ? `, ${standard.factory.location.city}` : ''}` : '',
+        reference: standard.reference ?? '',
+        approvedOn: standard.approvedOn ?? '',
+        toleranceDeltaE: standard.toleranceDeltaE ?? null,
+        physicalLocation: standard.physicalLocation ?? '',
+      }));
+    },
+  });
+}
+
+export interface NewStandardInput {
+  productCode: string;
+  shadeCode: string;
+  factoryId: string;
+  reference: string;
+  approvedOn: string;
+  toleranceDeltaE: number | null;
+  physicalLocation: string;
+}
+
+export function useAddShadeStandard() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: NewStandardInput): Promise<void> => {
+      if (isSample) {
+        await (await sample()).addShadeStandard(input);
+      } else {
+        const { dc, sdk } = await live();
+        await sdk.insertShadeStandard(dc, {
+          shadeCode: input.shadeCode,
+          productCode: input.productCode,
+          factoryId: input.factoryId || null,
+          reference: input.reference || null,
+          approvedOn: input.approvedOn || null,
+          toleranceDeltaE: input.toleranceDeltaE,
+          physicalLocation: input.physicalLocation || null,
+        });
+      }
+      await recordEvent('product', input.productCode, 'standard_recorded', undefined, { summary: `${input.shadeCode} ${input.reference}`.trim() });
+    },
+    onSuccess: async (_, input) => {
+      await client.invalidateQueries({ queryKey: ['catalog', 'standards', input.productCode] });
+      await client.invalidateQueries({ queryKey: ['timeline', 'product', input.productCode] });
+    },
   });
 }

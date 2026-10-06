@@ -9,13 +9,15 @@ import {
   quantityFromStored,
   type SkuStatus,
 } from '@basis/shared';
-import { LabelHeader, Ledger, Panel, SelectField, ShadeDot, SheetTabs, StatusChip, Td, TextField, Th, Tr, sheetTabClass } from '@basis/ui';
+import { Button, LabelHeader, Ledger, Panel, SelectField, ShadeDot, SheetTabs, StatusChip, Td, TextField, Th, Tr, sheetTabClass } from '@basis/ui';
 import { useMemo, useState } from 'react';
+import { canManageModule } from '@basis/shared';
 import { Link, NavLink, useParams } from 'react-router';
 import { useProducts, useSku, useSkuSourcing, useSkus } from '../../data/catalog';
 import { useRequiredSession } from '../../session';
 import { NotFound } from '../NotFound';
 import { ModuleTitle, ProductsTabs } from './ProductsIndex';
+import { SourcingDialog } from './SourcingDialog';
 
 export function SkuLedger() {
   const skus = useSkus();
@@ -108,13 +110,36 @@ export function SkuLedger() {
   );
 }
 
-function Sourcing({ code }: { code: string }) {
+function Sourcing({ code, productCode, manage }: { code: string; productCode: string; manage: boolean }) {
   const sourcing = useSkuSourcing(code, true);
+  const [adding, setAdding] = useState(false);
   if (sourcing.isPending) return <p className="text-ink-muted">Loading sourcing</p>;
   if (sourcing.error) return <p className="text-critical">Sourcing could not be loaded. {sourcing.error.message}</p>;
   const items = sourcing.data?.supplierItems ?? [];
-  if (items.length === 0) return <p className="text-ink-muted">No supplier is mapped to this SKU yet. Sourcing is added from a quotation.</p>;
+  const dialog = manage && <SourcingDialog skuCode={code} productCode={productCode} open={adding} onClose={() => setAdding(false)} />;
+  if (items.length === 0) {
+    return (
+      <>
+        <p className="text-ink-muted">No supplier is mapped to this SKU yet.</p>
+        {manage && (
+          <Button className="mt-4" onClick={() => setAdding(true)}>
+            Add sourcing
+          </Button>
+        )}
+        {dialog}
+      </>
+    );
+  }
   return (
+    <>
+    {manage && (
+      <div className="mb-4 flex justify-end">
+        <Button size="sm" onClick={() => setAdding(true)}>
+          Add sourcing
+        </Button>
+      </div>
+    )}
+    {dialog}
     <ul className="space-y-4">
       {items.map((item) => (
         <li key={item.id} className="rounded-[var(--radius-panel)] border border-line">
@@ -153,6 +178,7 @@ function Sourcing({ code }: { code: string }) {
         </li>
       ))}
     </ul>
+    </>
   );
 }
 
@@ -161,6 +187,7 @@ export function SkuSheet({ tab }: { tab: 'overview' | 'sourcing' }) {
   const { code = '' } = useParams();
   const sku = useSku(code);
   const costs = canViewCosts(session.role);
+  const manage = canManageModule(session.role, 'products');
 
   if (sku.isPending) return <p className="px-5 py-10 text-ink-muted lg:px-8">Loading SKU</p>;
   if (sku.error) return <p className="px-5 py-10 text-critical lg:px-8">The SKU could not be loaded. {sku.error.message}</p>;
@@ -224,7 +251,7 @@ export function SkuSheet({ tab }: { tab: 'overview' | 'sourcing' }) {
             </dl>
           </Panel>
         )}
-        {tab === 'sourcing' && (costs ? <Panel title="Sourcing"><Sourcing code={data.code} /></Panel> : <NotFound what="page" />)}
+        {tab === 'sourcing' && (costs ? <Panel title="Sourcing"><Sourcing code={data.code} productCode={data.productCode} manage={manage} /></Panel> : <NotFound what="page" />)}
       </div>
     </>
   );

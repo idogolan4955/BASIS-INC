@@ -12,3 +12,4 @@ export * from './money';
 export * from './parties';
 export * from './quantity';
 export * from './status';
+export * from './timeline';

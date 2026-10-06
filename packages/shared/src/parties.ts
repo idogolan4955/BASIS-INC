@@ -121,3 +121,10 @@ export interface CompanyDetail extends CompanySummary {
 export function companyDisplayName(company: { legalName: string; tradingName: string }): string {
   return company.tradingName || company.legalName;
 }
+
+export interface FactoryOption {
+  readonly id: string;
+  readonly name: string;
+  readonly companyId: string;
+  readonly companyName: string;
+}

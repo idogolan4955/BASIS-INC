@@ -40,3 +40,9 @@ mutation AddNote($entityType: String!, $entityId: String!, $note: String!) @auth
 mutation UpdateMyPreferences($locale: String, $timeZone: String) @auth(level: USER) {
   user_update(key: { uid_expr: "auth.uid" }, data: { locale: $locale, timeZone: $timeZone, updatedAt_expr: "request.time" })
 }
+
+# Any record's timeline: a typed event with an optional payload, written by
+# the person acting. Transitions, notes and attachments all go through here.
+mutation RecordEvent($entityType: String!, $entityId: String!, $kind: String!, $note: String, $payload: Any) @auth(level: USER) {
+  timelineEvent_insert(data: { entityType: $entityType, entityId: $entityId, kind: $kind, note: $note, payload: $payload, actorUid_expr: "auth.uid" })
+}
