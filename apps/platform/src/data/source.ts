@@ -1,6 +1,7 @@
 import { ROLE_LABELS, daysBetween, entityPath, formatLocalDate, isRole, moduleForEntity, todayIn, type AttentionItem, type GatewayData } from '@basis/shared';
 import { sampleDecisions } from './alerts';
 import { loadOpenTasks } from './tasks';
+import { daysBetween as between, type RunTimeline } from '@basis/shared';
 import { useQuery } from '@tanstack/react-query';
 
 // Where screens get their data. `vite --mode sample` serves typed sample
@@ -21,8 +22,30 @@ async function loadLiveGateway(): Promise<GatewayData> {
     import('@basis/shared/dataconnect/platform'),
     loadOpenTasks(),
   ]);
-  const { data } = await listOpenAlerts(dataConnect);
+  const [{ data }, runRows] = await Promise.all([listOpenAlerts(dataConnect), loadLiveRuns()]);
   const today = todayIn(zone());
+  const openRuns = runRows.filter((run) => run.state === 'planned' || run.state === 'active');
+  const runs: RunTimeline[] = openRuns
+    .filter((run) => run.state === 'active' || between(today, run.plannedStart) <= 14)
+    .sort((a, b) => String(a.forecastEnd ?? a.plannedEnd).localeCompare(String(b.forecastEnd ?? b.plannedEnd)))
+    .slice(0, 4)
+    .map((run) => ({
+      number: run.number,
+      path: `/manufacturing/runs/${run.number}`,
+      product: run.products[0]?.split(',')[0] ?? run.templateName,
+      shade: run.products.length > 1 ? `${run.products.length} lines` : (run.products[0]?.split(', ')[1] ?? ''),
+      metres: run.totalQuantity,
+      health: run.health,
+      exFactory: run.forecastEnd ?? run.plannedEnd,
+      milestones: run.milestones.map((milestone) => ({
+        key: milestone.key,
+        name: milestone.name,
+        state: milestone.state === 'done' || milestone.state === 'skipped' ? 'done' : milestone.state === 'in_progress' ? 'active' : milestone.state === 'blocked' ? 'blocked' : 'pending',
+        plannedEnd: milestone.plannedEnd,
+        ...(milestone.forecastEnd ? { forecastEnd: milestone.forecastEnd } : {}),
+        ...(milestone.actualEnd ? { actualEnd: milestone.actualEnd } : {}),
+      })),
+    }));
   // Tasks join the attention ledger when they are due within a week or late.
   const dueTasks: AttentionItem[] = tasks
     .filter((task) => task.dueOn && daysBetween(today, task.dueOn) <= 7)
@@ -45,7 +68,7 @@ async function loadLiveGateway(): Promise<GatewayData> {
     asOf: today,
     figures: {
       orders: { count: 0, periodLabel: 'Last 30 days', changePercent: 0, comparedTo: 'previous 30 days', weekly: [] },
-      production: { activeRuns: 0, onSchedule: 0 },
+      production: { activeRuns: openRuns.length, onSchedule: openRuns.filter((run) => run.health === 'on_track').length },
       transit: { shipments: 0, metres: '0', progress: [] },
       inventory: { rolls: 0, byFamily: [] },
       quality: { firstPassPercent: 0, inspections: 0, windowLabel: 'last 90 days', monthly: [] },
@@ -65,19 +88,59 @@ async function loadLiveGateway(): Promise<GatewayData> {
       })),
       ...dueTasks,
     ],
-    runs: [],
+    runs,
     shipments: [],
     orders: [],
     families: [],
   };
 }
 
+async function loadLiveRuns() {
+  const [{ dataConnect }, { listProductionRuns }] = await Promise.all([import('../lib/firebase'), import('@basis/shared/dataconnect/platform')]);
+  const { data } = await listProductionRuns(dataConnect);
+  const { runProgress } = await import('@basis/shared');
+  return data.productionRuns.map((run) => {
+    const milestones = run.productionMilestones_on_run.map((m) => ({
+      id: m.id, key: m.key, name: m.name, category: m.category, sequence: m.sequence, dependsOnKey: null, gate: m.gate, state: m.state,
+      plannedStart: m.plannedStart as never, plannedEnd: m.plannedEnd as never, forecastEnd: (m.forecastEnd ?? null) as never, actualStart: (m.actualStart ?? null) as never, actualEnd: (m.actualEnd ?? null) as never, delayReason: m.delayReason ?? '', note: '',
+    }));
+    return {
+      number: run.number, state: run.state, health: run.health, templateName: run.templateName ?? '', plannedStart: run.plannedStart as never, plannedEnd: run.plannedEnd as never,
+      forecastEnd: (run.forecastEnd ?? null) as never, totalQuantity: run.productionRunLines_on_run.reduce((sum, line) => sum + BigInt(line.plannedQuantity), 0n).toString(),
+      products: [...new Set(run.productionRunLines_on_run.map((line) => `${line.purchaseOrderLine.sku.product.name}, ${line.purchaseOrderLine.sku.shade.name}`))],
+      progress: runProgress(milestones), milestones,
+    };
+  });
+}
+
 async function loadGateway(): Promise<GatewayData> {
   if (import.meta.env.MODE === 'sample') {
-    const { sampleGateway } = await import('./sample');
-    const tasks = await loadOpenTasks();
+    const [{ sampleGateway }, { sampleManufacturing }, tasks] = await Promise.all([import('./sample'), import('./sample-manufacturing'), loadOpenTasks()]);
     const today = todayIn(zone());
     const data = sampleGateway(today);
+    // The run the manufacturing sample store holds is the one the Gateway shows,
+    // so a milestone updated in the sheet changes the timeline here too.
+    const storeRuns = (await sampleManufacturing.runs()).filter((run) => run.state === 'active' || run.state === 'planned');
+    const runs: RunTimeline[] = [
+      ...storeRuns.map((run) => ({
+        number: run.number,
+        path: `/manufacturing/runs/${run.number}`,
+        product: run.products[0]?.split(',')[0] ?? run.templateName,
+        shade: run.products.length > 1 ? `${run.products.length} lines` : (run.products[0]?.split(', ')[1] ?? ''),
+        metres: run.totalQuantity,
+        health: run.health,
+        exFactory: run.forecastEnd ?? run.plannedEnd,
+        milestones: run.milestones.map((milestone) => ({
+          key: milestone.key,
+          name: milestone.name,
+          state: (milestone.state === 'done' || milestone.state === 'skipped' ? 'done' : milestone.state === 'in_progress' ? 'active' : milestone.state === 'blocked' ? 'blocked' : 'pending') as RunTimeline['milestones'][number]['state'],
+          plannedEnd: milestone.plannedEnd,
+          ...(milestone.forecastEnd ? { forecastEnd: milestone.forecastEnd } : {}),
+          ...(milestone.actualEnd ? { actualEnd: milestone.actualEnd } : {}),
+        })),
+      })),
+      ...data.runs.filter((run) => !storeRuns.some((candidate) => candidate.number === run.number)),
+    ];
     const dueTasks: AttentionItem[] = tasks
       .filter((task) => task.dueOn && daysBetween(today, task.dueOn) <= 7)
       .map((task) => ({
@@ -94,6 +157,7 @@ async function loadGateway(): Promise<GatewayData> {
       }));
     return {
       ...data,
+      runs,
       attention: [
         ...data.attention
           .filter((item) => !sampleDecisions.resolved.has(item.id))

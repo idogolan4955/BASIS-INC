@@ -111,10 +111,20 @@ export interface Location_Key {
   __typename?: 'Location_Key';
 }
 
+export interface Lot_Key {
+  id: UUIDString;
+  __typename?: 'Lot_Key';
+}
+
 export interface NumberSequence_Key {
   prefix: string;
   year: number;
   __typename?: 'NumberSequence_Key';
+}
+
+export interface PaymentMilestone_Key {
+  id: UUIDString;
+  __typename?: 'PaymentMilestone_Key';
 }
 
 export interface PriceListItem_Key {
@@ -127,6 +137,16 @@ export interface PriceList_Key {
   __typename?: 'PriceList_Key';
 }
 
+export interface ProcessTemplateStep_Key {
+  id: UUIDString;
+  __typename?: 'ProcessTemplateStep_Key';
+}
+
+export interface ProcessTemplate_Key {
+  id: UUIDString;
+  __typename?: 'ProcessTemplate_Key';
+}
+
 export interface ProductVariant_Key {
   id: UUIDString;
   __typename?: 'ProductVariant_Key';
@@ -135,6 +155,31 @@ export interface ProductVariant_Key {
 export interface Product_Key {
   code: string;
   __typename?: 'Product_Key';
+}
+
+export interface ProductionMilestone_Key {
+  id: UUIDString;
+  __typename?: 'ProductionMilestone_Key';
+}
+
+export interface ProductionRunLine_Key {
+  id: UUIDString;
+  __typename?: 'ProductionRunLine_Key';
+}
+
+export interface ProductionRun_Key {
+  id: UUIDString;
+  __typename?: 'ProductionRun_Key';
+}
+
+export interface PurchaseOrderLine_Key {
+  id: UUIDString;
+  __typename?: 'PurchaseOrderLine_Key';
+}
+
+export interface PurchaseOrder_Key {
+  id: UUIDString;
+  __typename?: 'PurchaseOrder_Key';
 }
 
 export interface PutUp_Key {

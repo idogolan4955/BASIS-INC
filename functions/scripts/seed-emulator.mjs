@@ -149,7 +149,55 @@ async function seedCatalog() {
   return skus;
 }
 
+// Production processes per family. Durations are working assumptions until
+// a supplier's real lead times replace them on its own template.
+const TEMPLATES = [
+  { name: 'Warp-knit mesh', family: 'MSH', steps: [
+    ['yarn', 'Yarn sourcing', 'materials', 7, null, 'none'],
+    ['knit', 'Knitting', 'production', 10, 'yarn', 'none'],
+    ['labdip', 'Lab dip approval', 'colour', 3, 'yarn', 'approval'],
+    ['dye', 'Dyeing', 'production', 7, 'knit', 'none'],
+    ['finish', 'Finishing', 'production', 4, 'dye', 'none'],
+    ['inspect', 'Inspection', 'quality', 2, 'finish', 'inspection'],
+    ['pack', 'Packing', 'logistics', 2, 'inspect', 'none'],
+  ] },
+  { name: 'Woven lining', family: 'LIN', steps: [
+    ['yarn', 'Yarn sourcing', 'materials', 5, null, 'none'],
+    ['weave', 'Weaving', 'production', 10, 'yarn', 'none'],
+    ['labdip', 'Lab dip approval', 'colour', 3, 'yarn', 'approval'],
+    ['dye', 'Dyeing', 'production', 7, 'weave', 'none'],
+    ['finish', 'Finishing', 'production', 3, 'dye', 'none'],
+    ['inspect', 'Inspection', 'quality', 2, 'finish', 'inspection'],
+    ['pack', 'Packing', 'logistics', 2, 'inspect', 'none'],
+  ] },
+  { name: 'Bridal tulle', family: 'TUL', steps: [
+    ['yarn', 'Yarn sourcing', 'materials', 5, null, 'none'],
+    ['knit', 'Knitting', 'production', 8, 'yarn', 'none'],
+    ['dye', 'Dyeing', 'production', 6, 'knit', 'none'],
+    ['finish', 'Finishing', 'production', 4, 'dye', 'none'],
+    ['inspect', 'Inspection', 'quality', 2, 'finish', 'inspection'],
+    ['pack', 'Packing', 'logistics', 2, 'inspect', 'none'],
+  ] },
+];
+
+async function seedTemplates() {
+  for (const template of TEMPLATES) {
+    const existing = await gql(`query ($name: String!) { processTemplates(where: { name: { eq: $name } }, limit: 1) { id } }`, { name: template.name });
+    if (existing.processTemplates[0]) continue;
+    const inserted = await gql(`mutation ($name: String!, $family: String!) { processTemplate_insert(data: { name: $name, familyCode: $family, isDefault: true }) }`, { name: template.name, family: template.family });
+    const id = inserted.processTemplate_insert.id;
+    let sequence = 1;
+    for (const [key, name, category, durationDays, dependsOnKey, gate] of template.steps) {
+      await gql(`mutation ($id: UUID!, $key: String!, $name: String!, $category: String!, $sequence: Int!, $duration: Int!, $dependsOnKey: String, $gate: MilestoneGate!) {
+        processTemplateStep_insert(data: { templateId: $id, key: $key, name: $name, category: $category, sequence: $sequence, durationDays: $duration, dependsOnKey: $dependsOnKey, gate: $gate }) }`,
+        { id, key, name, category, sequence, duration: durationDays, dependsOnKey, gate });
+      sequence += 1;
+    }
+  }
+}
+
 const uid = await seedOwner();
+await seedTemplates();
 await seedReference();
 const skuCount = await seedCatalog();
-console.log(`Seeded emulators: owner ${OWNER.email} (${uid}), ${COUNTRIES.length} countries, ${CURRENCIES.length} currencies, ${UOMS.length} units, ${INCOTERMS.length} Incoterms, number sequences, ${catalog.products.length} products, ${skuCount} SKUs.`);
+console.log(`Seeded emulators: owner ${OWNER.email} (${uid}), ${COUNTRIES.length} countries, ${CURRENCIES.length} currencies, ${UOMS.length} units, ${INCOTERMS.length} Incoterms, number sequences, ${catalog.products.length} products, ${skuCount} SKUs, ${TEMPLATES.length} process templates.`);

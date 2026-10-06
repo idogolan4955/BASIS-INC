@@ -8,6 +8,7 @@ export * from './function-names';
 export * from './gateway';
 export * from './launch-catalog';
 export * from './local-date';
+export * from './manufacturing';
 export * from './money';
 export * from './parties';
 export * from './quantity';

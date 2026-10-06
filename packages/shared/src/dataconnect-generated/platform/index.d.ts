@@ -42,6 +42,13 @@ export enum ContactStatus {
   left = "left",
 };
 
+export enum Health {
+  on_track = "on_track",
+  at_risk = "at_risk",
+  delayed = "delayed",
+  blocked = "blocked",
+};
+
 export enum LocationType {
   factory = "factory",
   warehouse = "warehouse",
@@ -64,6 +71,14 @@ export enum ProductStatus {
   discontinued = "discontinued",
 };
 
+export enum PurchaseOrderState {
+  draft = "draft",
+  issued = "issued",
+  confirmed = "confirmed",
+  closed = "closed",
+  cancelled = "cancelled",
+};
+
 export enum Role {
   owner = "owner",
   operations = "operations",
@@ -76,6 +91,13 @@ export enum Role {
   viewer = "viewer",
   supplier = "supplier",
   customer = "customer",
+};
+
+export enum RunState {
+  planned = "planned",
+  active = "active",
+  completed = "completed",
+  cancelled = "cancelled",
 };
 
 export enum ShadeStatus {
@@ -390,6 +412,199 @@ export interface GetProductData {
 
 export interface GetProductVariables {
   code: string;
+}
+
+export interface GetProductionRunData {
+  productionRuns: ({
+    id: UUIDString;
+    number: string;
+    state: RunState;
+    health: Health;
+    plannedStart: DateString;
+    plannedEnd: DateString;
+    forecastEnd?: DateString | null;
+    actualEnd?: DateString | null;
+    templateName?: string | null;
+    notes?: string | null;
+    createdAt: TimestampString;
+    purchaseOrder: {
+      id: UUIDString;
+      number: string;
+      state: PurchaseOrderState;
+      supplier: {
+        id: UUIDString;
+        tradingName?: string | null;
+        legalName: string;
+      } & Company_Key;
+    } & PurchaseOrder_Key;
+    factory?: {
+      id: UUIDString;
+      location: {
+        name: string;
+        city?: string | null;
+      };
+    } & Factory_Key;
+    productionRunLines_on_run: ({
+      id: UUIDString;
+      plannedQuantity: Int64String;
+      producedQuantity: Int64String;
+      purchaseOrderLine: {
+        id: UUIDString;
+        lineNo: number;
+        uom: string;
+        sku: {
+          code: string;
+          product: {
+            name: string;
+          };
+          shade: {
+            code: string;
+            name: string;
+            hex?: string | null;
+          } & Shade_Key;
+          variant: {
+            name: string;
+          };
+        } & Sku_Key;
+      } & PurchaseOrderLine_Key;
+    } & ProductionRunLine_Key)[];
+    productionMilestones_on_run: ({
+      id: UUIDString;
+      key: string;
+      name: string;
+      category: string;
+      sequence: number;
+      dependsOnKey?: string | null;
+      gate: MilestoneGate;
+      plannedStart: DateString;
+      plannedEnd: DateString;
+      forecastEnd?: DateString | null;
+      actualStart?: DateString | null;
+      actualEnd?: DateString | null;
+      state: MilestoneState;
+      delayReason?: string | null;
+      note?: string | null;
+    } & ProductionMilestone_Key)[];
+    lots_on_run: ({
+      id: UUIDString;
+      number: string;
+      millLotRef?: string | null;
+      producedQuantity: Int64String;
+      producedOn?: DateString | null;
+      qualityState: LotQualityState;
+      sku: {
+        code: string;
+      } & Sku_Key;
+    } & Lot_Key)[];
+  } & ProductionRun_Key)[];
+}
+
+export interface GetProductionRunVariables {
+  number: string;
+}
+
+export interface GetPurchaseOrderCostsData {
+  purchaseOrders: ({
+    id: UUIDString;
+    currency: string;
+    fxRateToBase?: string | null;
+    purchaseOrderLines_on_purchaseOrder: ({
+      id: UUIDString;
+      lineNo: number;
+      quantity: Int64String;
+      unitPrice: Int64String;
+    } & PurchaseOrderLine_Key)[];
+    paymentMilestones_on_purchaseOrder: ({
+      id: UUIDString;
+      label: string;
+      percent?: number | null;
+      amount?: Int64String | null;
+      trigger: string;
+      dueOn?: DateString | null;
+      paidOn?: DateString | null;
+      paidAmount?: Int64String | null;
+      reference?: string | null;
+    } & PaymentMilestone_Key)[];
+  } & PurchaseOrder_Key)[];
+}
+
+export interface GetPurchaseOrderCostsVariables {
+  number: string;
+}
+
+export interface GetPurchaseOrderData {
+  purchaseOrders: ({
+    id: UUIDString;
+    number: string;
+    state: PurchaseOrderState;
+    currency: string;
+    namedPlace?: string | null;
+    paymentTerms?: string | null;
+    issuedOn?: DateString | null;
+    confirmedOn?: DateString | null;
+    requestedExFactory?: DateString | null;
+    notes?: string | null;
+    createdAt: TimestampString;
+    updatedAt: TimestampString;
+    version: number;
+    legalEntity?: {
+      id: UUIDString;
+      name: string;
+    } & LegalEntity_Key;
+    supplier: {
+      id: UUIDString;
+      legalName: string;
+      tradingName?: string | null;
+    } & Company_Key;
+    factory?: {
+      id: UUIDString;
+      location: {
+        name: string;
+        city?: string | null;
+      };
+    } & Factory_Key;
+    incoterm?: {
+      code: string;
+    } & Incoterm_Key;
+    purchaseOrderLines_on_purchaseOrder: ({
+      id: UUIDString;
+      lineNo: number;
+      quantity: Int64String;
+      uom: string;
+      overTolerancePercent?: number | null;
+      underTolerancePercent?: number | null;
+      requestedExFactory?: DateString | null;
+      sku: {
+        code: string;
+        product: {
+          code: string;
+          name: string;
+        } & Product_Key;
+        shade: {
+          code: string;
+          name: string;
+          hex?: string | null;
+        } & Shade_Key;
+        variant: {
+          name: string;
+        };
+      } & Sku_Key;
+    } & PurchaseOrderLine_Key)[];
+    productionRuns_on_purchaseOrder: ({
+      id: UUIDString;
+      number: string;
+      state: RunState;
+      health: Health;
+      plannedStart: DateString;
+      plannedEnd: DateString;
+      forecastEnd?: DateString | null;
+      actualEnd?: DateString | null;
+    } & ProductionRun_Key)[];
+  } & PurchaseOrder_Key)[];
+}
+
+export interface GetPurchaseOrderVariables {
+  number: string;
 }
 
 export interface GetSkuData {
@@ -784,6 +999,90 @@ export interface ListOpenTasksData {
   } & Task_Key)[];
 }
 
+export interface ListProcessTemplatesData {
+  processTemplates: ({
+    id: UUIDString;
+    name: string;
+    isDefault: boolean;
+    family?: {
+      code: string;
+      name: string;
+    } & FabricFamily_Key;
+    supplier?: {
+      id: UUIDString;
+      tradingName?: string | null;
+      legalName: string;
+    } & Company_Key;
+    processTemplateSteps_on_template: ({
+      id: UUIDString;
+      key: string;
+      name: string;
+      category: string;
+      sequence: number;
+      durationDays: number;
+      dependsOnKey?: string | null;
+      gate: MilestoneGate;
+    } & ProcessTemplateStep_Key)[];
+  } & ProcessTemplate_Key)[];
+}
+
+export interface ListProductionRunsData {
+  productionRuns: ({
+    id: UUIDString;
+    number: string;
+    state: RunState;
+    health: Health;
+    plannedStart: DateString;
+    plannedEnd: DateString;
+    forecastEnd?: DateString | null;
+    actualEnd?: DateString | null;
+    templateName?: string | null;
+    purchaseOrder: {
+      number: string;
+      supplier: {
+        tradingName?: string | null;
+        legalName: string;
+      };
+    };
+    factory?: {
+      location: {
+        name: string;
+      };
+    };
+    productionRunLines_on_run: ({
+      plannedQuantity: Int64String;
+      producedQuantity: Int64String;
+      purchaseOrderLine: {
+        uom: string;
+        sku: {
+          code: string;
+          product: {
+            name: string;
+          };
+          shade: {
+            name: string;
+          };
+        } & Sku_Key;
+      };
+    })[];
+    productionMilestones_on_run: ({
+      id: UUIDString;
+      key: string;
+      name: string;
+      category: string;
+      sequence: number;
+      gate: MilestoneGate;
+      plannedStart: DateString;
+      plannedEnd: DateString;
+      forecastEnd?: DateString | null;
+      actualStart?: DateString | null;
+      actualEnd?: DateString | null;
+      state: MilestoneState;
+      delayReason?: string | null;
+    } & ProductionMilestone_Key)[];
+  } & ProductionRun_Key)[];
+}
+
 export interface ListProductsData {
   products: ({
     code: string;
@@ -806,6 +1105,45 @@ export interface ListProductsData {
       } & Shade_Key;
     } & Sku_Key)[];
   } & Product_Key)[];
+}
+
+export interface ListPurchaseOrdersData {
+  purchaseOrders: ({
+    id: UUIDString;
+    number: string;
+    state: PurchaseOrderState;
+    currency: string;
+    issuedOn?: DateString | null;
+    confirmedOn?: DateString | null;
+    requestedExFactory?: DateString | null;
+    createdAt: TimestampString;
+    supplier: {
+      id: UUIDString;
+      legalName: string;
+      tradingName?: string | null;
+    } & Company_Key;
+    factory?: {
+      id: UUIDString;
+      location: {
+        name: string;
+      };
+    } & Factory_Key;
+    purchaseOrderLines_on_purchaseOrder: ({
+      quantity: Int64String;
+      uom: string;
+      sku: {
+        code: string;
+        product: {
+          name: string;
+        };
+      } & Sku_Key;
+    })[];
+    productionRuns_on_purchaseOrder: ({
+      number: string;
+      state: RunState;
+      health: Health;
+    })[];
+  } & PurchaseOrder_Key)[];
 }
 
 export interface ListPutUpsData {
@@ -954,10 +1292,20 @@ export interface Location_Key {
   __typename?: 'Location_Key';
 }
 
+export interface Lot_Key {
+  id: UUIDString;
+  __typename?: 'Lot_Key';
+}
+
 export interface NumberSequence_Key {
   prefix: string;
   year: number;
   __typename?: 'NumberSequence_Key';
+}
+
+export interface PaymentMilestone_Key {
+  id: UUIDString;
+  __typename?: 'PaymentMilestone_Key';
 }
 
 export interface PriceListItem_Key {
@@ -970,6 +1318,16 @@ export interface PriceList_Key {
   __typename?: 'PriceList_Key';
 }
 
+export interface ProcessTemplateStep_Key {
+  id: UUIDString;
+  __typename?: 'ProcessTemplateStep_Key';
+}
+
+export interface ProcessTemplate_Key {
+  id: UUIDString;
+  __typename?: 'ProcessTemplate_Key';
+}
+
 export interface ProductVariant_Key {
   id: UUIDString;
   __typename?: 'ProductVariant_Key';
@@ -978,6 +1336,31 @@ export interface ProductVariant_Key {
 export interface Product_Key {
   code: string;
   __typename?: 'Product_Key';
+}
+
+export interface ProductionMilestone_Key {
+  id: UUIDString;
+  __typename?: 'ProductionMilestone_Key';
+}
+
+export interface ProductionRunLine_Key {
+  id: UUIDString;
+  __typename?: 'ProductionRunLine_Key';
+}
+
+export interface ProductionRun_Key {
+  id: UUIDString;
+  __typename?: 'ProductionRun_Key';
+}
+
+export interface PurchaseOrderLine_Key {
+  id: UUIDString;
+  __typename?: 'PurchaseOrderLine_Key';
+}
+
+export interface PurchaseOrder_Key {
+  id: UUIDString;
+  __typename?: 'PurchaseOrder_Key';
 }
 
 export interface PutUp_Key {
@@ -1535,6 +1918,78 @@ export const insertShadeStandardRef: InsertShadeStandardRef;
 
 export function insertShadeStandard(vars: InsertShadeStandardVariables): MutationPromise<InsertShadeStandardData, InsertShadeStandardVariables>;
 export function insertShadeStandard(dc: DataConnect, vars: InsertShadeStandardVariables): MutationPromise<InsertShadeStandardData, InsertShadeStandardVariables>;
+
+interface ListPurchaseOrdersRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListPurchaseOrdersData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListPurchaseOrdersData, undefined>;
+  operationName: string;
+}
+export const listPurchaseOrdersRef: ListPurchaseOrdersRef;
+
+export function listPurchaseOrders(options?: ExecuteQueryOptions): QueryPromise<ListPurchaseOrdersData, undefined>;
+export function listPurchaseOrders(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListPurchaseOrdersData, undefined>;
+
+interface GetPurchaseOrderRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetPurchaseOrderVariables): QueryRef<GetPurchaseOrderData, GetPurchaseOrderVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetPurchaseOrderVariables): QueryRef<GetPurchaseOrderData, GetPurchaseOrderVariables>;
+  operationName: string;
+}
+export const getPurchaseOrderRef: GetPurchaseOrderRef;
+
+export function getPurchaseOrder(vars: GetPurchaseOrderVariables, options?: ExecuteQueryOptions): QueryPromise<GetPurchaseOrderData, GetPurchaseOrderVariables>;
+export function getPurchaseOrder(dc: DataConnect, vars: GetPurchaseOrderVariables, options?: ExecuteQueryOptions): QueryPromise<GetPurchaseOrderData, GetPurchaseOrderVariables>;
+
+interface GetPurchaseOrderCostsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetPurchaseOrderCostsVariables): QueryRef<GetPurchaseOrderCostsData, GetPurchaseOrderCostsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetPurchaseOrderCostsVariables): QueryRef<GetPurchaseOrderCostsData, GetPurchaseOrderCostsVariables>;
+  operationName: string;
+}
+export const getPurchaseOrderCostsRef: GetPurchaseOrderCostsRef;
+
+export function getPurchaseOrderCosts(vars: GetPurchaseOrderCostsVariables, options?: ExecuteQueryOptions): QueryPromise<GetPurchaseOrderCostsData, GetPurchaseOrderCostsVariables>;
+export function getPurchaseOrderCosts(dc: DataConnect, vars: GetPurchaseOrderCostsVariables, options?: ExecuteQueryOptions): QueryPromise<GetPurchaseOrderCostsData, GetPurchaseOrderCostsVariables>;
+
+interface ListProductionRunsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListProductionRunsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListProductionRunsData, undefined>;
+  operationName: string;
+}
+export const listProductionRunsRef: ListProductionRunsRef;
+
+export function listProductionRuns(options?: ExecuteQueryOptions): QueryPromise<ListProductionRunsData, undefined>;
+export function listProductionRuns(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListProductionRunsData, undefined>;
+
+interface GetProductionRunRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetProductionRunVariables): QueryRef<GetProductionRunData, GetProductionRunVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetProductionRunVariables): QueryRef<GetProductionRunData, GetProductionRunVariables>;
+  operationName: string;
+}
+export const getProductionRunRef: GetProductionRunRef;
+
+export function getProductionRun(vars: GetProductionRunVariables, options?: ExecuteQueryOptions): QueryPromise<GetProductionRunData, GetProductionRunVariables>;
+export function getProductionRun(dc: DataConnect, vars: GetProductionRunVariables, options?: ExecuteQueryOptions): QueryPromise<GetProductionRunData, GetProductionRunVariables>;
+
+interface ListProcessTemplatesRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListProcessTemplatesData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListProcessTemplatesData, undefined>;
+  operationName: string;
+}
+export const listProcessTemplatesRef: ListProcessTemplatesRef;
+
+export function listProcessTemplates(options?: ExecuteQueryOptions): QueryPromise<ListProcessTemplatesData, undefined>;
+export function listProcessTemplates(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListProcessTemplatesData, undefined>;
 
 interface AcknowledgeAlertRef {
   /* Allow users to create refs without passing in DataConnect */

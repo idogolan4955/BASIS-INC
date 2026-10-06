@@ -7,6 +7,9 @@ import { createRoot } from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router';
 import { Shell } from './layout/Shell';
 import { ModulePending } from './pages/ModulePending';
+import { ProcessTemplates, ProductionRuns, PurchaseOrders } from './pages/manufacturing/Manufacturing';
+import { PurchaseOrderSheet } from './pages/manufacturing/PurchaseOrderSheet';
+import { RunSheet } from './pages/manufacturing/RunSheet';
 import { Tasks } from './pages/operations/Tasks';
 import { Companies } from './pages/parties/Companies';
 import { CompanySheet } from './pages/parties/CompanySheet';
@@ -33,6 +36,17 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Gateway /> },
       { path: 'operations/tasks', element: <Tasks /> },
+      { path: 'manufacturing', element: <PurchaseOrders /> },
+      { path: 'manufacturing/purchase-orders', element: <PurchaseOrders /> },
+      { path: 'manufacturing/purchase-orders/:number', element: <PurchaseOrderSheet tab="overview" /> },
+      { path: 'manufacturing/purchase-orders/:number/production', element: <PurchaseOrderSheet tab="production" /> },
+      { path: 'manufacturing/purchase-orders/:number/payments', element: <PurchaseOrderSheet tab="payments" /> },
+      { path: 'manufacturing/purchase-orders/:number/timeline', element: <PurchaseOrderSheet tab="timeline" /> },
+      { path: 'manufacturing/runs', element: <ProductionRuns /> },
+      { path: 'manufacturing/runs/:number', element: <RunSheet tab="milestones" /> },
+      { path: 'manufacturing/runs/:number/lots', element: <RunSheet tab="lots" /> },
+      { path: 'manufacturing/runs/:number/timeline', element: <RunSheet tab="timeline" /> },
+      { path: 'manufacturing/templates', element: <ProcessTemplates /> },
       { path: 'products', element: <ProductsIndex /> },
       { path: 'products/skus', element: <SkuLedger /> },
       { path: 'products/skus/:code', element: <SkuSheet tab="overview" /> },

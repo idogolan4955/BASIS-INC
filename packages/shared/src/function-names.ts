@@ -9,6 +9,15 @@ export const FUNCTION_NAMES = {
   inviteUser: 'inviteUser',
   /** Callable, owner only: change a person's role. */
   setUserRole: 'setUserRole',
+  /** Callable, purchasing roles: a purchase order with its lines and payment schedule. */
+  createPurchaseOrder: 'createPurchaseOrder',
+  issuePurchaseOrder: 'issuePurchaseOrder',
+  confirmPurchaseOrder: 'confirmPurchaseOrder',
+  cancelPurchaseOrder: 'cancelPurchaseOrder',
+  /** Callable, purchasing roles: open a run on a confirmed order from a process template. */
+  createProductionRun: 'createProductionRun',
+  /** Callable, production roles: move a milestone; the run's health follows. */
+  updateMilestone: 'updateMilestone',
   /** Callable, owner and operations: run the alert rules now. */
   evaluateAlerts: 'evaluateAlerts',
   /** Scheduled: consume domain events, evaluate alert rules. */

@@ -164,6 +164,70 @@ export const RULES: Rule[] = [
     },
   },
   {
+    key: 'production.milestone_overdue',
+    async evaluate(now) {
+      const { productionRuns } = await graphql<{
+        productionRuns: { number: string; state: string; productionMilestones_on_run: { id: string; name: string; state: string; plannedEnd: string; forecastEnd: string | null }[] }[];
+      }>(`query { productionRuns(where: { state: { in: [planned, active] } }) { number state productionMilestones_on_run { id name state plannedEnd forecastEnd } } }`);
+      const today = isoDate(now);
+      return productionRuns.flatMap((run) =>
+        run.productionMilestones_on_run
+          .filter((milestone) => milestone.state !== 'done' && milestone.state !== 'skipped')
+          .map((milestone) => ({ milestone, late: daysBetween(milestone.forecastEnd ?? milestone.plannedEnd, today) }))
+          .filter(({ late }) => late > 0)
+          .map(({ milestone, late }) => ({
+            entityType: 'production_run',
+            entityId: run.number,
+            title: `${run.number}: ${milestone.name} is ${late} day${late === 1 ? '' : 's'} late`,
+            detail: `Expected to finish ${milestone.forecastEnd ?? milestone.plannedEnd}, still ${milestone.state.replace('_', ' ')}.`,
+            severity: (late > 3 ? 'critical' : 'caution') as Severity,
+            ownerRole: 'purchasing' as Role,
+            dedupeKey: `production.milestone_overdue:${milestone.id}`,
+          })),
+      );
+    },
+  },
+  {
+    key: 'production.run_health',
+    async evaluate() {
+      const { productionRuns } = await graphql<{ productionRuns: { number: string; health: string; forecastEnd: string | null; plannedEnd: string }[] }>(
+        `query { productionRuns(where: { state: { in: [planned, active] }, health: { in: [at_risk, delayed, blocked] } }) { number health forecastEnd plannedEnd } }`,
+      );
+      return productionRuns.map((run) => ({
+        entityType: 'production_run',
+        entityId: run.number,
+        title: `${run.number} is ${run.health.replace('_', ' ')}`,
+        detail: run.forecastEnd && run.forecastEnd !== run.plannedEnd ? `Planned to finish ${run.plannedEnd}, now expected ${run.forecastEnd}.` : `Planned to finish ${run.plannedEnd}.`,
+        severity: (run.health === 'at_risk' ? 'caution' : 'critical') as Severity,
+        ownerRole: 'purchasing' as Role,
+        dedupeKey: `production.run_health:${run.number}:${run.health}`,
+      }));
+    },
+  },
+  {
+    key: 'payments.due',
+    async evaluate(now) {
+      const { paymentMilestones } = await graphql<{
+        paymentMilestones: { id: string; label: string; dueOn: string | null; paidOn: string | null; amount: string | null; purchaseOrder: { number: string; currency: string; state: string } }[];
+      }>(`query { paymentMilestones(where: { paidOn: { isNull: true }, dueOn: { isNull: false } }) { id label dueOn paidOn amount purchaseOrder { number currency state } } }`);
+      const today = isoDate(now);
+      return paymentMilestones
+        .filter((payment) => payment.purchaseOrder.state !== 'cancelled' && daysBetween(today, payment.dueOn!) <= 7)
+        .map((payment) => {
+          const late = daysBetween(payment.dueOn!, today);
+          return {
+            entityType: 'purchase_order',
+            entityId: payment.purchaseOrder.number,
+            title: late > 0 ? `${payment.purchaseOrder.number}: ${payment.label} is ${late} day${late === 1 ? '' : 's'} overdue` : `${payment.purchaseOrder.number}: ${payment.label} due ${payment.dueOn}`,
+            detail: `${payment.purchaseOrder.currency} payment to the supplier, ${late > 0 ? 'unpaid' : 'falling due'}.`,
+            severity: (late > 0 ? 'critical' : 'caution') as Severity,
+            ownerRole: 'finance' as Role,
+            dedupeKey: `payments.due:${payment.id}:${late > 0 ? 'late' : 'soon'}`,
+          };
+        });
+    },
+  },
+  {
     key: 'parties.supplier_without_contact',
     async evaluate() {
       const { companies } = await graphql<{

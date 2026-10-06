@@ -1,12 +1,25 @@
 import type { FunctionName } from '@basis/shared';
 import { evaluateAlerts } from './alerts';
 import { api } from './api';
+import { cancelPurchaseOrder, confirmPurchaseOrder, createProductionRun, createPurchaseOrder, issuePurchaseOrder, updateMilestone } from './manufacturing';
 import { sweepEvents } from './sweep';
 import { inviteUser, setUserRole } from './users';
 
 // Exported names must be exactly the registry in @basis/shared; the type
 // check fails when a function is added on one side only.
-const registry: Record<FunctionName, unknown> = { api, evaluateAlerts, inviteUser, setUserRole, sweepEvents };
+const registry: Record<FunctionName, unknown> = {
+  api,
+  evaluateAlerts,
+  inviteUser,
+  setUserRole,
+  sweepEvents,
+  createPurchaseOrder,
+  issuePurchaseOrder,
+  confirmPurchaseOrder,
+  cancelPurchaseOrder,
+  createProductionRun,
+  updateMilestone,
+};
 void registry;
 
-export { api, evaluateAlerts, inviteUser, setUserRole, sweepEvents };
+export { api, evaluateAlerts, inviteUser, setUserRole, sweepEvents, createPurchaseOrder, issuePurchaseOrder, confirmPurchaseOrder, cancelPurchaseOrder, createProductionRun, updateMilestone };

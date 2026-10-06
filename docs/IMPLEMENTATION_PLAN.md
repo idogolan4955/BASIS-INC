@@ -140,6 +140,17 @@ Depends on: Phase 2.
 Exit: a real purchase order can be followed from issue to packed, released-pending-QC lots; delays appear on the Gateway without anyone setting a status.
 Depends on: Phase 2, P3.
 
+#### Phase 4 progress (2026-10-06)
+
+| Done | Remaining |
+|---|---|
+| Schema and connector for purchasing and manufacturing (`dataconnect/schema/manufacturing.gql`): purchase orders with lines, tolerances and payment milestones; process templates with steps, dependencies and gates; production runs with lines, milestones and lots. Prices and payments are read only through cost-role operations | RFQs and quotations; supplier terms; PO PDF |
+| Rules in `packages/shared/src/manufacturing.ts` with tests: milestones planned from a template by dependency; run health, forecast end, progress and state derived from the milestones; a slip on one step pushes every open step that depends on it | Lots and rolls, packing, "available to ship" |
+| Functions: `createPurchaseOrder`, `issuePurchaseOrder`, `confirmPurchaseOrder`, `cancelPurchaseOrder`, `createProductionRun`, `updateMilestone`; numbers from the sequence, deposit and balance milestones from the deposit share, the deposit falling due on issue, every change in the timeline. Inspection gates close only by QC or the owner | Operations pipeline and calendar |
+| Alert rules: milestone overdue, run at risk or delayed, payment due | Event-driven re-evaluation |
+| Module 04 Manufacturing: purchase-order ledger, order sheet (lines, production, payments for cost roles, timeline) with issue / confirm / cancel / open-run actions, new-order dialog; run ledger; run sheet with the milestone track, milestone update dialog, lines and lots; process-template ledger. The Gateway's production figure and timeline read the real runs | Gateway production figure counts runs on schedule only once lots and shipments report |
+| Verified against the emulators: PO-26-0001 created, issued (deposit due the same day), confirmed; RUN-26-0001 planned from the Warp-knit mesh template; a dye slip recorded with `updateMilestone` propagated to finishing, inspection and packing, turned the run `delayed`, and `evaluateAlerts` raised the run and the deposit | |
+
 ### P5 — Quality (L)
 
 - Inspection templates and sampling rules; inspections for lab dip, inline, pre-shipment, receiving.

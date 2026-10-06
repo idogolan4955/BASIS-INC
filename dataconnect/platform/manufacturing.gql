@@ -1,0 +1,313 @@
+# Manufacturing reads. Purchase prices and payments are in cost-only
+# operations. Writes that carry rules (numbers, transitions, derived health)
+# go through the manufacturing functions.
+
+query ListPurchaseOrders
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'finance'") {
+  purchaseOrders(orderBy: { createdAt: DESC }, limit: 500) {
+    id
+    number
+    state
+    currency
+    issuedOn
+    confirmedOn
+    requestedExFactory
+    createdAt
+    supplier {
+      id
+      legalName
+      tradingName
+    }
+    factory {
+      id
+      location {
+        name
+      }
+    }
+    purchaseOrderLines_on_purchaseOrder(limit: 100) {
+      quantity
+      uom
+      sku {
+        code
+        product {
+          name
+        }
+      }
+    }
+    productionRuns_on_purchaseOrder(limit: 50) {
+      number
+      state
+      health
+    }
+  }
+}
+
+query GetPurchaseOrder($number: String!)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'finance'") {
+  purchaseOrders(where: { number: { eq: $number } }, limit: 1) {
+    id
+    number
+    state
+    currency
+    namedPlace
+    paymentTerms
+    issuedOn
+    confirmedOn
+    requestedExFactory
+    notes
+    createdAt
+    updatedAt
+    version
+    legalEntity {
+      id
+      name
+    }
+    supplier {
+      id
+      legalName
+      tradingName
+    }
+    factory {
+      id
+      location {
+        name
+        city
+      }
+    }
+    incoterm {
+      code
+    }
+    purchaseOrderLines_on_purchaseOrder(orderBy: { lineNo: ASC }, limit: 100) {
+      id
+      lineNo
+      quantity
+      uom
+      overTolerancePercent
+      underTolerancePercent
+      requestedExFactory
+      sku {
+        code
+        product {
+          code
+          name
+        }
+        shade {
+          code
+          name
+          hex
+        }
+        variant {
+          name
+        }
+      }
+    }
+    productionRuns_on_purchaseOrder(orderBy: { createdAt: ASC }, limit: 50) {
+      id
+      number
+      state
+      health
+      plannedStart
+      plannedEnd
+      forecastEnd
+      actualEnd
+    }
+  }
+}
+
+# Cost-bearing: unit prices and the payment schedule.
+query GetPurchaseOrderCosts($number: String!)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'finance'") {
+  purchaseOrders(where: { number: { eq: $number } }, limit: 1) {
+    id
+    currency
+    fxRateToBase
+    purchaseOrderLines_on_purchaseOrder(orderBy: { lineNo: ASC }, limit: 100) {
+      id
+      lineNo
+      quantity
+      unitPrice
+    }
+    paymentMilestones_on_purchaseOrder(orderBy: { dueOn: ASC }, limit: 20) {
+      id
+      label
+      percent
+      amount
+      trigger
+      dueOn
+      paidOn
+      paidAmount
+      reference
+    }
+  }
+}
+
+query ListProductionRuns
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'finance'") {
+  productionRuns(orderBy: { plannedEnd: ASC }, limit: 500) {
+    id
+    number
+    state
+    health
+    plannedStart
+    plannedEnd
+    forecastEnd
+    actualEnd
+    templateName
+    purchaseOrder {
+      number
+      supplier {
+        tradingName
+        legalName
+      }
+    }
+    factory {
+      location {
+        name
+      }
+    }
+    productionRunLines_on_run(limit: 50) {
+      plannedQuantity
+      producedQuantity
+      purchaseOrderLine {
+        uom
+        sku {
+          code
+          product {
+            name
+          }
+          shade {
+            name
+          }
+        }
+      }
+    }
+    productionMilestones_on_run(orderBy: { sequence: ASC }, limit: 50) {
+      id
+      key
+      name
+      category
+      sequence
+      gate
+      plannedStart
+      plannedEnd
+      forecastEnd
+      actualStart
+      actualEnd
+      state
+      delayReason
+    }
+  }
+}
+
+query GetProductionRun($number: String!)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'finance'") {
+  productionRuns(where: { number: { eq: $number } }, limit: 1) {
+    id
+    number
+    state
+    health
+    plannedStart
+    plannedEnd
+    forecastEnd
+    actualEnd
+    templateName
+    notes
+    createdAt
+    purchaseOrder {
+      id
+      number
+      state
+      supplier {
+        id
+        tradingName
+        legalName
+      }
+    }
+    factory {
+      id
+      location {
+        name
+        city
+      }
+    }
+    productionRunLines_on_run(limit: 50) {
+      id
+      plannedQuantity
+      producedQuantity
+      purchaseOrderLine {
+        id
+        lineNo
+        uom
+        sku {
+          code
+          product {
+            name
+          }
+          shade {
+            code
+            name
+            hex
+          }
+          variant {
+            name
+          }
+        }
+      }
+    }
+    productionMilestones_on_run(orderBy: { sequence: ASC }, limit: 50) {
+      id
+      key
+      name
+      category
+      sequence
+      dependsOnKey
+      gate
+      plannedStart
+      plannedEnd
+      forecastEnd
+      actualStart
+      actualEnd
+      state
+      delayReason
+      note
+    }
+    lots_on_run(orderBy: { createdAt: ASC }, limit: 100) {
+      id
+      number
+      millLotRef
+      producedQuantity
+      producedOn
+      qualityState
+      sku {
+        code
+      }
+    }
+  }
+}
+
+query ListProcessTemplates @auth(level: USER) {
+  processTemplates(orderBy: { name: ASC }, limit: 50) {
+    id
+    name
+    isDefault
+    family {
+      code
+      name
+    }
+    supplier {
+      id
+      tradingName
+      legalName
+    }
+    processTemplateSteps_on_template(orderBy: { sequence: ASC }, limit: 50) {
+      id
+      key
+      name
+      category
+      sequence
+      durationDays
+      dependsOnKey
+      gate
+    }
+  }
+}

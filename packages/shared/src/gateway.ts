@@ -53,12 +53,12 @@ export interface AttentionItem {
   readonly owner: string;
 }
 
-export type MilestoneState = 'done' | 'active' | 'pending' | 'blocked';
+export type MilestoneViewState = 'done' | 'active' | 'pending' | 'blocked';
 
 export interface MilestoneView {
   readonly key: string;
   readonly name: string;
-  readonly state: MilestoneState;
+  readonly state: MilestoneViewState;
   readonly plannedEnd: LocalDate;
   /** Present when the current expectation differs from the plan. */
   readonly forecastEnd?: LocalDate;

@@ -17,6 +17,12 @@ This README will guide you through the process of using the generated JavaScript
   - [*ListShades*](#listshades)
   - [*ListPutUps*](#listputups)
   - [*ListShadeStandards*](#listshadestandards)
+  - [*ListPurchaseOrders*](#listpurchaseorders)
+  - [*GetPurchaseOrder*](#getpurchaseorder)
+  - [*GetPurchaseOrderCosts*](#getpurchaseordercosts)
+  - [*ListProductionRuns*](#listproductionruns)
+  - [*GetProductionRun*](#getproductionrun)
+  - [*ListProcessTemplates*](#listprocesstemplates)
   - [*ListCompanies*](#listcompanies)
   - [*GetCompany*](#getcompany)
   - [*ListFactories*](#listfactories)
@@ -1230,6 +1236,886 @@ console.log(data.shadeStandards);
 executeQuery(ref).then((response) => {
   const data = response.data;
   console.log(data.shadeStandards);
+});
+```
+
+## ListPurchaseOrders
+You can execute the `ListPurchaseOrders` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+listPurchaseOrders(options?: ExecuteQueryOptions): QueryPromise<ListPurchaseOrdersData, undefined>;
+
+interface ListPurchaseOrdersRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListPurchaseOrdersData, undefined>;
+}
+export const listPurchaseOrdersRef: ListPurchaseOrdersRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+listPurchaseOrders(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListPurchaseOrdersData, undefined>;
+
+interface ListPurchaseOrdersRef {
+  ...
+  (dc: DataConnect): QueryRef<ListPurchaseOrdersData, undefined>;
+}
+export const listPurchaseOrdersRef: ListPurchaseOrdersRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the listPurchaseOrdersRef:
+```typescript
+const name = listPurchaseOrdersRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ListPurchaseOrders` query has no variables.
+### Return Type
+Recall that executing the `ListPurchaseOrders` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ListPurchaseOrdersData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ListPurchaseOrdersData {
+  purchaseOrders: ({
+    id: UUIDString;
+    number: string;
+    state: PurchaseOrderState;
+    currency: string;
+    issuedOn?: DateString | null;
+    confirmedOn?: DateString | null;
+    requestedExFactory?: DateString | null;
+    createdAt: TimestampString;
+    supplier: {
+      id: UUIDString;
+      legalName: string;
+      tradingName?: string | null;
+    } & Company_Key;
+    factory?: {
+      id: UUIDString;
+      location: {
+        name: string;
+      };
+    } & Factory_Key;
+    purchaseOrderLines_on_purchaseOrder: ({
+      quantity: Int64String;
+      uom: string;
+      sku: {
+        code: string;
+        product: {
+          name: string;
+        };
+      } & Sku_Key;
+    })[];
+    productionRuns_on_purchaseOrder: ({
+      number: string;
+      state: RunState;
+      health: Health;
+    })[];
+  } & PurchaseOrder_Key)[];
+}
+```
+### Using `ListPurchaseOrders`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, listPurchaseOrders } from '@basis/dataconnect-platform';
+
+
+// Call the `listPurchaseOrders()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await listPurchaseOrders();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await listPurchaseOrders(dataConnect);
+
+console.log(data.purchaseOrders);
+
+// Or, you can use the `Promise` API.
+listPurchaseOrders().then((response) => {
+  const data = response.data;
+  console.log(data.purchaseOrders);
+});
+```
+
+### Using `ListPurchaseOrders`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, listPurchaseOrdersRef } from '@basis/dataconnect-platform';
+
+
+// Call the `listPurchaseOrdersRef()` function to get a reference to the query.
+const ref = listPurchaseOrdersRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = listPurchaseOrdersRef(dataConnect);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.purchaseOrders);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.purchaseOrders);
+});
+```
+
+## GetPurchaseOrder
+You can execute the `GetPurchaseOrder` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+getPurchaseOrder(vars: GetPurchaseOrderVariables, options?: ExecuteQueryOptions): QueryPromise<GetPurchaseOrderData, GetPurchaseOrderVariables>;
+
+interface GetPurchaseOrderRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetPurchaseOrderVariables): QueryRef<GetPurchaseOrderData, GetPurchaseOrderVariables>;
+}
+export const getPurchaseOrderRef: GetPurchaseOrderRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getPurchaseOrder(dc: DataConnect, vars: GetPurchaseOrderVariables, options?: ExecuteQueryOptions): QueryPromise<GetPurchaseOrderData, GetPurchaseOrderVariables>;
+
+interface GetPurchaseOrderRef {
+  ...
+  (dc: DataConnect, vars: GetPurchaseOrderVariables): QueryRef<GetPurchaseOrderData, GetPurchaseOrderVariables>;
+}
+export const getPurchaseOrderRef: GetPurchaseOrderRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getPurchaseOrderRef:
+```typescript
+const name = getPurchaseOrderRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetPurchaseOrder` query requires an argument of type `GetPurchaseOrderVariables`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetPurchaseOrderVariables {
+  number: string;
+}
+```
+### Return Type
+Recall that executing the `GetPurchaseOrder` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetPurchaseOrderData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetPurchaseOrderData {
+  purchaseOrders: ({
+    id: UUIDString;
+    number: string;
+    state: PurchaseOrderState;
+    currency: string;
+    namedPlace?: string | null;
+    paymentTerms?: string | null;
+    issuedOn?: DateString | null;
+    confirmedOn?: DateString | null;
+    requestedExFactory?: DateString | null;
+    notes?: string | null;
+    createdAt: TimestampString;
+    updatedAt: TimestampString;
+    version: number;
+    legalEntity?: {
+      id: UUIDString;
+      name: string;
+    } & LegalEntity_Key;
+    supplier: {
+      id: UUIDString;
+      legalName: string;
+      tradingName?: string | null;
+    } & Company_Key;
+    factory?: {
+      id: UUIDString;
+      location: {
+        name: string;
+        city?: string | null;
+      };
+    } & Factory_Key;
+    incoterm?: {
+      code: string;
+    } & Incoterm_Key;
+    purchaseOrderLines_on_purchaseOrder: ({
+      id: UUIDString;
+      lineNo: number;
+      quantity: Int64String;
+      uom: string;
+      overTolerancePercent?: number | null;
+      underTolerancePercent?: number | null;
+      requestedExFactory?: DateString | null;
+      sku: {
+        code: string;
+        product: {
+          code: string;
+          name: string;
+        } & Product_Key;
+        shade: {
+          code: string;
+          name: string;
+          hex?: string | null;
+        } & Shade_Key;
+        variant: {
+          name: string;
+        };
+      } & Sku_Key;
+    } & PurchaseOrderLine_Key)[];
+    productionRuns_on_purchaseOrder: ({
+      id: UUIDString;
+      number: string;
+      state: RunState;
+      health: Health;
+      plannedStart: DateString;
+      plannedEnd: DateString;
+      forecastEnd?: DateString | null;
+      actualEnd?: DateString | null;
+    } & ProductionRun_Key)[];
+  } & PurchaseOrder_Key)[];
+}
+```
+### Using `GetPurchaseOrder`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getPurchaseOrder, GetPurchaseOrderVariables } from '@basis/dataconnect-platform';
+
+// The `GetPurchaseOrder` query requires an argument of type `GetPurchaseOrderVariables`:
+const getPurchaseOrderVars: GetPurchaseOrderVariables = {
+  number: ..., 
+};
+
+// Call the `getPurchaseOrder()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getPurchaseOrder(getPurchaseOrderVars);
+// Variables can be defined inline as well.
+const { data } = await getPurchaseOrder({ number: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getPurchaseOrder(dataConnect, getPurchaseOrderVars);
+
+console.log(data.purchaseOrders);
+
+// Or, you can use the `Promise` API.
+getPurchaseOrder(getPurchaseOrderVars).then((response) => {
+  const data = response.data;
+  console.log(data.purchaseOrders);
+});
+```
+
+### Using `GetPurchaseOrder`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getPurchaseOrderRef, GetPurchaseOrderVariables } from '@basis/dataconnect-platform';
+
+// The `GetPurchaseOrder` query requires an argument of type `GetPurchaseOrderVariables`:
+const getPurchaseOrderVars: GetPurchaseOrderVariables = {
+  number: ..., 
+};
+
+// Call the `getPurchaseOrderRef()` function to get a reference to the query.
+const ref = getPurchaseOrderRef(getPurchaseOrderVars);
+// Variables can be defined inline as well.
+const ref = getPurchaseOrderRef({ number: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getPurchaseOrderRef(dataConnect, getPurchaseOrderVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.purchaseOrders);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.purchaseOrders);
+});
+```
+
+## GetPurchaseOrderCosts
+You can execute the `GetPurchaseOrderCosts` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+getPurchaseOrderCosts(vars: GetPurchaseOrderCostsVariables, options?: ExecuteQueryOptions): QueryPromise<GetPurchaseOrderCostsData, GetPurchaseOrderCostsVariables>;
+
+interface GetPurchaseOrderCostsRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetPurchaseOrderCostsVariables): QueryRef<GetPurchaseOrderCostsData, GetPurchaseOrderCostsVariables>;
+}
+export const getPurchaseOrderCostsRef: GetPurchaseOrderCostsRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getPurchaseOrderCosts(dc: DataConnect, vars: GetPurchaseOrderCostsVariables, options?: ExecuteQueryOptions): QueryPromise<GetPurchaseOrderCostsData, GetPurchaseOrderCostsVariables>;
+
+interface GetPurchaseOrderCostsRef {
+  ...
+  (dc: DataConnect, vars: GetPurchaseOrderCostsVariables): QueryRef<GetPurchaseOrderCostsData, GetPurchaseOrderCostsVariables>;
+}
+export const getPurchaseOrderCostsRef: GetPurchaseOrderCostsRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getPurchaseOrderCostsRef:
+```typescript
+const name = getPurchaseOrderCostsRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetPurchaseOrderCosts` query requires an argument of type `GetPurchaseOrderCostsVariables`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetPurchaseOrderCostsVariables {
+  number: string;
+}
+```
+### Return Type
+Recall that executing the `GetPurchaseOrderCosts` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetPurchaseOrderCostsData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetPurchaseOrderCostsData {
+  purchaseOrders: ({
+    id: UUIDString;
+    currency: string;
+    fxRateToBase?: string | null;
+    purchaseOrderLines_on_purchaseOrder: ({
+      id: UUIDString;
+      lineNo: number;
+      quantity: Int64String;
+      unitPrice: Int64String;
+    } & PurchaseOrderLine_Key)[];
+    paymentMilestones_on_purchaseOrder: ({
+      id: UUIDString;
+      label: string;
+      percent?: number | null;
+      amount?: Int64String | null;
+      trigger: string;
+      dueOn?: DateString | null;
+      paidOn?: DateString | null;
+      paidAmount?: Int64String | null;
+      reference?: string | null;
+    } & PaymentMilestone_Key)[];
+  } & PurchaseOrder_Key)[];
+}
+```
+### Using `GetPurchaseOrderCosts`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getPurchaseOrderCosts, GetPurchaseOrderCostsVariables } from '@basis/dataconnect-platform';
+
+// The `GetPurchaseOrderCosts` query requires an argument of type `GetPurchaseOrderCostsVariables`:
+const getPurchaseOrderCostsVars: GetPurchaseOrderCostsVariables = {
+  number: ..., 
+};
+
+// Call the `getPurchaseOrderCosts()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getPurchaseOrderCosts(getPurchaseOrderCostsVars);
+// Variables can be defined inline as well.
+const { data } = await getPurchaseOrderCosts({ number: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getPurchaseOrderCosts(dataConnect, getPurchaseOrderCostsVars);
+
+console.log(data.purchaseOrders);
+
+// Or, you can use the `Promise` API.
+getPurchaseOrderCosts(getPurchaseOrderCostsVars).then((response) => {
+  const data = response.data;
+  console.log(data.purchaseOrders);
+});
+```
+
+### Using `GetPurchaseOrderCosts`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getPurchaseOrderCostsRef, GetPurchaseOrderCostsVariables } from '@basis/dataconnect-platform';
+
+// The `GetPurchaseOrderCosts` query requires an argument of type `GetPurchaseOrderCostsVariables`:
+const getPurchaseOrderCostsVars: GetPurchaseOrderCostsVariables = {
+  number: ..., 
+};
+
+// Call the `getPurchaseOrderCostsRef()` function to get a reference to the query.
+const ref = getPurchaseOrderCostsRef(getPurchaseOrderCostsVars);
+// Variables can be defined inline as well.
+const ref = getPurchaseOrderCostsRef({ number: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getPurchaseOrderCostsRef(dataConnect, getPurchaseOrderCostsVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.purchaseOrders);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.purchaseOrders);
+});
+```
+
+## ListProductionRuns
+You can execute the `ListProductionRuns` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+listProductionRuns(options?: ExecuteQueryOptions): QueryPromise<ListProductionRunsData, undefined>;
+
+interface ListProductionRunsRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListProductionRunsData, undefined>;
+}
+export const listProductionRunsRef: ListProductionRunsRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+listProductionRuns(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListProductionRunsData, undefined>;
+
+interface ListProductionRunsRef {
+  ...
+  (dc: DataConnect): QueryRef<ListProductionRunsData, undefined>;
+}
+export const listProductionRunsRef: ListProductionRunsRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the listProductionRunsRef:
+```typescript
+const name = listProductionRunsRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ListProductionRuns` query has no variables.
+### Return Type
+Recall that executing the `ListProductionRuns` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ListProductionRunsData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ListProductionRunsData {
+  productionRuns: ({
+    id: UUIDString;
+    number: string;
+    state: RunState;
+    health: Health;
+    plannedStart: DateString;
+    plannedEnd: DateString;
+    forecastEnd?: DateString | null;
+    actualEnd?: DateString | null;
+    templateName?: string | null;
+    purchaseOrder: {
+      number: string;
+      supplier: {
+        tradingName?: string | null;
+        legalName: string;
+      };
+    };
+    factory?: {
+      location: {
+        name: string;
+      };
+    };
+    productionRunLines_on_run: ({
+      plannedQuantity: Int64String;
+      producedQuantity: Int64String;
+      purchaseOrderLine: {
+        uom: string;
+        sku: {
+          code: string;
+          product: {
+            name: string;
+          };
+          shade: {
+            name: string;
+          };
+        } & Sku_Key;
+      };
+    })[];
+    productionMilestones_on_run: ({
+      id: UUIDString;
+      key: string;
+      name: string;
+      category: string;
+      sequence: number;
+      gate: MilestoneGate;
+      plannedStart: DateString;
+      plannedEnd: DateString;
+      forecastEnd?: DateString | null;
+      actualStart?: DateString | null;
+      actualEnd?: DateString | null;
+      state: MilestoneState;
+      delayReason?: string | null;
+    } & ProductionMilestone_Key)[];
+  } & ProductionRun_Key)[];
+}
+```
+### Using `ListProductionRuns`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, listProductionRuns } from '@basis/dataconnect-platform';
+
+
+// Call the `listProductionRuns()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await listProductionRuns();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await listProductionRuns(dataConnect);
+
+console.log(data.productionRuns);
+
+// Or, you can use the `Promise` API.
+listProductionRuns().then((response) => {
+  const data = response.data;
+  console.log(data.productionRuns);
+});
+```
+
+### Using `ListProductionRuns`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, listProductionRunsRef } from '@basis/dataconnect-platform';
+
+
+// Call the `listProductionRunsRef()` function to get a reference to the query.
+const ref = listProductionRunsRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = listProductionRunsRef(dataConnect);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.productionRuns);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.productionRuns);
+});
+```
+
+## GetProductionRun
+You can execute the `GetProductionRun` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+getProductionRun(vars: GetProductionRunVariables, options?: ExecuteQueryOptions): QueryPromise<GetProductionRunData, GetProductionRunVariables>;
+
+interface GetProductionRunRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetProductionRunVariables): QueryRef<GetProductionRunData, GetProductionRunVariables>;
+}
+export const getProductionRunRef: GetProductionRunRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getProductionRun(dc: DataConnect, vars: GetProductionRunVariables, options?: ExecuteQueryOptions): QueryPromise<GetProductionRunData, GetProductionRunVariables>;
+
+interface GetProductionRunRef {
+  ...
+  (dc: DataConnect, vars: GetProductionRunVariables): QueryRef<GetProductionRunData, GetProductionRunVariables>;
+}
+export const getProductionRunRef: GetProductionRunRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getProductionRunRef:
+```typescript
+const name = getProductionRunRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetProductionRun` query requires an argument of type `GetProductionRunVariables`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetProductionRunVariables {
+  number: string;
+}
+```
+### Return Type
+Recall that executing the `GetProductionRun` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetProductionRunData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetProductionRunData {
+  productionRuns: ({
+    id: UUIDString;
+    number: string;
+    state: RunState;
+    health: Health;
+    plannedStart: DateString;
+    plannedEnd: DateString;
+    forecastEnd?: DateString | null;
+    actualEnd?: DateString | null;
+    templateName?: string | null;
+    notes?: string | null;
+    createdAt: TimestampString;
+    purchaseOrder: {
+      id: UUIDString;
+      number: string;
+      state: PurchaseOrderState;
+      supplier: {
+        id: UUIDString;
+        tradingName?: string | null;
+        legalName: string;
+      } & Company_Key;
+    } & PurchaseOrder_Key;
+    factory?: {
+      id: UUIDString;
+      location: {
+        name: string;
+        city?: string | null;
+      };
+    } & Factory_Key;
+    productionRunLines_on_run: ({
+      id: UUIDString;
+      plannedQuantity: Int64String;
+      producedQuantity: Int64String;
+      purchaseOrderLine: {
+        id: UUIDString;
+        lineNo: number;
+        uom: string;
+        sku: {
+          code: string;
+          product: {
+            name: string;
+          };
+          shade: {
+            code: string;
+            name: string;
+            hex?: string | null;
+          } & Shade_Key;
+          variant: {
+            name: string;
+          };
+        } & Sku_Key;
+      } & PurchaseOrderLine_Key;
+    } & ProductionRunLine_Key)[];
+    productionMilestones_on_run: ({
+      id: UUIDString;
+      key: string;
+      name: string;
+      category: string;
+      sequence: number;
+      dependsOnKey?: string | null;
+      gate: MilestoneGate;
+      plannedStart: DateString;
+      plannedEnd: DateString;
+      forecastEnd?: DateString | null;
+      actualStart?: DateString | null;
+      actualEnd?: DateString | null;
+      state: MilestoneState;
+      delayReason?: string | null;
+      note?: string | null;
+    } & ProductionMilestone_Key)[];
+    lots_on_run: ({
+      id: UUIDString;
+      number: string;
+      millLotRef?: string | null;
+      producedQuantity: Int64String;
+      producedOn?: DateString | null;
+      qualityState: LotQualityState;
+      sku: {
+        code: string;
+      } & Sku_Key;
+    } & Lot_Key)[];
+  } & ProductionRun_Key)[];
+}
+```
+### Using `GetProductionRun`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getProductionRun, GetProductionRunVariables } from '@basis/dataconnect-platform';
+
+// The `GetProductionRun` query requires an argument of type `GetProductionRunVariables`:
+const getProductionRunVars: GetProductionRunVariables = {
+  number: ..., 
+};
+
+// Call the `getProductionRun()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getProductionRun(getProductionRunVars);
+// Variables can be defined inline as well.
+const { data } = await getProductionRun({ number: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getProductionRun(dataConnect, getProductionRunVars);
+
+console.log(data.productionRuns);
+
+// Or, you can use the `Promise` API.
+getProductionRun(getProductionRunVars).then((response) => {
+  const data = response.data;
+  console.log(data.productionRuns);
+});
+```
+
+### Using `GetProductionRun`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getProductionRunRef, GetProductionRunVariables } from '@basis/dataconnect-platform';
+
+// The `GetProductionRun` query requires an argument of type `GetProductionRunVariables`:
+const getProductionRunVars: GetProductionRunVariables = {
+  number: ..., 
+};
+
+// Call the `getProductionRunRef()` function to get a reference to the query.
+const ref = getProductionRunRef(getProductionRunVars);
+// Variables can be defined inline as well.
+const ref = getProductionRunRef({ number: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getProductionRunRef(dataConnect, getProductionRunVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.productionRuns);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.productionRuns);
+});
+```
+
+## ListProcessTemplates
+You can execute the `ListProcessTemplates` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+listProcessTemplates(options?: ExecuteQueryOptions): QueryPromise<ListProcessTemplatesData, undefined>;
+
+interface ListProcessTemplatesRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListProcessTemplatesData, undefined>;
+}
+export const listProcessTemplatesRef: ListProcessTemplatesRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+listProcessTemplates(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListProcessTemplatesData, undefined>;
+
+interface ListProcessTemplatesRef {
+  ...
+  (dc: DataConnect): QueryRef<ListProcessTemplatesData, undefined>;
+}
+export const listProcessTemplatesRef: ListProcessTemplatesRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the listProcessTemplatesRef:
+```typescript
+const name = listProcessTemplatesRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ListProcessTemplates` query has no variables.
+### Return Type
+Recall that executing the `ListProcessTemplates` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ListProcessTemplatesData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ListProcessTemplatesData {
+  processTemplates: ({
+    id: UUIDString;
+    name: string;
+    isDefault: boolean;
+    family?: {
+      code: string;
+      name: string;
+    } & FabricFamily_Key;
+    supplier?: {
+      id: UUIDString;
+      tradingName?: string | null;
+      legalName: string;
+    } & Company_Key;
+    processTemplateSteps_on_template: ({
+      id: UUIDString;
+      key: string;
+      name: string;
+      category: string;
+      sequence: number;
+      durationDays: number;
+      dependsOnKey?: string | null;
+      gate: MilestoneGate;
+    } & ProcessTemplateStep_Key)[];
+  } & ProcessTemplate_Key)[];
+}
+```
+### Using `ListProcessTemplates`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, listProcessTemplates } from '@basis/dataconnect-platform';
+
+
+// Call the `listProcessTemplates()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await listProcessTemplates();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await listProcessTemplates(dataConnect);
+
+console.log(data.processTemplates);
+
+// Or, you can use the `Promise` API.
+listProcessTemplates().then((response) => {
+  const data = response.data;
+  console.log(data.processTemplates);
+});
+```
+
+### Using `ListProcessTemplates`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, listProcessTemplatesRef } from '@basis/dataconnect-platform';
+
+
+// Call the `listProcessTemplatesRef()` function to get a reference to the query.
+const ref = listProcessTemplatesRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = listProcessTemplatesRef(dataConnect);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.processTemplates);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.processTemplates);
 });
 ```
 

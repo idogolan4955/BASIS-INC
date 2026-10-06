@@ -1,0 +1,170 @@
+# Purchasing and manufacturing: Purchase Order → Production Run → Milestones.
+# Production is not a status field: each run owns milestones with planned,
+# forecast and actual dates; run health is derived from them by a function.
+# Quantities are Int64 thousandths of the unit; prices Int64 ten-thousandths.
+
+enum PurchaseOrderState {
+  draft
+  issued
+  confirmed
+  closed
+  cancelled
+}
+
+enum RunState {
+  planned
+  active
+  completed
+  cancelled
+}
+
+enum MilestoneState {
+  pending
+  in_progress
+  done
+  skipped
+  blocked
+}
+
+enum MilestoneGate {
+  none
+  approval
+  inspection
+}
+
+enum Health {
+  on_track
+  at_risk
+  delayed
+  blocked
+}
+
+enum LotQualityState {
+  pending
+  on_hold
+  released
+  rejected
+}
+
+type PurchaseOrder @table {
+  number: String! @col(dataType: "varchar(16)") @unique
+  legalEntity: LegalEntity
+  supplier: Company!
+  factory: Factory
+  currency: String! @col(dataType: "varchar(3)")
+  # Rate to the base currency at issue, as a decimal string.
+  fxRateToBase: String @col(dataType: "varchar(24)")
+  incoterm: Incoterm
+  namedPlace: String @col(dataType: "varchar(120)")
+  paymentTerms: String @col(dataType: "varchar(200)")
+  state: PurchaseOrderState!
+  issuedOn: Date
+  confirmedOn: Date
+  requestedExFactory: Date
+  notes: String
+  createdByUid: String @col(dataType: "varchar(128)")
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+  version: Int!
+}
+
+type PurchaseOrderLine @table {
+  purchaseOrder: PurchaseOrder!
+  lineNo: Int!
+  sku: Sku!
+  supplierItem: SupplierItem
+  quantity: Int64!
+  uom: String! @col(dataType: "varchar(8)")
+  unitPrice: Int64!
+  overTolerancePercent: Int
+  underTolerancePercent: Int
+  requestedExFactory: Date
+}
+
+type PaymentMilestone @table {
+  purchaseOrder: PurchaseOrder!
+  label: String! @col(dataType: "varchar(80)")
+  percent: Int
+  amount: Int64
+  # What makes it due: on_order, before_shipment, after_bl, on_arrival, on_date
+  trigger: String! @col(dataType: "varchar(32)")
+  dueOn: Date
+  paidOn: Date
+  paidAmount: Int64
+  reference: String @col(dataType: "varchar(80)")
+}
+
+# A reusable production process, by family and optionally by supplier.
+type ProcessTemplate @table {
+  name: String! @col(dataType: "varchar(80)")
+  family: FabricFamily
+  supplier: Company
+  isDefault: Boolean!
+}
+
+type ProcessTemplateStep @table {
+  template: ProcessTemplate!
+  key: String! @col(dataType: "varchar(32)")
+  name: String! @col(dataType: "varchar(80)")
+  category: String! @col(dataType: "varchar(32)")
+  sequence: Int!
+  durationDays: Int!
+  dependsOnKey: String @col(dataType: "varchar(32)")
+  gate: MilestoneGate!
+}
+
+type ProductionRun @table {
+  number: String! @col(dataType: "varchar(16)") @unique
+  purchaseOrder: PurchaseOrder!
+  factory: Factory
+  templateName: String @col(dataType: "varchar(80)")
+  plannedStart: Date!
+  plannedEnd: Date!
+  forecastEnd: Date
+  actualEnd: Date
+  # Derived by the manufacturing function from the milestones; never typed in.
+  health: Health!
+  state: RunState!
+  notes: String
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type ProductionRunLine @table {
+  run: ProductionRun!
+  purchaseOrderLine: PurchaseOrderLine!
+  plannedQuantity: Int64!
+  producedQuantity: Int64!
+}
+
+# Copied from the template when the run opens, then free to diverge.
+type ProductionMilestone @table {
+  run: ProductionRun!
+  key: String! @col(dataType: "varchar(32)")
+  name: String! @col(dataType: "varchar(80)")
+  category: String! @col(dataType: "varchar(32)")
+  sequence: Int!
+  dependsOnKey: String @col(dataType: "varchar(32)")
+  gate: MilestoneGate!
+  plannedStart: Date!
+  plannedEnd: Date!
+  forecastEnd: Date
+  actualStart: Date
+  actualEnd: Date
+  state: MilestoneState!
+  delayReason: String @col(dataType: "varchar(80)")
+  ownerUid: String @col(dataType: "varchar(128)")
+  note: String
+}
+
+# A batch produced by a run: the unit of shade consistency.
+type Lot @table {
+  number: String! @col(dataType: "varchar(16)") @unique
+  sku: Sku!
+  run: ProductionRun!
+  millLotRef: String @col(dataType: "varchar(80)")
+  producedQuantity: Int64!
+  producedOn: Date
+  qualityState: LotQualityState!
+  createdAt: Timestamp! @default(expr: "request.time")
+}
