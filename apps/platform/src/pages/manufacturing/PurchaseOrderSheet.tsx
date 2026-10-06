@@ -129,7 +129,7 @@ function Lines({ po, costs }: { po: PurchaseOrderDetail; costs: boolean }) {
             <Tr key={line.id}>
               <Td className="code text-ink-muted">{String(line.lineNo).padStart(2, '0')}</Td>
               <Td>
-                <Link to={`/products/skus/${line.skuCode}`} className="code underline decoration-line-strong underline-offset-4 hover:decoration-ink">
+                <Link to={`/products/skus/${line.skuCode}`} className="code whitespace-nowrap underline decoration-line-strong underline-offset-4 hover:decoration-ink">
                   {line.skuCode}
                 </Link>
               </Td>

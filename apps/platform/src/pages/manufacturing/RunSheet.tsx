@@ -258,7 +258,7 @@ export function RunSheet({ tab }: { tab: 'milestones' | 'lots' | 'timeline' }) {
                   {data.lines.map((line) => (
                     <Tr key={line.id}>
                       <Td>
-                        <Link to={`/products/skus/${line.skuCode}`} className="code underline decoration-line-strong underline-offset-4 hover:decoration-ink">
+                        <Link to={`/products/skus/${line.skuCode}`} className="code whitespace-nowrap underline decoration-line-strong underline-offset-4 hover:decoration-ink">
                           {line.skuCode}
                         </Link>
                       </Td>
