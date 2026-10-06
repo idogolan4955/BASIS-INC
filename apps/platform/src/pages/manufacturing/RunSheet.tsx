@@ -1,8 +1,6 @@
 import {
   HEALTH_LABEL,
   HEALTH_TONE,
-  LOT_QUALITY_LABEL,
-  LOT_QUALITY_TONE,
   MILESTONE_STATES,
   MILESTONE_STATE_LABEL,
   RUN_STATE_LABEL,
@@ -20,6 +18,8 @@ import { Button, Dialog, LabelHeader, Ledger, Meter, Panel, SelectField, ShadeDo
 import { useState, type FormEvent } from 'react';
 import { Link, NavLink, useParams } from 'react-router';
 import { useProductionRun, useUpdateMilestone } from '../../data/manufacturing';
+import { LotsPanel } from './RunLots';
+import { PackingPanel } from './RunPacking';
 import { useRecordNote, useTimeline } from '../../data/timeline';
 import { useRequiredSession } from '../../session';
 import { NotFound } from '../NotFound';
@@ -127,7 +127,7 @@ function RunTimelinePanel({ number }: { number: string }) {
   );
 }
 
-export function RunSheet({ tab }: { tab: 'milestones' | 'lots' | 'timeline' }) {
+export function RunSheet({ tab }: { tab: 'milestones' | 'lots' | 'packing' | 'timeline' }) {
   const session = useRequiredSession();
   const { number = '' } = useParams();
   const run = useProductionRun(number);
@@ -171,7 +171,7 @@ export function RunSheet({ tab }: { tab: 'milestones' | 'lots' | 'timeline' }) {
           { label: 'Planned', value: `${short(data.plannedStart)} to ${short(data.plannedEnd)}` },
           { label: 'Expected end', value: <span className={cn(slip > 0 && 'text-critical')}>{dateOrDash(expectedEnd)}{slip > 0 ? ` (+${slip}d)` : ''}</span> },
           { label: 'Progress', value: <Meter value={data.progress} /> },
-          { label: 'Lots', value: data.lots.length },
+          { label: 'Ready to ship', value: <span className={cn(data.availableToShip !== '0' && 'text-positive')}>{metres(data.availableToShip)}</span> },
         ]}
       />
       <SheetTabs>
@@ -180,6 +180,9 @@ export function RunSheet({ tab }: { tab: 'milestones' | 'lots' | 'timeline' }) {
         </NavLink>
         <NavLink to={`${base}/lots`} className={({ isActive }) => sheetTabClass(isActive)}>
           Lots
+        </NavLink>
+        <NavLink to={`${base}/packing`} className={({ isActive }) => sheetTabClass(isActive)}>
+          Packing
         </NavLink>
         <NavLink to={`${base}/timeline`} className={({ isActive }) => sheetTabClass(isActive)}>
           Timeline
@@ -280,40 +283,8 @@ export function RunSheet({ tab }: { tab: 'milestones' | 'lots' | 'timeline' }) {
             </Panel>
           </>
         )}
-        {tab === 'lots' && (
-          <Panel title="Lots" count={data.lots.length} flush>
-            {data.lots.length === 0 ? (
-              <p className="px-5 py-6 text-ink-muted">No lots recorded yet. Lots are recorded as the run produces them and released by QC.</p>
-            ) : (
-              <Ledger caption={`Lots of ${data.number}`}>
-                <thead>
-                  <tr>
-                    <Th>Lot</Th>
-                    <Th>SKU</Th>
-                    <Th>Mill reference</Th>
-                    <Th numeric>Quantity</Th>
-                    <Th>Produced</Th>
-                    <Th>Quality</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.lots.map((lot) => (
-                    <Tr key={lot.id}>
-                      <Td className="code">{lot.number}</Td>
-                      <Td className="code">{lot.skuCode}</Td>
-                      <Td className="code text-ink-soft">{lot.millLotRef || '—'}</Td>
-                      <Td numeric>{metres(lot.producedQuantity)}</Td>
-                      <Td className="code text-ink-soft">{dateOrDash(lot.producedOn)}</Td>
-                      <Td>
-                        <StatusChip tone={LOT_QUALITY_TONE[lot.qualityState]}>{LOT_QUALITY_LABEL[lot.qualityState]}</StatusChip>
-                      </Td>
-                    </Tr>
-                  ))}
-                </tbody>
-              </Ledger>
-            )}
-          </Panel>
-        )}
+        {tab === 'lots' && <LotsPanel run={data} manage={manage} />}
+        {tab === 'packing' && <PackingPanel run={data} manage={manage} />}
         {tab === 'timeline' && <RunTimelinePanel number={data.number} />}
       </div>
       {manage && <UpdateDialog key={editing?.id ?? 'none'} run={data} milestone={editing} onClose={() => setEditing(null)} />}

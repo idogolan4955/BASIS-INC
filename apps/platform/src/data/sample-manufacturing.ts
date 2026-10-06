@@ -1,13 +1,21 @@
 import {
   LAUNCH_CATALOG,
   addDays,
+  availableToShip,
+  cubicMetresMilli,
+  lotQuantities,
   planMilestones,
   propagateForecasts,
   runForecastEnd,
   runHealth,
   runProgress,
+  rollNumber,
   runStateFrom,
   todayIn,
+  type HandlingUnitView,
+  type LotDetail,
+  type LotQualityState,
+  type LotView,
   type MilestoneRecord,
   type ProcessTemplateView,
   type PurchaseOrderCosts,
@@ -16,11 +24,12 @@ import {
   type PurchaseOrderState,
   type PurchaseOrderSummary,
   type RunDetail,
+  type RollView,
   type RunState,
   type RunSummary,
   type TemplateStep,
 } from '@basis/shared';
-import type { MilestoneUpdateInput, NewPurchaseOrderInput, NewRunInput } from './manufacturing';
+import type { MilestoneUpdateInput, NewLotInput, NewPurchaseOrderInput, NewRunInput, PackInput } from './manufacturing';
 
 // SAMPLE DATA for `--mode sample`: two purchase orders and one run that is
 // late, so the Gateway and the Manufacturing screens have something true to
@@ -85,6 +94,25 @@ interface RunRecord {
   notes: string;
 }
 
+interface LotRecord {
+  id: string;
+  number: string;
+  runNumber: string;
+  skuCode: string;
+  millLotRef: string;
+  producedQuantity: string;
+  producedOn: string | null;
+  qualityState: LotQualityState;
+  rolls: Mutable<RollView>[];
+  loosePacked: { unit: string; quantity: string }[];
+}
+
+interface UnitRecord extends Omit<HandlingUnitView, 'contents' | 'quantity' | 'cbmMilli'> {
+  runNumber: string;
+}
+
+const PUT_UP = { rollLengthM: 50, rollsPerCarton: 6, cartonLengthCm: 165, cartonWidthCm: 32, cartonHeightCm: 32 };
+
 function line(lineNo: number, skuCode: string, quantity: string, over = 5, under = 5): PurchaseOrderLineView {
   const [productCode, , shadeCode] = skuCode.split('-') as [string, string, string];
   const p = product(productCode);
@@ -95,8 +123,19 @@ function line(lineNo: number, skuCode: string, quantity: string, over = 5, under
 const store = {
   pos: [] as PoRecord[],
   runs: [] as RunRecord[],
-  sequence: { PO: 44, RUN: 35 },
+  lots: [] as LotRecord[],
+  units: [] as UnitRecord[],
+  sequence: { PO: 44, RUN: 35, LOT: 13, CTN: 12, PLT: 0 },
 };
+
+function seedRolls(lotNumber: string, count: number, packedInto: (rollNo: number) => string | null): Mutable<RollView>[] {
+  return Array.from({ length: count }, (_, index) => {
+    const rollNo = index + 1;
+    // Measured lengths hover around the nominal 50 m, as they do off a winder.
+    const measured = 50000 + ((rollNo * 37) % 9) * 100 - 400;
+    return { id: `roll-${lotNumber}-${rollNo}`, number: rollNumber(lotNumber, rollNo), rollNo, measuredLength: String(measured), usableWidthCm: 158, weightG: 4200, grade: 'A', defectPoints: (rollNo * 7) % 5, packedIn: packedInto(rollNo) };
+  });
+}
 
 function seed() {
   const t = today();
@@ -124,6 +163,17 @@ function seed() {
       ],
     },
   ];
+  store.pos.push({
+    id: 'po-40', number: 'PO-26-0040', state: 'confirmed', supplierId: 'co-lanrui', supplierName: 'Lanrui Textile', factoryName: 'Lanrui weaving mill, Shaoxing', currency: 'USD',
+    issuedOn: addDays(t, -34), confirmedOn: addDays(t, -31), requestedExFactory: addDays(t, 4), createdAt: new Date().toISOString(), legalEntityName: '', incoterm: 'FOB', namedPlace: 'Ningbo',
+    paymentTerms: '30% deposit, 70% against BL copy', notes: '', version: 2,
+    lines: [line(1, 'BTL-160-MLK', '9000000')],
+    prices: { 'BTL-160-MLK': '19800' },
+    payments: [
+      { id: 'pay-40-1', label: 'Deposit 30%', percent: 30, amount: '53460000', trigger: 'on_order', dueOn: addDays(t, -34), paidOn: addDays(t, -30), paidAmount: '53460000', reference: 'TT-2588' },
+      { id: 'pay-40-2', label: 'Balance 70%', percent: 70, amount: '124740000', trigger: 'before_shipment', dueOn: null, paidOn: null, paidAmount: null, reference: '' },
+    ],
+  });
   const planned = planMilestones(TEMPLATES[0]!.steps, addDays(t, -20));
   const states: Record<string, Partial<MilestoneRecord>> = {
     yarn: { state: 'done', actualStart: addDays(t, -20), actualEnd: addDays(t, -13) },
@@ -133,12 +183,34 @@ function seed() {
   };
   const milestones: MilestoneRecord[] = planned.map((step) => ({ id: `ms-31-${step.key}`, ...step, forecastEnd: null, actualStart: null, actualEnd: null, state: 'pending', delayReason: '', note: '', ...states[step.key] }));
   const propagated = propagateForecasts(milestones);
+  // The tulle run is in packing: one lot released and going into cartons, one awaiting quality.
+  const tulle = planMilestones(TEMPLATES[1]!.steps, addDays(t, -24));
+  const tulleStates: Record<string, Partial<MilestoneRecord>> = {
+    yarn: { state: 'done', actualStart: addDays(t, -24), actualEnd: addDays(t, -19) },
+    knit: { state: 'done', actualStart: addDays(t, -19), actualEnd: addDays(t, -11) },
+    dye: { state: 'done', actualStart: addDays(t, -11), actualEnd: addDays(t, -5) },
+    finish: { state: 'done', actualStart: addDays(t, -5), actualEnd: addDays(t, -1) },
+    inspect: { state: 'done', actualStart: addDays(t, -1), actualEnd: t },
+    pack: { state: 'in_progress', actualStart: t },
+  };
   store.runs = [
     {
       id: 'run-31', number: 'RUN-26-0031', state: 'active', purchaseOrderNumber: 'PO-26-0041', templateName: 'Warp-knit mesh', plannedStart: addDays(t, -20), notes: '',
       milestones: milestones.map((candidate) => (candidate.state === 'pending' ? { ...candidate, forecastEnd: propagated.get(candidate.key) ?? null } : candidate)),
     },
+    {
+      id: 'run-33', number: 'RUN-26-0033', state: 'active', purchaseOrderNumber: 'PO-26-0040', templateName: 'Bridal tulle', plannedStart: addDays(t, -24), notes: 'Shade standard MLK-02 confirmed at lab dip.',
+      milestones: tulle.map((step) => ({ id: `ms-33-${step.key}`, ...step, forecastEnd: null, actualStart: null, actualEnd: null, state: 'pending', delayReason: '', note: '', ...tulleStates[step.key] })),
+    },
   ];
+  store.lots = [
+    { id: 'lot-12', number: 'LOT-26-0012', runNumber: 'RUN-26-0033', skuCode: 'BTL-160-MLK', millLotRef: 'LR-7731', producedQuantity: '4500000', producedOn: addDays(t, -2), qualityState: 'released', rolls: seedRolls('LOT-26-0012', 90, (rollNo) => (rollNo <= 72 ? `CTN-26-${String(Math.ceil(rollNo / 6)).padStart(4, '0')}` : null)), loosePacked: [] },
+    { id: 'lot-13', number: 'LOT-26-0013', runNumber: 'RUN-26-0033', skuCode: 'BTL-160-MLK', millLotRef: 'LR-7732', producedQuantity: '4500000', producedOn: addDays(t, -1), qualityState: 'pending', rolls: seedRolls('LOT-26-0013', 90, () => null), loosePacked: [] },
+  ];
+  store.units = Array.from({ length: 12 }, (_, index) => ({
+    id: `ctn-${index + 1}`, number: `CTN-26-${String(index + 1).padStart(4, '0')}`, kind: 'carton', runNumber: 'RUN-26-0033', marks: `BASIS / BTL-160-MLK / ${index + 1} of 30`, parentNumber: null,
+    lengthCm: PUT_UP.cartonLengthCm, widthCm: PUT_UP.cartonWidthCm, heightCm: PUT_UP.cartonHeightCm, grossWeightG: 26400, netWeightG: 25200, packedOn: t as never,
+  }));
 }
 seed();
 
@@ -147,6 +219,26 @@ const poTotal = (po: PoRecord) => po.lines.reduce((total, l) => total + BigInt(l
 function summary(po: PoRecord): PurchaseOrderSummary {
   const runs = store.runs.filter((run) => run.purchaseOrderNumber === po.number).map((run) => ({ number: run.number, state: run.state, health: runHealth(run.milestones, today()) }));
   return { ...po, totalQuantity: poTotal(po), lineCount: po.lines.length, products: [...new Set(po.lines.map((l) => l.productName))], runs };
+}
+
+function lotView(lot: LotRecord): LotView {
+  const l = line(0, lot.skuCode, '0');
+  return {
+    id: lot.id, number: lot.number, skuCode: lot.skuCode, productName: l.productName, variantName: l.variantName, shadeCode: l.shadeCode, shadeName: l.shadeName, shadeHex: l.shadeHex,
+    rollTracking: true, putUp: PUT_UP, millLotRef: lot.millLotRef, producedQuantity: lot.producedQuantity, producedOn: lot.producedOn as never, qualityState: lot.qualityState,
+    ...lotQuantities(lot.rolls, lot.loosePacked.map((entry) => entry.quantity)),
+    rolls: lot.rolls,
+  };
+}
+
+function unitView(unit: UnitRecord): HandlingUnitView {
+  const contents = store.lots
+    .filter((lot) => lot.runNumber === unit.runNumber)
+    .flatMap((lot) => [
+      ...lot.rolls.filter((roll) => roll.packedIn === unit.number).map((roll) => ({ rollNumber: roll.number, lotNumber: lot.number, skuCode: lot.skuCode, quantity: roll.measuredLength })),
+      ...lot.loosePacked.filter((entry) => entry.unit === unit.number).map((entry) => ({ rollNumber: null, lotNumber: lot.number, skuCode: lot.skuCode, quantity: entry.quantity })),
+    ]);
+  return { ...unit, contents, quantity: contents.reduce((total, content) => total + BigInt(content.quantity), 0n).toString(), cbmMilli: cubicMetresMilli(unit.lengthCm, unit.widthCm, unit.heightCm) };
 }
 
 function runSummary(run: RunRecord): RunSummary {
@@ -198,14 +290,28 @@ export const sampleManufacturing = {
     const run = store.runs.find((candidate) => candidate.number === number);
     if (!run) return null;
     const po = store.pos.find((candidate) => candidate.number === run.purchaseOrderNumber)!;
+    const lots = store.lots.filter((lot) => lot.runNumber === run.number).map(lotView);
     return {
       ...runSummary(run),
       purchaseOrderState: po.state,
       supplierId: po.supplierId,
       notes: run.notes,
-      lines: po.lines.map((l) => ({ id: `rl-${l.id}`, skuCode: l.skuCode, productName: l.productName, variantName: l.variantName, shadeCode: l.shadeCode, shadeName: l.shadeName, shadeHex: l.shadeHex, plannedQuantity: l.quantity, producedQuantity: '0', uom: l.uom })),
-      lots: [],
+      lines: po.lines.map((l) => ({
+        id: `rl-${l.id}`, skuCode: l.skuCode, productName: l.productName, variantName: l.variantName, shadeCode: l.shadeCode, shadeName: l.shadeName, shadeHex: l.shadeHex, plannedQuantity: l.quantity,
+        producedQuantity: store.lots.filter((lot) => lot.runNumber === run.number && lot.skuCode === l.skuCode).reduce((total, lot) => total + BigInt(lot.producedQuantity), 0n).toString(),
+        uom: l.uom, rollTracking: true, putUp: PUT_UP,
+      })),
+      lots,
+      handlingUnits: store.units.filter((unit) => unit.runNumber === run.number).map(unitView),
+      availableToShip: availableToShip(lots),
     };
+  },
+  async lot(number: string): Promise<LotDetail | null> {
+    const lot = store.lots.find((candidate) => candidate.number === number);
+    if (!lot) return null;
+    const run = store.runs.find((candidate) => candidate.number === lot.runNumber)!;
+    const po = store.pos.find((candidate) => candidate.number === run.purchaseOrderNumber)!;
+    return { ...lotView(lot), runNumber: run.number, purchaseOrderNumber: po.number, supplierName: po.supplierName };
   },
   async templates(): Promise<ProcessTemplateView[]> {
     return TEMPLATES;
@@ -279,5 +385,51 @@ export const sampleManufacturing = {
     const propagated = propagateForecasts(chain);
     run.milestones = chain.map((candidate) => (candidate.state === 'pending' ? { ...candidate, forecastEnd: propagated.get(candidate.key) ?? null } : candidate));
     run.state = runStateFrom(run.milestones, run.state);
+  },
+  async recordLot(input: NewLotInput): Promise<string> {
+    const run = store.runs.find((candidate) => candidate.number === input.runNumber);
+    if (!run) throw new Error('No such run.');
+    const rolls = input.rolls ?? [];
+    if (rolls.length === 0) throw new Error(`${input.skuCode} is tracked by roll; record the rolls.`);
+    store.sequence.LOT += 1;
+    const number = `LOT-26-${String(store.sequence.LOT).padStart(4, '0')}`;
+    const total = rolls.reduce((sum, roll) => sum + BigInt(roll.measuredLength), 0n);
+    store.lots.push({
+      id: `lot-${number}`, number, runNumber: run.number, skuCode: input.skuCode, millLotRef: input.millLotRef ?? '', producedQuantity: total.toString(), producedOn: input.producedOn ?? today(), qualityState: 'pending', loosePacked: [],
+      rolls: rolls.map((roll, index) => ({ id: `roll-${number}-${index + 1}`, number: rollNumber(number, index + 1), rollNo: index + 1, measuredLength: roll.measuredLength, usableWidthCm: roll.usableWidthCm ?? null, weightG: roll.weightG ?? null, grade: roll.grade ?? '', defectPoints: roll.defectPoints ?? null, packedIn: null })),
+    });
+    return number;
+  },
+  async pack(input: PackInput): Promise<string> {
+    const run = store.runs.find((candidate) => candidate.number === input.runNumber);
+    if (!run) throw new Error('No such run.');
+    const lots = store.lots.filter((lot) => lot.runNumber === run.number);
+    const rolls = input.rollNumbers.map((number) => {
+      const roll = lots.flatMap((lot) => lot.rolls).find((candidate) => candidate.number === number);
+      if (!roll) throw new Error(`${number} is not a roll of this run.`);
+      if (roll.packedIn) throw new Error(`${number} is already packed.`);
+      return roll;
+    });
+    if (rolls.length === 0 && (input.loose ?? []).length === 0) throw new Error('Nothing to pack.');
+    const prefix = input.kind === 'carton' ? 'CTN' : 'PLT';
+    store.sequence[prefix] += 1;
+    const number = `${prefix}-26-${String(store.sequence[prefix]).padStart(4, '0')}`;
+    store.units.push({
+      id: `hu-${number}`, number, kind: input.kind, runNumber: run.number, marks: input.marks ?? '', parentNumber: input.parentNumber ?? null,
+      lengthCm: input.lengthCm ?? null, widthCm: input.widthCm ?? null, heightCm: input.heightCm ?? null, grossWeightG: input.grossWeightG ?? null, netWeightG: input.netWeightG ?? null, packedOn: (input.packedOn ?? today()) as never,
+    });
+    for (const roll of rolls) roll.packedIn = number;
+    for (const entry of input.loose ?? []) lots.find((lot) => lot.number === entry.lotNumber)?.loosePacked.push({ unit: number, quantity: entry.quantity });
+    const packing = run.milestones.find((milestone) => milestone.key === 'pack');
+    if (packing && packing.state === 'pending') {
+      run.milestones = run.milestones.map((milestone) => (milestone.id === packing.id ? { ...milestone, state: 'in_progress', actualStart: today() } : milestone));
+      run.state = runStateFrom(run.milestones, run.state);
+    }
+    return number;
+  },
+  async setLotQuality(input: { number: string; state: LotQualityState; note: string }): Promise<void> {
+    const lot = store.lots.find((candidate) => candidate.number === input.number);
+    if (!lot) throw new Error('No such lot.');
+    lot.qualityState = input.state;
   },
 };

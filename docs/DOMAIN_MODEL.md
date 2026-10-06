@@ -193,7 +193,7 @@ erDiagram
 | `production_run_line` | What the run produces | run_id, po_line_id, planned quantity, produced quantity |
 | `production_milestone` | One step of one run | run_id, key, name, category, sequence, depends_on, gate, planned start / end, forecast end, actual start / end, state (`pending` / `in_progress` / `done` / `skipped` / `blocked`), delay_reason, owner, evidence |
 | `lot` | Batch / dye lot produced by a run | number, sku_id, run_id, mill dye-lot reference, produced quantity, produced_on, quality state (`pending` / `on_hold` / `released` / `rejected`), shade reading summary |
-| `roll` | Individual roll (where roll tracking is required) | lot_id, roll number, measured length, usable width, weight, grade, defect points, state, current location / handling unit |
+| `roll` | Individual roll (where roll tracking is required) | lot_id, roll number, measured length, usable width, weight, grade, defect points. Where the roll is (which handling unit, which location) and what state it is in follow from `handling_unit_content` and `stock_movement`; nothing is typed in |
 | `handling_unit` | A physical package | type (`roll`, `carton`, `pallet`, `container_load`), parent_id, marks, dimensions, gross weight, net weight, CBM (computed) |
 | `handling_unit_content` | What a package holds | handling_unit_id, roll_id *or* lot_id + quantity |
 

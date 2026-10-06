@@ -51,6 +51,13 @@ export const LocationType = {
   customer_site: "customer_site",
 }
 
+export const LotQualityState = {
+  pending: "pending",
+  on_hold: "on_hold",
+  released: "released",
+  rejected: "rejected",
+}
+
 export const PrincipalType = {
   staff: "staff",
   supplier: "supplier",
@@ -464,6 +471,19 @@ export function getProductionRun(dcOrVars, varsOrOptions, options) {
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(getProductionRunRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const getLotRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetLot', inputVars);
+}
+getLotRef.operationName = 'GetLot';
+
+export function getLot(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getLotRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 
 export const listProcessTemplatesRef = (dc) => {

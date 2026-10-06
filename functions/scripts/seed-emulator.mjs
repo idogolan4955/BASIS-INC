@@ -94,7 +94,7 @@ async function seedReference() {
     await gql(`mutation ($code: String!, $name: String!, $version: Int!) { incoterm_upsert(data: { code: $code, name: $name, version: $version }) }`, { code, name: INCOTERM_NAMES[code], version });
   }
   const year = new Date().getFullYear();
-  for (const prefix of ['PO', 'RUN', 'INS', 'CAR', 'SHP', 'QTN', 'RFQ', 'QUO', 'SO', 'SMP', 'LOT']) {
+  for (const prefix of ['PO', 'RUN', 'INS', 'CAR', 'SHP', 'QTN', 'RFQ', 'QUO', 'SO', 'SMP', 'LOT', 'CTN', 'PLT']) {
     await gql(`mutation ($prefix: String!, $year: Int!) { numberSequence_upsert(data: { prefix: $prefix, year: $year, nextValue: 1 }) }`, { prefix, year });
   }
 }

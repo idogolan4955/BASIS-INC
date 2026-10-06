@@ -89,6 +89,16 @@ export interface Factory_Key {
   __typename?: 'Factory_Key';
 }
 
+export interface HandlingUnitContent_Key {
+  id: UUIDString;
+  __typename?: 'HandlingUnitContent_Key';
+}
+
+export interface HandlingUnit_Key {
+  id: UUIDString;
+  __typename?: 'HandlingUnit_Key';
+}
+
 export interface Incoterm_Key {
   code: string;
   __typename?: 'Incoterm_Key';
@@ -191,6 +201,11 @@ export interface RolePermission_Key {
   role: Role;
   permission: string;
   __typename?: 'RolePermission_Key';
+}
+
+export interface Roll_Key {
+  id: UUIDString;
+  __typename?: 'Roll_Key';
 }
 
 export interface ShadeCollection_Key {

@@ -240,6 +240,7 @@ query GetProductionRun($number: String!)
         uom
         sku {
           code
+          rollTracking
           product {
             name
           }
@@ -250,6 +251,13 @@ query GetProductionRun($number: String!)
           }
           variant {
             name
+          }
+          putUp {
+            rollLengthM
+            rollsPerCarton
+            cartonLengthCm
+            cartonWidthCm
+            cartonHeightCm
           }
         }
       }
@@ -272,14 +280,114 @@ query GetProductionRun($number: String!)
       note
     }
     lots_on_run(orderBy: { createdAt: ASC }, limit: 100) {
-      id
+      ...LotFacts
+    }
+    handlingUnits_on_run(orderBy: { createdAt: ASC }, limit: 200) {
+      ...HandlingUnitFacts
+    }
+  }
+}
+
+fragment LotFacts on Lot {
+  id
+  number
+  millLotRef
+  producedQuantity
+  producedOn
+  qualityState
+  createdAt
+  sku {
+    code
+    rollTracking
+    product {
+      name
+    }
+    variant {
+      name
+    }
+    shade {
+      code
+      name
+      hex
+    }
+    putUp {
+      rollLengthM
+      rollsPerCarton
+      cartonLengthCm
+      cartonWidthCm
+      cartonHeightCm
+    }
+  }
+  rolls_on_lot(orderBy: { rollNo: ASC }, limit: 500) {
+    id
+    number
+    rollNo
+    measuredLength
+    usableWidthCm
+    weightG
+    grade
+    defectPoints
+    handlingUnitContents_on_roll(limit: 1) {
+      handlingUnit {
+        number
+      }
+    }
+  }
+  handlingUnitContents_on_lot(limit: 100) {
+    quantity
+    handlingUnit {
       number
-      millLotRef
-      producedQuantity
-      producedOn
-      qualityState
+    }
+  }
+}
+
+fragment HandlingUnitFacts on HandlingUnit {
+  id
+  number
+  kind
+  marks
+  lengthCm
+  widthCm
+  heightCm
+  grossWeightG
+  netWeightG
+  packedOn
+  parent {
+    number
+  }
+  handlingUnitContents_on_handlingUnit(limit: 500) {
+    quantity
+    roll {
+      number
+      measuredLength
+      lot {
+        number
+        sku {
+          code
+        }
+      }
+    }
+    lot {
+      number
       sku {
         code
+      }
+    }
+  }
+}
+
+query GetLot($number: String!)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'finance'") {
+  lots(where: { number: { eq: $number } }, limit: 1) {
+    ...LotFacts
+    run {
+      number
+      purchaseOrder {
+        number
+        supplier {
+          tradingName
+          legalName
+        }
       }
     }
   }

@@ -58,6 +58,14 @@ const LocationType = {
 }
 exports.LocationType = LocationType;
 
+const LotQualityState = {
+  pending: "pending",
+  on_hold: "on_hold",
+  released: "released",
+  rejected: "rejected",
+}
+exports.LotQualityState = LotQualityState;
+
 const PrincipalType = {
   staff: "staff",
   supplier: "supplier",
@@ -536,6 +544,21 @@ exports.getProductionRun = function getProductionRun(dcOrVars, varsOrOptions, op
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(getProductionRunRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getLotRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetLot', inputVars);
+}
+getLotRef.operationName = 'GetLot';
+exports.getLotRef = getLotRef;
+
+exports.getLot = function getLot(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getLotRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
 

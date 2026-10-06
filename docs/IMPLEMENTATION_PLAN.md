@@ -151,6 +151,15 @@ Depends on: Phase 2, P3.
 | Module 04 Manufacturing: purchase-order ledger, order sheet (lines, production, payments for cost roles, timeline) with issue / confirm / cancel / open-run actions, new-order dialog; run ledger; run sheet with the milestone track, milestone update dialog, lines and lots; process-template ledger. The Gateway's production figure and timeline read the real runs | Gateway production figure counts runs on schedule only once lots and shipments report |
 | Verified against the emulators: PO-26-0001 created, issued (deposit due the same day), confirmed; RUN-26-0001 planned from the Warp-knit mesh template; a dye slip recorded with `updateMilestone` propagated to finishing, inspection and packing, turned the run `delayed`, and `evaluateAlerts` raised the run and the deposit | |
 
+#### Phase 4 progress, second slice (2026-10-06)
+
+| Done | Remaining |
+|---|---|
+| Lots, rolls and handling units in the schema: a lot is recorded on a run with its rolls (measured length, usable width, weight, grade, defect points); a carton or pallet holds rolls, or a quantity of a lot that is not tracked by roll, and nests in a parent. `recordLot` also moves the run line's produced quantity; `packHandlingUnit` refuses a roll that is already packed and starts the run's packing step on the first carton | Roll labels and the packing list as PDF; pallets built from cartons in the interface (the function already takes a parent) |
+| "Ready to ship" is a quantity: `availableToShip` in `packages/shared` adds up what is released by quality and already packed; the run sheet and the lot sheet show it, never a label. Lot quality is set by QC or the owner through `setLotQuality` with the finding recorded; the inspection module will drive the same transition from dispositions | Inspections (P5) replacing the manual quality record |
+| Interface: Lots and Packing tabs on the run sheet with the record-lot dialog (count and nominal length, or measured lengths pasted from the winder) and the pack dialog (rolls chosen from the lot, carton dimensions from the put-up, marks, weights, CBM derived); a lot sheet at `/inventory/lots/[lot]` with its rolls and where each is packed, the quality record and its timeline | Inventory module proper: stock by SKU, locations, movements, receiving from a shipment |
+| Verified against the emulators: two lots recorded on RUN-26-0001 (six rolls), three rolls packed into CTN-26-0001 with packing started on the run, a repack refused, LOT-26-0001 released, a second carton across two lots; the run reports 200.1 m ready to ship | |
+
 ### P5 — Quality (L)
 
 - Inspection templates and sampling rules; inspections for lab dip, inline, pre-shipment, receiving.

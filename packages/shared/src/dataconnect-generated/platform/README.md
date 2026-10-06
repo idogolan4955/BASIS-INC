@@ -22,6 +22,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*GetPurchaseOrderCosts*](#getpurchaseordercosts)
   - [*ListProductionRuns*](#listproductionruns)
   - [*GetProductionRun*](#getproductionrun)
+  - [*GetLot*](#getlot)
   - [*ListProcessTemplates*](#listprocesstemplates)
   - [*ListCompanies*](#listcompanies)
   - [*GetCompany*](#getcompany)
@@ -1897,6 +1898,7 @@ export interface GetProductionRunData {
         uom: string;
         sku: {
           code: string;
+          rollTracking: boolean;
           product: {
             name: string;
           };
@@ -1907,6 +1909,13 @@ export interface GetProductionRunData {
           } & Shade_Key;
           variant: {
             name: string;
+          };
+          putUp: {
+            rollLengthM: number;
+            rollsPerCarton?: number | null;
+            cartonLengthCm?: number | null;
+            cartonWidthCm?: number | null;
+            cartonHeightCm?: number | null;
           };
         } & Sku_Key;
       } & PurchaseOrderLine_Key;
@@ -1935,10 +1944,85 @@ export interface GetProductionRunData {
       producedQuantity: Int64String;
       producedOn?: DateString | null;
       qualityState: LotQualityState;
+      createdAt: TimestampString;
       sku: {
         code: string;
+        rollTracking: boolean;
+        product: {
+          name: string;
+        };
+        variant: {
+          name: string;
+        };
+        shade: {
+          code: string;
+          name: string;
+          hex?: string | null;
+        } & Shade_Key;
+        putUp: {
+          rollLengthM: number;
+          rollsPerCarton?: number | null;
+          cartonLengthCm?: number | null;
+          cartonWidthCm?: number | null;
+          cartonHeightCm?: number | null;
+        };
       } & Sku_Key;
+      rolls_on_lot: ({
+        id: UUIDString;
+        number: string;
+        rollNo: number;
+        measuredLength: Int64String;
+        usableWidthCm?: number | null;
+        weightG?: number | null;
+        grade?: string | null;
+        defectPoints?: number | null;
+        handlingUnitContents_on_roll: ({
+          handlingUnit: {
+            number: string;
+          };
+        })[];
+      } & Roll_Key)[];
+      handlingUnitContents_on_lot: ({
+        quantity?: Int64String | null;
+        handlingUnit: {
+          number: string;
+        };
+      })[];
     } & Lot_Key)[];
+    handlingUnits_on_run: ({
+      id: UUIDString;
+      number: string;
+      kind: HandlingUnitKind;
+      marks?: string | null;
+      lengthCm?: number | null;
+      widthCm?: number | null;
+      heightCm?: number | null;
+      grossWeightG?: number | null;
+      netWeightG?: number | null;
+      packedOn?: DateString | null;
+      parent?: {
+        number: string;
+      };
+      handlingUnitContents_on_handlingUnit: ({
+        quantity?: Int64String | null;
+        roll?: {
+          number: string;
+          measuredLength: Int64String;
+          lot: {
+            number: string;
+            sku: {
+              code: string;
+            } & Sku_Key;
+          };
+        };
+        lot?: {
+          number: string;
+          sku: {
+            code: string;
+          } & Sku_Key;
+        };
+      })[];
+    } & HandlingUnit_Key)[];
   } & ProductionRun_Key)[];
 }
 ```
@@ -2002,6 +2086,176 @@ console.log(data.productionRuns);
 executeQuery(ref).then((response) => {
   const data = response.data;
   console.log(data.productionRuns);
+});
+```
+
+## GetLot
+You can execute the `GetLot` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+getLot(vars: GetLotVariables, options?: ExecuteQueryOptions): QueryPromise<GetLotData, GetLotVariables>;
+
+interface GetLotRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetLotVariables): QueryRef<GetLotData, GetLotVariables>;
+}
+export const getLotRef: GetLotRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getLot(dc: DataConnect, vars: GetLotVariables, options?: ExecuteQueryOptions): QueryPromise<GetLotData, GetLotVariables>;
+
+interface GetLotRef {
+  ...
+  (dc: DataConnect, vars: GetLotVariables): QueryRef<GetLotData, GetLotVariables>;
+}
+export const getLotRef: GetLotRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getLotRef:
+```typescript
+const name = getLotRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetLot` query requires an argument of type `GetLotVariables`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetLotVariables {
+  number: string;
+}
+```
+### Return Type
+Recall that executing the `GetLot` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetLotData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetLotData {
+  lots: ({
+    id: UUIDString;
+    number: string;
+    millLotRef?: string | null;
+    producedQuantity: Int64String;
+    producedOn?: DateString | null;
+    qualityState: LotQualityState;
+    createdAt: TimestampString;
+    sku: {
+      code: string;
+      rollTracking: boolean;
+      product: {
+        name: string;
+      };
+      variant: {
+        name: string;
+      };
+      shade: {
+        code: string;
+        name: string;
+        hex?: string | null;
+      } & Shade_Key;
+      putUp: {
+        rollLengthM: number;
+        rollsPerCarton?: number | null;
+        cartonLengthCm?: number | null;
+        cartonWidthCm?: number | null;
+        cartonHeightCm?: number | null;
+      };
+    } & Sku_Key;
+    rolls_on_lot: ({
+      id: UUIDString;
+      number: string;
+      rollNo: number;
+      measuredLength: Int64String;
+      usableWidthCm?: number | null;
+      weightG?: number | null;
+      grade?: string | null;
+      defectPoints?: number | null;
+      handlingUnitContents_on_roll: ({
+        handlingUnit: {
+          number: string;
+        };
+      })[];
+    } & Roll_Key)[];
+    handlingUnitContents_on_lot: ({
+      quantity?: Int64String | null;
+      handlingUnit: {
+        number: string;
+      };
+    })[];
+    run: {
+      number: string;
+      purchaseOrder: {
+        number: string;
+        supplier: {
+          tradingName?: string | null;
+          legalName: string;
+        };
+      };
+    };
+  } & Lot_Key)[];
+}
+```
+### Using `GetLot`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getLot, GetLotVariables } from '@basis/dataconnect-platform';
+
+// The `GetLot` query requires an argument of type `GetLotVariables`:
+const getLotVars: GetLotVariables = {
+  number: ..., 
+};
+
+// Call the `getLot()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getLot(getLotVars);
+// Variables can be defined inline as well.
+const { data } = await getLot({ number: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getLot(dataConnect, getLotVars);
+
+console.log(data.lots);
+
+// Or, you can use the `Promise` API.
+getLot(getLotVars).then((response) => {
+  const data = response.data;
+  console.log(data.lots);
+});
+```
+
+### Using `GetLot`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getLotRef, GetLotVariables } from '@basis/dataconnect-platform';
+
+// The `GetLot` query requires an argument of type `GetLotVariables`:
+const getLotVars: GetLotVariables = {
+  number: ..., 
+};
+
+// Call the `getLotRef()` function to get a reference to the query.
+const ref = getLotRef(getLotVars);
+// Variables can be defined inline as well.
+const ref = getLotRef({ number: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getLotRef(dataConnect, getLotVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.lots);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.lots);
 });
 ```
 

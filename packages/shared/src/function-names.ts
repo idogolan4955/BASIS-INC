@@ -18,6 +18,12 @@ export const FUNCTION_NAMES = {
   createProductionRun: 'createProductionRun',
   /** Callable, production roles: move a milestone; the run's health follows. */
   updateMilestone: 'updateMilestone',
+  /** Callable, production roles: a lot produced by a run, with its rolls. */
+  recordLot: 'recordLot',
+  /** Callable, production roles: pack rolls into a carton or pallet. */
+  packHandlingUnit: 'packHandlingUnit',
+  /** Callable, QC and owner: a lot's quality state, with the reason. */
+  setLotQuality: 'setLotQuality',
   /** Callable, owner and operations: run the alert rules now. */
   evaluateAlerts: 'evaluateAlerts',
   /** Scheduled: consume domain events, evaluate alert rules. */

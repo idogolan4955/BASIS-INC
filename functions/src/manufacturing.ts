@@ -7,6 +7,7 @@ import {
   runForecastEnd,
   runHealth,
   runStateFrom,
+  rollNumber,
   QUANTITY_SCALE,
   type MilestoneFacts,
   type MilestoneState,
@@ -22,6 +23,7 @@ import { REGION, audit, callerOf, emit, failure, graphql, requireRole } from './
 
 const PURCHASING = ['owner', 'operations', 'purchasing'] as const;
 const PRODUCTION = ['owner', 'operations', 'purchasing', 'qc'] as const;
+const QUALITY = ['owner', 'qc'] as const;
 
 const today = () => new Date().toISOString().slice(0, 10);
 const int64 = z.string().regex(/^-?\d+$/, 'Fixed-point integer expected');
@@ -331,6 +333,32 @@ interface RunRow {
   productionMilestones_on_run: (MilestoneFacts & { id: string; name: string; gate: string; actualStart: string | null; state: MilestoneState; plannedStart: string; sequence: number; dependsOnKey: string | null })[];
 }
 
+const RUN_WITH_MILESTONES = `id state productionMilestones_on_run(orderBy: { sequence: ASC }) { id key name gate state plannedStart plannedEnd forecastEnd actualStart actualEnd sequence dependsOnKey }`;
+
+/**
+ * The run follows its milestones: pending steps take their forecast from the
+ * chain, and health, state and forecast end are written from the facts.
+ */
+async function deriveRun(run: RunRow, chain: RunRow['productionMilestones_on_run'], now: string): Promise<{ health: ReturnType<typeof runHealth>; state: RunState; forecastEnd: string | null }> {
+  const propagated = propagateForecasts(chain as never);
+  for (const candidate of chain) {
+    const next = propagated.get(candidate.key) ?? null;
+    if (candidate.state === 'pending' && (next ?? null) !== (candidate.forecastEnd ?? null)) {
+      await graphql(`mutation ($id: UUID!, $forecastEnd: Date) { productionMilestone_update(id: $id, data: { forecastEnd: $forecastEnd }) }`, { id: candidate.id, forecastEnd: next });
+    }
+  }
+  const facts: MilestoneFacts[] = chain.map((candidate) => ({ ...candidate, forecastEnd: (propagated.get(candidate.key) ?? null) as never }));
+  const health = runHealth(facts, now as never);
+  const state = runStateFrom(facts, run.state);
+  const forecastEnd = runForecastEnd(facts);
+  await graphql(
+    `mutation ($id: UUID!, $health: Health!, $state: RunState!, $forecastEnd: Date, $actualEnd: Date) {
+      productionRun_update(id: $id, data: { health: $health, state: $state, forecastEnd: $forecastEnd, actualEnd: $actualEnd, updatedAt_expr: "request.time" }) }`,
+    { id: run.id, health, state, forecastEnd, actualEnd: state === 'completed' ? forecastEnd : null },
+  );
+  return { health, state, forecastEnd };
+}
+
 export const updateMilestone = onCall({ region: REGION }, async (request) => {
   const caller = callerOf(request);
   requireRole(caller, PRODUCTION, 'Updating milestones');
@@ -339,8 +367,7 @@ export const updateMilestone = onCall({ region: REGION }, async (request) => {
   const input = parsed.data;
 
   const { productionRuns } = await graphql<{ productionRuns: RunRow[] }>(
-    `query ($number: String!) { productionRuns(where: { number: { eq: $number } }, limit: 1) {
-       id state productionMilestones_on_run(orderBy: { sequence: ASC }) { id key name gate state plannedStart plannedEnd forecastEnd actualStart actualEnd sequence dependsOnKey } } }`,
+    `query ($number: String!) { productionRuns(where: { number: { eq: $number } }, limit: 1) { ${RUN_WITH_MILESTONES} } }`,
     { number: input.runNumber },
   );
   const run = productionRuns[0];
@@ -381,27 +408,207 @@ export const updateMilestone = onCall({ region: REGION }, async (request) => {
       ? { ...candidate, state: nextState, forecastEnd: forecastEnd as never, actualEnd: (nextState === 'done' ? actualEnd : null) as never }
       : candidate,
   );
-  const propagated = propagateForecasts(chain as never);
-  for (const candidate of chain) {
-    const next = propagated.get(candidate.key) ?? null;
-    if (candidate.state === 'pending' && (next ?? null) !== (candidate.forecastEnd ?? null)) {
-      await graphql(`mutation ($id: UUID!, $forecastEnd: Date) { productionMilestone_update(id: $id, data: { forecastEnd: $forecastEnd }) }`, { id: candidate.id, forecastEnd: next });
-    }
-  }
-  const facts: MilestoneFacts[] = chain.map((candidate) => ({ ...candidate, forecastEnd: (propagated.get(candidate.key) ?? null) as never }));
-  const health = runHealth(facts, now as never);
-  const state = runStateFrom(facts, run.state);
-  const runForecast = runForecastEnd(facts);
-  const runActualEnd = state === 'completed' ? runForecast : null;
-  await graphql(
-    `mutation ($id: UUID!, $health: Health!, $state: RunState!, $forecastEnd: Date, $actualEnd: Date) {
-      productionRun_update(id: $id, data: { health: $health, state: $state, forecastEnd: $forecastEnd, actualEnd: $actualEnd, updatedAt_expr: "request.time" }) }`,
-    { id: run.id, health, state, forecastEnd: runForecast, actualEnd: runActualEnd },
-  );
+  const { health, state, forecastEnd: runForecast } = await deriveRun(run, chain, now);
 
   const summary = `${milestone.name}: ${nextState.replace('_', ' ')}${forecastEnd && forecastEnd !== milestone.plannedEnd ? `, now expected ${forecastEnd}` : ''}${input.delayReason ? ` (${input.delayReason})` : ''}`;
   await audit(caller.uid, 'production_milestone.update', 'production_run', input.runNumber, { milestone: milestone.name, state: milestone.state }, { state: nextState, forecastEnd, actualEnd });
   await emit('production_milestone.updated', 'production_run', input.runNumber, { milestone: milestone.key, state: nextState, health });
   await timeline('production_run', input.runNumber, 'status_changed', caller.uid, summary);
   return { runNumber: input.runNumber, health, state, forecastEnd: runForecast };
+});
+
+// ---------------------------------------------------------------- lots and packing
+
+const rollInput = z.object({
+  measuredLength: int64,
+  usableWidthCm: z.number().int().positive().optional(),
+  weightG: z.number().int().nonnegative().optional(),
+  grade: z.string().max(8).optional(),
+  defectPoints: z.number().int().nonnegative().optional(),
+});
+
+const recordLotInput = z.object({
+  runNumber: z.string().min(1),
+  skuCode: z.string().min(1),
+  millLotRef: z.string().max(80).optional(),
+  producedOn: date.optional(),
+  /** For SKUs that are not tracked by roll; otherwise the rolls add up to it. */
+  producedQuantity: int64.optional(),
+  rolls: z.array(rollInput).max(500).optional(),
+});
+
+interface RunLotsRow extends RunRow {
+  productionRunLines_on_run: { id: string; producedQuantity: string; purchaseOrderLine: { sku: { code: string; rollTracking: boolean } } }[];
+  lots_on_run: { id: string; number: string; sku: { code: string }; rolls_on_lot: { id: string; number: string; measuredLength: string; handlingUnitContents_on_roll: { id: string }[] }[] }[];
+}
+
+async function loadRunForPacking(number: string): Promise<RunLotsRow> {
+  const { productionRuns } = await graphql<{ productionRuns: RunLotsRow[] }>(
+    `query ($number: String!) { productionRuns(where: { number: { eq: $number } }, limit: 1) {
+       ${RUN_WITH_MILESTONES}
+       productionRunLines_on_run { id producedQuantity purchaseOrderLine { sku { code rollTracking } } }
+       lots_on_run { id number sku { code } rolls_on_lot(orderBy: { rollNo: ASC }) { id number measuredLength handlingUnitContents_on_roll { id } } } } }`,
+    { number },
+  );
+  const run = productionRuns[0];
+  if (!run) throw failure('not_found', `No production run ${number}.`);
+  if (run.state === 'cancelled') throw failure('invariant_violation', 'A cancelled run cannot change.');
+  return run;
+}
+
+const metres = (stored: bigint) => `${(Number(stored) / Number(QUANTITY_SCALE)).toLocaleString('en-GB', { maximumFractionDigits: 1 })} m`;
+
+export const recordLot = onCall({ region: REGION }, async (request) => {
+  const caller = callerOf(request);
+  requireRole(caller, PRODUCTION, 'Recording lots');
+  const parsed = recordLotInput.safeParse(request.data);
+  if (!parsed.success) validationFailure(parsed.error);
+  const input = parsed.data;
+
+  const run = await loadRunForPacking(input.runNumber);
+  const line = run.productionRunLines_on_run.find((candidate) => candidate.purchaseOrderLine.sku.code === input.skuCode);
+  if (!line) throw failure('validation', `${input.skuCode} is not on this run.`, { skuCode: 'Choose a SKU from the run' });
+  const rolls = input.rolls ?? [];
+  if (line.purchaseOrderLine.sku.rollTracking && rolls.length === 0) {
+    throw failure('validation', `${input.skuCode} is tracked by roll; record the rolls.`, { rolls: 'At least one roll' });
+  }
+  const total = rolls.length > 0 ? rolls.reduce((sum, roll) => sum + BigInt(roll.measuredLength), 0n) : BigInt(input.producedQuantity ?? '0');
+  if (total <= 0n) throw failure('validation', 'The produced quantity must be more than zero.', { producedQuantity: 'More than zero' });
+  if (rolls.some((roll) => BigInt(roll.measuredLength) <= 0n)) throw failure('validation', 'Every roll needs a measured length.', { rolls: 'Lengths above zero' });
+
+  const number = await allocateNumber('LOT');
+  const { lot_insert } = await graphql<{ lot_insert: { id: string } }>(
+    `mutation ($number: String!, $skuCode: String!, $runId: UUID!, $millLotRef: String, $quantity: Int64!, $producedOn: Date) {
+      lot_insert(data: { number: $number, skuCode: $skuCode, runId: $runId, millLotRef: $millLotRef, producedQuantity: $quantity, producedOn: $producedOn, qualityState: pending }) }`,
+    { number, skuCode: input.skuCode, runId: run.id, millLotRef: input.millLotRef ?? null, quantity: total.toString(), producedOn: input.producedOn ?? null },
+  );
+  for (const [index, roll] of rolls.entries()) {
+    await graphql(
+      `mutation ($lotId: UUID!, $number: String!, $rollNo: Int!, $length: Int64!, $width: Int, $weight: Int, $grade: String, $points: Int) {
+        roll_insert(data: { lotId: $lotId, number: $number, rollNo: $rollNo, measuredLength: $length, usableWidthCm: $width, weightG: $weight, grade: $grade, defectPoints: $points }) }`,
+      { lotId: lot_insert.id, number: rollNumber(number, index + 1), rollNo: index + 1, length: roll.measuredLength, width: roll.usableWidthCm ?? null, weight: roll.weightG ?? null, grade: roll.grade ?? null, points: roll.defectPoints ?? null },
+    );
+  }
+  await graphql(`mutation ($id: UUID!, $produced: Int64!) { productionRunLine_update(id: $id, data: { producedQuantity: $produced }) }`, {
+    id: line.id,
+    produced: (BigInt(line.producedQuantity) + total).toString(),
+  });
+
+  const summary = `${number}: ${metres(total)} of ${input.skuCode}${rolls.length > 0 ? ` in ${rolls.length} rolls` : ''}${input.millLotRef ? `, mill lot ${input.millLotRef}` : ''}`;
+  await audit(caller.uid, 'lot.record', 'lot', number, null, { run: input.runNumber, skuCode: input.skuCode, producedQuantity: total.toString(), rolls: rolls.length });
+  await emit('lot.recorded', 'lot', number, { run: input.runNumber, skuCode: input.skuCode });
+  await timeline('lot', number, 'created', caller.uid, `Recorded on ${input.runNumber}: ${metres(total)}${rolls.length > 0 ? ` in ${rolls.length} rolls` : ''}, awaiting quality`);
+  await timeline('production_run', input.runNumber, 'lot_recorded', caller.uid, summary);
+  return { number, id: lot_insert.id };
+});
+
+const packInput = z.object({
+  runNumber: z.string().min(1),
+  kind: z.enum(['carton', 'pallet']),
+  rollNumbers: z.array(z.string().min(1)).max(500).default([]),
+  /** Quantities of lots that are not tracked by roll. */
+  loose: z.array(z.object({ lotNumber: z.string().min(1), quantity: int64 })).max(50).default([]),
+  marks: z.string().max(120).optional(),
+  lengthCm: z.number().int().positive().optional(),
+  widthCm: z.number().int().positive().optional(),
+  heightCm: z.number().int().positive().optional(),
+  grossWeightG: z.number().int().nonnegative().optional(),
+  netWeightG: z.number().int().nonnegative().optional(),
+  packedOn: date.optional(),
+  parentNumber: z.string().optional(),
+});
+
+export const packHandlingUnit = onCall({ region: REGION }, async (request) => {
+  const caller = callerOf(request);
+  requireRole(caller, PRODUCTION, 'Packing');
+  const parsed = packInput.safeParse(request.data);
+  if (!parsed.success) validationFailure(parsed.error);
+  const input = parsed.data;
+  if (input.rollNumbers.length === 0 && input.loose.length === 0) throw failure('validation', 'Nothing to pack.', { rollNumbers: 'Choose the rolls' });
+
+  const run = await loadRunForPacking(input.runNumber);
+  const rollsByNumber = new Map(run.lots_on_run.flatMap((lot) => lot.rolls_on_lot.map((roll) => [roll.number, { ...roll, lot }] as const)));
+  const rolls = input.rollNumbers.map((number) => {
+    const roll = rollsByNumber.get(number);
+    if (!roll) throw failure('validation', `${number} is not a roll of this run.`, { rollNumbers: number });
+    if (roll.handlingUnitContents_on_roll.length > 0) throw failure('invariant_violation', `${number} is already packed.`, { rollNumbers: number });
+    return roll;
+  });
+  const loose = input.loose.map((entry) => {
+    const lot = run.lots_on_run.find((candidate) => candidate.number === entry.lotNumber);
+    if (!lot) throw failure('validation', `${entry.lotNumber} is not a lot of this run.`, { loose: entry.lotNumber });
+    if (BigInt(entry.quantity) <= 0n) throw failure('validation', 'A packed quantity is more than zero.', { loose: entry.lotNumber });
+    return { lot, quantity: entry.quantity };
+  });
+  let parentId: string | null = null;
+  if (input.parentNumber) {
+    const { handlingUnits } = await graphql<{ handlingUnits: { id: string }[] }>(`query ($number: String!) { handlingUnits(where: { number: { eq: $number } }, limit: 1) { id } }`, { number: input.parentNumber });
+    if (!handlingUnits[0]) throw failure('not_found', `No handling unit ${input.parentNumber}.`);
+    parentId = handlingUnits[0].id;
+  }
+
+  const packedOn = input.packedOn ?? today();
+  const number = await allocateNumber(input.kind === 'carton' ? 'CTN' : 'PLT');
+  const { handlingUnit_insert } = await graphql<{ handlingUnit_insert: { id: string } }>(
+    `mutation ($number: String!, $kind: HandlingUnitKind!, $runId: UUID!, $parentId: UUID, $marks: String, $l: Int, $w: Int, $h: Int, $gross: Int, $net: Int, $packedOn: Date!) {
+      handlingUnit_insert(data: { number: $number, kind: $kind, runId: $runId, parentId: $parentId, marks: $marks, lengthCm: $l, widthCm: $w, heightCm: $h, grossWeightG: $gross, netWeightG: $net, packedOn: $packedOn }) }`,
+    { number, kind: input.kind, runId: run.id, parentId, marks: input.marks ?? null, l: input.lengthCm ?? null, w: input.widthCm ?? null, h: input.heightCm ?? null, gross: input.grossWeightG ?? null, net: input.netWeightG ?? null, packedOn },
+  );
+  for (const roll of rolls) {
+    await graphql(`mutation ($unitId: UUID!, $rollId: UUID!) { handlingUnitContent_insert(data: { handlingUnitId: $unitId, rollId: $rollId }) }`, { unitId: handlingUnit_insert.id, rollId: roll.id });
+  }
+  for (const entry of loose) {
+    await graphql(`mutation ($unitId: UUID!, $lotId: UUID!, $quantity: Int64!) { handlingUnitContent_insert(data: { handlingUnitId: $unitId, lotId: $lotId, quantity: $quantity }) }`, { unitId: handlingUnit_insert.id, lotId: entry.lot.id, quantity: entry.quantity });
+  }
+
+  // The first carton starts the packing step; nobody has to set it.
+  const packing = run.productionMilestones_on_run.find((milestone) => milestone.key === 'pack') ?? run.productionMilestones_on_run.find((milestone) => /pack/i.test(milestone.name));
+  let health = null as ReturnType<typeof runHealth> | null;
+  if (packing && packing.state === 'pending') {
+    await graphql(`mutation ($id: UUID!, $start: Date!) { productionMilestone_update(id: $id, data: { state: in_progress, actualStart: $start }) }`, { id: packing.id, start: packedOn });
+    const chain = run.productionMilestones_on_run.map((candidate) => (candidate.id === packing.id ? { ...candidate, state: 'in_progress' as const, actualStart: packedOn } : candidate));
+    health = (await deriveRun(run, chain, today())).health;
+  }
+
+  const total = rolls.reduce((sum, roll) => sum + BigInt(roll.measuredLength), 0n) + loose.reduce((sum, entry) => sum + BigInt(entry.quantity), 0n);
+  const lots = [...new Set([...rolls.map((roll) => roll.lot.number), ...loose.map((entry) => entry.lot.number)])];
+  const summary = `${number}: ${rolls.length > 0 ? `${rolls.length} rolls, ` : ''}${metres(total)} from ${lots.join(', ')}`;
+  await audit(caller.uid, 'handling_unit.pack', 'handling_unit', number, null, { run: input.runNumber, kind: input.kind, rolls: rolls.length, quantity: total.toString() });
+  await emit('handling_unit.packed', 'production_run', input.runNumber, { number, kind: input.kind, lots });
+  await timeline('production_run', input.runNumber, 'packed', caller.uid, summary);
+  for (const lot of lots) await timeline('lot', lot, 'packed', caller.uid, `${number}: ${rolls.filter((roll) => roll.lot.number === lot).length} rolls packed`);
+  return { number, id: handlingUnit_insert.id, health };
+});
+
+const lotQualityInput = z.object({
+  number: z.string().min(1),
+  state: z.enum(['pending', 'on_hold', 'released', 'rejected']),
+  note: z.string().min(3).max(2000),
+});
+
+const LOT_QUALITY_WORDS: Record<string, string> = { pending: 'awaiting quality', on_hold: 'on hold', released: 'released', rejected: 'rejected' };
+
+// Until inspections land, this is how QC records a disposition; the
+// inspection module will call the same transition from its results.
+export const setLotQuality = onCall({ region: REGION }, async (request) => {
+  const caller = callerOf(request);
+  requireRole(caller, QUALITY, 'Releasing lots');
+  const parsed = lotQualityInput.safeParse(request.data);
+  if (!parsed.success) validationFailure(parsed.error);
+  const input = parsed.data;
+
+  const { lots } = await graphql<{ lots: { id: string; qualityState: string; run: { number: string } }[] }>(
+    `query ($number: String!) { lots(where: { number: { eq: $number } }, limit: 1) { id qualityState run { number } } }`,
+    { number: input.number },
+  );
+  const lot = lots[0];
+  if (!lot) throw failure('not_found', `No lot ${input.number}.`);
+  await graphql(`mutation ($id: UUID!, $state: LotQualityState!) { lot_update(id: $id, data: { qualityState: $state }) }`, { id: lot.id, state: input.state });
+
+  const words = LOT_QUALITY_WORDS[input.state] ?? input.state;
+  await audit(caller.uid, 'lot.quality', 'lot', input.number, { qualityState: lot.qualityState }, { qualityState: input.state, note: input.note });
+  await emit('lot.quality_changed', 'lot', input.number, { from: lot.qualityState, to: input.state, run: lot.run.number });
+  await timeline('lot', input.number, 'status_changed', caller.uid, `${words[0]!.toUpperCase()}${words.slice(1)}: ${input.note}`);
+  await timeline('production_run', lot.run.number, 'status_changed', caller.uid, `${input.number} ${words}: ${input.note}`);
+  return { number: input.number, qualityState: input.state };
 });

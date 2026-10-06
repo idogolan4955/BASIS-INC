@@ -276,6 +276,58 @@ export interface PurchaseOrderCosts {
   }[];
 }
 
+export const HANDLING_UNIT_KINDS = ['roll', 'carton', 'pallet', 'container_load'] as const;
+export type HandlingUnitKind = (typeof HANDLING_UNIT_KINDS)[number];
+export const HANDLING_UNIT_KIND_LABEL: Record<HandlingUnitKind, string> = { roll: 'Roll', carton: 'Carton', pallet: 'Pallet', container_load: 'Container load' };
+
+export interface PutUpFacts {
+  readonly rollLengthM: number;
+  readonly rollsPerCarton: number | null;
+  readonly cartonLengthCm: number | null;
+  readonly cartonWidthCm: number | null;
+  readonly cartonHeightCm: number | null;
+}
+
+export interface RollView {
+  readonly id: string;
+  readonly number: string;
+  readonly rollNo: number;
+  /** Fixed-point thousandths of a metre. */
+  readonly measuredLength: string;
+  readonly usableWidthCm: number | null;
+  readonly weightG: number | null;
+  readonly grade: string;
+  readonly defectPoints: number | null;
+  /** The carton or pallet the roll sits in, once packed. */
+  readonly packedIn: string | null;
+}
+
+export interface HandlingUnitContentView {
+  readonly rollNumber: string | null;
+  readonly lotNumber: string;
+  readonly skuCode: string;
+  readonly quantity: string;
+}
+
+export interface HandlingUnitView {
+  readonly id: string;
+  readonly number: string;
+  readonly kind: HandlingUnitKind;
+  readonly marks: string;
+  readonly parentNumber: string | null;
+  readonly lengthCm: number | null;
+  readonly widthCm: number | null;
+  readonly heightCm: number | null;
+  readonly grossWeightG: number | null;
+  readonly netWeightG: number | null;
+  readonly packedOn: LocalDate | null;
+  readonly contents: readonly HandlingUnitContentView[];
+  /** Metres inside, fixed-point. */
+  readonly quantity: string;
+  /** Thousandths of a cubic metre, from the dimensions. */
+  readonly cbmMilli: number | null;
+}
+
 export interface MilestoneRecord extends MilestoneFacts {
   readonly id: string;
   readonly name: string;
@@ -300,6 +352,8 @@ export interface RunLineView {
   readonly plannedQuantity: string;
   readonly producedQuantity: string;
   readonly uom: string;
+  readonly rollTracking: boolean;
+  readonly putUp: PutUpFacts | null;
 }
 
 export interface RunSummary {
@@ -325,10 +379,31 @@ export interface LotView {
   readonly id: string;
   readonly number: string;
   readonly skuCode: string;
+  readonly productName: string;
+  readonly variantName: string;
+  readonly shadeCode: string;
+  readonly shadeName: string;
+  readonly shadeHex: string;
+  readonly rollTracking: boolean;
+  readonly putUp: PutUpFacts | null;
   readonly millLotRef: string;
+  /** What the mill reported, fixed-point metres. */
   readonly producedQuantity: string;
   readonly producedOn: LocalDate | null;
   readonly qualityState: LotQualityState;
+  readonly rollCount: number;
+  readonly packedRollCount: number;
+  /** Sum of the rolls' measured lengths. */
+  readonly measuredQuantity: string;
+  /** Metres already inside a carton or pallet. */
+  readonly packedQuantity: string;
+  readonly rolls: readonly RollView[];
+}
+
+export interface LotDetail extends LotView {
+  readonly runNumber: string;
+  readonly purchaseOrderNumber: string;
+  readonly supplierName: string;
 }
 
 export interface RunDetail extends RunSummary {
@@ -337,6 +412,9 @@ export interface RunDetail extends RunSummary {
   readonly notes: string;
   readonly lines: readonly RunLineView[];
   readonly lots: readonly LotView[];
+  readonly handlingUnits: readonly HandlingUnitView[];
+  /** Released and packed, fixed-point metres: the run's ready-to-ship quantity. */
+  readonly availableToShip: string;
 }
 
 export interface ProcessTemplateView {
@@ -347,4 +425,47 @@ export interface ProcessTemplateView {
   readonly supplierName: string;
   readonly isDefault: boolean;
   readonly steps: readonly TemplateStep[];
+}
+
+// ---------------------------------------------------------------- lots and packing
+
+/** Thousandths of a cubic metre from carton dimensions in centimetres; null until all three are known. */
+export function cubicMetresMilli(lengthCm: number | null, widthCm: number | null, heightCm: number | null): number | null {
+  if (!lengthCm || !widthCm || !heightCm) return null;
+  return Math.round((lengthCm * widthCm * heightCm) / 1000);
+}
+
+/** The quantities a lot's rolls and loose packed contents add up to. */
+export function lotQuantities(
+  rolls: readonly { readonly measuredLength: string; readonly packedIn: string | null }[],
+  loosePacked: readonly string[] = [],
+): { rollCount: number; packedRollCount: number; measuredQuantity: string; packedQuantity: string } {
+  let measured = 0n;
+  let packed = 0n;
+  let packedRolls = 0;
+  for (const roll of rolls) {
+    measured += BigInt(roll.measuredLength);
+    if (roll.packedIn) {
+      packed += BigInt(roll.measuredLength);
+      packedRolls += 1;
+    }
+  }
+  for (const quantity of loosePacked) packed += BigInt(quantity);
+  return { rollCount: rolls.length, packedRollCount: packedRolls, measuredQuantity: measured.toString(), packedQuantity: packed.toString() };
+}
+
+/**
+ * "Ready to ship" is a quantity, never a label: what is released by quality
+ * and already packed.
+ */
+export function availableToShip(lots: readonly { readonly qualityState: LotQualityState; readonly packedQuantity: string }[]): string {
+  return lots
+    .filter((lot) => lot.qualityState === 'released')
+    .reduce((total, lot) => total + BigInt(lot.packedQuantity), 0n)
+    .toString();
+}
+
+/** Roll numbers hang off the lot: LOT-26-0001-01, -02, ... */
+export function rollNumber(lotNumber: string, rollNo: number): string {
+  return `${lotNumber}-${String(rollNo).padStart(2, '0')}`;
 }

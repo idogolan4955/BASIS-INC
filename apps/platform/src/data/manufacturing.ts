@@ -1,15 +1,25 @@
 import {
   FUNCTION_NAMES,
+  availableToShip,
+  cubicMetresMilli,
   isLocalDate,
+  lotQuantities,
   runProgress,
+  type HandlingUnitContentView,
+  type HandlingUnitKind,
+  type HandlingUnitView,
   type Health,
   type LocalDate,
+  type LotDetail,
+  type LotQualityState,
+  type LotView,
   type MilestoneRecord,
   type MilestoneState,
   type ProcessTemplateView,
   type PurchaseOrderCosts,
   type PurchaseOrderDetail,
   type PurchaseOrderSummary,
+  type PutUpFacts,
   type RunDetail,
   type RunSummary,
 } from '@basis/shared';
@@ -67,6 +77,93 @@ function milestoneRecord(row: MilestoneRow): MilestoneRecord {
     actualEnd: asDate(row.actualEnd),
     delayReason: row.delayReason ?? '',
     note: row.note ?? '',
+  };
+}
+
+type PutUpRow = { rollLengthM: number; rollsPerCarton?: number | null; cartonLengthCm?: number | null; cartonWidthCm?: number | null; cartonHeightCm?: number | null } | null | undefined;
+const putUpFacts = (row: PutUpRow): PutUpFacts | null =>
+  row ? { rollLengthM: row.rollLengthM, rollsPerCarton: row.rollsPerCarton ?? null, cartonLengthCm: row.cartonLengthCm ?? null, cartonWidthCm: row.cartonWidthCm ?? null, cartonHeightCm: row.cartonHeightCm ?? null } : null;
+
+type LotRow = {
+  id: string;
+  number: string;
+  millLotRef?: string | null;
+  producedQuantity: string;
+  producedOn?: string | null;
+  qualityState: LotQualityState;
+  sku: { code: string; rollTracking: boolean; product: { name: string }; variant: { name: string }; shade: { code: string; name: string; hex?: string | null }; putUp: NonNullable<PutUpRow> };
+  rolls_on_lot: { id: string; number: string; rollNo: number; measuredLength: string; usableWidthCm?: number | null; weightG?: number | null; grade?: string | null; defectPoints?: number | null; handlingUnitContents_on_roll: { handlingUnit: { number: string } }[] }[];
+  handlingUnitContents_on_lot: { quantity?: string | null; handlingUnit: { number: string } }[];
+};
+
+function lotView(row: LotRow): LotView {
+  const rolls = row.rolls_on_lot.map((roll) => ({
+    id: roll.id,
+    number: roll.number,
+    rollNo: roll.rollNo,
+    measuredLength: roll.measuredLength,
+    usableWidthCm: roll.usableWidthCm ?? null,
+    weightG: roll.weightG ?? null,
+    grade: roll.grade ?? '',
+    defectPoints: roll.defectPoints ?? null,
+    packedIn: roll.handlingUnitContents_on_roll[0]?.handlingUnit.number ?? null,
+  }));
+  return {
+    id: row.id,
+    number: row.number,
+    skuCode: row.sku.code,
+    productName: row.sku.product.name,
+    variantName: row.sku.variant.name,
+    shadeCode: row.sku.shade.code,
+    shadeName: row.sku.shade.name,
+    shadeHex: row.sku.shade.hex ?? '#CCCCCC',
+    rollTracking: row.sku.rollTracking,
+    putUp: putUpFacts(row.sku.putUp),
+    millLotRef: row.millLotRef ?? '',
+    producedQuantity: row.producedQuantity,
+    producedOn: asDate(row.producedOn),
+    qualityState: row.qualityState,
+    ...lotQuantities(rolls, row.handlingUnitContents_on_lot.map((content) => content.quantity ?? '0')),
+    rolls,
+  };
+}
+
+type HandlingUnitRow = {
+  id: string;
+  number: string;
+  kind: HandlingUnitKind;
+  marks?: string | null;
+  lengthCm?: number | null;
+  widthCm?: number | null;
+  heightCm?: number | null;
+  grossWeightG?: number | null;
+  netWeightG?: number | null;
+  packedOn?: string | null;
+  parent?: { number: string } | null;
+  handlingUnitContents_on_handlingUnit: { quantity?: string | null; roll?: { number: string; measuredLength: string; lot: { number: string; sku: { code: string } } } | null; lot?: { number: string; sku: { code: string } } | null }[];
+};
+
+function handlingUnitView(row: HandlingUnitRow): HandlingUnitView {
+  const contents: HandlingUnitContentView[] = [];
+  for (const content of row.handlingUnitContents_on_handlingUnit) {
+    if (content.roll) contents.push({ rollNumber: content.roll.number, lotNumber: content.roll.lot.number, skuCode: content.roll.lot.sku.code, quantity: content.roll.measuredLength });
+    else if (content.lot) contents.push({ rollNumber: null, lotNumber: content.lot.number, skuCode: content.lot.sku.code, quantity: content.quantity ?? '0' });
+  }
+  return {
+    id: row.id,
+    number: row.number,
+    kind: row.kind,
+    marks: row.marks ?? '',
+    parentNumber: row.parent?.number ?? null,
+    lengthCm: row.lengthCm ?? null,
+    widthCm: row.widthCm ?? null,
+    heightCm: row.heightCm ?? null,
+    grossWeightG: row.grossWeightG ?? null,
+    netWeightG: row.netWeightG ?? null,
+    packedOn: asDate(row.packedOn),
+    contents,
+    quantity: sum(contents.map((content) => content.quantity)),
+    cbmMilli: cubicMetresMilli(row.lengthCm ?? null, row.widthCm ?? null, row.heightCm ?? null),
   };
 }
 
@@ -239,7 +336,10 @@ export function useProductionRun(number: string) {
         plannedQuantity: line.plannedQuantity,
         producedQuantity: line.producedQuantity,
         uom: line.purchaseOrderLine.uom,
+        rollTracking: line.purchaseOrderLine.sku.rollTracking,
+        putUp: putUpFacts(line.purchaseOrderLine.sku.putUp),
       }));
+      const lots = run.lots_on_run.map(lotView);
       return {
         id: run.id,
         number: run.number,
@@ -261,15 +361,28 @@ export function useProductionRun(number: string) {
         progress: runProgress(milestones),
         milestones,
         lines,
-        lots: run.lots_on_run.map((lot) => ({
-          id: lot.id,
-          number: lot.number,
-          skuCode: lot.sku.code,
-          millLotRef: lot.millLotRef ?? '',
-          producedQuantity: lot.producedQuantity,
-          producedOn: asDate(lot.producedOn),
-          qualityState: lot.qualityState,
-        })),
+        lots,
+        handlingUnits: run.handlingUnits_on_run.map(handlingUnitView),
+        availableToShip: availableToShip(lots),
+      };
+    },
+  });
+}
+
+export function useLot(number: string) {
+  return useQuery({
+    queryKey: ['manufacturing', 'lot', number],
+    queryFn: async (): Promise<LotDetail | null> => {
+      if (isSample) return (await sample()).lot(number);
+      const { dc, sdk } = await live();
+      const { data } = await sdk.getLot(dc, { number });
+      const lot = data.lots[0];
+      if (!lot) return null;
+      return {
+        ...lotView(lot),
+        runNumber: lot.run.number,
+        purchaseOrderNumber: lot.run.purchaseOrder.number,
+        supplierName: lot.run.purchaseOrder.supplier.tradingName || lot.run.purchaseOrder.supplier.legalName,
       };
     },
   });
@@ -392,6 +505,68 @@ export function useUpdateMilestone() {
         return;
       }
       await callFunction(FUNCTION_NAMES.updateMilestone, input);
+    },
+    onSuccess: () => invalidateManufacturing(client),
+  });
+}
+
+export interface NewLotInput {
+  runNumber: string;
+  skuCode: string;
+  millLotRef?: string;
+  producedOn?: string;
+  producedQuantity?: string;
+  rolls?: { measuredLength: string; usableWidthCm?: number; weightG?: number; grade?: string; defectPoints?: number }[];
+}
+
+export function useRecordLot() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: NewLotInput): Promise<string> => {
+      if (isSample) return (await sample()).recordLot(input);
+      const result = await callFunction<NewLotInput, { number: string }>(FUNCTION_NAMES.recordLot, input);
+      return result.number;
+    },
+    onSuccess: () => invalidateManufacturing(client),
+  });
+}
+
+export interface PackInput {
+  runNumber: string;
+  kind: 'carton' | 'pallet';
+  rollNumbers: string[];
+  loose?: { lotNumber: string; quantity: string }[];
+  marks?: string;
+  lengthCm?: number;
+  widthCm?: number;
+  heightCm?: number;
+  grossWeightG?: number;
+  netWeightG?: number;
+  packedOn?: string;
+  parentNumber?: string;
+}
+
+export function usePackHandlingUnit() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: PackInput): Promise<string> => {
+      if (isSample) return (await sample()).pack(input);
+      const result = await callFunction<PackInput, { number: string }>(FUNCTION_NAMES.packHandlingUnit, input);
+      return result.number;
+    },
+    onSuccess: () => invalidateManufacturing(client),
+  });
+}
+
+export function useSetLotQuality() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { number: string; state: LotQualityState; note: string }): Promise<void> => {
+      if (isSample) {
+        await (await sample()).setLotQuality(input);
+        return;
+      }
+      await callFunction(FUNCTION_NAMES.setLotQuality, input);
     },
     onSuccess: () => invalidateManufacturing(client),
   });

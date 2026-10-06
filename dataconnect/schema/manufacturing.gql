@@ -46,6 +46,13 @@ enum LotQualityState {
   rejected
 }
 
+enum HandlingUnitKind {
+  roll
+  carton
+  pallet
+  container_load
+}
+
 type PurchaseOrder @table {
   number: String! @col(dataType: "varchar(16)") @unique
   legalEntity: LegalEntity
@@ -167,4 +174,43 @@ type Lot @table {
   producedOn: Date
   qualityState: LotQualityState!
   createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# One physical roll wound from a lot. Where it is follows from its packing
+# and, later, its stock movements; nothing here is typed in as a status.
+type Roll @table {
+  lot: Lot!
+  number: String! @col(dataType: "varchar(24)") @unique
+  rollNo: Int!
+  # Fixed-point thousandths of a metre.
+  measuredLength: Int64!
+  usableWidthCm: Int
+  weightG: Int
+  grade: String @col(dataType: "varchar(8)")
+  defectPoints: Int
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# A physical package: a carton of rolls, a pallet of cartons.
+type HandlingUnit @table {
+  number: String! @col(dataType: "varchar(16)") @unique
+  kind: HandlingUnitKind!
+  run: ProductionRun
+  parent: HandlingUnit
+  marks: String @col(dataType: "varchar(120)")
+  lengthCm: Int
+  widthCm: Int
+  heightCm: Int
+  grossWeightG: Int
+  netWeightG: Int
+  packedOn: Date
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# What a package holds: a roll, or a quantity of a lot that is not tracked by roll.
+type HandlingUnitContent @table {
+  handlingUnit: HandlingUnit!
+  roll: Roll
+  lot: Lot
+  quantity: Int64
 }

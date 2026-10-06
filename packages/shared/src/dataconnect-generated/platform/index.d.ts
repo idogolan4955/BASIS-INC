@@ -59,6 +59,13 @@ export enum LocationType {
   customer_site = "customer_site",
 };
 
+export enum LotQualityState {
+  pending = "pending",
+  on_hold = "on_hold",
+  released = "released",
+  rejected = "rejected",
+};
+
 export enum PrincipalType {
   staff = "staff",
   supplier = "supplier",
@@ -336,6 +343,75 @@ export interface GetCompanyVariables {
   id: UUIDString;
 }
 
+export interface GetLotData {
+  lots: ({
+    id: UUIDString;
+    number: string;
+    millLotRef?: string | null;
+    producedQuantity: Int64String;
+    producedOn?: DateString | null;
+    qualityState: LotQualityState;
+    createdAt: TimestampString;
+    sku: {
+      code: string;
+      rollTracking: boolean;
+      product: {
+        name: string;
+      };
+      variant: {
+        name: string;
+      };
+      shade: {
+        code: string;
+        name: string;
+        hex?: string | null;
+      } & Shade_Key;
+      putUp: {
+        rollLengthM: number;
+        rollsPerCarton?: number | null;
+        cartonLengthCm?: number | null;
+        cartonWidthCm?: number | null;
+        cartonHeightCm?: number | null;
+      };
+    } & Sku_Key;
+    rolls_on_lot: ({
+      id: UUIDString;
+      number: string;
+      rollNo: number;
+      measuredLength: Int64String;
+      usableWidthCm?: number | null;
+      weightG?: number | null;
+      grade?: string | null;
+      defectPoints?: number | null;
+      handlingUnitContents_on_roll: ({
+        handlingUnit: {
+          number: string;
+        };
+      })[];
+    } & Roll_Key)[];
+    handlingUnitContents_on_lot: ({
+      quantity?: Int64String | null;
+      handlingUnit: {
+        number: string;
+      };
+    })[];
+    run: {
+      number: string;
+      purchaseOrder: {
+        number: string;
+        supplier: {
+          tradingName?: string | null;
+          legalName: string;
+        };
+      };
+    };
+  } & Lot_Key)[];
+}
+
+export interface GetLotVariables {
+  number: string;
+}
+
 export interface GetMeData {
   user?: {
     uid: string;
@@ -454,6 +530,7 @@ export interface GetProductionRunData {
         uom: string;
         sku: {
           code: string;
+          rollTracking: boolean;
           product: {
             name: string;
           };
@@ -464,6 +541,13 @@ export interface GetProductionRunData {
           } & Shade_Key;
           variant: {
             name: string;
+          };
+          putUp: {
+            rollLengthM: number;
+            rollsPerCarton?: number | null;
+            cartonLengthCm?: number | null;
+            cartonWidthCm?: number | null;
+            cartonHeightCm?: number | null;
           };
         } & Sku_Key;
       } & PurchaseOrderLine_Key;
@@ -492,10 +576,85 @@ export interface GetProductionRunData {
       producedQuantity: Int64String;
       producedOn?: DateString | null;
       qualityState: LotQualityState;
+      createdAt: TimestampString;
       sku: {
         code: string;
+        rollTracking: boolean;
+        product: {
+          name: string;
+        };
+        variant: {
+          name: string;
+        };
+        shade: {
+          code: string;
+          name: string;
+          hex?: string | null;
+        } & Shade_Key;
+        putUp: {
+          rollLengthM: number;
+          rollsPerCarton?: number | null;
+          cartonLengthCm?: number | null;
+          cartonWidthCm?: number | null;
+          cartonHeightCm?: number | null;
+        };
       } & Sku_Key;
+      rolls_on_lot: ({
+        id: UUIDString;
+        number: string;
+        rollNo: number;
+        measuredLength: Int64String;
+        usableWidthCm?: number | null;
+        weightG?: number | null;
+        grade?: string | null;
+        defectPoints?: number | null;
+        handlingUnitContents_on_roll: ({
+          handlingUnit: {
+            number: string;
+          };
+        })[];
+      } & Roll_Key)[];
+      handlingUnitContents_on_lot: ({
+        quantity?: Int64String | null;
+        handlingUnit: {
+          number: string;
+        };
+      })[];
     } & Lot_Key)[];
+    handlingUnits_on_run: ({
+      id: UUIDString;
+      number: string;
+      kind: HandlingUnitKind;
+      marks?: string | null;
+      lengthCm?: number | null;
+      widthCm?: number | null;
+      heightCm?: number | null;
+      grossWeightG?: number | null;
+      netWeightG?: number | null;
+      packedOn?: DateString | null;
+      parent?: {
+        number: string;
+      };
+      handlingUnitContents_on_handlingUnit: ({
+        quantity?: Int64String | null;
+        roll?: {
+          number: string;
+          measuredLength: Int64String;
+          lot: {
+            number: string;
+            sku: {
+              code: string;
+            } & Sku_Key;
+          };
+        };
+        lot?: {
+          number: string;
+          sku: {
+            code: string;
+          } & Sku_Key;
+        };
+      })[];
+    } & HandlingUnit_Key)[];
   } & ProductionRun_Key)[];
 }
 
@@ -685,6 +844,16 @@ export interface GetSkuSourcingVariables {
 
 export interface GetSkuVariables {
   code: string;
+}
+
+export interface HandlingUnitContent_Key {
+  id: UUIDString;
+  __typename?: 'HandlingUnitContent_Key';
+}
+
+export interface HandlingUnit_Key {
+  id: UUIDString;
+  __typename?: 'HandlingUnit_Key';
 }
 
 export interface Incoterm_Key {
@@ -1410,6 +1579,11 @@ export interface RolePermission_Key {
   __typename?: 'RolePermission_Key';
 }
 
+export interface Roll_Key {
+  id: UUIDString;
+  __typename?: 'Roll_Key';
+}
+
 export interface SetSkuPublicData {
   sku_update?: Sku_Key | null;
 }
@@ -1978,6 +2152,18 @@ export const getProductionRunRef: GetProductionRunRef;
 
 export function getProductionRun(vars: GetProductionRunVariables, options?: ExecuteQueryOptions): QueryPromise<GetProductionRunData, GetProductionRunVariables>;
 export function getProductionRun(dc: DataConnect, vars: GetProductionRunVariables, options?: ExecuteQueryOptions): QueryPromise<GetProductionRunData, GetProductionRunVariables>;
+
+interface GetLotRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetLotVariables): QueryRef<GetLotData, GetLotVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetLotVariables): QueryRef<GetLotData, GetLotVariables>;
+  operationName: string;
+}
+export const getLotRef: GetLotRef;
+
+export function getLot(vars: GetLotVariables, options?: ExecuteQueryOptions): QueryPromise<GetLotData, GetLotVariables>;
+export function getLot(dc: DataConnect, vars: GetLotVariables, options?: ExecuteQueryOptions): QueryPromise<GetLotData, GetLotVariables>;
 
 interface ListProcessTemplatesRef {
   /* Allow users to create refs without passing in DataConnect */

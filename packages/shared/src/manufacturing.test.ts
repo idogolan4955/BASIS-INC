@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { localDate } from './local-date';
-import { planMilestones, propagateForecasts, runForecastEnd, runHealth, runProgress, runStateFrom, type ChainMilestone, type MilestoneFacts, type TemplateStep } from './manufacturing';
+import { availableToShip, cubicMetresMilli, lotQuantities, planMilestones, propagateForecasts, rollNumber, runForecastEnd, runHealth, runProgress, runStateFrom, type ChainMilestone, type MilestoneFacts, type TemplateStep } from './manufacturing';
 
 const steps: TemplateStep[] = [
   { key: 'yarn', name: 'Yarn', category: 'materials', sequence: 1, durationDays: 7, dependsOnKey: null, gate: 'none' },
@@ -110,5 +110,39 @@ describe('forecast propagation', () => {
   it('keeps the forecast on the step being worked', () => {
     const result = propagateForecasts(chain([{ state: 'in_progress', forecastEnd: localDate('2026-10-12') }]));
     expect(result.get('yarn')).toBe('2026-10-12');
+  });
+});
+
+describe('lots and packing', () => {
+  it('adds up measured and packed metres', () => {
+    const result = lotQuantities(
+      [
+        { measuredLength: '50000', packedIn: 'CTN-26-0001' },
+        { measuredLength: '49500', packedIn: 'CTN-26-0001' },
+        { measuredLength: '50200', packedIn: null },
+      ],
+      ['120000'],
+    );
+    expect(result).toEqual({ rollCount: 3, packedRollCount: 2, measuredQuantity: '149700', packedQuantity: '219500' });
+  });
+
+  it('counts as available to ship only what is released and packed', () => {
+    expect(
+      availableToShip([
+        { qualityState: 'released', packedQuantity: '300000' },
+        { qualityState: 'pending', packedQuantity: '300000' },
+        { qualityState: 'released', packedQuantity: '0' },
+        { qualityState: 'on_hold', packedQuantity: '50000' },
+      ]),
+    ).toBe('300000');
+  });
+
+  it('derives cubic metres from carton dimensions', () => {
+    expect(cubicMetresMilli(60, 40, 30)).toBe(72);
+    expect(cubicMetresMilli(60, null, 30)).toBeNull();
+  });
+
+  it('numbers rolls under their lot', () => {
+    expect(rollNumber('LOT-26-0007', 3)).toBe('LOT-26-0007-03');
   });
 });
