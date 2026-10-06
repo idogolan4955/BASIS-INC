@@ -11,6 +11,7 @@ import { ProcessTemplates, ProductionRuns, PurchaseOrders } from './pages/manufa
 import { PurchaseOrderSheet } from './pages/manufacturing/PurchaseOrderSheet';
 import { RunSheet } from './pages/manufacturing/RunSheet';
 import { LotSheet } from './pages/inventory/LotSheet';
+import { Documents } from './pages/documents/Documents';
 import { Tasks } from './pages/operations/Tasks';
 import { Companies } from './pages/parties/Companies';
 import { CompanySheet } from './pages/parties/CompanySheet';
@@ -42,15 +43,19 @@ const router = createBrowserRouter([
       { path: 'manufacturing/purchase-orders/:number', element: <PurchaseOrderSheet tab="overview" /> },
       { path: 'manufacturing/purchase-orders/:number/production', element: <PurchaseOrderSheet tab="production" /> },
       { path: 'manufacturing/purchase-orders/:number/payments', element: <PurchaseOrderSheet tab="payments" /> },
+      { path: 'manufacturing/purchase-orders/:number/documents', element: <PurchaseOrderSheet tab="documents" /> },
       { path: 'manufacturing/purchase-orders/:number/timeline', element: <PurchaseOrderSheet tab="timeline" /> },
       { path: 'manufacturing/runs', element: <ProductionRuns /> },
       { path: 'manufacturing/runs/:number', element: <RunSheet tab="milestones" /> },
       { path: 'manufacturing/runs/:number/lots', element: <RunSheet tab="lots" /> },
       { path: 'manufacturing/runs/:number/packing', element: <RunSheet tab="packing" /> },
+      { path: 'manufacturing/runs/:number/documents', element: <RunSheet tab="documents" /> },
       { path: 'manufacturing/runs/:number/timeline', element: <RunSheet tab="timeline" /> },
       { path: 'manufacturing/templates', element: <ProcessTemplates /> },
       { path: 'inventory/lots/:number', element: <LotSheet tab="rolls" /> },
+      { path: 'inventory/lots/:number/documents', element: <LotSheet tab="documents" /> },
       { path: 'inventory/lots/:number/timeline', element: <LotSheet tab="timeline" /> },
+      { path: 'documents', element: <Documents /> },
       { path: 'products', element: <ProductsIndex /> },
       { path: 'products/skus', element: <SkuLedger /> },
       { path: 'products/skus/:code', element: <SkuSheet tab="overview" /> },

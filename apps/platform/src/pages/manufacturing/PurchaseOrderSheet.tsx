@@ -21,6 +21,7 @@ import { Button, Dialog, LabelHeader, Ledger, Panel, ShadeDot, SheetTabs, Status
 import { useState, type FormEvent } from 'react';
 import { Link, NavLink, useNavigate, useParams } from 'react-router';
 import { useCancelPurchaseOrder, useConfirmPurchaseOrder, useCreateProductionRun, useIssuePurchaseOrder, usePurchaseOrder, usePurchaseOrderCosts } from '../../data/manufacturing';
+import { DocumentsPanel } from '../../components/DocumentsPanel';
 import { isSample } from '../../data/source';
 import { useRecordNote, useTimeline } from '../../data/timeline';
 import { useDocument } from '../../lib/documents';
@@ -268,7 +269,7 @@ function PoTimeline({ number }: { number: string }) {
   );
 }
 
-export function PurchaseOrderSheet({ tab }: { tab: 'overview' | 'production' | 'payments' | 'timeline' }) {
+export function PurchaseOrderSheet({ tab }: { tab: 'overview' | 'production' | 'payments' | 'documents' | 'timeline' }) {
   const session = useRequiredSession();
   const { number = '' } = useParams();
   const po = usePurchaseOrder(number);
@@ -321,9 +322,14 @@ export function PurchaseOrderSheet({ tab }: { tab: 'overview' | 'production' | '
         actions={
           <>
             {costs && !isSample && data.state !== 'draft' && (
-              <Button onClick={() => pdf.open('purchase-order', data.number)} busy={pdf.busy === 'purchase-order'} busyLabel="Rendering">
-                PDF
-              </Button>
+              <>
+                <Button onClick={() => pdf.open('purchase-order', data.number)} busy={pdf.busy === 'purchase-order'} busyLabel="Rendering">
+                  PDF
+                </Button>
+                <Button onClick={() => pdf.share('purchase-order', data.number, `Purchase order ${data.number} from BASIS INC. for ${data.supplierName}`)} busy={pdf.busy === 'share:purchase-order'} busyLabel="Sharing">
+                  WhatsApp
+                </Button>
+              </>
             )}
             {manage && (
             <>
@@ -364,6 +370,9 @@ export function PurchaseOrderSheet({ tab }: { tab: 'overview' | 'production' | '
             Payments
           </NavLink>
         )}
+        <NavLink to={`${base}/documents`} className={({ isActive }) => sheetTabClass(isActive)}>
+          Documents
+        </NavLink>
         <NavLink to={`${base}/timeline`} className={({ isActive }) => sheetTabClass(isActive)}>
           Timeline
         </NavLink>
@@ -390,6 +399,15 @@ export function PurchaseOrderSheet({ tab }: { tab: 'overview' | 'production' | '
         )}
         {tab === 'production' && <Production po={data} manage={manage} onOpenRun={() => setDialog('run')} />}
         {tab === 'payments' && (costs ? <Payments po={data} /> : <NotFound what="page" />)}
+        {tab === 'documents' && (
+          <DocumentsPanel
+            entityType="purchase_order"
+            entityId={data.number}
+            generated={[{ kind: 'purchase-order', label: 'purchase order', available: costs && data.state !== 'draft' }]}
+            canFile={manage}
+            shareText={`Purchase order ${data.number} from BASIS INC. for ${data.supplierName}`}
+          />
+        )}
         {tab === 'timeline' && <PoTimeline number={data.number} />}
       </div>
       {manage && (

@@ -1,7 +1,8 @@
-import { HANDLING_UNIT_KIND_LABEL, formatLocalDate, formatQuantity, quantityFromStored, todayIn, type RunDetail } from '@basis/shared';
+import { HANDLING_UNIT_KIND_LABEL, formatLocalDate, formatQuantity, metresNumber, quantityFromStored, todayIn, type ExportRow, type RunDetail } from '@basis/shared';
 import { Button, CheckField, Dialog, Ledger, Panel, SelectField, Td, TextField, Th, Tr, cn } from '@basis/ui';
 import { useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
+import { ExportMenu } from '../../components/ExportMenu';
 import { usePackHandlingUnit } from '../../data/manufacturing';
 import { isSample } from '../../data/source';
 import { useDocument } from '../../lib/documents';
@@ -138,6 +139,27 @@ export function PackDialog({ run, open, onClose }: { run: RunDetail; open: boole
   );
 }
 
+/** The cartons as export rows, for the CSV built in the browser. */
+function unitRows(run: RunDetail): ExportRow[] {
+  return run.handlingUnits.map((unit) => ({
+    number: unit.number,
+    run: run.number,
+    kind: unit.kind,
+    marks: unit.marks,
+    lots: [...new Set(unit.contents.map((content) => content.lotNumber))].join(', '),
+    skus: [...new Set(unit.contents.map((content) => content.skuCode))].join(', '),
+    rolls: unit.contents.filter((content) => content.rollNumber).length,
+    quantityM: metresNumber(unit.quantity),
+    lengthCm: unit.lengthCm,
+    widthCm: unit.widthCm,
+    heightCm: unit.heightCm,
+    cbm: unit.cbmMilli === null ? null : unit.cbmMilli / 1000,
+    grossKg: unit.grossWeightG === null ? null : unit.grossWeightG / 1000,
+    netKg: unit.netWeightG === null ? null : unit.netWeightG / 1000,
+    packedOn: unit.packedOn,
+  }));
+}
+
 export function PackingPanel({ run, manage }: { run: RunDetail; manage: boolean }) {
   const [packing, setPacking] = useState(false);
   const pdf = useDocument();
@@ -161,10 +183,16 @@ export function PackingPanel({ run, manage }: { run: RunDetail; manage: boolean 
                 {pdf.error}
               </span>
             )}
+            {units.length > 0 && <ExportMenu ledger="handling-units" scope={{ run: run.number }} rows={unitRows(run)} />}
             {!isSample && units.length > 0 && (
-              <Button size="sm" onClick={() => pdf.open('packing-list', run.number)} busy={pdf.busy === 'packing-list'} busyLabel="Rendering">
-                Packing list
-              </Button>
+              <>
+                <Button size="sm" onClick={() => pdf.open('packing-list', run.number)} busy={pdf.busy === 'packing-list'} busyLabel="Rendering">
+                  Packing list
+                </Button>
+                <Button size="sm" onClick={() => pdf.share('packing-list', run.number, `Packing list ${run.number} from BASIS INC.`)} busy={pdf.busy === 'share:packing-list'} busyLabel="Sharing">
+                  WhatsApp
+                </Button>
+              </>
             )}
             {manage && run.state !== 'cancelled' && (
               <Button size="sm" variant="primary" onClick={() => setPacking(true)} disabled={unpacked === 0}>

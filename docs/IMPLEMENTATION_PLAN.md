@@ -169,6 +169,16 @@ Depends on: Phase 2, P3.
 | Interface: PDF on the order sheet, Packing list on the run's packing tab, Roll labels on the lot sheet; the browser fetches with the session token and saves the file. Sample mode has no functions, so the actions are not shown there | A print view for sample mode, if the demo needs one |
 | The emulator seed now survives an Auth-emulator restart: the owner account is recreated under the uid the Data Connect record already carries | |
 
+#### Phase 4 progress, fourth slice (2026-10-06)
+
+| Done | Remaining |
+|---|---|
+| Filing: a generated document becomes a `Document` record linked to its record (`fileGeneratedDocument`; a purchase order is filed the moment it is issued). The bytes go to Storage under `documents/<entity>/<number>/` where Storage is reachable, with `storage.rules` opening purchase orders to cost roles and the rest to staff; without Storage the record points at the generator and the document is regenerated on open. Documents tab on the order, run and lot sheets; module 12 Documents lists everything by kind | Uploads of external documents (supplier invoices, certificates) once Storage runs locally (Java) and in production (Blaze); document requirements per shipment (P6) |
+| Sharing: every generated or filed document can be handed to WhatsApp — on a phone through the share sheet with the file itself; on a desktop the file is saved and a WhatsApp message opens naming it | WhatsApp Business API delivery with message history (Growth) |
+| Exports at `/api/export/<ledger>.csv|xlsx` with `run`, `po` and `lot` scopes: purchase orders, order lines, production runs, lots, rolls, cartons and pallets, SKUs. One ledger definition in `packages/shared/src/exports.ts` drives the function (ExcelJS for XLSX; CSV with BOM, CRLF and formula guarding) and the sample interface (CSV built in the browser). Cost columns leave only with cost roles. Export menus on the order, run, SKU ledgers, on the packing tab and the lot's rolls | Exports for the modules still to come; a scheduled accounting export (P9) |
+| Phones have a menu: the bottom bar carries Gateway, Attention, Search and Menu; Menu opens the rail as a drawer | |
+| Seed: number sequences are never reset by a re-seed | |
+
 ### P5 — Quality (L)
 
 - Inspection templates and sampling rules; inspections for lab dip, inline, pre-shipment, receiving.

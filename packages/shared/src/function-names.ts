@@ -24,6 +24,8 @@ export const FUNCTION_NAMES = {
   packHandlingUnit: 'packHandlingUnit',
   /** Callable, QC and owner: a lot's quality state, with the reason. */
   setLotQuality: 'setLotQuality',
+  /** Callable: file a generated document (purchase order, packing list, labels) as a document record of its entity. */
+  fileGeneratedDocument: 'fileGeneratedDocument',
   /** Callable, owner and operations: run the alert rules now. */
   evaluateAlerts: 'evaluateAlerts',
   /** Scheduled: consume domain events, evaluate alert rules. */

@@ -1,8 +1,10 @@
-import { LOT_QUALITY_LABEL, LOT_QUALITY_STATES, LOT_QUALITY_TONE, formatLocalDate, formatQuantity, quantityFromStored, type LotDetail, type LotQualityState } from '@basis/shared';
+import { LOT_QUALITY_LABEL, LOT_QUALITY_STATES, LOT_QUALITY_TONE, formatLocalDate, formatQuantity, metresNumber, quantityFromStored, type LotDetail, type LotQualityState } from '@basis/shared';
 import { Button, Dialog, LabelHeader, Ledger, Panel, SelectField, ShadeDot, SheetTabs, StatusChip, Td, TextArea, Th, Timeline, Tr, sheetTabClass } from '@basis/ui';
 import { useState, type FormEvent } from 'react';
 import { Link, NavLink, useParams } from 'react-router';
 import { useLot, useSetLotQuality } from '../../data/manufacturing';
+import { DocumentsPanel } from '../../components/DocumentsPanel';
+import { ExportMenu } from '../../components/ExportMenu';
 import { isSample } from '../../data/source';
 import { useRecordNote, useTimeline } from '../../data/timeline';
 import { useDocument } from '../../lib/documents';
@@ -67,7 +69,7 @@ function LotTimeline({ number }: { number: string }) {
   );
 }
 
-export function LotSheet({ tab }: { tab: 'rolls' | 'timeline' }) {
+export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
   const session = useRequiredSession();
   const { number = '' } = useParams();
   const lot = useLot(number);
@@ -121,9 +123,14 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'timeline' }) {
         actions={
           <>
             {!isSample && data.rollCount > 0 && (
-              <Button onClick={() => pdf.open('roll-labels', data.number)} busy={pdf.busy === 'roll-labels'} busyLabel="Rendering">
-                Roll labels
-              </Button>
+              <>
+                <Button onClick={() => pdf.open('roll-labels', data.number)} busy={pdf.busy === 'roll-labels'} busyLabel="Rendering">
+                  Roll labels
+                </Button>
+                <Button onClick={() => pdf.share('roll-labels', data.number, `Roll labels ${data.number} from BASIS INC.`)} busy={pdf.busy === 'share:roll-labels'} busyLabel="Sharing">
+                  WhatsApp
+                </Button>
+              </>
             )}
             {quality && (
               <Button variant="primary" onClick={() => setEditing(true)}>
@@ -137,13 +144,29 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'timeline' }) {
         <NavLink to={base} end className={({ isActive }) => sheetTabClass(isActive)}>
           Rolls
         </NavLink>
+        <NavLink to={`${base}/documents`} className={({ isActive }) => sheetTabClass(isActive)}>
+          Documents
+        </NavLink>
         <NavLink to={`${base}/timeline`} className={({ isActive }) => sheetTabClass(isActive)}>
           Timeline
         </NavLink>
       </SheetTabs>
       <div className="flex flex-col gap-4 px-5 py-6 lg:px-8">
         {tab === 'rolls' && (
-          <Panel title="Rolls" count={data.rolls.length} flush>
+          <Panel
+            title="Rolls"
+            count={data.rolls.length}
+            flush
+            action={
+              data.rolls.length > 0 && (
+                <ExportMenu
+                  ledger="rolls"
+                  scope={{ lot: data.number }}
+                  rows={data.rolls.map((roll) => ({ number: roll.number, lot: data.number, sku: data.skuCode, shade: data.shadeName, lengthM: metresNumber(roll.measuredLength), usableWidthCm: roll.usableWidthCm, weightKg: roll.weightG === null ? null : roll.weightG / 1000, grade: roll.grade || null, defectPoints: roll.defectPoints, packedIn: roll.packedIn }))}
+                />
+              )
+            }
+          >
             {data.rolls.length === 0 ? (
               <p className="px-5 py-6 text-ink-muted">This lot is not tracked by roll.</p>
             ) : (
@@ -182,6 +205,15 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'timeline' }) {
               </Ledger>
             )}
           </Panel>
+        )}
+        {tab === 'documents' && (
+          <DocumentsPanel
+            entityType="lot"
+            entityId={data.number}
+            generated={[{ kind: 'roll-labels', label: 'roll labels', available: data.rollCount > 0 }]}
+            canFile={['owner', 'operations', 'purchasing', 'qc', 'logistics'].includes(session.role)}
+            shareText={`Roll labels ${data.number} from BASIS INC.`}
+          />
         )}
         {tab === 'timeline' && <LotTimeline number={data.number} />}
       </div>

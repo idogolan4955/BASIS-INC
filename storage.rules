@@ -2,6 +2,27 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
+    function role() {
+      return request.auth != null ? request.auth.token.role : null;
+    }
+    function staff() {
+      return role() in ['owner', 'operations', 'purchasing', 'qc', 'logistics', 'sales', 'marketing', 'finance', 'viewer'];
+    }
+    function costRole() {
+      return role() in ['owner', 'operations', 'purchasing', 'finance'];
+    }
+
+    // Filed documents, written only by the functions. Purchase orders carry
+    // prices, so they open for cost roles alone.
+    match /documents/purchase_order/{entityId}/{file} {
+      allow read: if costRole();
+      allow write: if false;
+    }
+    match /documents/{entityType}/{entityId}/{file} {
+      allow read: if staff();
+      allow write: if false;
+    }
+
     // Deny by default. Each module adds its own paths with explicit role checks.
     match /{allPaths=**} {
       allow read, write: if false;

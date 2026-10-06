@@ -8,12 +8,14 @@ import {
   canManageModule,
   formatLocalDate,
   formatQuantity,
+  metresNumber,
   quantityFromStored,
 } from '@basis/shared';
 import { Button, EmptyState, Ledger, Meter, Panel, StatusChip, Td, Th, Tr, cn } from '@basis/ui';
 import { Plus } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { Link, NavLink } from 'react-router';
+import { ExportMenu } from '../../components/ExportMenu';
 import { useProcessTemplates, useProductionRuns, usePurchaseOrders } from '../../data/manufacturing';
 import { useRequiredSession } from '../../session';
 import { ModuleTitle } from '../products/ProductsIndex';
@@ -58,12 +60,19 @@ export function PurchaseOrders() {
         number="04"
         title="Manufacturing"
         actions={
-          manage && (
-            <Button variant="primary" onClick={() => setCreating(true)}>
-              <Plus size={16} aria-hidden="true" />
-              New purchase order
-            </Button>
-          )
+          <>
+            <ExportMenu
+              ledger="purchase-orders"
+              size="md"
+              rows={rows.map((po) => ({ number: po.number, supplier: po.supplierName, state: po.state, currency: po.currency, incoterm: null, namedPlace: null, issuedOn: po.issuedOn, confirmedOn: null, requestedExFactory: po.requestedExFactory, lines: po.lineCount, quantityM: metresNumber(po.totalQuantity), amount: null, paymentTerms: null }))}
+            />
+            {manage && (
+              <Button variant="primary" onClick={() => setCreating(true)}>
+                <Plus size={16} aria-hidden="true" />
+                New purchase order
+              </Button>
+            )}
+          </>
         }
       >
         Purchase orders, production runs and their milestones.
@@ -139,7 +148,17 @@ export function ProductionRuns() {
   const rows = runs.data ?? [];
   return (
     <>
-      <ModuleTitle number="04" title="Manufacturing">
+      <ModuleTitle
+        number="04"
+        title="Manufacturing"
+        actions={
+          <ExportMenu
+            ledger="production-runs"
+            size="md"
+            rows={rows.map((run) => ({ number: run.number, order: run.purchaseOrderNumber, supplier: run.supplierName, template: run.templateName, state: run.state, health: run.health, plannedStart: run.plannedStart, plannedEnd: run.plannedEnd, forecastEnd: run.forecastEnd, actualEnd: run.actualEnd, progress: Math.round(run.progress * 100), quantityM: metresNumber(run.totalQuantity), producedM: null, readyM: null }))}
+          />
+        }
+      >
         Every run, soonest finish first. Health is read from the milestones.
       </ModuleTitle>
       <ManufacturingTabs active="runs" />

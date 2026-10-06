@@ -78,6 +78,29 @@ query ListTimeline($entityType: String!, $entityId: String!) @auth(level: USER) 
   }
 }
 
+query ListDocuments @auth(level: USER) {
+  documents(where: { archivedAt: { isNull: true } }, orderBy: { createdAt: DESC }, limit: 500) {
+    id
+    kind
+    title
+    number
+    issuedOn
+    expiresOn
+    storagePath
+    mimeType
+    sizeBytes
+    createdAt
+    uploadedBy {
+      name
+    }
+    documentLinks_on_document(limit: 10) {
+      entityType
+      entityId
+      role
+    }
+  }
+}
+
 query ListDocumentsFor($entityType: String!, $entityId: String!) @auth(level: USER) {
   documentLinks(where: { entityType: { eq: $entityType }, entityId: { eq: $entityId } }, limit: 500) {
     id
@@ -93,6 +116,9 @@ query ListDocumentsFor($entityType: String!, $entityId: String!) @auth(level: US
       mimeType
       sizeBytes
       createdAt
+      uploadedBy {
+        name
+      }
     }
   }
 }

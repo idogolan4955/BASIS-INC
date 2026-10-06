@@ -39,6 +39,23 @@ const ContactStatus = {
 }
 exports.ContactStatus = ContactStatus;
 
+const DocumentKind = {
+  commercial_invoice: "commercial_invoice",
+  packing_list: "packing_list",
+  bill_of_lading: "bill_of_lading",
+  air_waybill: "air_waybill",
+  certificate_of_origin: "certificate_of_origin",
+  certificate: "certificate",
+  inspection_report: "inspection_report",
+  technical_sheet: "technical_sheet",
+  quotation: "quotation",
+  purchase_order: "purchase_order",
+  contract: "contract",
+  photo: "photo",
+  other: "other",
+}
+exports.DocumentKind = DocumentKind;
+
 const Health = {
   on_track: "on_track",
   at_risk: "at_risk",
@@ -946,6 +963,21 @@ exports.listTimeline = function listTimeline(dcOrVars, varsOrOptions, options) {
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(listTimelineRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const listDocumentsRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListDocuments');
+}
+listDocumentsRef.operationName = 'ListDocuments';
+exports.listDocumentsRef = listDocumentsRef;
+
+exports.listDocuments = function listDocuments(dcOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(listDocumentsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
 

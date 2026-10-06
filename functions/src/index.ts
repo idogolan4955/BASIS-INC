@@ -1,6 +1,7 @@
 import type { FunctionName } from '@basis/shared';
 import { evaluateAlerts } from './alerts';
 import { api } from './api';
+import { fileGeneratedDocument } from './documents';
 import { cancelPurchaseOrder, confirmPurchaseOrder, createProductionRun, createPurchaseOrder, issuePurchaseOrder, packHandlingUnit, recordLot, setLotQuality, updateMilestone } from './manufacturing';
 import { sweepEvents } from './sweep';
 import { inviteUser, setUserRole } from './users';
@@ -22,7 +23,8 @@ const registry: Record<FunctionName, unknown> = {
   recordLot,
   packHandlingUnit,
   setLotQuality,
+  fileGeneratedDocument,
 };
 void registry;
 
-export { api, evaluateAlerts, inviteUser, setUserRole, sweepEvents, createPurchaseOrder, issuePurchaseOrder, confirmPurchaseOrder, cancelPurchaseOrder, createProductionRun, updateMilestone, recordLot, packHandlingUnit, setLotQuality };
+export { api, evaluateAlerts, inviteUser, setUserRole, sweepEvents, createPurchaseOrder, issuePurchaseOrder, confirmPurchaseOrder, cancelPurchaseOrder, createProductionRun, updateMilestone, recordLot, packHandlingUnit, setLotQuality, fileGeneratedDocument };

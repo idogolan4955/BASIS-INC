@@ -18,6 +18,7 @@ import { Button, Dialog, LabelHeader, Ledger, Meter, Panel, SelectField, ShadeDo
 import { useState, type FormEvent } from 'react';
 import { Link, NavLink, useParams } from 'react-router';
 import { useProductionRun, useUpdateMilestone } from '../../data/manufacturing';
+import { DocumentsPanel } from '../../components/DocumentsPanel';
 import { LotsPanel } from './RunLots';
 import { PackingPanel } from './RunPacking';
 import { useRecordNote, useTimeline } from '../../data/timeline';
@@ -127,7 +128,7 @@ function RunTimelinePanel({ number }: { number: string }) {
   );
 }
 
-export function RunSheet({ tab }: { tab: 'milestones' | 'lots' | 'packing' | 'timeline' }) {
+export function RunSheet({ tab }: { tab: 'milestones' | 'lots' | 'packing' | 'documents' | 'timeline' }) {
   const session = useRequiredSession();
   const { number = '' } = useParams();
   const run = useProductionRun(number);
@@ -183,6 +184,9 @@ export function RunSheet({ tab }: { tab: 'milestones' | 'lots' | 'packing' | 'ti
         </NavLink>
         <NavLink to={`${base}/packing`} className={({ isActive }) => sheetTabClass(isActive)}>
           Packing
+        </NavLink>
+        <NavLink to={`${base}/documents`} className={({ isActive }) => sheetTabClass(isActive)}>
+          Documents
         </NavLink>
         <NavLink to={`${base}/timeline`} className={({ isActive }) => sheetTabClass(isActive)}>
           Timeline
@@ -285,6 +289,15 @@ export function RunSheet({ tab }: { tab: 'milestones' | 'lots' | 'packing' | 'ti
         )}
         {tab === 'lots' && <LotsPanel run={data} manage={manage} />}
         {tab === 'packing' && <PackingPanel run={data} manage={manage} />}
+        {tab === 'documents' && (
+          <DocumentsPanel
+            entityType="production_run"
+            entityId={data.number}
+            generated={[{ kind: 'packing-list', label: 'packing list', available: data.handlingUnits.length > 0 }]}
+            canFile={manage}
+            shareText={`Packing list ${data.number} from BASIS INC.`}
+          />
+        )}
         {tab === 'timeline' && <RunTimelinePanel number={data.number} />}
       </div>
       {manage && <UpdateDialog key={editing?.id ?? 'none'} run={data} milestone={editing} onClose={() => setEditing(null)} />}

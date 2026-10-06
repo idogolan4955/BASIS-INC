@@ -32,6 +32,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*ListOpenAlerts*](#listopenalerts)
   - [*ListMyTasks*](#listmytasks)
   - [*ListTimeline*](#listtimeline)
+  - [*ListDocuments*](#listdocuments)
   - [*ListDocumentsFor*](#listdocumentsfor)
   - [*ListCountries*](#listcountries)
   - [*ListCurrencies*](#listcurrencies)
@@ -3297,6 +3298,116 @@ executeQuery(ref).then((response) => {
 });
 ```
 
+## ListDocuments
+You can execute the `ListDocuments` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+listDocuments(options?: ExecuteQueryOptions): QueryPromise<ListDocumentsData, undefined>;
+
+interface ListDocumentsRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListDocumentsData, undefined>;
+}
+export const listDocumentsRef: ListDocumentsRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+listDocuments(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListDocumentsData, undefined>;
+
+interface ListDocumentsRef {
+  ...
+  (dc: DataConnect): QueryRef<ListDocumentsData, undefined>;
+}
+export const listDocumentsRef: ListDocumentsRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the listDocumentsRef:
+```typescript
+const name = listDocumentsRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ListDocuments` query has no variables.
+### Return Type
+Recall that executing the `ListDocuments` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ListDocumentsData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ListDocumentsData {
+  documents: ({
+    id: UUIDString;
+    kind: DocumentKind;
+    title: string;
+    number?: string | null;
+    issuedOn?: DateString | null;
+    expiresOn?: DateString | null;
+    storagePath: string;
+    mimeType: string;
+    sizeBytes: number;
+    createdAt: TimestampString;
+    uploadedBy?: {
+      name: string;
+    };
+    documentLinks_on_document: ({
+      entityType: string;
+      entityId: string;
+      role?: string | null;
+    })[];
+  } & Document_Key)[];
+}
+```
+### Using `ListDocuments`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, listDocuments } from '@basis/dataconnect-platform';
+
+
+// Call the `listDocuments()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await listDocuments();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await listDocuments(dataConnect);
+
+console.log(data.documents);
+
+// Or, you can use the `Promise` API.
+listDocuments().then((response) => {
+  const data = response.data;
+  console.log(data.documents);
+});
+```
+
+### Using `ListDocuments`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, listDocumentsRef } from '@basis/dataconnect-platform';
+
+
+// Call the `listDocumentsRef()` function to get a reference to the query.
+const ref = listDocumentsRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = listDocumentsRef(dataConnect);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.documents);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.documents);
+});
+```
+
 ## ListDocumentsFor
 You can execute the `ListDocumentsFor` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
 ```typescript
@@ -3355,6 +3466,9 @@ export interface ListDocumentsForData {
       mimeType: string;
       sizeBytes: number;
       createdAt: TimestampString;
+      uploadedBy?: {
+        name: string;
+      };
     } & Document_Key;
   } & DocumentLink_Key)[];
 }

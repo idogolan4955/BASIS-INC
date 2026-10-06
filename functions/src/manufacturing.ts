@@ -16,6 +16,7 @@ import {
 } from '@basis/shared';
 import { onCall } from 'firebase-functions/v2/https';
 import { z } from 'zod';
+import { fileGenerated } from './documents';
 import { REGION, audit, callerOf, emit, failure, graphql, requireRole } from './lib';
 
 // Purchasing and manufacturing commands: the ones that allocate numbers,
@@ -202,6 +203,8 @@ export const issuePurchaseOrder = onCall({ region: REGION }, async (request) => 
       paymentMilestone_updateMany(where: { purchaseOrder: { number: { eq: $number } }, trigger: { eq: "on_order" }, dueOn: { isNull: true } }, data: { dueOn: $dueOn }) }`,
     { number, dueOn: issuedOn },
   );
+  // The order as sent to the supplier is filed with it.
+  await fileGenerated('purchase-order', number, caller.uid);
   return result;
 });
 

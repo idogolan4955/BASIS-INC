@@ -1,6 +1,8 @@
 import { HttpsError, onRequest } from 'firebase-functions/v2/https';
 import { REGION, httpCallerOf, requireRole } from './lib';
+import { renderExport } from './exports';
 import { renderPackingList, renderPurchaseOrder, renderRollLabels } from './pdf';
+import { EXPORT_FORMATS, isExportLedger, type ExportFormat } from '@basis/shared';
 
 // Plain HTTP, behind Hosting's /api/** rewrite. Public intake, webhooks,
 // exports and PDFs join this router as their modules are built.
@@ -47,6 +49,34 @@ export const api = onRequest({ region: REGION, cors: [/^http:\/\/localhost:\d+$/
       }
       console.error('pdf', error);
       response.status(500).json({ error: 'internal', message: 'The document could not be rendered.' });
+    }
+    return;
+  }
+
+  // /export/<ledger>.<csv|xlsx>?run=&po=&lot=: a ledger as a file, cost columns for cost roles only.
+  const exported = path.match(/^\/export\/([a-z-]+)\.(csv|xlsx)$/);
+  if (request.method === 'GET' && exported) {
+    const ledger = exported[1]!;
+    const format = exported[2] as ExportFormat;
+    if (!isExportLedger(ledger) || !EXPORT_FORMATS.includes(format)) {
+      response.status(404).json({ error: 'not_found', message: `No export ${ledger}.${format}.` });
+      return;
+    }
+    try {
+      const caller = await httpCallerOf(request.get('authorization'));
+      const scope = Object.fromEntries((['run', 'po', 'lot'] as const).map((key) => [key, typeof request.query[key] === 'string' && /^[A-Z]{2,4}-\d{2}-\d{4}$/.test(request.query[key] as string) ? (request.query[key] as string) : undefined]));
+      const { body, filename, contentType } = await renderExport(ledger, format, caller, scope);
+      response.set('Content-Type', contentType);
+      response.set('Content-Disposition', `attachment; filename="${filename}"`);
+      response.set('Cache-Control', 'private, no-store');
+      response.send(body);
+    } catch (error) {
+      if (error instanceof HttpsError) {
+        response.status(STATUS[error.code] ?? 500).json({ error: error.code, message: error.message, details: error.details ?? null });
+        return;
+      }
+      console.error('export', error);
+      response.status(500).json({ error: 'internal', message: 'The export could not be produced.' });
     }
     return;
   }

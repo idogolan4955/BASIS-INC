@@ -42,6 +42,22 @@ export enum ContactStatus {
   left = "left",
 };
 
+export enum DocumentKind {
+  commercial_invoice = "commercial_invoice",
+  packing_list = "packing_list",
+  bill_of_lading = "bill_of_lading",
+  air_waybill = "air_waybill",
+  certificate_of_origin = "certificate_of_origin",
+  certificate = "certificate",
+  inspection_report = "inspection_report",
+  technical_sheet = "technical_sheet",
+  quotation = "quotation",
+  purchase_order = "purchase_order",
+  contract = "contract",
+  photo = "photo",
+  other = "other",
+};
+
 export enum Health {
   on_track = "on_track",
   at_risk = "at_risk",
@@ -1025,6 +1041,29 @@ export interface ListCurrenciesData {
   } & Currency_Key)[];
 }
 
+export interface ListDocumentsData {
+  documents: ({
+    id: UUIDString;
+    kind: DocumentKind;
+    title: string;
+    number?: string | null;
+    issuedOn?: DateString | null;
+    expiresOn?: DateString | null;
+    storagePath: string;
+    mimeType: string;
+    sizeBytes: number;
+    createdAt: TimestampString;
+    uploadedBy?: {
+      name: string;
+    };
+    documentLinks_on_document: ({
+      entityType: string;
+      entityId: string;
+      role?: string | null;
+    })[];
+  } & Document_Key)[];
+}
+
 export interface ListDocumentsForData {
   documentLinks: ({
     id: UUIDString;
@@ -1040,6 +1079,9 @@ export interface ListDocumentsForData {
       mimeType: string;
       sizeBytes: number;
       createdAt: TimestampString;
+      uploadedBy?: {
+        name: string;
+      };
     } & Document_Key;
   } & DocumentLink_Key)[];
 }
@@ -2488,6 +2530,18 @@ export const listTimelineRef: ListTimelineRef;
 
 export function listTimeline(vars: ListTimelineVariables, options?: ExecuteQueryOptions): QueryPromise<ListTimelineData, ListTimelineVariables>;
 export function listTimeline(dc: DataConnect, vars: ListTimelineVariables, options?: ExecuteQueryOptions): QueryPromise<ListTimelineData, ListTimelineVariables>;
+
+interface ListDocumentsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListDocumentsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListDocumentsData, undefined>;
+  operationName: string;
+}
+export const listDocumentsRef: ListDocumentsRef;
+
+export function listDocuments(options?: ExecuteQueryOptions): QueryPromise<ListDocumentsData, undefined>;
+export function listDocuments(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListDocumentsData, undefined>;
 
 interface ListDocumentsForRef {
   /* Allow users to create refs without passing in DataConnect */

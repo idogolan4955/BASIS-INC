@@ -16,6 +16,7 @@ import { Link, NavLink, useParams } from 'react-router';
 import { useProducts, useSku, useSkuSourcing, useSkus } from '../../data/catalog';
 import { useRequiredSession } from '../../session';
 import { NotFound } from '../NotFound';
+import { ExportMenu } from '../../components/ExportMenu';
 import { ModuleTitle, ProductsTabs } from './ProductsIndex';
 import { SourcingDialog } from './SourcingDialog';
 
@@ -36,7 +37,11 @@ export function SkuLedger() {
 
   return (
     <>
-      <ModuleTitle number="02" title="Products">
+      <ModuleTitle
+        number="02"
+        title="Products"
+        actions={<ExportMenu ledger="skus" size="md" rows={rows.map((sku) => ({ code: sku.code, product: sku.productName, variant: sku.variantName, shade: sku.shadeName, shadeCode: sku.shadeCode, putUp: sku.putUpName, status: sku.status, public: sku.isPublic ? 'yes' : 'no', rollTracking: sku.rollTracking ? 'yes' : 'no' }))} />}
+      >
         Every sellable unit: a variant, in a shade, in a put-up.
       </ModuleTitle>
       <ProductsTabs active="skus" />
