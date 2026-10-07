@@ -99,13 +99,16 @@ export function pipelineFrom(runs: readonly OperationsRun[], shipments: readonly
   }
   const moving = shipments.filter((shipment) => shipment.stage === 'in_transit' || shipment.stage === 'arrived');
   const customs = shipments.filter((shipment) => shipment.stage === 'customs');
-  const sum = (list: readonly OperationsShipment[]) => list.reduce((total, shipment) => total + BigInt(shipment.metres), 0n).toString();
+  const sum = (list: readonly OperationsShipment[]) => list.reduce((total, shipment) => total + BigInt(shipment.metres), 0n);
+  // Metres loaded on a booked shipment have left the floor, whichever stage the shipment is at.
+  const loaded = sum(shipments.filter((shipment) => shipment.stage !== 'draft' && shipment.stage !== 'cancelled'));
+  const stillReady = ready > loaded ? ready - loaded : 0n;
   return [
     { stage: 'in_production', metres: production.toString(), records: productionRuns },
     { stage: 'in_qc', metres: qc.toString(), records: qcLots },
-    { stage: 'ready_to_ship', metres: ready.toString(), records: readyLots },
-    { stage: 'in_transit', metres: sum(moving), records: moving.length },
-    { stage: 'in_customs', metres: sum(customs), records: customs.length },
+    { stage: 'ready_to_ship', metres: stillReady.toString(), records: stillReady > 0n ? readyLots : 0 },
+    { stage: 'in_transit', metres: sum(moving).toString(), records: moving.length },
+    { stage: 'in_customs', metres: sum(customs).toString(), records: customs.length },
     { stage: 'in_stock', metres: '0', records: 0, pending: true },
   ];
 }

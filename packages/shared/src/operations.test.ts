@@ -43,6 +43,10 @@ describe('pipeline', () => {
     ]);
     expect(moving.find((cell) => cell.stage === 'in_transit')).toMatchObject({ metres: '6300000', records: 1 });
     expect(moving.find((cell) => cell.stage === 'in_customs')).toMatchObject({ metres: '1200000', records: 1 });
+    // What is loaded on a booked shipment is no longer waiting on the floor.
+    expect(moving.find((cell) => cell.stage === 'ready_to_ship')).toMatchObject({ metres: '0', records: 0 });
+    const partly = pipelineFrom([run], [{ number: 'SHP-4', stage: 'booked', health: 'on_track', metres: '600000', etd: null, eta: null, plannedEta: null, originName: 'Ningbo', destinationName: 'Tel Aviv' }]);
+    expect(partly.find((cell) => cell.stage === 'ready_to_ship')).toMatchObject({ metres: '3000000', records: 1 });
   });
 });
 

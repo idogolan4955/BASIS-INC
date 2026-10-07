@@ -784,7 +784,7 @@ export const HE: Record<string, string> = {
   'Loading shipments': 'טוען משלוחים',
   'Logistics sections': 'מדורי לוגיסטיקה',
   'Looking for packed cartons': 'מחפש קרטונים ארוזים',
-  'Metres by stage. Production counts what is planned and not yet produced; QC the lots awaiting inspection; ready to ship what is released and packed; transit and customs what booked shipments carry.': 'מטרים לפי שלב. ייצור סופר את מה שתוכנן וטרם יוצר; QC את הלוטים הממתינים לבדיקה; מוכן למשלוח את מה ששוחרר ונארז; מעבר ומכס את מה שמשלוחים מוזמנים נושאים.',
+  'Metres by stage. Production counts what is planned and not yet produced; QC the lots awaiting inspection; ready to ship what is released, packed and not yet loaded; transit and customs what booked shipments carry.': 'מטרים לפי שלב. ייצור סופר את מה שתוכנן וטרם יוצר; QC את הלוטים הממתינים לבדיקה; מוכן למשלוח את מה ששוחרר, נארז וטרם נטען; מעבר ומכס את מה שמשלוחים מוזמנים נושאים.',
   Missing: 'חסר',
   Mode: 'אמצעי',
   'New shipment': 'משלוח חדש',

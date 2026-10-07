@@ -43,7 +43,7 @@ export function Operations() {
           <>
             <Panel title={t('In motion')}>
               <Pipeline cells={data.pipeline} />
-              <p className="mt-3 text-[0.8125rem] text-ink-muted">{t('Metres by stage. Production counts what is planned and not yet produced; QC the lots awaiting inspection; ready to ship what is released and packed; transit and customs what booked shipments carry.')}</p>
+              <p className="mt-3 text-[0.8125rem] text-ink-muted">{t('Metres by stage. Production counts what is planned and not yet produced; QC the lots awaiting inspection; ready to ship what is released, packed and not yet loaded; transit and customs what booked shipments carry.')}</p>
             </Panel>
             <Panel title={t('Next 30 days')} count={data.calendar.length}>
               <EtaRail entries={data.calendar} asOf={data.asOf} />
