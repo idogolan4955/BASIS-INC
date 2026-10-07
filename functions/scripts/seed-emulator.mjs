@@ -104,7 +104,7 @@ async function seedReference() {
   const year = new Date().getFullYear();
   // Sequences start at 1 once and are never reset: a re-seed must not hand
   // out a number that is already taken.
-  for (const prefix of ['PO', 'RUN', 'INS', 'CAR', 'SHP', 'QTN', 'RFQ', 'QUO', 'SO', 'SMP', 'LOT', 'CTN', 'PLT', 'INQ']) {
+  for (const prefix of ['PO', 'RUN', 'INS', 'CAR', 'SHP', 'QTN', 'RFQ', 'QUO', 'SO', 'SMP', 'LOT', 'CTN', 'PLT', 'INQ', 'RCV']) {
     const { numberSequence } = await gql(`query ($prefix: String!, $year: Int!) { numberSequence(key: { prefix: $prefix, year: $year }) { nextValue } }`, { prefix, year });
     if (!numberSequence) await gql(`mutation ($prefix: String!, $year: Int!) { numberSequence_insert(data: { prefix: $prefix, year: $year, nextValue: 1 }) }`, { prefix, year });
   }
@@ -284,6 +284,12 @@ async function seedLogistics() {
     await gql(`mutation ($type: LocationType!, $name: String!, $city: String!, $country: String!, $code: String, $tz: String!) {
       location_insert(data: { type: $type, name: $name, city: $city, countryCode: $country, locationCode: $code, timeZone: $tz }) }`,
       { type, name, city, country, code: locationCode || null, tz: timeZone });
+  }
+  // The warehouse as a stock location, the default place goods are received into.
+  const { stockLocations } = await gql(`query { stockLocations(where: { kind: { eq: physical } }, limit: 1) { id } }`);
+  if (!stockLocations[0]) {
+    const { locations } = await gql(`query { locations(where: { name: { eq: "BASIS warehouse" } }, limit: 1) { id } }`);
+    await gql(`mutation ($placeId: UUID) { stockLocation_insert(data: { name: "BASIS warehouse", kind: physical, placeId: $placeId, isDefault: true }) }`, { placeId: locations[0]?.id ?? null });
   }
   const { documentRequirements } = await gql(`query { documentRequirements(limit: 200) { documentKind mode flow destinationCountry { code } } }`);
   for (const [mode, flow, country, documentKind, daysBeforeEtd] of DOCUMENT_REQUIREMENTS) {

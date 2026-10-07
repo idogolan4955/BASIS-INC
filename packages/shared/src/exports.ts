@@ -25,7 +25,7 @@ export interface LedgerDefinition {
   readonly scopes: readonly ('run' | 'po' | 'lot')[];
 }
 
-export const EXPORT_LEDGERS = ['purchase-orders', 'purchase-order-lines', 'production-runs', 'lots', 'rolls', 'handling-units', 'skus', 'shipments'] as const;
+export const EXPORT_LEDGERS = ['purchase-orders', 'purchase-order-lines', 'production-runs', 'lots', 'rolls', 'handling-units', 'skus', 'shipments', 'stock'] as const;
 export type ExportLedger = (typeof EXPORT_LEDGERS)[number];
 
 export function isExportLedger(value: string): value is ExportLedger {
@@ -177,6 +177,22 @@ export const LEDGERS: Record<ExportLedger, LedgerDefinition> = {
       { key: 'quantityM', label: 'Metres', kind: 'number' },
       { key: 'cbm', label: 'CBM', kind: 'number' },
       { key: 'grossKg', label: 'Gross (kg)', kind: 'number' },
+    ],
+  },
+  stock: {
+    key: 'stock',
+    title: 'Stock',
+    scopes: [],
+    columns: [
+      { key: 'sku', label: 'SKU' },
+      { key: 'product', label: 'Product' },
+      { key: 'shade', label: 'Shade' },
+      { key: 'lot', label: 'Lot' },
+      { key: 'location', label: 'Place' },
+      { key: 'quantityM', label: 'On hand (m)', kind: 'number' },
+      { key: 'rolls', label: 'Rolls', kind: 'number' },
+      { key: 'landedUnitCost', label: 'Landed cost per m', kind: 'number', cost: true },
+      { key: 'updated', label: 'Updated', kind: 'date' },
     ],
   },
   skus: {

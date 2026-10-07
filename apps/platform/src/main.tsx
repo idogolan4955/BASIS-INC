@@ -22,6 +22,7 @@ import { Operations } from './pages/operations/Operations';
 import { Arrivals, Requirements, Shipments } from './pages/logistics/Logistics';
 import { ShipmentSheet } from './pages/logistics/ShipmentSheet';
 import { FxRates, LandedCost } from './pages/costing/Costing';
+import { Movements, Places, Receipts, Stock } from './pages/inventory/Inventory';
 import { Companies } from './pages/parties/Companies';
 import { CompanySheet } from './pages/parties/CompanySheet';
 import { ProductSheet } from './pages/products/ProductSheet';
@@ -63,7 +64,12 @@ const router = createBrowserRouter([
       { path: 'manufacturing/runs/:number/documents', element: <RunSheet tab="documents" /> },
       { path: 'manufacturing/runs/:number/timeline', element: <RunSheet tab="timeline" /> },
       { path: 'manufacturing/templates', element: <ProcessTemplates /> },
+      { path: 'inventory', element: <Stock /> },
+      { path: 'inventory/movements', element: <Movements /> },
+      { path: 'inventory/receipts', element: <Receipts /> },
+      { path: 'inventory/places', element: <Places /> },
       { path: 'inventory/lots/:number', element: <LotSheet tab="rolls" /> },
+      { path: 'inventory/lots/:number/stock', element: <LotSheet tab="stock" /> },
       { path: 'inventory/lots/:number/documents', element: <LotSheet tab="documents" /> },
       { path: 'inventory/lots/:number/timeline', element: <LotSheet tab="timeline" /> },
       { path: 'documents', element: <Documents /> },

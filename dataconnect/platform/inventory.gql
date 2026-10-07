@@ -1,0 +1,179 @@
+# Inventory reads. Balances and movements carry no prices; stock value at
+# landed cost is read by the cost roles through the costing operations.
+
+query ListStockLocations @auth(level: USER) {
+  stockLocations(orderBy: { name: ASC }, limit: 200) {
+    id
+    name
+    kind
+    zone
+    isDefault
+    place {
+      name
+      city
+    }
+  }
+}
+
+query ListStockBalances
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'sales' || auth.token.role == 'finance' || auth.token.role == 'viewer'") {
+  stockBalances(where: { onHand: { ne: 0 } }, orderBy: { updatedAt: DESC }, limit: 2000) {
+    id
+    onHand
+    rolls
+    updatedAt
+    sku {
+      code
+      product {
+        name
+        family {
+          code
+          name
+        }
+      }
+      variant {
+        name
+      }
+      shade {
+        code
+        name
+        hex
+      }
+    }
+    lot {
+      number
+    }
+    location {
+      id
+      name
+      kind
+    }
+  }
+}
+
+query ListStockMovements($lotNumber: String, $limit: Int!)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'sales' || auth.token.role == 'finance' || auth.token.role == 'viewer'") {
+  stockMovements(where: { lot: { number: { eq: $lotNumber } } }, orderBy: { occurredAt: DESC }, limit: $limit) {
+    id
+    quantity
+    uom
+    reason
+    sourceType
+    sourceId
+    note
+    occurredAt
+    actorUid
+    sku {
+      code
+    }
+    lot {
+      number
+    }
+    roll {
+      number
+    }
+    fromLocation {
+      id
+      name
+    }
+    toLocation {
+      id
+      name
+    }
+  }
+}
+
+query ListRecentMovements($limit: Int!)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'sales' || auth.token.role == 'finance' || auth.token.role == 'viewer'") {
+  stockMovements(orderBy: { occurredAt: DESC }, limit: $limit) {
+    id
+    quantity
+    uom
+    reason
+    sourceType
+    sourceId
+    note
+    occurredAt
+    actorUid
+    sku {
+      code
+    }
+    lot {
+      number
+    }
+    roll {
+      number
+    }
+    fromLocation {
+      id
+      name
+    }
+    toLocation {
+      id
+      name
+    }
+  }
+}
+
+query ListReceipts
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'finance' || auth.token.role == 'viewer'") {
+  receipts(orderBy: { createdAt: DESC }, limit: 500) {
+    id
+    number
+    receivedOn
+    receivedByUid
+    note
+    createdAt
+    shipment {
+      number
+    }
+    location {
+      name
+    }
+    receiptLines_on_receipt(limit: 200) {
+      expectedQuantity
+      receivedQuantity
+      rollsExpected
+      rollsReceived
+      note
+      lot {
+        number
+        sku {
+          code
+        }
+      }
+    }
+  }
+}
+
+query ListReorderPolicies @auth(level: USER) {
+  reorderPolicies(limit: 2000) {
+    id
+    reorderPoint
+    targetLevel
+    sku {
+      code
+      product {
+        name
+      }
+      shade {
+        name
+      }
+    }
+    location {
+      name
+    }
+  }
+}
+
+# Roll positions for a lot: where each roll is and what is left on it.
+query ListRollPositions($lotNumber: String!) @auth(level: USER) {
+  rolls(where: { lot: { number: { eq: $lotNumber } } }, orderBy: { rollNo: ASC }, limit: 500) {
+    number
+    remainingLength
+    stockLocation {
+      id
+      name
+    }
+  }
+}

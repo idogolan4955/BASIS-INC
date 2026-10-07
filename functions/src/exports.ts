@@ -243,6 +243,19 @@ async function shipments(): Promise<ExportRow[]> {
   });
 }
 
+async function stock(): Promise<ExportRow[]> {
+  const [{ stockBalances }, { lotCosts }] = await Promise.all([
+    graphql<{ stockBalances: { onHand: string; rolls: number; updatedAt: string; sku: { code: string; product: { name: string }; shade: { name: string } }; lot: { number: string }; location: { name: string; kind: string } }[] }>(
+      `query { stockBalances(where: { onHand: { ne: 0 } }, orderBy: { updatedAt: DESC }, limit: 5000) { onHand rolls updatedAt sku { code product { name } shade { name } } lot { number } location { name kind } } }`,
+    ),
+    graphql<{ lotCosts: { landedUnitCost: string; lot: { number: string } }[] }>(`query { lotCosts(limit: 5000) { landedUnitCost lot { number } } }`),
+  ]);
+  const landed = new Map(lotCosts.map((cost) => [cost.lot.number, cost.landedUnitCost]));
+  return stockBalances
+    .filter((balance) => balance.location.kind === 'physical')
+    .map((balance) => ({ sku: balance.sku.code, product: balance.sku.product.name, shade: balance.sku.shade.name, lot: balance.lot.number, location: balance.location.name, quantityM: metresNumber(balance.onHand), rolls: balance.rolls, landedUnitCost: landed.has(balance.lot.number) ? Number(landed.get(balance.lot.number)) / 10000 : null, updated: balance.updatedAt.slice(0, 10) }));
+}
+
 const SOURCES: Record<ExportLedger, (scope: ExportScope) => Promise<ExportRow[]>> = {
   'purchase-orders': purchaseOrders,
   'purchase-order-lines': purchaseOrderLines,
@@ -252,6 +265,7 @@ const SOURCES: Record<ExportLedger, (scope: ExportScope) => Promise<ExportRow[]>
   'handling-units': handlingUnits,
   skus,
   shipments,
+  stock,
 };
 
 async function xlsx(title: string, columns: readonly ExportColumn[], rows: readonly ExportRow[]): Promise<Buffer> {

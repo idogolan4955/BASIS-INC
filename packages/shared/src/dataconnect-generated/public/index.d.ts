@@ -277,6 +277,21 @@ export interface PutUp_Key {
   __typename?: 'PutUp_Key';
 }
 
+export interface ReceiptLine_Key {
+  id: UUIDString;
+  __typename?: 'ReceiptLine_Key';
+}
+
+export interface Receipt_Key {
+  id: UUIDString;
+  __typename?: 'Receipt_Key';
+}
+
+export interface ReorderPolicy_Key {
+  id: UUIDString;
+  __typename?: 'ReorderPolicy_Key';
+}
+
 export interface RolePermission_Key {
   role: Role;
   permission: string;
@@ -336,6 +351,21 @@ export interface Shipment_Key {
 export interface Sku_Key {
   code: string;
   __typename?: 'Sku_Key';
+}
+
+export interface StockBalance_Key {
+  id: UUIDString;
+  __typename?: 'StockBalance_Key';
+}
+
+export interface StockLocation_Key {
+  id: UUIDString;
+  __typename?: 'StockLocation_Key';
+}
+
+export interface StockMovement_Key {
+  id: UUIDString;
+  __typename?: 'StockMovement_Key';
 }
 
 export interface SupplierItem_Key {

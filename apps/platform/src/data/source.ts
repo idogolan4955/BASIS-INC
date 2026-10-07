@@ -22,7 +22,7 @@ async function loadLiveGateway(): Promise<GatewayData> {
     import('@basis/shared/dataconnect/platform'),
     loadOpenTasks(),
   ]);
-  const [{ data }, runRows, lanes] = await Promise.all([listOpenAlerts(dataConnect), loadLiveRuns(), loadLanes()]);
+  const [{ data }, runRows, lanes, stock] = await Promise.all([listOpenAlerts(dataConnect), loadLiveRuns(), loadLanes(), loadStockFigure()]);
   const today = todayIn(zone());
   const openRuns = runRows.filter((run) => run.state === 'planned' || run.state === 'active');
   const runs: RunTimeline[] = openRuns
@@ -70,7 +70,7 @@ async function loadLiveGateway(): Promise<GatewayData> {
       orders: { count: 0, periodLabel: 'Last 30 days', changePercent: 0, comparedTo: 'previous 30 days', weekly: [] },
       production: { activeRuns: openRuns.length, onSchedule: openRuns.filter((run) => run.health === 'on_track').length },
       transit: lanes.transit,
-      inventory: { rolls: 0, byFamily: [] },
+      inventory: stock,
       quality: { firstPassPercent: 0, inspections: 0, windowLabel: 'last 90 days', monthly: [] },
     },
     attention: [
@@ -93,6 +93,25 @@ async function loadLiveGateway(): Promise<GatewayData> {
     orders: [],
     families: [],
   };
+}
+
+// Rolls in the warehouses, by family: read from the balances the ledger produced.
+async function loadStockFigure(): Promise<GatewayData['figures']['inventory']> {
+  const balances = import.meta.env.MODE === 'sample'
+    ? await (await import('./sample-inventory')).sampleInventory.balances()
+    : await (async () => {
+        const [{ dataConnect }, sdk] = await Promise.all([import('../lib/firebase'), import('@basis/shared/dataconnect/platform')]);
+        const { data } = await sdk.listStockBalances(dataConnect);
+        return data.stockBalances.map((row) => ({ rolls: row.rolls, familyCode: row.sku.product.family.code, familyName: row.sku.product.family.name, locationKind: row.location.kind }));
+      })();
+  const physical = balances.filter((balance) => balance.locationKind === 'physical');
+  const families = new Map<string, { code: string; name: string; rolls: number }>();
+  for (const balance of physical) {
+    const current = families.get(balance.familyCode) ?? { code: balance.familyCode, name: balance.familyName, rolls: 0 };
+    current.rolls += balance.rolls;
+    families.set(balance.familyCode, current);
+  }
+  return { rolls: physical.reduce((sum, balance) => sum + balance.rolls, 0), byFamily: [...families.values()].sort((a, b) => a.code.localeCompare(b.code)) };
 }
 
 // Booked shipments on their lanes, soonest arrival first, and the in-transit
@@ -136,7 +155,7 @@ async function loadLiveRuns() {
 
 async function loadGateway(): Promise<GatewayData> {
   if (import.meta.env.MODE === 'sample') {
-    const [{ sampleGateway }, { sampleManufacturing }, tasks, lanes] = await Promise.all([import('./sample'), import('./sample-manufacturing'), loadOpenTasks(), loadLanes()]);
+    const [{ sampleGateway }, { sampleManufacturing }, tasks, lanes, stock] = await Promise.all([import('./sample'), import('./sample-manufacturing'), loadOpenTasks(), loadLanes(), loadStockFigure()]);
     const today = todayIn(zone());
     const data = sampleGateway(today);
     // The run the manufacturing sample store holds is the one the Gateway shows,
@@ -178,7 +197,7 @@ async function loadGateway(): Promise<GatewayData> {
       }));
     return {
       ...data,
-      figures: { ...data.figures, transit: lanes.transit },
+      figures: { ...data.figures, transit: lanes.transit, inventory: stock },
       shipments: lanes.shipments,
       runs,
       attention: [

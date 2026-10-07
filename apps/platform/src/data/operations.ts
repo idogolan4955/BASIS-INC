@@ -80,11 +80,19 @@ export async function loadShipmentFacts(): Promise<OperationsShipment[]> {
   return data.shipments.filter((shipment) => shipment.state === 'booked').map((row) => shipmentFacts(summaryOf(row as never, today)));
 }
 
+/** Balances by lot and place, as the pipeline's stock cell reads them. */
+async function loadStockFacts(): Promise<{ onHand: string; physical: boolean }[]> {
+  if (isSample) return (await (await import('./sample-inventory')).sampleInventory.balances()).map((balance) => ({ onHand: balance.onHand, physical: balance.locationKind === 'physical' }));
+  const [{ dataConnect }, sdk] = await Promise.all([import('../lib/firebase'), import('@basis/shared/dataconnect/platform')]);
+  const { data } = await sdk.listStockBalances(dataConnect);
+  return data.stockBalances.map((balance) => ({ onHand: balance.onHand, physical: balance.location.kind === 'physical' }));
+}
+
 export async function loadOperations(): Promise<OperationsView> {
   const asOf = todayIn(zone());
-  const [runs, tasks, shipments] = await Promise.all([isSample ? sampleRuns() : liveRuns(), loadOpenTasks(), loadShipmentFacts()]);
+  const [runs, tasks, shipments, stock] = await Promise.all([isSample ? sampleRuns() : liveRuns(), loadOpenTasks(), loadShipmentFacts(), loadStockFacts()]);
   const taskFacts: OperationsTask[] = tasks.map((task) => ({ id: task.id, title: task.title, dueOn: task.dueOn, entityType: task.entityType ?? '', entityId: task.entityId ?? '', assigneeName: task.assigneeName ?? '' }));
-  return { asOf, runs, pipeline: pipelineFrom(runs, shipments), calendar: calendarFrom(runs, taskFacts, asOf, 30, shipments) };
+  return { asOf, runs, pipeline: pipelineFrom(runs, shipments, stock), calendar: calendarFrom(runs, taskFacts, asOf, 30, shipments) };
 }
 
 export function useOperations() {

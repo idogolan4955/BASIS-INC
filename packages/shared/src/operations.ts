@@ -69,9 +69,9 @@ export interface OperationsTask {
 /**
  * What is where, in metres: planned metres still in production, lots awaiting
  * quality, released metres already packed, metres on the water and in
- * customs. Stock arrives with the inventory module and is reported as pending.
+ * customs, and what sits in the warehouses by lot.
  */
-export function pipelineFrom(runs: readonly OperationsRun[], shipments: readonly OperationsShipment[] = []): PipelineCell[] {
+export function pipelineFrom(runs: readonly OperationsRun[], shipments: readonly OperationsShipment[] = [], stock: readonly { readonly onHand: string; readonly physical: boolean }[] | null = null): PipelineCell[] {
   let production = 0n;
   let productionRuns = 0;
   let qc = 0n;
@@ -109,7 +109,9 @@ export function pipelineFrom(runs: readonly OperationsRun[], shipments: readonly
     { stage: 'ready_to_ship', metres: stillReady.toString(), records: stillReady > 0n ? readyLots : 0 },
     { stage: 'in_transit', metres: sum(moving).toString(), records: moving.length },
     { stage: 'in_customs', metres: sum(customs).toString(), records: customs.length },
-    { stage: 'in_stock', metres: '0', records: 0, pending: true },
+    stock === null
+      ? { stage: 'in_stock', metres: '0', records: 0, pending: true }
+      : { stage: 'in_stock', metres: stock.filter((balance) => balance.physical).reduce((sum, balance) => sum + BigInt(balance.onHand), 0n).toString(), records: stock.filter((balance) => balance.physical).length },
   ];
 }
 

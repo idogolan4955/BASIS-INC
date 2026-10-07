@@ -36,6 +36,7 @@ describe('pipeline', () => {
     expect(cells.find((cell) => cell.stage === 'ready_to_ship')).toMatchObject({ metres: '3600000', records: 1 });
     expect(cells.find((cell) => cell.stage === 'in_transit')).toMatchObject({ metres: '0', records: 0 });
     expect(cells.find((cell) => cell.stage === 'in_stock')?.pending).toBe(true);
+    expect(pipelineFrom([run], [], [{ onHand: '4188000', physical: true }, { onHand: '900000', physical: false }]).find((cell) => cell.stage === 'in_stock')).toMatchObject({ metres: '4188000', records: 1 });
     const moving = pipelineFrom([run], [
       { number: 'SHP-1', stage: 'in_transit', health: 'on_track', metres: '6300000', etd: null, eta: null, plannedEta: null, originName: 'Ningbo', destinationName: 'Rotterdam' },
       { number: 'SHP-2', stage: 'customs', health: 'at_risk', metres: '1200000', etd: null, eta: null, plannedEta: null, originName: 'Shanghai', destinationName: 'New York' },

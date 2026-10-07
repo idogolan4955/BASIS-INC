@@ -13,6 +13,9 @@ import { NewInspectionDialog } from '../qc/Qc';
 import { INSPECTION_RESULT_LABEL, INSPECTION_RESULT_TONE, INSPECTION_STATE_LABEL, INSPECTION_STATE_TONE, INSPECTION_TYPE_LABEL } from '@basis/shared';
 import { useRequiredSession } from '../../session';
 import { useLotCostsFor } from '../../data/costing';
+import { useRollPositions, useStockBalances } from '../../data/inventory';
+import { MovementsLedger } from './Inventory';
+import { MoveDialog } from './StockDialogs';
 import { NotFound } from '../NotFound';
 import { useT } from '../../i18n';
 
@@ -74,19 +77,25 @@ function LotTimeline({ number }: { number: string }) {
   );
 }
 
-export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
+export function LotSheet({ tab }: { tab: 'rolls' | 'stock' | 'documents' | 'timeline' }) {
   const t = useT();
   const session = useRequiredSession();
   const { number = '' } = useParams();
   const lot = useLot(number);
   const [editing, setEditing] = useState(false);
   const [inspecting, setInspecting] = useState(false);
+  const [moving, setMoving] = useState(false);
+  const positions = useRollPositions(number);
+  const balances = useStockBalances();
   const inspections = useInspectionsFor('lot', number);
   const pdf = useDocument();
   const quality = session.role === 'owner' || session.role === 'qc';
   const costRole = canViewCosts(session.role);
   const lotCosts = useLotCostsFor(number, costRole);
   const landed = lotCosts.data?.[0] ?? null;
+  const stock = (balances.data ?? []).filter((balance) => balance.lotNumber === number);
+  const onHand = stock.filter((balance) => balance.locationKind === 'physical').reduce((sum, balance) => sum + BigInt(balance.onHand), 0n).toString();
+  const stockRole = ['owner', 'operations', 'logistics'].includes(session.role);
 
   if (lot.isPending) return <p className="px-5 py-10 text-ink-muted lg:px-8">{t('Loading lot')}</p>;
   if (lot.error) return <p className="px-5 py-10 text-critical lg:px-8">The lot could not be loaded. {lot.error.message}</p>;
@@ -129,7 +138,9 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
           { label: t('Rolls'), value: data.rollCount > 0 ? `${data.packedRollCount} of ${data.rollCount} packed` : 'Not tracked' },
           { label: t('Mill lot'), value: data.millLotRef || '—' },
           { label: t('Produced'), value: dateOrDash(data.producedOn) },
-          { label: t('Ready to ship'), value: <span className={ready !== '0' ? 'text-positive' : undefined}>{metres(ready)}</span> },
+          onHand !== '0'
+            ? { label: t('In stock'), value: <span className="text-positive">{metres(onHand)} · {stock.filter((balance) => balance.locationKind === 'physical').map((balance) => balance.locationName).join(', ')}</span> }
+            : { label: t('Ready to ship'), value: <span className={ready !== '0' ? 'text-positive' : undefined}>{metres(ready)}</span> },
           ...(costRole && landed ? [{ label: t('Landed cost'), value: <Link to={`/logistics/shipments/${landed.shipmentNumber}/costs`} className="underline decoration-line-strong underline-offset-4">{formatMoney(moneyFromStored(landed.landedUnitCost, landed.currency), 4)} / m{landed.isFinal ? '' : ` (${t('estimate')})`}</Link> }] : []),
         ]}
         actions={
@@ -148,11 +159,13 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
             {quality && (
               <Button onClick={() => setEditing(true)}>{t('Record quality')}</Button>
             )}
+            {stockRole && onHand !== '0' && <Button onClick={() => setMoving(true)}>{t('Move stock')}</Button>}
           </>
         }
       />
       <SheetTabs>
         <NavLink to={base} end className={({ isActive }) => sheetTabClass(isActive)}>{t('Rolls')}</NavLink>
+        <NavLink to={`${base}/stock`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Stock')}</NavLink>
         <NavLink to={`${base}/documents`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Documents')}</NavLink>
         <NavLink to={`${base}/timeline`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Timeline')}</NavLink>
       </SheetTabs>
@@ -218,6 +231,7 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
                     <Th>{t('Grade')}</Th>
                     <Th numeric>{t('Points')}</Th>
                     <Th>{t('Packed in')}</Th>
+                    <Th>{t('Where')}</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -236,12 +250,48 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
                       <Td className="text-ink-soft">{roll.grade || '—'}</Td>
                       <Td numeric className="text-ink-soft">{roll.defectPoints ?? '—'}</Td>
                       <Td className="code whitespace-nowrap">{roll.packedIn ?? <span className="text-ink-muted">{t('Unpacked')}</span>}</Td>
+                      <Td className="whitespace-nowrap text-ink-soft">
+                        {(() => {
+                          const position = (positions.data ?? []).find((candidate) => candidate.number === roll.number);
+                          if (!position?.locationName) return position?.remainingLength === '0' ? <span className="text-ink-muted">{t('Consumed')}</span> : '—';
+                          return `${position.locationName}${position.remainingLength && position.remainingLength !== roll.measuredLength ? ` · ${metres(position.remainingLength)} ${t('left')}` : ''}`;
+                        })()}
+                      </Td>
                     </Tr>
                   ))}
                 </tbody>
               </Ledger>
             )}
           </Panel>
+        )}
+        {tab === 'stock' && (
+          <>
+            <Panel title={t('Balances')} count={stock.length} flush>
+              {stock.length === 0 ? (
+                <p className="px-5 py-6 text-ink-muted">{t('Not in stock. A lot enters stock when its shipment is received.')}</p>
+              ) : (
+                <Ledger caption={t('Balances')}>
+                  <thead>
+                    <tr>
+                      <Th>{t('Place')}</Th>
+                      <Th numeric>{t('Rolls')}</Th>
+                      <Th numeric>{t('On hand')}</Th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stock.map((balance) => (
+                      <Tr key={balance.id}>
+                        <Td className="font-medium">{balance.locationName}</Td>
+                        <Td numeric className="text-ink-soft">{balance.rolls || '—'}</Td>
+                        <Td numeric>{metres(balance.onHand)}</Td>
+                      </Tr>
+                    ))}
+                  </tbody>
+                </Ledger>
+              )}
+            </Panel>
+            <MovementsLedger lotNumber={data.number} />
+          </>
         )}
         {tab === 'documents' && (
           <DocumentsPanel
@@ -256,6 +306,7 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
       </div>
       {['owner', 'operations', 'qc'].includes(session.role) && <NewInspectionDialog key={inspecting ? 'inspect-open' : 'inspect-closed'} open={inspecting} onClose={() => setInspecting(false)} subject={data.number} />}
       {quality && <QualityDialog key={editing ? 'quality-open' : 'quality-closed'} lot={data} open={editing} onClose={() => setEditing(false)} />}
+      {stockRole && <MoveDialog key={moving ? 'move-open' : 'move-closed'} lot={data} open={moving} onClose={() => setMoving(false)} />}
     </>
   );
 }

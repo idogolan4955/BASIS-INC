@@ -1,4 +1,4 @@
-import { documentsCheck, expectedEta, expectedEtd, legStatus, shipmentDates, type DocumentRequirementRule, type LegFacts, type LocalDate } from '@basis/shared';
+import { documentsCheck, expectedEta, expectedEtd, legStatus, lowStock, shipmentDates, type DocumentRequirementRule, type LegFacts, type LocalDate } from '@basis/shared';
 import { onCall } from 'firebase-functions/v2/https';
 import { REGION, callerOf, graphql, requireRole } from './lib';
 
@@ -374,6 +374,53 @@ export const RULES: Rule[] = [
           severity: (days > 30 ? 'critical' : 'caution') as Severity,
           ownerRole: 'finance' as Role,
           dedupeKey: `costing.final_pending:${shipment.number}`,
+        }));
+    },
+  },
+  {
+    key: 'inventory.low_stock',
+    async evaluate() {
+      const [{ stockBalances }, { reorderPolicies }] = await Promise.all([
+        graphql<{ stockBalances: { onHand: string; sku: { code: string }; lot: { number: string }; location: { id: string; kind: string } }[] }>(`query { stockBalances(where: { onHand: { gt: 0 } }, limit: 5000) { onHand sku { code } lot { number } location { id kind } } }`),
+        graphql<{ reorderPolicies: { reorderPoint: string; targetLevel: string; sku: { code: string; product: { name: string }; shade: { name: string } } }[] }>(`query { reorderPolicies(limit: 2000) { reorderPoint targetLevel sku { code product { name } shade { name } } } }`),
+      ]);
+      const low = lowStock(
+        stockBalances.map((balance) => ({ skuCode: balance.sku.code, lotNumber: balance.lot.number, locationId: balance.location.id, onHand: balance.onHand, physical: balance.location.kind === 'physical' })),
+        reorderPolicies.map((policy) => ({ skuCode: policy.sku.code, reorderPoint: policy.reorderPoint, targetLevel: policy.targetLevel })),
+      );
+      const metres = (stored: string) => `${(Number(stored) / 1000).toLocaleString('en-GB', { maximumFractionDigits: 0 })} m`;
+      return low.map((item) => {
+        const sku = reorderPolicies.find((policy) => policy.sku.code === item.skuCode)!.sku;
+        return {
+          entityType: 'sku',
+          entityId: item.skuCode,
+          title: `${sku.product.name}, ${sku.shade.name}: stock below reorder point`,
+          detail: `${metres(item.available)} available against a reorder point of ${metres(item.reorderPoint)}; ${metres(item.shortfall)} to reach the target.`,
+          severity: (item.available === '0' ? 'critical' : 'caution') as Severity,
+          ownerRole: 'purchasing' as Role,
+          dedupeKey: `inventory.low_stock:${item.skuCode}`,
+        };
+      });
+    },
+  },
+  {
+    key: 'inventory.arrived_unreceived',
+    async evaluate(now) {
+      const { shipments } = await graphql<{ shipments: { number: string; destination: { name: string }; shipmentLegs_on_shipment: LegFacts[] }[] }>(
+        `query { shipments(where: { state: { eq: booked } }, limit: 500) { number destination { name } shipmentLegs_on_shipment(orderBy: { sequence: ASC }) { type sequence plannedEtd plannedEta etd eta atd ata } } }`,
+      );
+      const today = isoDate(now) as LocalDate;
+      return shipments
+        .map((shipment) => ({ shipment, main: shipment.shipmentLegs_on_shipment.find((leg) => leg.type === 'main_carriage') }))
+        .filter(({ main }) => main?.ata && daysBetween(main.ata, today) >= 2)
+        .map(({ shipment, main }) => ({
+          entityType: 'shipment',
+          entityId: shipment.number,
+          title: `${shipment.number} arrived and is not received`,
+          detail: `Main carriage arrived ${main!.ata}, ${daysBetween(main!.ata!, today)} days ago; nothing is in stock yet.`,
+          severity: (daysBetween(main!.ata!, today) > 7 ? 'critical' : 'caution') as Severity,
+          ownerRole: 'logistics' as Role,
+          dedupeKey: `inventory.arrived_unreceived:${shipment.number}`,
         }));
     },
   },

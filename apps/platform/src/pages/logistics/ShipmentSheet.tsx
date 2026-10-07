@@ -42,6 +42,7 @@ import { useRequiredSession } from '../../session';
 import { NotFound } from '../NotFound';
 import { laneOf } from './Logistics';
 import { CostsPanel } from './ShipmentCosts';
+import { ReceiveDialog } from '../inventory/StockDialogs';
 
 // The shipment sheet: its route as a track of legs, what it carries, the
 // documents it must have, and its timeline. Legs record what happened; the
@@ -533,6 +534,7 @@ export function ShipmentSheet({ tab }: { tab: 'route' | 'contents' | 'documents'
   const pdf = useDocument();
   const [editing, setEditing] = useState(false);
   const [emailing, setEmailing] = useState(false);
+  const [receiving, setReceiving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const manage = ['owner', 'operations', 'logistics'].includes(session.role);
   const costs = canViewLogisticsCosts(session.role);
@@ -612,6 +614,11 @@ export function ShipmentSheet({ tab }: { tab: 'route' | 'contents' | 'documents'
                   {t('Book')}
                 </Button>
               )}
+              {data.state === 'booked' && data.flow !== 'direct' && data.flow !== 'outbound' && (
+                <Button variant={data.legs.some((leg) => leg.type === 'main_carriage' && legStatus(leg) === 'arrived') ? 'primary' : undefined} onClick={() => setReceiving(true)}>
+                  {t('Receive')}
+                </Button>
+              )}
               {(data.state === 'draft' || data.state === 'booked') && <Button onClick={() => setEditing(true)}>{t('Details')}</Button>}
               {(data.state === 'draft' || data.state === 'booked') && !departed && (
                 <Button onClick={() => act(() => cancel.mutateAsync({ number: data.number }), t('The shipment could not be cancelled.'))} busy={cancel.isPending} busyLabel={t('Cancelling')}>
@@ -649,6 +656,7 @@ export function ShipmentSheet({ tab }: { tab: 'route' | 'contents' | 'documents'
         {tab === 'timeline' && <ShipmentTimeline number={data.number} />}
       </div>
       {manage && <DetailsDialog key={editing ? 'details-open' : 'details-closed'} shipment={data} open={editing} onClose={() => setEditing(false)} />}
+      {manage && <ReceiveDialog key={receiving ? 'receive-open' : 'receive-closed'} shipment={data} open={receiving} onClose={() => setReceiving(false)} />}
       {!isSample && <EmailDialog key={emailing ? 'email-open' : 'email-closed'} kind="shipment-packing-list" number={data.number} subject={`Packing list ${data.number} from BASIS INC.`} open={emailing} onClose={() => setEmailing(false)} />}
     </>
   );

@@ -56,6 +56,11 @@ export const FUNCTION_NAMES = {
   recordCustomsEntry: 'recordCustomsEntry',
   setFxRate: 'setFxRate',
   allocateShipmentCosts: 'allocateShipmentCosts',
+  /** Callable, stock roles: places, receiving, movements; reorder points for purchasing. */
+  createStockLocation: 'createStockLocation',
+  receiveShipment: 'receiveShipment',
+  recordStockMovement: 'recordStockMovement',
+  setReorderPolicy: 'setReorderPolicy',
   /** Callable, owner and operations: run the alert rules now. */
   evaluateAlerts: 'evaluateAlerts',
   /** Scheduled: consume domain events, evaluate alert rules. */

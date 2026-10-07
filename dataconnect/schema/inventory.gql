@@ -1,0 +1,94 @@
+# Inventory: where stock is, read from an append-only ledger of movements.
+# A balance is the sum of what moved in minus what moved out; the function
+# recomputes it from the ledger after every movement and nobody edits it.
+# Quantities are Int64 thousandths of a metre.
+
+enum StockLocationKind {
+  physical
+  at_supplier
+  in_transit
+  customer
+  scrap
+  adjustment
+  samples
+}
+
+enum MovementReason {
+  receipt
+  transfer
+  pick
+  ship
+  adjust
+  return
+  sample_cut
+  scrap
+}
+
+# A place stock can be: a warehouse (or a zone in one), or a virtual place
+# such as "with customer" or "adjustment" that balances the ledger.
+type StockLocation @table {
+  name: String! @col(dataType: "varchar(120)")
+  kind: StockLocationKind!
+  place: Location
+  zone: String @col(dataType: "varchar(80)")
+  isDefault: Boolean!
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# Append-only. One line per lot (or per roll) moved, with where from and
+# where to; a receipt has no from, a consumption no to.
+type StockMovement @table {
+  sku: Sku!
+  lot: Lot!
+  roll: Roll
+  quantity: Int64!
+  uom: String! @col(dataType: "varchar(8)")
+  fromLocation: StockLocation
+  toLocation: StockLocation
+  reason: MovementReason!
+  sourceType: String @col(dataType: "varchar(40)")
+  sourceId: String @col(dataType: "varchar(80)")
+  note: String
+  occurredAt: Timestamp! @default(expr: "request.time")
+  actorUid: String @col(dataType: "varchar(128)")
+}
+
+# Derived: Σ movements per SKU, lot and location. Written by the function
+# that records the movement, from the ledger, never by hand.
+type StockBalance @table {
+  sku: Sku!
+  lot: Lot!
+  location: StockLocation!
+  onHand: Int64!
+  rolls: Int!
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type Receipt @table {
+  number: String! @col(dataType: "varchar(16)") @unique
+  shipment: Shipment!
+  location: StockLocation!
+  receivedOn: Date!
+  receivedByUid: String @col(dataType: "varchar(128)")
+  note: String
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type ReceiptLine @table {
+  receipt: Receipt!
+  shipmentLine: ShipmentLine!
+  lot: Lot!
+  expectedQuantity: Int64!
+  receivedQuantity: Int64!
+  rollsExpected: Int!
+  rollsReceived: Int!
+  note: String
+}
+
+type ReorderPolicy @table {
+  sku: Sku!
+  location: StockLocation
+  reorderPoint: Int64!
+  targetLevel: Int64!
+  updatedAt: Timestamp! @default(expr: "request.time")
+}

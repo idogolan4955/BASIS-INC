@@ -188,6 +188,9 @@ type Roll @table {
   weightG: Int
   grade: String @col(dataType: "varchar(8)")
   defectPoints: Int
+  # Derived from the movement ledger: where the roll is and what is left on it.
+  stockLocation: StockLocation
+  remainingLength: Int64
   createdAt: Timestamp! @default(expr: "request.time")
 }
 

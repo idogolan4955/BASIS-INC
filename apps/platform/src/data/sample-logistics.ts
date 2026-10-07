@@ -359,6 +359,12 @@ export const sampleLogistics = {
     shipment.shipmentLines_on_shipment = [];
     return { number, state: 'cancelled' };
   },
+  /** Received in full: the shipment closes. */
+  async close(number: string): Promise<void> {
+    const shipment = find(number);
+    shipment.state = 'closed';
+    shipment.health = 'on_track';
+  },
   async setCustomsHeld(number: string, held: boolean): Promise<void> {
     const shipment = find(number);
     shipment.customsHeld = held;
