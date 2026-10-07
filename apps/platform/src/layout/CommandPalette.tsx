@@ -110,7 +110,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
           aria-label={t('Jump to a module, product, SKU or company')}
           className="h-full flex-1 bg-transparent text-sm outline-none placeholder:text-ink-muted"
         />
-        <kbd className="code rounded-xs border border-line px-1.5 py-0.5 text-ink-muted">esc</kbd>
+        <kbd className="code rounded-xs border border-line px-1.5 py-0.5 text-ink-muted">{t('esc')}</kbd>
       </div>
       <ul className="max-h-[50vh] overflow-y-auto py-1.5">
         {matches.map((destination, index) => (

@@ -2,11 +2,13 @@ import { Panel, ShadeDot } from '@basis/ui';
 import { Link } from 'react-router';
 import { useProducts, useShades } from '../../data/catalog';
 import { ModuleTitle, ProductsTabs } from './ProductsIndex';
+import { useT } from '../../i18n';
 
 // The Shade System: one shade language across products, packaging, samples
 // and the website. Shades are circles, as the brand booklet draws them.
 
 export function Shades() {
+  const t = useT();
   const shades = useShades();
   const products = useProducts();
   const productName = new Map((products.data ?? []).map((product) => [product.code, product.name]));
@@ -14,12 +16,10 @@ export function Shades() {
 
   return (
     <>
-      <ModuleTitle number="02" title="Shade System">
-        One shade language. A shade exists once; each product offers it when its SKU is approved.
-      </ModuleTitle>
+      <ModuleTitle number="02" title={t('Shade System')}>{t('One shade language. A shade exists once; each product offers it when its SKU is approved.')}</ModuleTitle>
       <ProductsTabs active="shades" />
       <div className="flex flex-col gap-4 px-5 py-6 lg:px-8">
-        {shades.isPending && <p className="text-ink-muted">Loading shades</p>}
+        {shades.isPending && <p className="text-ink-muted">{t('Loading shades')}</p>}
         {collections.map((collection) => (
           <Panel key={collection || 'all'} title={collection || 'Shades'}>
             <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -45,7 +45,7 @@ export function Shades() {
                             {productName.get(code) ?? code} (pending)
                           </span>
                         ))}
-                        {shade.availableIn.length === 0 && shade.pendingIn.length === 0 && <span className="text-ink-muted">Not offered yet</span>}
+                        {shade.availableIn.length === 0 && shade.pendingIn.length === 0 && <span className="text-ink-muted">{t('Not offered yet')}</span>}
                       </div>
                     </div>
                   </li>
@@ -53,9 +53,7 @@ export function Shades() {
             </ul>
           </Panel>
         ))}
-        <p className="max-w-prose text-[0.8125rem] text-ink-muted">
-          Screen colours are approximations. The physical standard and its Lab values govern shade matching; samples settle any doubt.
-        </p>
+        <p className="max-w-prose text-[0.8125rem] text-ink-muted">{t('Screen colours are approximations. The physical standard and its Lab values govern shade matching; samples settle any doubt.')}</p>
       </div>
     </>
   );

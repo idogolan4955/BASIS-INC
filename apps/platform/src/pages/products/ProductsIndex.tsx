@@ -28,11 +28,13 @@ import { useState, type FormEvent } from 'react';
 import { Link, NavLink } from 'react-router';
 import { useCreateProduct, useFamilies, useProducts, useShades } from '../../data/catalog';
 import { useRequiredSession } from '../../session';
+import { useT } from '../../i18n';
 
 const STRUCTURE: Record<string, 'mesh' | 'lining' | 'tulle'> = { MSH: 'mesh', LIN: 'lining', TUL: 'tulle' };
 const pad = (index: number) => String(index).padStart(2, '0');
 
 export function ProductsTabs({ active }: { active: 'products' | 'skus' | 'shades' | 'put-ups' }) {
+  const t = useT();
   const tab = (key: typeof active, to: string, label: string) => (
     <NavLink
       key={key}
@@ -47,10 +49,10 @@ export function ProductsTabs({ active }: { active: 'products' | 'skus' | 'shades
     </NavLink>
   );
   return (
-    <nav aria-label="Catalog sections" className="flex gap-6 border-b border-line bg-panel px-5 lg:px-8">
-      {tab('products', '/products', 'Products')}
-      {tab('skus', '/products/skus', 'SKUs')}
-      {tab('shades', '/products/shades', 'Shade System')}
+    <nav aria-label={t('Catalog sections')} className="flex gap-6 border-b border-line bg-panel px-5 lg:px-8">
+      {tab('products', '/products', t('Products'))}
+      {tab('skus', '/products/skus', t('SKUs'))}
+      {tab('shades', '/products/shades', t('Shade System'))}
     </nav>
   );
 }
@@ -71,6 +73,7 @@ export function ModuleTitle({ number, title, children, actions }: { number: stri
 }
 
 function NewProductDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const t = useT();
   const families = useFamilies();
   const create = useCreateProduct();
   const [form, setForm] = useState({ code: '', family: '', index: '', name: '', tagline: '', description: '', status: 'draft' as ProductStatus });
@@ -96,25 +99,25 @@ function NewProductDialog({ open, onClose }: { open: boolean; onClose: () => voi
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title="New product" description="A named fabric within a family. Variants, shades and SKUs are added on its sheet.">
+    <Dialog open={open} onClose={onClose} title={t('New product')} description={t('A named fabric within a family. Variants, shades and SKUs are added on its sheet.')}>
       <form id="new-product" onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-        <TextField label="Code" required value={form.code} onChange={set('code')} placeholder="PWM" help="Short, upper case; becomes part of every SKU code." />
-        <TextField label="Index" required type="number" min={1} value={form.index} onChange={set('index')} placeholder="6" help="Position in the range." />
-        <SelectField label="Family" required value={form.family} onChange={set('family')} className="sm:col-span-2">
-          <option value="">Choose a family</option>
+        <TextField label={t('Code')} required value={form.code} onChange={set('code')} placeholder={t('PWM')} help={t('Short, upper case; becomes part of every SKU code.')} />
+        <TextField label={t('Index')} required type="number" min={1} value={form.index} onChange={set('index')} placeholder="6" help={t('Position in the range.')} />
+        <SelectField label={t('Family')} required value={form.family} onChange={set('family')} className="sm:col-span-2">
+          <option value="">{t('Choose a family')}</option>
           {families.data?.map((family) => (
             <option key={family.code} value={family.code}>
               {family.name}
             </option>
           ))}
         </SelectField>
-        <TextField label="Name" required value={form.name} onChange={set('name')} className="sm:col-span-2" />
-        <TextField label="Tagline" value={form.tagline} onChange={set('tagline')} placeholder="Shaping / support mesh" className="sm:col-span-2" />
-        <TextArea label="Description" value={form.description} onChange={set('description')} className="sm:col-span-2" />
-        <SelectField label="Status" value={form.status} onChange={set('status')}>
+        <TextField label={t('Name')} required value={form.name} onChange={set('name')} className="sm:col-span-2" />
+        <TextField label={t('Tagline')} value={form.tagline} onChange={set('tagline')} placeholder={t('Shaping / support mesh')} className="sm:col-span-2" />
+        <TextArea label={t('Description')} value={form.description} onChange={set('description')} className="sm:col-span-2" />
+        <SelectField label={t('Status')} value={form.status} onChange={set('status')}>
           {PRODUCT_STATUSES.map((status) => (
             <option key={status} value={status}>
-              {PRODUCT_STATUS_LABEL[status]}
+              {t(PRODUCT_STATUS_LABEL[status])}
             </option>
           ))}
         </SelectField>
@@ -124,10 +127,8 @@ function NewProductDialog({ open, onClose }: { open: boolean; onClose: () => voi
           </p>
         )}
         <div className="flex justify-end gap-3 sm:col-span-2">
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" busy={create.isPending} busyLabel="Saving">
-            Create product
-          </Button>
+          <Button onClick={onClose}>{t('Cancel')}</Button>
+          <Button type="submit" variant="primary" busy={create.isPending} busyLabel={t('Saving')}>{t('Create product')}</Button>
         </div>
       </form>
     </Dialog>
@@ -135,6 +136,7 @@ function NewProductDialog({ open, onClose }: { open: boolean; onClose: () => voi
 }
 
 function ProductRow({ product, shadeHex }: { product: ProductSummary; shadeHex: Map<string, { hex: string; name: string }> }) {
+  const t = useT();
   return (
     <Tr>
       <Td className="code text-ink-muted">{pad(product.index)}</Td>
@@ -152,18 +154,19 @@ function ProductRow({ product, shadeHex }: { product: ProductSummary; shadeHex: 
             const shade = shadeHex.get(code);
             return shade ? <ShadeDot key={code} hex={shade.hex} name={shade.name} code={code} size="sm" /> : null;
           })}
-          {product.availableShades.length === 0 && <span className="text-ink-muted">none yet</span>}
+          {product.availableShades.length === 0 && <span className="text-ink-muted">{t('none yet')}</span>}
         </span>
       </Td>
       <Td numeric>{product.skuCount}</Td>
       <Td>
-        <StatusChip tone={PRODUCT_STATUS_TONE[product.status]}>{PRODUCT_STATUS_LABEL[product.status]}</StatusChip>
+        <StatusChip tone={PRODUCT_STATUS_TONE[product.status]}>{t(PRODUCT_STATUS_LABEL[product.status])}</StatusChip>
       </Td>
     </Tr>
   );
 }
 
 export function ProductsIndex() {
+  const t = useT();
   const session = useRequiredSession();
   const families = useFamilies();
   const products = useProducts();
@@ -176,23 +179,19 @@ export function ProductsIndex() {
     <>
       <ModuleTitle
         number="02"
-        title="Products"
+        title={t('Products')}
         actions={
           manage && (
             <Button variant="primary" onClick={() => setCreating(true)}>
-              <Plus size={16} aria-hidden="true" />
-              New product
-            </Button>
+              <Plus size={16} aria-hidden="true" />{t('New product')}</Button>
           )
         }
-      >
-        The range: families, products, variants, shades and SKUs.
-      </ModuleTitle>
+      >{t('The range: families, products, variants, shades and SKUs.')}</ModuleTitle>
       <ProductsTabs active="products" />
 
       <div className="flex flex-col gap-4 px-5 py-6 lg:px-8">
         {families.data && families.data.length > 0 && (
-          <section aria-label="Fabric families" className="grid gap-4 sm:grid-cols-3">
+          <section aria-label={t('Fabric families')} className="grid gap-4 sm:grid-cols-3">
             {families.data.map((family) => (
               <div key={family.code} className="rounded-[var(--radius-panel)] border border-line bg-panel">
                 <div className="aspect-[3/1] overflow-hidden border-b border-line bg-sunken text-nude-deep">
@@ -213,33 +212,29 @@ export function ProductsIndex() {
           </section>
         )}
 
-        <Panel title="Products" count={products.data?.length} flush>
+        <Panel title={t('Products')} count={products.data?.length} flush>
           {products.isPending ? (
-            <p className="px-5 py-8 text-ink-muted" aria-busy="true">
-              Loading products
-            </p>
+            <p className="px-5 py-8 text-ink-muted" aria-busy="true">{t('Loading products')}</p>
           ) : products.error ? (
             <p className="px-5 py-8 text-critical">The products could not be loaded. {products.error.message}</p>
           ) : products.data && products.data.length === 0 ? (
             <div className="p-5">
               <EmptyState
-                title="No products yet"
-                action={manage ? <Button variant="primary" onClick={() => setCreating(true)}>New product</Button> : undefined}
-              >
-                A product is a named fabric within a family. Create the first one, then add its variants, shades and SKUs.
-              </EmptyState>
+                title={t('No products yet')}
+                action={manage ? <Button variant="primary" onClick={() => setCreating(true)}>{t('New product')}</Button> : undefined}
+              >{t('A product is a named fabric within a family. Create the first one, then add its variants, shades and SKUs.')}</EmptyState>
             </div>
           ) : (
-            <Ledger caption="Products in the range">
+            <Ledger caption={t('Products in the range')}>
               <thead>
                 <tr>
-                  <Th className="w-14">No.</Th>
-                  <Th>Product</Th>
-                  <Th>Code</Th>
-                  <Th>Family</Th>
-                  <Th>Available shades</Th>
-                  <Th numeric>SKUs</Th>
-                  <Th>Status</Th>
+                  <Th className="w-14">{t('No.')}</Th>
+                  <Th>{t('Product')}</Th>
+                  <Th>{t('Code')}</Th>
+                  <Th>{t('Family')}</Th>
+                  <Th>{t('Available shades')}</Th>
+                  <Th numeric>{t('SKUs')}</Th>
+                  <Th>{t('Status')}</Th>
                 </tr>
               </thead>
               <tbody>

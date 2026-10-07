@@ -2,11 +2,13 @@ import { Button, Ledger, Panel, StatusChip, Td, Th, Tr } from '@basis/ui';
 import { useState } from 'react';
 import { INQUIRY_KIND_LABEL, useInquiries, useMarkInquiry, type InquiryView } from '../../data/inquiries';
 import { ModuleTitle } from '../products/ProductsIndex';
+import { useT } from '../../i18n';
 
 // Module 09, inquiries: what the website sent in, newest first, until it is
 // answered and becomes a lead.
 
 function Detail({ inquiry }: { inquiry: InquiryView }) {
+  const t = useT();
   return (
     <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
       {[
@@ -30,7 +32,7 @@ function Detail({ inquiry }: { inquiry: InquiryView }) {
         ))}
       {inquiry.message && (
         <div className="sm:col-span-2">
-          <dt className="caps text-ink-muted">Message</dt>
+          <dt className="caps text-ink-muted">{t('Message')}</dt>
           <dd className="mt-0.5 whitespace-pre-line">{inquiry.message}</dd>
         </div>
       )}
@@ -39,32 +41,31 @@ function Detail({ inquiry }: { inquiry: InquiryView }) {
 }
 
 export function Inquiries() {
+  const t = useT();
   const inquiries = useInquiries();
   const mark = useMarkInquiry();
   const [open, setOpen] = useState<string | null>(null);
   const rows = inquiries.data ?? [];
   return (
     <>
-      <ModuleTitle number="09" title="Customers">
-        Inquiries from the website: sample requests, wholesale applications, messages.
-      </ModuleTitle>
+      <ModuleTitle number="09" title={t('Customers')}>{t('Inquiries from the website: sample requests, wholesale applications, messages.')}</ModuleTitle>
       <div className="px-5 py-6 lg:px-8">
-        <Panel title="Inquiries" count={rows.filter((inquiry) => inquiry.state === 'new').length} flush>
+        <Panel title={t('Inquiries')} count={rows.filter((inquiry) => inquiry.state === 'new').length} flush>
           {inquiries.isPending ? (
-            <p className="px-5 py-6 text-ink-muted">Loading inquiries</p>
+            <p className="px-5 py-6 text-ink-muted">{t('Loading inquiries')}</p>
           ) : rows.length === 0 ? (
-            <p className="px-5 py-6 text-ink-muted">Nothing has come in from the website yet.</p>
+            <p className="px-5 py-6 text-ink-muted">{t('Nothing has come in from the website yet.')}</p>
           ) : (
-            <Ledger caption="Inquiries">
+            <Ledger caption={t('Inquiries')}>
               <thead>
                 <tr>
-                  <Th>Reference</Th>
-                  <Th>Kind</Th>
-                  <Th>From</Th>
-                  <Th>Country</Th>
-                  <Th>Received</Th>
-                  <Th>State</Th>
-                  <Th>Action</Th>
+                  <Th>{t('Reference')}</Th>
+                  <Th>{t('Kind')}</Th>
+                  <Th>{t('From')}</Th>
+                  <Th>{t('Country')}</Th>
+                  <Th>{t('Received')}</Th>
+                  <Th>{t('State')}</Th>
+                  <Th>{t('Action')}</Th>
                 </tr>
               </thead>
               <tbody>
@@ -76,7 +77,7 @@ export function Inquiries() {
                           {inquiry.reference}
                         </button>
                       </Td>
-                      <Td className="text-ink-soft">{INQUIRY_KIND_LABEL[inquiry.kind] ?? inquiry.kind}</Td>
+                      <Td className="text-ink-soft">{t(INQUIRY_KIND_LABEL[inquiry.kind] ?? inquiry.kind)}</Td>
                       <Td className="font-medium">
                         {inquiry.company || inquiry.name}
                         {inquiry.company && <span className="ms-2 font-normal text-ink-muted">{inquiry.name}</span>}
@@ -87,7 +88,7 @@ export function Inquiries() {
                         <StatusChip tone={inquiry.state === 'new' ? 'caution' : 'positive'}>{inquiry.state === 'new' ? 'New' : 'Handled'}</StatusChip>
                       </Td>
                       <Td>
-                        <Button size="sm" variant="quiet" onClick={() => mark.mutate({ reference: inquiry.reference, state: inquiry.state === 'new' ? 'handled' : 'new' })} busy={mark.isPending && mark.variables?.reference === inquiry.reference} busyLabel="Saving">
+                        <Button size="sm" variant="quiet" onClick={() => mark.mutate({ reference: inquiry.reference, state: inquiry.state === 'new' ? 'handled' : 'new' })} busy={mark.isPending && mark.variables?.reference === inquiry.reference} busyLabel={t('Saving')}>
                           {inquiry.state === 'new' ? 'Mark handled' : 'Reopen'}
                         </Button>
                       </Td>

@@ -7,6 +7,7 @@ import { ExportMenu } from '../../components/ExportMenu';
 import { usePackHandlingUnit } from '../../data/manufacturing';
 import { isSample } from '../../data/source';
 import { useDocument } from '../../lib/documents';
+import { useT } from '../../i18n';
 
 // Packing: rolls go into cartons, cartons onto pallets. Each unit carries
 // its marks, dimensions and weights, so the packing list and the shipment
@@ -18,6 +19,7 @@ const kilos = (grams: number | null) => (grams === null ? '—' : `${(grams / 10
 const cbm = (milli: number | null) => (milli === null ? '—' : (milli / 1000).toLocaleString('en-GB', { minimumFractionDigits: 3, maximumFractionDigits: 3 }));
 
 export function PackDialog({ run, open, onClose }: { run: RunDetail; open: boolean; onClose: () => void }) {
+  const t = useT();
   const pack = usePackHandlingUnit();
   const lotsWithRolls = run.lots.filter((lot) => lot.rolls.some((roll) => !roll.packedIn));
   const firstLot = lotsWithRolls[0];
@@ -80,14 +82,14 @@ export function PackDialog({ run, open, onClose }: { run: RunDetail; open: boole
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title="Pack" description="Rolls into a carton. The first carton starts the packing step on the run." className="w-[min(44rem,calc(100vw-2rem))]">
+    <Dialog open={open} onClose={onClose} title={t('Pack')} description={t('Rolls into a carton. The first carton starts the packing step on the run.')} className="w-[min(44rem,calc(100vw-2rem))]">
       <form onSubmit={submit} className="grid gap-4 sm:grid-cols-3">
-        <SelectField label="Unit" value={form.kind} onChange={(event) => setForm((f) => ({ ...f, kind: event.target.value as 'carton' | 'pallet' }))}>
-          <option value="carton">Carton</option>
-          <option value="pallet">Pallet</option>
+        <SelectField label={t('Unit')} value={form.kind} onChange={(event) => setForm((f) => ({ ...f, kind: event.target.value as 'carton' | 'pallet' }))}>
+          <option value="carton">{t('Carton')}</option>
+          <option value="pallet">{t('Pallet')}</option>
         </SelectField>
-        <SelectField label="Lot" required value={form.lotNumber} onChange={(event) => chooseLot(event.target.value)} className="sm:col-span-2">
-          {lotsWithRolls.length === 0 && <option value="">No unpacked rolls</option>}
+        <SelectField label={t('Lot')} required value={form.lotNumber} onChange={(event) => chooseLot(event.target.value)} className="sm:col-span-2">
+          {lotsWithRolls.length === 0 && <option value="">{t('No unpacked rolls')}</option>}
           {lotsWithRolls.map((candidate) => (
             <option key={candidate.number} value={candidate.number}>
               {candidate.number} · {candidate.skuCode} · {candidate.rollCount - candidate.packedRollCount} rolls unpacked
@@ -105,34 +107,32 @@ export function PackDialog({ run, open, onClose }: { run: RunDetail; open: boole
                 Next {count}
               </Button>
             ))}
-            <Button size="sm" onClick={() => setChosen(new Set())} disabled={chosen.size === 0}>
-              Clear
-            </Button>
+            <Button size="sm" onClick={() => setChosen(new Set())} disabled={chosen.size === 0}>{t('Clear')}</Button>
           </div>
           <div className="grid max-h-48 grid-cols-2 gap-x-4 gap-y-1 overflow-y-auto rounded-xs border border-line bg-milk p-3 sm:grid-cols-3">
             {unpacked.map((roll) => (
               <CheckField key={roll.number} label={roll.number.slice(-2)} help={metres(roll.measuredLength)} checked={chosen.has(roll.number)} onChange={() => toggle(roll.number)} className="items-center" />
             ))}
-            {unpacked.length === 0 && <p className="col-span-full text-[0.8125rem] text-ink-muted">Every roll of this lot is packed.</p>}
+            {unpacked.length === 0 && <p className="col-span-full text-[0.8125rem] text-ink-muted">{t('Every roll of this lot is packed.')}</p>}
           </div>
         </fieldset>
 
-        <TextField label="Marks" value={form.marks} onChange={set('marks')} placeholder="BASIS / BTL-160-MLK / 13 of 30" className="sm:col-span-2" />
-        <TextField label="Packed on" type="date" value={form.packedOn} onChange={set('packedOn')} />
-        <TextField label="Length" type="number" unit="cm" value={form.lengthCm} onChange={set('lengthCm')} />
-        <TextField label="Width" type="number" unit="cm" value={form.widthCm} onChange={set('widthCm')} />
-        <TextField label="Height" type="number" unit="cm" value={form.heightCm} onChange={set('heightCm')} />
-        <TextField label="Gross weight" type="number" step="0.1" unit="kg" value={form.grossKg} onChange={set('grossKg')} />
-        <TextField label="Net weight" type="number" step="0.1" unit="kg" value={form.netKg} onChange={set('netKg')} />
+        <TextField label={t('Marks')} value={form.marks} onChange={set('marks')} placeholder={t('BASIS / BTL-160-MLK / 13 of 30')} className="sm:col-span-2" />
+        <TextField label={t('Packed on')} type="date" value={form.packedOn} onChange={set('packedOn')} />
+        <TextField label={t('Length')} type="number" unit="cm" value={form.lengthCm} onChange={set('lengthCm')} />
+        <TextField label={t('Width')} type="number" unit="cm" value={form.widthCm} onChange={set('widthCm')} />
+        <TextField label={t('Height')} type="number" unit="cm" value={form.heightCm} onChange={set('heightCm')} />
+        <TextField label={t('Gross weight')} type="number" step="0.1" unit="kg" value={form.grossKg} onChange={set('grossKg')} />
+        <TextField label={t('Net weight')} type="number" step="0.1" unit="kg" value={form.netKg} onChange={set('netKg')} />
         {error && (
           <p role="alert" className="text-[0.8125rem] font-medium text-critical sm:col-span-3">
             {error}
           </p>
         )}
         <div className="flex justify-end gap-3 sm:col-span-3">
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" busy={pack.isPending} busyLabel="Packing" disabled={unpacked.length === 0}>
-            Pack {form.kind}
+          <Button onClick={onClose}>{t('Cancel')}</Button>
+          <Button type="submit" variant="primary" busy={pack.isPending} busyLabel={t('Packing')} disabled={unpacked.length === 0}>
+            {form.kind === 'carton' ? t('Pack carton') : t('Pack pallet')}
           </Button>
         </div>
       </form>
@@ -162,6 +162,7 @@ function unitRows(run: RunDetail): ExportRow[] {
 }
 
 export function PackingPanel({ run, manage }: { run: RunDetail; manage: boolean }) {
+  const t = useT();
   const [packing, setPacking] = useState(false);
   const [emailing, setEmailing] = useState(false);
   const pdf = useDocument();
@@ -175,7 +176,7 @@ export function PackingPanel({ run, manage }: { run: RunDetail; manage: boolean 
   return (
     <>
       <Panel
-        title="Packing"
+        title={t('Packing')}
         count={units.length}
         flush
         action={
@@ -188,21 +189,13 @@ export function PackingPanel({ run, manage }: { run: RunDetail; manage: boolean 
             {units.length > 0 && <ExportMenu ledger="handling-units" scope={{ run: run.number }} rows={unitRows(run)} />}
             {!isSample && units.length > 0 && (
               <>
-                <Button size="sm" onClick={() => pdf.open('packing-list', run.number)} busy={pdf.busy === 'packing-list'} busyLabel="Rendering">
-                  Packing list
-                </Button>
-                <Button size="sm" onClick={() => pdf.share('packing-list', run.number, `Packing list ${run.number} from BASIS INC.`)} busy={pdf.busy === 'share:packing-list'} busyLabel="Sharing">
-                  WhatsApp
-                </Button>
-                <Button size="sm" onClick={() => setEmailing(true)}>
-                  Email
-                </Button>
+                <Button size="sm" onClick={() => pdf.open('packing-list', run.number)} busy={pdf.busy === 'packing-list'} busyLabel={t('Rendering')}>{t('Packing list')}</Button>
+                <Button size="sm" onClick={() => pdf.share('packing-list', run.number, `Packing list ${run.number} from BASIS INC.`)} busy={pdf.busy === 'share:packing-list'} busyLabel={t('Sharing')}>{t('WhatsApp')}</Button>
+                <Button size="sm" onClick={() => setEmailing(true)}>{t('Email')}</Button>
               </>
             )}
             {manage && run.state !== 'cancelled' && (
-              <Button size="sm" variant="primary" onClick={() => setPacking(true)} disabled={unpacked === 0}>
-                Pack carton
-              </Button>
+              <Button size="sm" variant="primary" onClick={() => setPacking(true)} disabled={unpacked === 0}>{t('Pack carton')}</Button>
             )}
           </span>
         }
@@ -215,23 +208,23 @@ export function PackingPanel({ run, manage }: { run: RunDetail; manage: boolean 
           <Ledger caption={`Handling units of ${run.number}`}>
             <thead>
               <tr>
-                <Th>Unit</Th>
-                <Th>Kind</Th>
-                <Th>Marks</Th>
-                <Th>Lots</Th>
-                <Th numeric>Rolls</Th>
-                <Th numeric>Metres</Th>
-                <Th>Size</Th>
-                <Th numeric>CBM</Th>
-                <Th numeric>Gross</Th>
-                <Th>Packed</Th>
+                <Th>{t('Unit')}</Th>
+                <Th>{t('Kind')}</Th>
+                <Th>{t('Marks')}</Th>
+                <Th>{t('Lots')}</Th>
+                <Th numeric>{t('Rolls')}</Th>
+                <Th numeric>{t('Metres')}</Th>
+                <Th>{t('Size')}</Th>
+                <Th numeric>{t('CBM')}</Th>
+                <Th numeric>{t('Gross')}</Th>
+                <Th>{t('Packed')}</Th>
               </tr>
             </thead>
             <tbody>
               {units.map((unit) => (
                 <Tr key={unit.id}>
                   <Td className="code whitespace-nowrap">{unit.number}</Td>
-                  <Td className="text-ink-soft">{HANDLING_UNIT_KIND_LABEL[unit.kind]}</Td>
+                  <Td className="text-ink-soft">{t(HANDLING_UNIT_KIND_LABEL[unit.kind])}</Td>
                   <Td className="text-ink-soft">{unit.marks || '—'}</Td>
                   <Td>
                     <span className="flex flex-wrap gap-x-3">

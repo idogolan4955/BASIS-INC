@@ -3,11 +3,13 @@ import { Button, CheckField, Dialog, SelectField, TextField } from '@basis/ui';
 import { useState, type FormEvent } from 'react';
 import { useAddSourcing } from '../../data/catalog';
 import { useCompanies, useFactories } from '../../data/parties';
+import { useT } from '../../i18n';
 
 // Where a SKU is bought: the supplier, its factory, their code for it, the
 // minimum, the lead time and the first price tier. Cost roles only.
 
 export function SourcingDialog({ skuCode, productCode, open, onClose }: { skuCode: string; productCode: string; open: boolean; onClose: () => void }) {
+  const t = useT();
   const companies = useCompanies();
   const factories = useFactories();
   const add = useAddSourcing();
@@ -52,33 +54,33 @@ export function SourcingDialog({ skuCode, productCode, open, onClose }: { skuCod
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title="Add sourcing" description={`Where ${skuCode} is bought, and the first price tier.`}>
+    <Dialog open={open} onClose={onClose} title={t('Add sourcing')} description={`Where ${skuCode} is bought, and the first price tier.`}>
       <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-        <SelectField label="Supplier" required value={form.supplierId} onChange={set('supplierId')}>
-          <option value="">Choose a supplier</option>
+        <SelectField label={t('Supplier')} required value={form.supplierId} onChange={set('supplierId')}>
+          <option value="">{t('Choose a supplier')}</option>
           {suppliers.map((company) => (
             <option key={company.id} value={company.id}>
               {company.name}
             </option>
           ))}
         </SelectField>
-        <SelectField label="Factory" value={form.factoryId} onChange={set('factoryId')}>
-          <option value="">Not specified</option>
+        <SelectField label={t('Factory')} value={form.factoryId} onChange={set('factoryId')}>
+          <option value="">{t('Not specified')}</option>
           {supplierFactories.map((factory) => (
             <option key={factory.id} value={factory.id}>
               {factory.name}
             </option>
           ))}
         </SelectField>
-        <TextField label="Supplier's code" value={form.supplierSku} onChange={set('supplierSku')} />
-        <TextField label="Lead time" type="number" unit="days" value={form.leadTimeDays} onChange={set('leadTimeDays')} />
-        <TextField label="Minimum order" unit="m" value={form.moq} onChange={set('moq')} placeholder="1000" />
-        <CheckField label="Preferred source" checked={preferred} onChange={(event) => setPreferred(event.target.checked)} className="sm:self-end" />
+        <TextField label={t('Supplier\'s code')} value={form.supplierSku} onChange={set('supplierSku')} />
+        <TextField label={t('Lead time')} type="number" unit="days" value={form.leadTimeDays} onChange={set('leadTimeDays')} />
+        <TextField label={t('Minimum order')} unit="m" value={form.moq} onChange={set('moq')} placeholder="1000" />
+        <CheckField label={t('Preferred source')} checked={preferred} onChange={(event) => setPreferred(event.target.checked)} className="sm:self-end" />
         <fieldset className="grid gap-4 border-t border-line pt-4 sm:col-span-2 sm:grid-cols-3">
-          <legend className="caps mb-1 text-ink-soft">First price tier</legend>
-          <TextField label="From quantity" unit="m" value={form.minQuantity} onChange={set('minQuantity')} placeholder="1000" />
-          <TextField label="Unit price" required value={form.unitPrice} onChange={set('unitPrice')} placeholder="2.8500" help="Per metre, up to 4 decimals." />
-          <TextField label="Currency" required value={form.currency} onChange={set('currency')} placeholder="USD" />
+          <legend className="caps mb-1 text-ink-soft">{t('First price tier')}</legend>
+          <TextField label={t('From quantity')} unit="m" value={form.minQuantity} onChange={set('minQuantity')} placeholder="1000" />
+          <TextField label={t('Unit price')} required value={form.unitPrice} onChange={set('unitPrice')} placeholder="2.8500" help={t('Per metre, up to 4 decimals.')} />
+          <TextField label={t('Currency')} required value={form.currency} onChange={set('currency')} placeholder={t('USD')} />
         </fieldset>
         {error && (
           <p role="alert" className="text-[0.8125rem] font-medium text-critical sm:col-span-2">
@@ -86,10 +88,8 @@ export function SourcingDialog({ skuCode, productCode, open, onClose }: { skuCod
           </p>
         )}
         <div className="flex justify-end gap-3 sm:col-span-2">
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" busy={add.isPending} busyLabel="Saving">
-            Add sourcing
-          </Button>
+          <Button onClick={onClose}>{t('Cancel')}</Button>
+          <Button type="submit" variant="primary" busy={add.isPending} busyLabel={t('Saving')}>{t('Add sourcing')}</Button>
         </div>
       </form>
     </Dialog>

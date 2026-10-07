@@ -1,5 +1,6 @@
 import { Wordmark, cn } from '@basis/ui';
 import { useId, useState, type FormEvent } from 'react';
+import { useT } from '../../i18n';
 
 // Accounts are created by invitation. The form asks for exactly what it needs
 // and names the problem when something is wrong.
@@ -64,6 +65,7 @@ function Field({
 }
 
 export function SignIn() {
+  const t = useT();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
@@ -104,14 +106,14 @@ export function SignIn() {
     <main className="grid min-h-dvh place-items-center bg-surface px-5 py-10">
       <div className="w-full max-w-sm">
         <Wordmark className="text-lg text-ink" />
-        <h1 className="mt-10 font-display text-[2.5rem] font-medium leading-none tracking-[-0.01em]">Sign in</h1>
-        <p className="mt-3 text-ink-muted">Accounts are created by invitation from an owner.</p>
+        <h1 className="mt-10 font-display text-[2.5rem] font-medium leading-none tracking-[-0.01em]">{t('Sign in')}</h1>
+        <p className="mt-3 text-ink-muted">{t('Accounts are created by invitation from an owner.')}</p>
 
         <form onSubmit={submit} noValidate className="mt-8 space-y-4" aria-busy={busy}>
-          <Field id={emailId} label="Email" type="email" value={email} onChange={setEmail} autoComplete="username" invalid={invalid} />
+          <Field id={emailId} label={t('Email')} type="email" value={email} onChange={setEmail} autoComplete="username" invalid={invalid} />
           <Field
             id={passwordId}
-            label="Password"
+            label={t('Password')}
             type="password"
             value={password}
             onChange={setPassword}
@@ -125,9 +127,7 @@ export function SignIn() {
             </p>
           )}
           {status.kind === 'reset_sent' && (
-            <p role="status" className="text-[0.8125rem] text-ink-soft">
-              If an account exists for that address, a link to set a new password is on its way.
-            </p>
+            <p role="status" className="text-[0.8125rem] text-ink-soft">{t('If an account exists for that address, a link to set a new password is on its way.')}</p>
           )}
 
           <div className="flex items-center justify-between gap-4 pt-2">
@@ -136,9 +136,7 @@ export function SignIn() {
               onClick={reset}
               disabled={busy}
               className="text-[0.8125rem] text-ink-soft underline decoration-line-strong underline-offset-4 hover:decoration-ink disabled:opacity-50"
-            >
-              Reset password
-            </button>
+            >{t('Reset password')}</button>
             <button
               type="submit"
               disabled={busy}
@@ -154,11 +152,12 @@ export function SignIn() {
 }
 
 export function NoRole({ email, signOut }: { email: string; signOut: () => Promise<void> }) {
+  const t = useT();
   return (
     <main className="grid min-h-dvh place-items-center bg-surface px-5">
       <div className="w-full max-w-md">
         <Wordmark className="text-lg text-ink" />
-        <h1 className="mt-10 font-display text-[2.25rem] font-medium leading-tight">No role assigned yet</h1>
+        <h1 className="mt-10 font-display text-[2.25rem] font-medium leading-tight">{t('No role assigned yet')}</h1>
         <p className="mt-4 text-ink-soft">
           {email} is signed in, but an owner has not given this account a role. Nothing can be opened until one is set.
         </p>
@@ -166,17 +165,16 @@ export function NoRole({ email, signOut }: { email: string; signOut: () => Promi
           type="button"
           onClick={() => void signOut()}
           className="mt-8 h-10 rounded-xs border border-line-strong px-5 text-sm font-medium hover:border-charcoal"
-        >
-          Sign out
-        </button>
+        >{t('Sign out')}</button>
       </div>
     </main>
   );
 }
 
 export function Loading() {
+  const t = useT();
   return (
-    <main className="grid min-h-dvh place-items-center bg-surface" aria-busy="true" aria-label="Loading">
+    <main className="grid min-h-dvh place-items-center bg-surface" aria-busy="true" aria-label={t('Loading')}>
       <Wordmark className="text-lg text-ink-muted" />
     </main>
   );

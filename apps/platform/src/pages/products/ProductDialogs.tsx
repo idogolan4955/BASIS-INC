@@ -13,6 +13,7 @@ import { Button, CheckField, Dialog, SelectField, ShadeDot, TextArea, TextField 
 import { useState, type FormEvent } from 'react';
 import { useAddShadeStandard, useCreateSkus, useCreateVariant, usePutUps, useUpdateProduct } from '../../data/catalog';
 import { useFactories } from '../../data/parties';
+import { useT } from '../../i18n';
 
 // The forms that change a product: its details and specification, a new
 // variant, SKUs for a variant across shades, and an approved shade standard.
@@ -36,6 +37,7 @@ function Problem({ message }: { message: string | null }) {
 const numberOrNull = (value: string): number | null => (value.trim() === '' ? null : Number(value));
 
 export function EditProductDialog({ product, open, onClose }: { product: ProductDetail; open: boolean; onClose: () => void }) {
+  const t = useT();
   const update = useUpdateProduct();
   const { form, setForm, set } = useForm({
     name: product.name,
@@ -72,20 +74,20 @@ export function EditProductDialog({ product, open, onClose }: { product: Product
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title={`Edit ${product.name}`} description="Details and the family's specification. Variants and SKUs are edited on their own." className="w-[min(40rem,calc(100vw-2rem))]">
+    <Dialog open={open} onClose={onClose} title={`Edit ${product.name}`} description={t('Details and the family\'s specification. Variants and SKUs are edited on their own.')} className="w-[min(40rem,calc(100vw-2rem))]">
       <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-        <TextField label="Name" required value={form.name} onChange={set('name')} />
-        <TextField label="Tagline" value={form.tagline} onChange={set('tagline')} />
-        <TextArea label="Description" value={form.description} onChange={set('description')} className="sm:col-span-2" />
-        <TextField label="Construction" value={form.construction} onChange={set('construction')} placeholder="Warp knit" />
-        <TextField label="Care" value={form.care} onChange={set('care')} />
+        <TextField label={t('Name')} required value={form.name} onChange={set('name')} />
+        <TextField label={t('Tagline')} value={form.tagline} onChange={set('tagline')} />
+        <TextArea label={t('Description')} value={form.description} onChange={set('description')} className="sm:col-span-2" />
+        <TextField label={t('Construction')} value={form.construction} onChange={set('construction')} placeholder={t('Warp knit')} />
+        <TextField label={t('Care')} value={form.care} onChange={set('care')} />
         {product.specSchema.length > 0 && (
           <fieldset className="grid gap-4 border-t border-line pt-4 sm:col-span-2 sm:grid-cols-2">
             <legend className="caps mb-1 text-ink-soft">{product.familyName} specification</legend>
             {product.specSchema.map((field) =>
               field.kind === 'select' ? (
                 <SelectField key={field.key} label={field.label} value={specs[field.key] ?? ''} onChange={(event) => setSpecs((s) => ({ ...s, [field.key]: event.target.value }))}>
-                  <option value="">Not set</option>
+                  <option value="">{t('Not set')}</option>
                   {field.options?.map((option) => (
                     <option key={option} value={option}>
                       {option}
@@ -105,26 +107,24 @@ export function EditProductDialog({ product, open, onClose }: { product: Product
             )}
           </fieldset>
         )}
-        <SelectField label="Status" value={form.status} onChange={set('status')}>
+        <SelectField label={t('Status')} value={form.status} onChange={set('status')}>
           {PRODUCT_STATUSES.map((status) => (
             <option key={status} value={status}>
-              {PRODUCT_STATUS_LABEL[status]}
+              {t(PRODUCT_STATUS_LABEL[status])}
             </option>
           ))}
         </SelectField>
         <CheckField
-          label="Published on the website"
-          help="Only active products with at least one published SKU appear."
+          label={t('Published on the website')}
+          help={t('Only active products with at least one published SKU appear.')}
           checked={form.isPublic}
           onChange={(event) => setForm((current) => ({ ...current, isPublic: event.target.checked }))}
           className="sm:self-end"
         />
         <Problem message={error} />
         <div className="flex justify-end gap-3 sm:col-span-2">
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" busy={update.isPending} busyLabel="Saving">
-            Save changes
-          </Button>
+          <Button onClick={onClose}>{t('Cancel')}</Button>
+          <Button type="submit" variant="primary" busy={update.isPending} busyLabel={t('Saving')}>{t('Save changes')}</Button>
         </div>
       </form>
     </Dialog>
@@ -132,6 +132,7 @@ export function EditProductDialog({ product, open, onClose }: { product: Product
 }
 
 export function NewVariantDialog({ product, open, onClose }: { product: ProductDetail; open: boolean; onClose: () => void }) {
+  const t = useT();
   const create = useCreateVariant();
   const { form, set } = useForm({ code: '', name: '', widthCm: '', usableWidthCm: '', gsm: '', stretchWarpPercent: '', stretchWeftPercent: '', finish: '' });
   const [error, setError] = useState<string | null>(null);
@@ -161,22 +162,20 @@ export function NewVariantDialog({ product, open, onClose }: { product: ProductD
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title="New variant" description={`A width, weight or finish version of ${product.name}. Its code joins the SKU code: ${product.code}-160-SK02.`}>
+    <Dialog open={open} onClose={onClose} title={t('New variant')} description={`A width, weight or finish version of ${product.name}. Its code joins the SKU code: ${product.code}-160-SK02.`}>
       <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-        <TextField label="Code" required value={form.code} onChange={set('code')} placeholder="160" />
-        <TextField label="Name" required value={form.name} onChange={set('name')} placeholder="160 cm" />
-        <TextField label="Width" type="number" unit="cm" value={form.widthCm} onChange={set('widthCm')} />
-        <TextField label="Usable width" type="number" unit="cm" value={form.usableWidthCm} onChange={set('usableWidthCm')} />
-        <TextField label="Weight" type="number" unit="gsm" value={form.gsm} onChange={set('gsm')} />
-        <TextField label="Finish" value={form.finish} onChange={set('finish')} />
-        <TextField label="Stretch, warp" type="number" unit="%" value={form.stretchWarpPercent} onChange={set('stretchWarpPercent')} />
-        <TextField label="Stretch, weft" type="number" unit="%" value={form.stretchWeftPercent} onChange={set('stretchWeftPercent')} />
+        <TextField label={t('Code')} required value={form.code} onChange={set('code')} placeholder="160" />
+        <TextField label={t('Name')} required value={form.name} onChange={set('name')} placeholder={t('160 cm')} />
+        <TextField label={t('Width')} type="number" unit="cm" value={form.widthCm} onChange={set('widthCm')} />
+        <TextField label={t('Usable width')} type="number" unit="cm" value={form.usableWidthCm} onChange={set('usableWidthCm')} />
+        <TextField label={t('Weight')} type="number" unit="gsm" value={form.gsm} onChange={set('gsm')} />
+        <TextField label={t('Finish')} value={form.finish} onChange={set('finish')} />
+        <TextField label={t('Stretch, warp')} type="number" unit="%" value={form.stretchWarpPercent} onChange={set('stretchWarpPercent')} />
+        <TextField label={t('Stretch, weft')} type="number" unit="%" value={form.stretchWeftPercent} onChange={set('stretchWeftPercent')} />
         <Problem message={error} />
         <div className="flex justify-end gap-3 sm:col-span-2">
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" busy={create.isPending} busyLabel="Saving">
-            Create variant
-          </Button>
+          <Button onClick={onClose}>{t('Cancel')}</Button>
+          <Button type="submit" variant="primary" busy={create.isPending} busyLabel={t('Saving')}>{t('Create variant')}</Button>
         </div>
       </form>
     </Dialog>
@@ -184,6 +183,7 @@ export function NewVariantDialog({ product, open, onClose }: { product: ProductD
 }
 
 export function NewSkusDialog({ product, shades, open, onClose }: { product: ProductDetail; shades: readonly ShadeView[]; open: boolean; onClose: () => void }) {
+  const t = useT();
   const create = useCreateSkus();
   const putUps = usePutUps();
   const [variantId, setVariantId] = useState(product.variants[0]?.id ?? '');
@@ -212,17 +212,17 @@ export function NewSkusDialog({ product, shades, open, onClose }: { product: Pro
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title="New SKUs" description="One SKU per chosen shade: the variant, in the shade, in the put-up.">
+    <Dialog open={open} onClose={onClose} title={t('New SKUs')} description={t('One SKU per chosen shade: the variant, in the shade, in the put-up.')}>
       <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-        <SelectField label="Variant" required value={variantId} onChange={(event) => setVariantId(event.target.value)}>
-          {product.variants.length === 0 && <option value="">No variants yet</option>}
+        <SelectField label={t('Variant')} required value={variantId} onChange={(event) => setVariantId(event.target.value)}>
+          {product.variants.length === 0 && <option value="">{t('No variants yet')}</option>}
           {product.variants.map((candidate) => (
             <option key={candidate.id} value={candidate.id}>
               {candidate.name} ({candidate.fullCode})
             </option>
           ))}
         </SelectField>
-        <SelectField label="Put-up" required value={putUp} onChange={(event) => setPutUpCode(event.target.value)}>
+        <SelectField label={t('Put-up')} required value={putUp} onChange={(event) => setPutUpCode(event.target.value)}>
           {putUps.data?.map((candidate) => (
             <option key={candidate.code} value={candidate.code}>
               {candidate.name}
@@ -230,7 +230,7 @@ export function NewSkusDialog({ product, shades, open, onClose }: { product: Pro
           ))}
         </SelectField>
         <fieldset className="sm:col-span-2">
-          <legend className="mb-2 text-xs font-medium text-ink-soft">Shades</legend>
+          <legend className="mb-2 text-xs font-medium text-ink-soft">{t('Shades')}</legend>
           <div className="grid gap-2 sm:grid-cols-2">
             {shades.map((shade) => {
               const taken = existing.has(shade.code);
@@ -251,18 +251,18 @@ export function NewSkusDialog({ product, shades, open, onClose }: { product: Pro
             })}
           </div>
         </fieldset>
-        <SelectField label="Starting status" value={status} onChange={(event) => setStatus(event.target.value as SkuStatus)}>
+        <SelectField label={t('Starting status')} value={status} onChange={(event) => setStatus(event.target.value as SkuStatus)}>
           {SKU_STATUSES.map((candidate) => (
             <option key={candidate} value={candidate}>
-              {SKU_STATUS_LABEL[candidate]}
+              {t(SKU_STATUS_LABEL[candidate])}
             </option>
           ))}
         </SelectField>
-        <CheckField label="Track by roll" help="Each roll gets its own identity, length and location." checked={rollTracking} onChange={(event) => setRollTracking(event.target.checked)} className="sm:self-end" />
+        <CheckField label={t('Track by roll')} help={t('Each roll gets its own identity, length and location.')} checked={rollTracking} onChange={(event) => setRollTracking(event.target.checked)} className="sm:self-end" />
         <Problem message={error} />
         <div className="flex justify-end gap-3 sm:col-span-2">
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" busy={create.isPending} busyLabel="Saving">
+          <Button onClick={onClose}>{t('Cancel')}</Button>
+          <Button type="submit" variant="primary" busy={create.isPending} busyLabel={t('Saving')}>
             Create {chosen.length > 0 ? `${chosen.length} ` : ''}SKU{chosen.length === 1 ? '' : 's'}
           </Button>
         </div>
@@ -272,6 +272,7 @@ export function NewSkusDialog({ product, shades, open, onClose }: { product: Pro
 }
 
 export function StandardDialog({ product, shades, open, onClose }: { product: ProductDetail; shades: readonly ShadeView[]; open: boolean; onClose: () => void }) {
+  const t = useT();
   const add = useAddShadeStandard();
   const factories = useFactories();
   const { form, set } = useForm({ shadeCode: shades[0]?.code ?? '', factoryId: '', reference: '', approvedOn: '', toleranceDeltaE: '', physicalLocation: '' });
@@ -298,33 +299,31 @@ export function StandardDialog({ product, shades, open, onClose }: { product: Pr
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title="Record a shade standard" description="The approved reference a lot of this product is matched against, for one shade at one factory.">
+    <Dialog open={open} onClose={onClose} title={t('Record a shade standard')} description={t('The approved reference a lot of this product is matched against, for one shade at one factory.')}>
       <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-        <SelectField label="Shade" required value={form.shadeCode} onChange={set('shadeCode')}>
+        <SelectField label={t('Shade')} required value={form.shadeCode} onChange={set('shadeCode')}>
           {shades.map((shade) => (
             <option key={shade.code} value={shade.code}>
               {shade.name} ({shade.code})
             </option>
           ))}
         </SelectField>
-        <SelectField label="Factory" value={form.factoryId} onChange={set('factoryId')}>
-          <option value="">Any factory</option>
+        <SelectField label={t('Factory')} value={form.factoryId} onChange={set('factoryId')}>
+          <option value="">{t('Any factory')}</option>
           {factories.data?.map((factory) => (
             <option key={factory.id} value={factory.id}>
               {factory.name} · {factory.companyName}
             </option>
           ))}
         </SelectField>
-        <TextField label="Lab-dip reference" value={form.reference} onChange={set('reference')} placeholder="LD-26-0031" />
-        <TextField label="Approved on" type="date" value={form.approvedOn} onChange={set('approvedOn')} />
-        <TextField label="Tolerance" type="number" step="0.1" unit="ΔE" value={form.toleranceDeltaE} onChange={set('toleranceDeltaE')} />
-        <TextField label="Physical standard kept at" value={form.physicalLocation} onChange={set('physicalLocation')} placeholder="Shade cabinet, drawer 2" />
+        <TextField label={t('Lab-dip reference')} value={form.reference} onChange={set('reference')} placeholder="LD-26-0031" />
+        <TextField label={t('Approved on')} type="date" value={form.approvedOn} onChange={set('approvedOn')} />
+        <TextField label={t('Tolerance')} type="number" step="0.1" unit="ΔE" value={form.toleranceDeltaE} onChange={set('toleranceDeltaE')} />
+        <TextField label={t('Physical standard kept at')} value={form.physicalLocation} onChange={set('physicalLocation')} placeholder={t('Shade cabinet, drawer 2')} />
         <Problem message={error} />
         <div className="flex justify-end gap-3 sm:col-span-2">
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" busy={add.isPending} busyLabel="Saving">
-            Record standard
-          </Button>
+          <Button onClick={onClose}>{t('Cancel')}</Button>
+          <Button type="submit" variant="primary" busy={add.isPending} busyLabel={t('Saving')}>{t('Record standard')}</Button>
         </div>
       </form>
     </Dialog>

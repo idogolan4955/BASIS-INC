@@ -38,7 +38,7 @@ export function ExportMenu({ ledger, scope, rows, size = 'sm' }: { ledger: Expor
       </Button>
       {open && (
         <>
-          <button type="button" aria-label="Close" className="fixed inset-0 z-10 cursor-default" onClick={() => setOpen(false)} />
+          <button type="button" aria-label={t('Close')} className="fixed inset-0 z-10 cursor-default" onClick={() => setOpen(false)} />
           <span role="menu" className="absolute end-0 top-full z-20 mt-1 min-w-40 rounded-[var(--radius-panel)] border border-line bg-panel py-1 shadow-[0_8px_24px_-12px_rgba(43,39,36,0.35)]">
             {formats.map((format) => (
               <button

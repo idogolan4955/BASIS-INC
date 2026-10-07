@@ -20,12 +20,14 @@ import { useRecordNote, useTimeline } from '../../data/timeline';
 import { useRequiredSession } from '../../session';
 import { NotFound } from '../NotFound';
 import { EditProductDialog, NewSkusDialog, NewVariantDialog, StandardDialog } from './ProductDialogs';
+import { useT } from '../../i18n';
 
 function ProductTimeline({ code }: { code: string }) {
+  const t = useT();
   const timeline = useTimeline('product', code);
   const note = useRecordNote('product', code);
   return (
-    <Panel title="Timeline" count={timeline.data?.length} className="xl:col-span-12">
+    <Panel title={t('Timeline')} count={timeline.data?.length} className="xl:col-span-12">
       <Timeline events={timeline.data ?? []} onAddNote={(text) => note.mutateAsync(text)} busy={note.isPending} />
     </Panel>
   );
@@ -35,41 +37,42 @@ const STRUCTURE: Record<string, 'mesh' | 'lining' | 'tulle'> = { MSH: 'mesh', LI
 const pad = (index: number) => String(index).padStart(2, '0');
 
 function Overview({ product }: { product: ProductDetail }) {
+  const t = useT();
   const specRows = product.specSchema.map((field) => ({ field, value: product.specs[field.key] ?? '' }));
   return (
     <div className="grid gap-4 xl:grid-cols-12">
-      <Panel title="About" className="xl:col-span-7">
-        {product.description ? <p className="max-w-prose text-[0.9375rem] leading-relaxed">{product.description}</p> : <p className="text-ink-muted">No description yet.</p>}
+      <Panel title={t('About')} className="xl:col-span-7">
+        {product.description ? <p className="max-w-prose text-[0.9375rem] leading-relaxed">{product.description}</p> : <p className="text-ink-muted">{t('No description yet.')}</p>}
         <dl className="mt-6 grid gap-x-8 gap-y-4 sm:grid-cols-2">
           <div>
-            <dt className="caps text-ink-muted">Composition</dt>
+            <dt className="caps text-ink-muted">{t('Composition')}</dt>
             <dd className="mt-1 text-sm">
               {product.composition.length > 0
                 ? product.composition.map((part) => `${part.percent}% ${part.fibre}`).join(', ')
-                : <span className="text-ink-muted">To be confirmed per production standard</span>}
+                : <span className="text-ink-muted">{t('To be confirmed per production standard')}</span>}
             </dd>
           </div>
           <div>
-            <dt className="caps text-ink-muted">Construction</dt>
-            <dd className="mt-1 text-sm">{product.construction || <span className="text-ink-muted">Not recorded</span>}</dd>
+            <dt className="caps text-ink-muted">{t('Construction')}</dt>
+            <dd className="mt-1 text-sm">{product.construction || <span className="text-ink-muted">{t('Not recorded')}</span>}</dd>
           </div>
           <div>
-            <dt className="caps text-ink-muted">Care</dt>
-            <dd className="mt-1 text-sm">{product.care || <span className="text-ink-muted">Not recorded</span>}</dd>
+            <dt className="caps text-ink-muted">{t('Care')}</dt>
+            <dd className="mt-1 text-sm">{product.care || <span className="text-ink-muted">{t('Not recorded')}</span>}</dd>
           </div>
         </dl>
       </Panel>
 
       <Panel title={`${product.familyName} specification`} className="xl:col-span-5" flush>
         {specRows.length === 0 ? (
-          <p className="px-5 py-6 text-ink-muted">This family has no specification schema yet.</p>
+          <p className="px-5 py-6 text-ink-muted">{t('This family has no specification schema yet.')}</p>
         ) : (
           <dl>
             {specRows.map(({ field, value }) => (
               <div key={field.key} className="flex items-baseline justify-between gap-4 border-b border-line px-5 py-3 last:border-b-0">
                 <dt className="text-[0.8125rem] text-ink-muted">{field.label}</dt>
                 <dd className="text-end text-sm">
-                  {value || <span className="text-ink-muted">Not set</span>}
+                  {value || <span className="text-ink-muted">{t('Not set')}</span>}
                   {value && field.unit && <span className="code ms-1 text-ink-muted">{field.unit}</span>}
                 </dd>
               </div>
@@ -78,22 +81,22 @@ function Overview({ product }: { product: ProductDetail }) {
         )}
       </Panel>
 
-      <Panel title="Variants" count={product.variants.length} className="xl:col-span-12" flush>
+      <Panel title={t('Variants')} count={product.variants.length} className="xl:col-span-12" flush>
         {product.variants.length === 0 ? (
-          <p className="px-5 py-6 text-ink-muted">No variants yet. A variant is a width, weight or finish version of the product.</p>
+          <p className="px-5 py-6 text-ink-muted">{t('No variants yet. A variant is a width, weight or finish version of the product.')}</p>
         ) : (
-          <Ledger caption="Variants">
+          <Ledger caption={t('Variants')}>
             <thead>
               <tr>
-                <Th>Variant</Th>
-                <Th>Code</Th>
-                <Th numeric>Width</Th>
-                <Th numeric>Usable width</Th>
-                <Th numeric>GSM</Th>
-                <Th numeric>Stretch warp</Th>
-                <Th numeric>Stretch weft</Th>
-                <Th>Finish</Th>
-                <Th>Status</Th>
+                <Th>{t('Variant')}</Th>
+                <Th>{t('Code')}</Th>
+                <Th numeric>{t('Width')}</Th>
+                <Th numeric>{t('Usable width')}</Th>
+                <Th numeric>{t('GSM')}</Th>
+                <Th numeric>{t('Stretch warp')}</Th>
+                <Th numeric>{t('Stretch weft')}</Th>
+                <Th>{t('Finish')}</Th>
+                <Th>{t('Status')}</Th>
               </tr>
             </thead>
             <tbody>
@@ -101,14 +104,14 @@ function Overview({ product }: { product: ProductDetail }) {
                 <Tr key={variant.id}>
                   <Td className="font-medium">{variant.name}</Td>
                   <Td className="code">{variant.fullCode}</Td>
-                  <Td numeric>{variant.widthCm === null ? <span className="text-ink-muted">tbc</span> : `${variant.widthCm} cm`}</Td>
-                  <Td numeric>{variant.usableWidthCm === null ? <span className="text-ink-muted">tbc</span> : `${variant.usableWidthCm} cm`}</Td>
-                  <Td numeric>{variant.gsm === null ? <span className="text-ink-muted">tbc</span> : variant.gsm}</Td>
-                  <Td numeric>{variant.stretchWarpPercent === null ? <span className="text-ink-muted">tbc</span> : `${variant.stretchWarpPercent}%`}</Td>
-                  <Td numeric>{variant.stretchWeftPercent === null ? <span className="text-ink-muted">tbc</span> : `${variant.stretchWeftPercent}%`}</Td>
+                  <Td numeric>{variant.widthCm === null ? <span className="text-ink-muted">{t('tbc')}</span> : `${variant.widthCm} cm`}</Td>
+                  <Td numeric>{variant.usableWidthCm === null ? <span className="text-ink-muted">{t('tbc')}</span> : `${variant.usableWidthCm} cm`}</Td>
+                  <Td numeric>{variant.gsm === null ? <span className="text-ink-muted">{t('tbc')}</span> : variant.gsm}</Td>
+                  <Td numeric>{variant.stretchWarpPercent === null ? <span className="text-ink-muted">{t('tbc')}</span> : `${variant.stretchWarpPercent}%`}</Td>
+                  <Td numeric>{variant.stretchWeftPercent === null ? <span className="text-ink-muted">{t('tbc')}</span> : `${variant.stretchWeftPercent}%`}</Td>
                   <Td className="text-ink-soft">{variant.finish || '—'}</Td>
                   <Td>
-                    <StatusChip tone={PRODUCT_STATUS_TONE[variant.status]}>{PRODUCT_STATUS_LABEL[variant.status]}</StatusChip>
+                    <StatusChip tone={PRODUCT_STATUS_TONE[variant.status]}>{t(PRODUCT_STATUS_LABEL[variant.status])}</StatusChip>
                   </Td>
                 </Tr>
               ))}
@@ -123,23 +126,24 @@ function Overview({ product }: { product: ProductDetail }) {
 }
 
 function Skus({ product, manage }: { product: ProductDetail; manage: boolean }) {
+  const t = useT();
   const skus = [...product.skus].sort((a, b) => a.variantCode.localeCompare(b.variantCode) || a.shadeSort - b.shadeSort);
   const setStatus = useSetSkuStatus();
   const setPublic = useSetSkuPublic();
   return (
-    <Panel title="SKUs" count={skus.length} flush>
+    <Panel title={t('SKUs')} count={skus.length} flush>
       {skus.length === 0 ? (
-        <p className="px-5 py-6 text-ink-muted">No SKUs yet. A SKU is a variant in a shade, in a put-up.</p>
+        <p className="px-5 py-6 text-ink-muted">{t('No SKUs yet. A SKU is a variant in a shade, in a put-up.')}</p>
       ) : (
         <Ledger caption={`SKUs of ${product.name}`}>
           <thead>
             <tr>
-              <Th>SKU</Th>
-              <Th>Variant</Th>
-              <Th>Shade</Th>
-              <Th>Put-up</Th>
-              <Th>Status</Th>
-              <Th>Public</Th>
+              <Th>{t('SKU')}</Th>
+              <Th>{t('Variant')}</Th>
+              <Th>{t('Shade')}</Th>
+              <Th>{t('Put-up')}</Th>
+              <Th>{t('Status')}</Th>
+              <Th>{t('Public')}</Th>
             </tr>
           </thead>
           <tbody>
@@ -172,13 +176,13 @@ function Skus({ product, manage }: { product: ProductDetail; manage: boolean }) 
                       >
                         {SKU_STATUSES.map((status) => (
                           <option key={status} value={status}>
-                            {SKU_STATUS_LABEL[status]}
+                            {t(SKU_STATUS_LABEL[status])}
                           </option>
                         ))}
                       </select>
                     </label>
                   ) : (
-                    <StatusChip tone={SKU_STATUS_TONE[sku.status]}>{SKU_STATUS_LABEL[sku.status]}</StatusChip>
+                    <StatusChip tone={SKU_STATUS_TONE[sku.status]}>{t(SKU_STATUS_LABEL[sku.status])}</StatusChip>
                   )}
                 </Td>
                 <Td>
@@ -206,36 +210,35 @@ function Skus({ product, manage }: { product: ProductDetail; manage: boolean }) 
 }
 
 function Standards({ product, shades, manage }: { product: ProductDetail; shades: readonly ShadeView[]; manage: boolean }) {
+  const t = useT();
   const standards = useShadeStandards(product.code);
   const [recording, setRecording] = useState(false);
   const rows = standards.data ?? [];
   return (
     <>
       <Panel
-        title="Shade standards"
+        title={t('Shade standards')}
         count={rows.length}
         flush
         action={
           manage && (
             <Button size="sm" onClick={() => setRecording(true)}>
-              <Plus size={14} aria-hidden="true" />
-              Record standard
-            </Button>
+              <Plus size={14} aria-hidden="true" />{t('Record standard')}</Button>
           )
         }
       >
         {rows.length === 0 ? (
-          <p className="px-5 py-6 text-ink-muted">No approved standards yet. A standard is the lab dip a lot is matched against, per shade and factory.</p>
+          <p className="px-5 py-6 text-ink-muted">{t('No approved standards yet. A standard is the lab dip a lot is matched against, per shade and factory.')}</p>
         ) : (
           <Ledger caption={`Shade standards of ${product.name}`}>
             <thead>
               <tr>
-                <Th>Shade</Th>
-                <Th>Factory</Th>
-                <Th>Reference</Th>
-                <Th>Approved</Th>
-                <Th numeric>Tolerance</Th>
-                <Th>Kept at</Th>
+                <Th>{t('Shade')}</Th>
+                <Th>{t('Factory')}</Th>
+                <Th>{t('Reference')}</Th>
+                <Th>{t('Approved')}</Th>
+                <Th numeric>{t('Tolerance')}</Th>
+                <Th>{t('Kept at')}</Th>
               </tr>
             </thead>
             <tbody>
@@ -267,13 +270,12 @@ function Standards({ product, shades, manage }: { product: ProductDetail; shades
 }
 
 function ShadeAvailability({ product, shades }: { product: ProductDetail; shades: readonly ShadeView[] }) {
+  const t = useT();
   const byShade = new Map<string, ProductDetail['skus'][number][]>();
   for (const sku of product.skus) byShade.set(sku.shadeCode, [...(byShade.get(sku.shadeCode) ?? []), sku]);
   return (
-    <Panel title="Shade availability">
-      <p className="mb-5 max-w-prose text-[0.8125rem] text-ink-muted">
-        A shade exists once in the Shade System. It is available for this product when one of its SKUs is active; until then it is listed, not offered.
-      </p>
+    <Panel title={t('Shade availability')}>
+      <p className="mb-5 max-w-prose text-[0.8125rem] text-ink-muted">{t('A shade exists once in the Shade System. It is available for this product when one of its SKUs is active; until then it is listed, not offered.')}</p>
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {shades.map((shade) => {
           const skus = byShade.get(shade.code) ?? [];
@@ -296,6 +298,7 @@ function ShadeAvailability({ product, shades }: { product: ProductDetail; shades
 }
 
 export function ProductSheet({ tab }: { tab: 'overview' | 'skus' | 'shades' }) {
+  const t = useT();
   const session = useRequiredSession();
   const { code = '' } = useParams();
   const product = useProduct(code);
@@ -303,9 +306,9 @@ export function ProductSheet({ tab }: { tab: 'overview' | 'skus' | 'shades' }) {
   const [dialog, setDialog] = useState<'edit' | 'variant' | 'skus' | null>(null);
   const manage = canManageModule(session.role, 'products');
 
-  if (product.isPending) return <p className="px-5 py-10 text-ink-muted lg:px-8">Loading product</p>;
+  if (product.isPending) return <p className="px-5 py-10 text-ink-muted lg:px-8">{t('Loading product')}</p>;
   if (product.error) return <p className="px-5 py-10 text-critical lg:px-8">The product could not be loaded. {product.error.message}</p>;
-  if (!product.data) return <NotFound what="product" />;
+  if (!product.data) return <NotFound what={t('product')} />;
   const data = product.data;
   const base = `/products/${data.code}`;
 
@@ -318,7 +321,7 @@ export function ProductSheet({ tab }: { tab: 'overview' | 'skus' | 'shades' }) {
         subtitle={data.tagline}
         status={
           <>
-            <StatusChip tone={PRODUCT_STATUS_TONE[data.status]}>{PRODUCT_STATUS_LABEL[data.status]}</StatusChip>
+            <StatusChip tone={PRODUCT_STATUS_TONE[data.status]}>{t(PRODUCT_STATUS_LABEL[data.status])}</StatusChip>
             <span className="text-[0.8125rem] text-ink-muted">{data.isPublic ? 'Published on the website' : 'Not published'}</span>
           </>
         }
@@ -337,32 +340,24 @@ export function ProductSheet({ tab }: { tab: 'overview' | 'skus' | 'shades' }) {
         actions={
           manage && (
             <>
-              <Button onClick={() => setDialog('variant')}>New variant</Button>
-              <Button onClick={() => setDialog('skus')}>New SKUs</Button>
-              <Button variant="primary" onClick={() => setDialog('edit')}>
-                Edit
-              </Button>
+              <Button onClick={() => setDialog('variant')}>{t('New variant')}</Button>
+              <Button onClick={() => setDialog('skus')}>{t('New SKUs')}</Button>
+              <Button variant="primary" onClick={() => setDialog('edit')}>{t('Edit')}</Button>
             </>
           )
         }
       />
       <SheetTabs>
-        <NavLink to={base} end className={({ isActive }) => sheetTabClass(isActive)}>
-          Overview
-        </NavLink>
-        <NavLink to={`${base}/skus`} className={({ isActive }) => sheetTabClass(isActive)}>
-          SKUs
-        </NavLink>
-        <NavLink to={`${base}/shades`} className={({ isActive }) => sheetTabClass(isActive)}>
-          Shades
-        </NavLink>
+        <NavLink to={base} end className={({ isActive }) => sheetTabClass(isActive)}>{t('Overview')}</NavLink>
+        <NavLink to={`${base}/skus`} className={({ isActive }) => sheetTabClass(isActive)}>{t('SKUs')}</NavLink>
+        <NavLink to={`${base}/shades`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Shades')}</NavLink>
       </SheetTabs>
       <div className="px-5 py-6 lg:px-8">
         {tab === 'overview' && <Overview product={data} />}
         {tab === 'skus' && <Skus product={data} manage={manage} />}
         {tab === 'shades' && (
           <div className="flex flex-col gap-4">
-            {shades.data ? <ShadeAvailability product={data} shades={shades.data} /> : <EmptyState title="Loading shades" />}
+            {shades.data ? <ShadeAvailability product={data} shades={shades.data} /> : <EmptyState title={t('Loading shades')} />}
             <Standards product={data} shades={shades.data ?? []} manage={manage || session.role === 'qc'} />
           </div>
         )}

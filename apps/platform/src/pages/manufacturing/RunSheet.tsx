@@ -24,6 +24,7 @@ import { PackingPanel } from './RunPacking';
 import { useRecordNote, useTimeline } from '../../data/timeline';
 import { useRequiredSession } from '../../session';
 import { NotFound } from '../NotFound';
+import { useT } from '../../i18n';
 
 const metres = (stored: string) => formatQuantity(quantityFromStored(stored, 'm'));
 const short = (date: string | null) => (date ? formatLocalDate(date as never).slice(0, 6) : '—');
@@ -47,6 +48,7 @@ function toTrackSteps(run: RunDetail, today: string): TrackStep[] {
 }
 
 function UpdateDialog({ run, milestone, onClose }: { run: RunDetail; milestone: MilestoneRecord | null; onClose: () => void }) {
+  const t = useT();
   const update = useUpdateMilestone();
   const [form, setForm] = useState({ state: milestone?.state ?? 'pending', forecastEnd: milestone?.forecastEnd ?? '', actualStart: milestone?.actualStart ?? '', actualEnd: milestone?.actualEnd ?? '', delayReason: milestone?.delayReason ?? '', note: milestone?.note ?? '' });
   const [error, setError] = useState<string | null>(null);
@@ -76,42 +78,40 @@ function UpdateDialog({ run, milestone, onClose }: { run: RunDetail; milestone: 
   return (
     <Dialog open={milestone !== null} onClose={onClose} title={milestone ? `${milestone.name}` : 'Milestone'} description={milestone ? `Planned ${formatLocalDate(milestone.plannedStart)} to ${formatLocalDate(milestone.plannedEnd)}. The run's health follows from what is recorded here.` : undefined}>
       <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-        <SelectField label="State" value={form.state} onChange={set('state')}>
+        <SelectField label={t('State')} value={form.state} onChange={set('state')}>
           {MILESTONE_STATES.map((state) => (
             <option key={state} value={state}>
-              {MILESTONE_STATE_LABEL[state]}
+              {t(MILESTONE_STATE_LABEL[state])}
             </option>
           ))}
         </SelectField>
         <TextField
-          label="Now expected to end"
+          label={t('Now expected to end')}
           type="date"
           value={form.state === 'pending' ? '' : form.forecastEnd}
           onChange={set('forecastEnd')}
           disabled={form.state === 'pending'}
           help={form.state === 'pending' ? 'A pending step follows the steps before it.' : 'Leave empty when the plan holds.'}
         />
-        <TextField label="Actual start" type="date" value={form.actualStart} onChange={set('actualStart')} />
-        <TextField label="Actual end" type="date" value={form.actualEnd} onChange={set('actualEnd')} help="Filled in when the step is done." />
-        <SelectField label="Delay reason" value={form.delayReason} onChange={set('delayReason')}>
-          <option value="">None</option>
+        <TextField label={t('Actual start')} type="date" value={form.actualStart} onChange={set('actualStart')} />
+        <TextField label={t('Actual end')} type="date" value={form.actualEnd} onChange={set('actualEnd')} help={t('Filled in when the step is done.')} />
+        <SelectField label={t('Delay reason')} value={form.delayReason} onChange={set('delayReason')}>
+          <option value="">{t('None')}</option>
           {DELAY_REASONS.map((reason) => (
             <option key={reason} value={reason}>
               {reason}
             </option>
           ))}
         </SelectField>
-        <TextArea label="Note" value={form.note} onChange={set('note')} rows={2} className="sm:col-span-2" />
+        <TextArea label={t('Note')} value={form.note} onChange={set('note')} rows={2} className="sm:col-span-2" />
         {error && (
           <p role="alert" className="text-[0.8125rem] font-medium text-critical sm:col-span-2">
             {error}
           </p>
         )}
         <div className="flex justify-end gap-3 sm:col-span-2">
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" busy={update.isPending} busyLabel="Saving">
-            Save milestone
-          </Button>
+          <Button onClick={onClose}>{t('Cancel')}</Button>
+          <Button type="submit" variant="primary" busy={update.isPending} busyLabel={t('Saving')}>{t('Save milestone')}</Button>
         </div>
       </form>
     </Dialog>
@@ -119,16 +119,18 @@ function UpdateDialog({ run, milestone, onClose }: { run: RunDetail; milestone: 
 }
 
 function RunTimelinePanel({ number }: { number: string }) {
+  const t = useT();
   const timeline = useTimeline('production_run', number);
   const note = useRecordNote('production_run', number);
   return (
-    <Panel title="Timeline" count={timeline.data?.length}>
+    <Panel title={t('Timeline')} count={timeline.data?.length}>
       <Timeline events={timeline.data ?? []} onAddNote={(text) => note.mutateAsync(text)} busy={note.isPending} />
     </Panel>
   );
 }
 
 export function RunSheet({ tab }: { tab: 'milestones' | 'lots' | 'packing' | 'documents' | 'timeline' }) {
+  const t = useT();
   const session = useRequiredSession();
   const { number = '' } = useParams();
   const run = useProductionRun(number);
@@ -136,9 +138,9 @@ export function RunSheet({ tab }: { tab: 'milestones' | 'lots' | 'packing' | 'do
   const manage = ['owner', 'operations', 'purchasing', 'qc'].includes(session.role);
   const today = todayIn(Intl.DateTimeFormat().resolvedOptions().timeZone);
 
-  if (run.isPending) return <p className="px-5 py-10 text-ink-muted lg:px-8">Loading run</p>;
+  if (run.isPending) return <p className="px-5 py-10 text-ink-muted lg:px-8">{t('Loading run')}</p>;
   if (run.error) return <p className="px-5 py-10 text-critical lg:px-8">The run could not be loaded. {run.error.message}</p>;
-  if (!run.data) return <NotFound what="production run" />;
+  if (!run.data) return <NotFound what={t('production run')} />;
   const data = run.data;
   const base = `/manufacturing/runs/${data.number}`;
   const expectedEnd = data.forecastEnd ?? data.plannedEnd;
@@ -162,8 +164,8 @@ export function RunSheet({ tab }: { tab: 'milestones' | 'lots' | 'packing' | 'do
         }
         status={
           <>
-            <StatusChip tone={RUN_STATE_TONE[data.state]}>{RUN_STATE_LABEL[data.state]}</StatusChip>
-            <StatusChip tone={HEALTH_TONE[data.health]}>{HEALTH_LABEL[data.health]}</StatusChip>
+            <StatusChip tone={RUN_STATE_TONE[data.state]}>{t(RUN_STATE_LABEL[data.state])}</StatusChip>
+            <StatusChip tone={HEALTH_TONE[data.health]}>{t(HEALTH_LABEL[data.health])}</StatusChip>
           </>
         }
         facts={[
@@ -176,40 +178,30 @@ export function RunSheet({ tab }: { tab: 'milestones' | 'lots' | 'packing' | 'do
         ]}
       />
       <SheetTabs>
-        <NavLink to={base} end className={({ isActive }) => sheetTabClass(isActive)}>
-          Milestones
-        </NavLink>
-        <NavLink to={`${base}/lots`} className={({ isActive }) => sheetTabClass(isActive)}>
-          Lots
-        </NavLink>
-        <NavLink to={`${base}/packing`} className={({ isActive }) => sheetTabClass(isActive)}>
-          Packing
-        </NavLink>
-        <NavLink to={`${base}/documents`} className={({ isActive }) => sheetTabClass(isActive)}>
-          Documents
-        </NavLink>
-        <NavLink to={`${base}/timeline`} className={({ isActive }) => sheetTabClass(isActive)}>
-          Timeline
-        </NavLink>
+        <NavLink to={base} end className={({ isActive }) => sheetTabClass(isActive)}>{t('Milestones')}</NavLink>
+        <NavLink to={`${base}/lots`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Lots')}</NavLink>
+        <NavLink to={`${base}/packing`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Packing')}</NavLink>
+        <NavLink to={`${base}/documents`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Documents')}</NavLink>
+        <NavLink to={`${base}/timeline`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Timeline')}</NavLink>
       </SheetTabs>
       <div className="flex flex-col gap-4 px-5 py-6 lg:px-8">
         {tab === 'milestones' && (
           <>
-            <Panel title="Production timeline">
+            <Panel title={t('Production timeline')}>
               <Track steps={toTrackSteps(data, today)} />
             </Panel>
-            <Panel title="Milestones" count={data.milestones.length} flush>
+            <Panel title={t('Milestones')} count={data.milestones.length} flush>
               <Ledger caption={`Milestones of ${data.number}`}>
                 <thead>
                   <tr>
-                    <Th className="w-14">No.</Th>
-                    <Th>Step</Th>
-                    <Th>Planned</Th>
-                    <Th>Expected</Th>
-                    <Th>Actual</Th>
-                    <Th>State</Th>
-                    <Th>Reason</Th>
-                    {manage && <Th>Update</Th>}
+                    <Th className="w-14">{t('No.')}</Th>
+                    <Th>{t('Step')}</Th>
+                    <Th>{t('Planned')}</Th>
+                    <Th>{t('Expected')}</Th>
+                    <Th>{t('Actual')}</Th>
+                    <Th>{t('State')}</Th>
+                    <Th>{t('Reason')}</Th>
+                    {manage && <Th>{t('Update')}</Th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -233,15 +225,13 @@ export function RunSheet({ tab }: { tab: 'milestones' | 'lots' | 'packing' | 'do
                         </Td>
                         <Td>
                           <StatusChip tone={milestone.state === 'done' ? 'positive' : milestone.state === 'in_progress' ? 'transit' : milestone.state === 'blocked' ? 'critical' : milestone.state === 'skipped' ? 'neutral' : open && slipped ? 'caution' : 'neutral'}>
-                            {MILESTONE_STATE_LABEL[milestone.state]}
+                            {t(MILESTONE_STATE_LABEL[milestone.state])}
                           </StatusChip>
                         </Td>
                         <Td className="text-ink-soft">{milestone.delayReason || '—'}</Td>
                         {manage && (
                           <Td>
-                            <Button size="sm" variant="quiet" onClick={() => setEditing(milestone)} disabled={data.state === 'cancelled'}>
-                              Update
-                            </Button>
+                            <Button size="sm" variant="quiet" onClick={() => setEditing(milestone)} disabled={data.state === 'cancelled'}>{t('Update')}</Button>
                           </Td>
                         )}
                       </Tr>
@@ -250,15 +240,15 @@ export function RunSheet({ tab }: { tab: 'milestones' | 'lots' | 'packing' | 'do
                 </tbody>
               </Ledger>
             </Panel>
-            <Panel title="Lines" count={data.lines.length} flush>
+            <Panel title={t('Lines')} count={data.lines.length} flush>
               <Ledger caption={`Lines of ${data.number}`}>
                 <thead>
                   <tr>
-                    <Th>SKU</Th>
-                    <Th>Product</Th>
-                    <Th>Shade</Th>
-                    <Th numeric>Planned</Th>
-                    <Th numeric>Produced</Th>
+                    <Th>{t('SKU')}</Th>
+                    <Th>{t('Product')}</Th>
+                    <Th>{t('Shade')}</Th>
+                    <Th numeric>{t('Planned')}</Th>
+                    <Th numeric>{t('Produced')}</Th>
                   </tr>
                 </thead>
                 <tbody>

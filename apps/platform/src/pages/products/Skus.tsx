@@ -19,8 +19,10 @@ import { NotFound } from '../NotFound';
 import { ExportMenu } from '../../components/ExportMenu';
 import { ModuleTitle, ProductsTabs } from './ProductsIndex';
 import { SourcingDialog } from './SourcingDialog';
+import { useT } from '../../i18n';
 
 export function SkuLedger() {
+  const t = useT();
   const skus = useSkus();
   const products = useProducts();
   const [query, setQuery] = useState('');
@@ -39,48 +41,46 @@ export function SkuLedger() {
     <>
       <ModuleTitle
         number="02"
-        title="Products"
+        title={t('Products')}
         actions={<ExportMenu ledger="skus" size="md" rows={rows.map((sku) => ({ code: sku.code, product: sku.productName, variant: sku.variantName, shade: sku.shadeName, shadeCode: sku.shadeCode, putUp: sku.putUpName, status: sku.status, public: sku.isPublic ? 'yes' : 'no', rollTracking: sku.rollTracking ? 'yes' : 'no' }))} />}
-      >
-        Every sellable unit: a variant, in a shade, in a put-up.
-      </ModuleTitle>
+      >{t('Every sellable unit: a variant, in a shade, in a put-up.')}</ModuleTitle>
       <ProductsTabs active="skus" />
       <div className="px-5 py-6 lg:px-8">
-        <Panel title="SKUs" count={rows.length} flush>
+        <Panel title={t('SKUs')} count={rows.length} flush>
           <div className="grid gap-3 border-b border-line px-5 py-4 sm:grid-cols-3">
-            <TextField label="Search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Code, product or shade" />
-            <SelectField label="Product" value={product} onChange={(event) => setProduct(event.target.value)}>
-              <option value="">All products</option>
+            <TextField label={t('Search')} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t('Code, product or shade')} />
+            <SelectField label={t('Product')} value={product} onChange={(event) => setProduct(event.target.value)}>
+              <option value="">{t('All products')}</option>
               {products.data?.map((candidate) => (
                 <option key={candidate.code} value={candidate.code}>
                   {candidate.name}
                 </option>
               ))}
             </SelectField>
-            <SelectField label="Status" value={status} onChange={(event) => setStatus(event.target.value as '' | SkuStatus)}>
-              <option value="">All statuses</option>
+            <SelectField label={t('Status')} value={status} onChange={(event) => setStatus(event.target.value as '' | SkuStatus)}>
+              <option value="">{t('All statuses')}</option>
               {SKU_STATUSES.map((candidate) => (
                 <option key={candidate} value={candidate}>
-                  {SKU_STATUS_LABEL[candidate]}
+                  {t(SKU_STATUS_LABEL[candidate])}
                 </option>
               ))}
             </SelectField>
           </div>
           {skus.isPending ? (
-            <p className="px-5 py-8 text-ink-muted">Loading SKUs</p>
+            <p className="px-5 py-8 text-ink-muted">{t('Loading SKUs')}</p>
           ) : rows.length === 0 ? (
-            <p className="px-5 py-8 text-ink-muted">No SKUs match. Clear a filter, or create SKUs from a product sheet.</p>
+            <p className="px-5 py-8 text-ink-muted">{t('No SKUs match. Clear a filter, or create SKUs from a product sheet.')}</p>
           ) : (
-            <Ledger caption="SKUs">
+            <Ledger caption={t('SKUs')}>
               <thead>
                 <tr>
-                  <Th>SKU</Th>
-                  <Th>Product</Th>
-                  <Th>Variant</Th>
-                  <Th>Shade</Th>
-                  <Th>Put-up</Th>
-                  <Th>Status</Th>
-                  <Th>Public</Th>
+                  <Th>{t('SKU')}</Th>
+                  <Th>{t('Product')}</Th>
+                  <Th>{t('Variant')}</Th>
+                  <Th>{t('Shade')}</Th>
+                  <Th>{t('Put-up')}</Th>
+                  <Th>{t('Status')}</Th>
+                  <Th>{t('Public')}</Th>
                 </tr>
               </thead>
               <tbody>
@@ -101,7 +101,7 @@ export function SkuLedger() {
                     </Td>
                     <Td className="whitespace-nowrap text-ink-soft">{sku.putUpName}</Td>
                     <Td>
-                      <StatusChip tone={SKU_STATUS_TONE[sku.status]}>{SKU_STATUS_LABEL[sku.status]}</StatusChip>
+                      <StatusChip tone={SKU_STATUS_TONE[sku.status]}>{t(SKU_STATUS_LABEL[sku.status])}</StatusChip>
                     </Td>
                     <Td className="text-ink-soft">{sku.isPublic ? 'Yes' : 'No'}</Td>
                   </Tr>
@@ -116,20 +116,19 @@ export function SkuLedger() {
 }
 
 function Sourcing({ code, productCode, manage }: { code: string; productCode: string; manage: boolean }) {
+  const t = useT();
   const sourcing = useSkuSourcing(code, true);
   const [adding, setAdding] = useState(false);
-  if (sourcing.isPending) return <p className="text-ink-muted">Loading sourcing</p>;
+  if (sourcing.isPending) return <p className="text-ink-muted">{t('Loading sourcing')}</p>;
   if (sourcing.error) return <p className="text-critical">Sourcing could not be loaded. {sourcing.error.message}</p>;
   const items = sourcing.data?.supplierItems ?? [];
   const dialog = manage && <SourcingDialog skuCode={code} productCode={productCode} open={adding} onClose={() => setAdding(false)} />;
   if (items.length === 0) {
     return (
       <>
-        <p className="text-ink-muted">No supplier is mapped to this SKU yet.</p>
+        <p className="text-ink-muted">{t('No supplier is mapped to this SKU yet.')}</p>
         {manage && (
-          <Button className="mt-4" onClick={() => setAdding(true)}>
-            Add sourcing
-          </Button>
+          <Button className="mt-4" onClick={() => setAdding(true)}>{t('Add sourcing')}</Button>
         )}
         {dialog}
       </>
@@ -139,9 +138,7 @@ function Sourcing({ code, productCode, manage }: { code: string; productCode: st
     <>
     {manage && (
       <div className="mb-4 flex justify-end">
-        <Button size="sm" onClick={() => setAdding(true)}>
-          Add sourcing
-        </Button>
+        <Button size="sm" onClick={() => setAdding(true)}>{t('Add sourcing')}</Button>
       </div>
     )}
     {dialog}
@@ -156,9 +153,8 @@ function Sourcing({ code, productCode, manage }: { code: string; productCode: st
               {item.factoryName && <span className="ms-3 text-[0.8125rem] text-ink-muted">{item.factoryName}</span>}
             </div>
             <div className="flex items-center gap-4 text-[0.8125rem] text-ink-soft">
-              {item.isPreferred && <StatusChip tone="positive">Preferred</StatusChip>}
-              <span>
-                Supplier SKU <span className="code text-ink">{item.supplierSku || '—'}</span>
+              {item.isPreferred && <StatusChip tone="positive">{t('Preferred')}</StatusChip>}
+              <span>{t('Supplier SKU')}<span className="code text-ink">{item.supplierSku || '—'}</span>
               </span>
               <span>MOQ {item.moq ? formatQuantity(quantityFromStored(item.moq, 'm')) : '—'}</span>
               <span>Lead time {item.leadTimeDays ?? '—'} days</span>
@@ -167,8 +163,8 @@ function Sourcing({ code, productCode, manage }: { code: string; productCode: st
           <Ledger caption={`Purchase prices from ${item.supplierName}`}>
             <thead>
               <tr>
-                <Th numeric>From quantity</Th>
-                <Th numeric>Unit price</Th>
+                <Th numeric>{t('From quantity')}</Th>
+                <Th numeric>{t('Unit price')}</Th>
               </tr>
             </thead>
             <tbody>
@@ -188,15 +184,16 @@ function Sourcing({ code, productCode, manage }: { code: string; productCode: st
 }
 
 export function SkuSheet({ tab }: { tab: 'overview' | 'sourcing' }) {
+  const t = useT();
   const session = useRequiredSession();
   const { code = '' } = useParams();
   const sku = useSku(code);
   const costs = canViewCosts(session.role);
   const manage = canManageModule(session.role, 'products');
 
-  if (sku.isPending) return <p className="px-5 py-10 text-ink-muted lg:px-8">Loading SKU</p>;
+  if (sku.isPending) return <p className="px-5 py-10 text-ink-muted lg:px-8">{t('Loading SKU')}</p>;
   if (sku.error) return <p className="px-5 py-10 text-critical lg:px-8">The SKU could not be loaded. {sku.error.message}</p>;
-  if (!sku.data) return <NotFound what="SKU" />;
+  if (!sku.data) return <NotFound what={t('SKU')} />;
   const data = sku.data;
   const base = `/products/skus/${data.code}`;
 
@@ -213,7 +210,7 @@ export function SkuSheet({ tab }: { tab: 'overview' | 'sourcing' }) {
         }
         status={
           <>
-            <StatusChip tone={SKU_STATUS_TONE[data.status]}>{SKU_STATUS_LABEL[data.status]}</StatusChip>
+            <StatusChip tone={SKU_STATUS_TONE[data.status]}>{t(SKU_STATUS_LABEL[data.status])}</StatusChip>
             <span className="text-[0.8125rem] text-ink-muted">{data.isPublic ? 'Published' : 'Not published'}</span>
             <span className="text-[0.8125rem] text-ink-muted">{data.rollTracking ? 'Tracked by roll' : 'Tracked by lot'}</span>
           </>
@@ -228,35 +225,31 @@ export function SkuSheet({ tab }: { tab: 'overview' | 'sourcing' }) {
         ]}
       />
       <SheetTabs>
-        <NavLink to={base} end className={({ isActive }) => sheetTabClass(isActive)}>
-          Overview
-        </NavLink>
+        <NavLink to={base} end className={({ isActive }) => sheetTabClass(isActive)}>{t('Overview')}</NavLink>
         {costs && (
-          <NavLink to={`${base}/sourcing`} className={({ isActive }) => sheetTabClass(isActive)}>
-            Sourcing
-          </NavLink>
+          <NavLink to={`${base}/sourcing`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Sourcing')}</NavLink>
         )}
       </SheetTabs>
       <div className="px-5 py-6 lg:px-8">
         {tab === 'overview' && (
-          <Panel title="Specification">
+          <Panel title={t('Specification')}>
             <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-3">
               <div>
-                <dt className="caps text-ink-muted">Barcode</dt>
-                <dd className="code mt-1">{data.barcode || <span className="text-ink-muted">none</span>}</dd>
+                <dt className="caps text-ink-muted">{t('Barcode')}</dt>
+                <dd className="code mt-1">{data.barcode || <span className="text-ink-muted">{t('none')}</span>}</dd>
               </div>
               <div>
-                <dt className="caps text-ink-muted">Sales MOQ</dt>
-                <dd className="mt-1 text-sm">{data.salesMoq ? formatQuantity(quantityFromStored(data.salesMoq, 'm')) : <span className="text-ink-muted">none</span>}</dd>
+                <dt className="caps text-ink-muted">{t('Sales MOQ')}</dt>
+                <dd className="mt-1 text-sm">{data.salesMoq ? formatQuantity(quantityFromStored(data.salesMoq, 'm')) : <span className="text-ink-muted">{t('none')}</span>}</dd>
               </div>
               <div>
-                <dt className="caps text-ink-muted">GSM</dt>
-                <dd className="mt-1 text-sm">{data.gsm ?? <span className="text-ink-muted">tbc</span>}</dd>
+                <dt className="caps text-ink-muted">{t('GSM')}</dt>
+                <dd className="mt-1 text-sm">{data.gsm ?? <span className="text-ink-muted">{t('tbc')}</span>}</dd>
               </div>
             </dl>
           </Panel>
         )}
-        {tab === 'sourcing' && (costs ? <Panel title="Sourcing"><Sourcing code={data.code} productCode={data.productCode} manage={manage} /></Panel> : <NotFound what="page" />)}
+        {tab === 'sourcing' && (costs ? <Panel title={t('Sourcing')}><Sourcing code={data.code} productCode={data.productCode} manage={manage} /></Panel> : <NotFound what={t('page')} />)}
       </div>
     </>
   );

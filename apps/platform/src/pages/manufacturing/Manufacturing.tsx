@@ -41,7 +41,7 @@ export function ManufacturingTabs({ active }: { active: 'orders' | 'runs' | 'tem
     </NavLink>
   );
   return (
-    <nav aria-label="Manufacturing sections" className="flex gap-6 border-b border-line bg-panel px-5 lg:px-8">
+    <nav aria-label={t('Manufacturing sections')} className="flex gap-6 border-b border-line bg-panel px-5 lg:px-8">
       {tab('orders', '/manufacturing', t('Purchase orders'))}
       {tab('runs', '/manufacturing/runs', t('Production runs'))}
       {tab('templates', '/manufacturing/templates', t('Process templates'))}
@@ -89,9 +89,7 @@ export function PurchaseOrders() {
             <p className="px-5 py-8 text-critical">Purchase orders could not be loaded. {orders.error.message}</p>
           ) : rows.length === 0 ? (
             <div className="p-5">
-              <EmptyState title="No purchase orders yet" action={manage ? <Button variant="primary" onClick={() => setCreating(true)}>New purchase order</Button> : undefined}>
-                A purchase order commits quantities of SKUs to a supplier. Issue it, confirm it, then open a production run on it.
-              </EmptyState>
+              <EmptyState title={t('No purchase orders yet')} action={manage ? <Button variant="primary" onClick={() => setCreating(true)}>{t('New purchase order')}</Button> : undefined}>{t('A purchase order commits quantities of SKUs to a supplier. Issue it, confirm it, then open a production run on it.')}</EmptyState>
             </div>
           ) : (
             <Ledger caption={t('Purchase orders')}>
@@ -171,7 +169,7 @@ export function ProductionRuns() {
           {runs.isPending ? (
             <p className="px-5 py-8 text-ink-muted">{t('Loading runs')}</p>
           ) : rows.length === 0 ? (
-            <p className="px-5 py-8 text-ink-muted">No production runs. A run opens from a confirmed purchase order.</p>
+            <p className="px-5 py-8 text-ink-muted">{t('No production runs. A run opens from a confirmed purchase order.')}</p>
           ) : (
             <Ledger caption={t('Production runs')}>
               <thead>
@@ -241,12 +239,12 @@ export function ProcessTemplates() {
             <Ledger caption={`Steps of ${template.name}`}>
               <thead>
                 <tr>
-                  <Th className="w-14">No.</Th>
-                  <Th>Step</Th>
-                  <Th>Category</Th>
-                  <Th numeric>Days</Th>
-                  <Th>Starts after</Th>
-                  <Th>Gate</Th>
+                  <Th className="w-14">{t('No.')}</Th>
+                  <Th>{t('Step')}</Th>
+                  <Th>{t('Category')}</Th>
+                  <Th numeric>{t('Days')}</Th>
+                  <Th>{t('Starts after')}</Th>
+                  <Th>{t('Gate')}</Th>
                 </tr>
               </thead>
               <tbody>
@@ -264,7 +262,7 @@ export function ProcessTemplates() {
             </Ledger>
           </Panel>
         ))}
-        {templates.data?.length === 0 && <EmptyState title="No process templates">Templates are seeded with the reference data; add one in Settings.</EmptyState>}
+        {templates.data?.length === 0 && <EmptyState title={t('No process templates')}>{t('Templates are seeded with the reference data; add one in Settings.')}</EmptyState>}
       </div>
     </>
   );

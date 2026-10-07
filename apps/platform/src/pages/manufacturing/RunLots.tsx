@@ -3,6 +3,7 @@ import { Button, Dialog, Ledger, Panel, SelectField, ShadeDot, StatusChip, Td, T
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import { useRecordLot } from '../../data/manufacturing';
+import { useT } from '../../i18n';
 
 // What the run has produced: lots, each with its rolls, each on its way
 // through quality and into cartons.
@@ -11,6 +12,7 @@ const metres = (stored: string) => formatQuantity(quantityFromStored(stored, 'm'
 const dateOrDash = (value: string | null) => (value ? formatLocalDate(value as never) : '—');
 
 export function RecordLotDialog({ run, open, onClose }: { run: RunDetail; open: boolean; onClose: () => void }) {
+  const t = useT();
   const record = useRecordLot();
   const first = run.lines[0];
   const [form, setForm] = useState({
@@ -66,34 +68,34 @@ export function RecordLotDialog({ run, open, onClose }: { run: RunDetail; open: 
   const measuredCount = form.measured.split(/[\s,;]+/).filter((value) => value.trim()).length;
 
   return (
-    <Dialog open={open} onClose={onClose} title="Record lot" description="What came off the line, as the mill reports it. Quality comes next; packing after that.">
+    <Dialog open={open} onClose={onClose} title={t('Record lot')} description={t('What came off the line, as the mill reports it. Quality comes next; packing after that.')}>
       <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-        <SelectField label="SKU" required value={form.skuCode} onChange={(event) => chooseSku(event.target.value)} className="sm:col-span-2">
+        <SelectField label={t('SKU')} required value={form.skuCode} onChange={(event) => chooseSku(event.target.value)} className="sm:col-span-2">
           {run.lines.map((candidate) => (
             <option key={candidate.skuCode} value={candidate.skuCode}>
               {candidate.skuCode} · {candidate.productName}, {candidate.shadeName}
             </option>
           ))}
         </SelectField>
-        <TextField label="Mill lot reference" value={form.millLotRef} onChange={set('millLotRef')} placeholder="LR-7731" />
-        <TextField label="Produced on" type="date" value={form.producedOn} onChange={set('producedOn')} />
+        <TextField label={t('Mill lot reference')} value={form.millLotRef} onChange={set('millLotRef')} placeholder="LR-7731" />
+        <TextField label={t('Produced on')} type="date" value={form.producedOn} onChange={set('producedOn')} />
         {line?.rollTracking ? (
           <>
-            <TextField label="Rolls" type="number" min={1} max={500} value={form.rollCount} onChange={set('rollCount')} disabled={measuredCount > 0} />
-            <TextField label="Nominal length" unit="m" value={form.nominalLength} onChange={set('nominalLength')} disabled={measuredCount > 0} help="Each roll is recorded at this length unless measured below." />
-            <TextField label="Usable width" type="number" unit="cm" value={form.usableWidthCm} onChange={set('usableWidthCm')} />
+            <TextField label={t('Rolls')} type="number" min={1} max={500} value={form.rollCount} onChange={set('rollCount')} disabled={measuredCount > 0} />
+            <TextField label={t('Nominal length')} unit="m" value={form.nominalLength} onChange={set('nominalLength')} disabled={measuredCount > 0} help={t('Each roll is recorded at this length unless measured below.')} />
+            <TextField label={t('Usable width')} type="number" unit="cm" value={form.usableWidthCm} onChange={set('usableWidthCm')} />
             <TextArea
-              label="Measured lengths"
+              label={t('Measured lengths')}
               value={form.measured}
               onChange={set('measured')}
               rows={3}
               placeholder="50.2 49.8 50.1 …"
-              help={measuredCount > 0 ? `${measuredCount} rolls from the measured lengths.` : 'One length per roll, when the winder reports them.'}
+              help={measuredCount > 0 ? t('{count} rolls from the measured lengths.', { count: measuredCount }) : t('One length per roll, when the winder reports them.')}
               className="sm:col-span-2"
             />
           </>
         ) : (
-          <TextField label="Produced quantity" required unit="m" value={form.producedQuantity} onChange={set('producedQuantity')} className="sm:col-span-2" />
+          <TextField label={t('Produced quantity')} required unit="m" value={form.producedQuantity} onChange={set('producedQuantity')} className="sm:col-span-2" />
         )}
         {error && (
           <p role="alert" className="text-[0.8125rem] font-medium text-critical sm:col-span-2">
@@ -101,10 +103,8 @@ export function RecordLotDialog({ run, open, onClose }: { run: RunDetail; open: 
           </p>
         )}
         <div className="flex justify-end gap-3 sm:col-span-2">
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" busy={record.isPending} busyLabel="Recording">
-            Record lot
-          </Button>
+          <Button onClick={onClose}>{t('Cancel')}</Button>
+          <Button type="submit" variant="primary" busy={record.isPending} busyLabel={t('Recording')}>{t('Record lot')}</Button>
         </div>
       </form>
     </Dialog>
@@ -112,26 +112,27 @@ export function RecordLotDialog({ run, open, onClose }: { run: RunDetail; open: 
 }
 
 export function LotsPanel({ run, manage }: { run: RunDetail; manage: boolean }) {
+  const t = useT();
   const [recording, setRecording] = useState(false);
   return (
     <>
-      <Panel title="Lots" count={run.lots.length} flush action={manage && run.state !== 'cancelled' && <Button size="sm" onClick={() => setRecording(true)}>Record lot</Button>}>
+      <Panel title={t('Lots')} count={run.lots.length} flush action={manage && run.state !== 'cancelled' && <Button size="sm" onClick={() => setRecording(true)}>{t('Record lot')}</Button>}>
         {run.lots.length === 0 ? (
-          <p className="px-5 py-6 text-ink-muted">No lots yet. A lot is recorded as the mill reports it, with its rolls; quality releases it, packing makes it ready to ship.</p>
+          <p className="px-5 py-6 text-ink-muted">{t('No lots yet. A lot is recorded as the mill reports it, with its rolls; quality releases it, packing makes it ready to ship.')}</p>
         ) : (
           <Ledger caption={`Lots of ${run.number}`}>
             <thead>
               <tr>
-                <Th>Lot</Th>
-                <Th>SKU</Th>
-                <Th>Mill ref.</Th>
-                <Th>Produced</Th>
-                <Th numeric>Reported</Th>
-                <Th numeric>Measured</Th>
-                <Th numeric>Rolls</Th>
-                <Th numeric>Packed</Th>
-                <Th>Quality</Th>
-                <Th numeric>Ready to ship</Th>
+                <Th>{t('Lot')}</Th>
+                <Th>{t('SKU')}</Th>
+                <Th>{t('Mill ref.')}</Th>
+                <Th>{t('Produced')}</Th>
+                <Th numeric>{t('Reported')}</Th>
+                <Th numeric>{t('Measured')}</Th>
+                <Th numeric>{t('Rolls')}</Th>
+                <Th numeric>{t('Packed')}</Th>
+                <Th>{t('Quality')}</Th>
+                <Th numeric>{t('Ready to ship')}</Th>
               </tr>
             </thead>
             <tbody>
@@ -155,7 +156,7 @@ export function LotsPanel({ run, manage }: { run: RunDetail; manage: boolean }) 
                   <Td numeric>{lot.rollCount || '—'}</Td>
                   <Td numeric className="text-ink-soft">{lot.rollCount > 0 ? `${lot.packedRollCount} of ${lot.rollCount}` : metres(lot.packedQuantity)}</Td>
                   <Td>
-                    <StatusChip tone={LOT_QUALITY_TONE[lot.qualityState]}>{LOT_QUALITY_LABEL[lot.qualityState]}</StatusChip>
+                    <StatusChip tone={LOT_QUALITY_TONE[lot.qualityState]}>{t(LOT_QUALITY_LABEL[lot.qualityState])}</StatusChip>
                   </Td>
                   <Td numeric className={lot.qualityState === 'released' && lot.packedQuantity !== '0' ? 'font-medium' : 'text-ink-muted'}>
                     {lot.qualityState === 'released' ? metres(lot.packedQuantity) : '0 m'}

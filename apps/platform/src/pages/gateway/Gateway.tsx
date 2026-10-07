@@ -123,7 +123,7 @@ function Figures({ data, can }: { data: GatewayData; can: (module: ModuleKey) =>
   const lastWeek = orders.weekly[orders.weekly.length - 1] ?? 0;
 
   return (
-    <section aria-label="Figures" className="grid grid-cols-[repeat(auto-fit,minmax(10.5rem,1fr))] gap-4">
+    <section aria-label={t('Figures')} className="grid grid-cols-[repeat(auto-fit,minmax(10.5rem,1fr))] gap-4">
       {can('orders') && (
         <FigureTile
           label={t('Orders')}
@@ -204,28 +204,23 @@ function Figures({ data, can }: { data: GatewayData; can: (module: ModuleKey) =>
 }
 
 function ItemActions({ item }: { item: GatewayData['attention'][number] }) {
+  const t = useT();
   const acknowledge = useAcknowledgeAlert();
   const resolve = useResolveAlert();
   const complete = useCompleteTask();
   if (item.kind === 'task') {
     return (
-      <Button size="sm" variant="quiet" onClick={() => complete.mutate(item.id)} disabled={complete.isPending}>
-        Mark done
-      </Button>
+      <Button size="sm" variant="quiet" onClick={() => complete.mutate(item.id)} disabled={complete.isPending}>{t('Mark done')}</Button>
     );
   }
   return (
     <span className="flex items-center gap-4">
       {item.state === 'open' ? (
-        <Button size="sm" variant="quiet" onClick={() => acknowledge.mutate(item.id)} disabled={acknowledge.isPending}>
-          Acknowledge
-        </Button>
+        <Button size="sm" variant="quiet" onClick={() => acknowledge.mutate(item.id)} disabled={acknowledge.isPending}>{t('Acknowledge')}</Button>
       ) : (
-        <span className="text-[0.8125rem] text-ink-muted">Acknowledged</span>
+        <span className="text-[0.8125rem] text-ink-muted">{t('Acknowledged')}</span>
       )}
-      <Button size="sm" variant="quiet" onClick={() => resolve.mutate(item.id)} disabled={resolve.isPending}>
-        Dismiss
-      </Button>
+      <Button size="sm" variant="quiet" onClick={() => resolve.mutate(item.id)} disabled={resolve.isPending}>{t('Dismiss')}</Button>
     </span>
   );
 }
@@ -250,7 +245,7 @@ function Attention({ items, canRun }: { items: GatewayData['attention']; canRun:
             </span>
           )}
           {canRun && !isSample && (
-            <Button size="sm" variant="quiet" onClick={() => run.mutate()} busy={run.isPending} busyLabel="Checking">
+            <Button size="sm" variant="quiet" onClick={() => run.mutate()} busy={run.isPending} busyLabel={t('Checking')}>
               {t('Run checks')}
             </Button>
           )}
@@ -263,9 +258,7 @@ function Attention({ items, canRun }: { items: GatewayData['attention']; canRun:
     >
       <NewTaskDialog open={creating} onClose={() => setCreating(false)} />
       {items.length === 0 ? (
-        <PanelEmpty>
-          Nothing needs a decision right now. Delays, pending inspections and missing documents appear here as they arise.
-        </PanelEmpty>
+        <PanelEmpty>{t('Nothing needs a decision right now. Delays, pending inspections and missing documents appear here as they arise.')}</PanelEmpty>
       ) : (
         <>
           {/* Phones read each item as a block; wider screens get the ledger. */}
@@ -394,6 +387,7 @@ function Production({ runs, asOf }: { runs: readonly RunTimeline[]; asOf: LocalD
 }
 
 function Lane({ shipment }: { shipment: ShipmentLane }) {
+  const t = useT();
   const position = `${Math.max(0, Math.min(1, shipment.progress)) * 100}%`;
   const late = shipment.health === 'delayed' || shipment.health === 'blocked';
   return (
@@ -405,7 +399,7 @@ function Lane({ shipment }: { shipment: ShipmentLane }) {
         </div>
         <div className="flex items-center gap-4">
           {shipment.health !== 'on_track' && (
-            <StatusChip tone={HEALTH_TONE[shipment.health]}>{HEALTH_LABEL[shipment.health]}</StatusChip>
+            <StatusChip tone={HEALTH_TONE[shipment.health]}>{t(HEALTH_LABEL[shipment.health])}</StatusChip>
           )}
           <StatusChip tone={SHIPMENT_STAGE_TONE[shipment.stage]}>{SHIPMENT_STAGE_LABEL[shipment.stage]}</StatusChip>
         </div>
@@ -445,7 +439,7 @@ function Shipments({ shipments }: { shipments: readonly ShipmentLane[] }) {
   return (
     <Panel id="shipments" title={t('Shipment status')} action={<ViewAll to="/logistics/shipments">{t('All shipments')}</ViewAll>} className="scroll-mt-20 xl:col-span-5">
       {shipments.length === 0 ? (
-        <p className="text-ink-muted">No shipments are booked. Goods ready to ship can be assigned to a shipment in Logistics.</p>
+        <p className="text-ink-muted">{t('No shipments are booked. Goods ready to ship can be assigned to a shipment in Logistics.')}</p>
       ) : (
         <ul>
           {shipments.map((shipment) => (
@@ -462,18 +456,18 @@ function Orders({ orders }: { orders: GatewayData['orders'] }) {
   return (
     <Panel id="orders" title={t('Recent orders')} action={<ViewAll to="/orders">{t('All orders')}</ViewAll>} flush className="scroll-mt-20 xl:col-span-12 2xl:col-span-8">
       {orders.length === 0 ? (
-        <PanelEmpty>No orders yet. Confirmed sales orders appear here, newest first.</PanelEmpty>
+        <PanelEmpty>{t('No orders yet. Confirmed sales orders appear here, newest first.')}</PanelEmpty>
       ) : (
-        <Ledger caption="Recent sales orders">
+        <Ledger caption={t('Recent sales orders')}>
           <thead>
             <tr>
-              <Th>Order</Th>
-              <Th>Customer</Th>
-              <Th>Fabric</Th>
-              <Th numeric>Quantity</Th>
-              <Th>Fulfilment</Th>
-              <Th>Ship date</Th>
-              <Th>Status</Th>
+              <Th>{t('Order')}</Th>
+              <Th>{t('Customer')}</Th>
+              <Th>{t('Fabric')}</Th>
+              <Th numeric>{t('Quantity')}</Th>
+              <Th>{t('Fulfilment')}</Th>
+              <Th>{t('Ship date')}</Th>
+              <Th>{t('Status')}</Th>
             </tr>
           </thead>
           <tbody>
@@ -506,7 +500,7 @@ function Families({ families }: { families: GatewayData['families'] }) {
   return (
     <Panel id="families" title={t('Fabric families')} action={<ViewAll to="/products">{t('All products')}</ViewAll>} className="scroll-mt-20 xl:col-span-12 2xl:col-span-4">
       {families.length === 0 ? (
-        <p className="text-ink-muted">No fabric families yet. Add the first family in Products.</p>
+        <p className="text-ink-muted">{t('No fabric families yet. Add the first family in Products.')}</p>
       ) : (
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {families.map((family) => (
@@ -532,8 +526,9 @@ function Families({ families }: { families: GatewayData['families'] }) {
 }
 
 function Loading() {
+  const t = useT();
   return (
-    <div className="space-y-4 px-5 py-6 lg:px-8" aria-busy="true" aria-label="Loading the Gateway">
+    <div className="space-y-4 px-5 py-6 lg:px-8" aria-busy="true" aria-label={t('Loading the Gateway')}>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(10.5rem,1fr))] gap-4">
         {Array.from({ length: 5 }, (_, index) => (
           <FigureTileSkeleton key={index} />
@@ -545,12 +540,13 @@ function Loading() {
 }
 
 function Unavailable({ message }: { message: string }) {
+  const t = useT();
   return (
     <div className="px-5 py-10 lg:px-8">
       <div className="max-w-xl rounded-[var(--radius-panel)] border border-line bg-panel p-6">
-        <h2 className="text-base font-semibold">The Gateway could not load</h2>
+        <h2 className="text-base font-semibold">{t('The Gateway could not load')}</h2>
         <p className="mt-2 text-ink-soft">{message}</p>
-        <p className="mt-4 text-ink-muted">Reload the page to try again. If it keeps failing, the data connection needs attention.</p>
+        <p className="mt-4 text-ink-muted">{t('Reload the page to try again. If it keeps failing, the data connection needs attention.')}</p>
       </div>
     </div>
   );

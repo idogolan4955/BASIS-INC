@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router';
 import { useSkus } from '../../data/catalog';
 import { useCreatePurchaseOrder } from '../../data/manufacturing';
 import { useCompanies, useFactories } from '../../data/parties';
+import { useT } from '../../i18n';
 
 // A purchase order: who, under what terms, and exactly which SKUs in what
 // quantity at what price. Prices are typed here by cost roles only; the
@@ -22,6 +23,7 @@ interface LineDraft {
 const INCOTERMS = ['EXW', 'FCA', 'FOB', 'CFR', 'CIF', 'DAP', 'DDP'];
 
 export function NewPurchaseOrderDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const t = useT();
   const navigate = useNavigate();
   const companies = useCompanies();
   const factories = useFactories();
@@ -76,57 +78,57 @@ export function NewPurchaseOrderDialog({ open, onClose }: { open: boolean; onClo
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title="New purchase order" description="Saved as a draft. Issue it when it is ready to send to the supplier." className="w-[min(48rem,calc(100vw-2rem))]">
+    <Dialog open={open} onClose={onClose} title={t('New purchase order')} description={t('Saved as a draft. Issue it when it is ready to send to the supplier.')} className="w-[min(48rem,calc(100vw-2rem))]">
       <form onSubmit={submit} className="grid gap-4 sm:grid-cols-3">
-        <SelectField label="Supplier" required value={form.supplierId} onChange={(event) => setForm((f) => ({ ...f, supplierId: event.target.value, factoryId: '' }))} className="sm:col-span-2">
-          <option value="">Choose a supplier</option>
+        <SelectField label={t('Supplier')} required value={form.supplierId} onChange={(event) => setForm((f) => ({ ...f, supplierId: event.target.value, factoryId: '' }))} className="sm:col-span-2">
+          <option value="">{t('Choose a supplier')}</option>
           {suppliers.map((company) => (
             <option key={company.id} value={company.id}>
               {company.name}
             </option>
           ))}
         </SelectField>
-        <SelectField label="Factory" value={form.factoryId} onChange={set('factoryId')}>
-          <option value="">Not specified</option>
+        <SelectField label={t('Factory')} value={form.factoryId} onChange={set('factoryId')}>
+          <option value="">{t('Not specified')}</option>
           {supplierFactories.map((factory) => (
             <option key={factory.id} value={factory.id}>
               {factory.name}
             </option>
           ))}
         </SelectField>
-        <TextField label="Currency" required value={form.currency} onChange={set('currency')} placeholder="USD" />
-        <SelectField label="Incoterm" value={form.incotermCode} onChange={set('incotermCode')}>
+        <TextField label={t('Currency')} required value={form.currency} onChange={set('currency')} placeholder={t('USD')} />
+        <SelectField label={t('Incoterm')} value={form.incotermCode} onChange={set('incotermCode')}>
           {INCOTERMS.map((code) => (
             <option key={code} value={code}>
               {code}
             </option>
           ))}
         </SelectField>
-        <TextField label="Named place" value={form.namedPlace} onChange={set('namedPlace')} placeholder="Ningbo" />
-        <TextField label="Payment terms" value={form.paymentTerms} onChange={set('paymentTerms')} className="sm:col-span-2" />
-        <TextField label="Deposit" type="number" min={0} max={100} unit="%" value={form.depositPercent} onChange={set('depositPercent')} help="The balance falls due before shipment." />
-        <TextField label="Requested ex-factory" type="date" value={form.requestedExFactory} onChange={set('requestedExFactory')} />
-        <TextArea label="Notes" value={form.notes} onChange={set('notes')} rows={2} className="sm:col-span-2" />
+        <TextField label={t('Named place')} value={form.namedPlace} onChange={set('namedPlace')} placeholder={t('Ningbo')} />
+        <TextField label={t('Payment terms')} value={form.paymentTerms} onChange={set('paymentTerms')} className="sm:col-span-2" />
+        <TextField label={t('Deposit')} type="number" min={0} max={100} unit="%" value={form.depositPercent} onChange={set('depositPercent')} help={t('The balance falls due before shipment.')} />
+        <TextField label={t('Requested ex-factory')} type="date" value={form.requestedExFactory} onChange={set('requestedExFactory')} />
+        <TextArea label={t('Notes')} value={form.notes} onChange={set('notes')} rows={2} className="sm:col-span-2" />
 
         <fieldset className="border-t border-line pt-4 sm:col-span-3">
-          <legend className="caps mb-3 text-ink-soft">Lines</legend>
+          <legend className="caps mb-3 text-ink-soft">{t('Lines')}</legend>
           <div className="space-y-3">
             {lines.map((line, index) => {
               const sku = skuOptions.find((candidate) => candidate.code === line.skuCode);
               return (
                 <div key={index} className="grid items-end gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_5rem_5rem_2.5rem]">
                   <SelectField label={`SKU ${index + 1}`} required value={line.skuCode} onChange={(event) => setLine(index, 'skuCode', event.target.value)}>
-                    <option value="">Choose a SKU</option>
+                    <option value="">{t('Choose a SKU')}</option>
                     {skuOptions.map((candidate) => (
                       <option key={candidate.code} value={candidate.code}>
                         {candidate.code} · {candidate.productName}, {candidate.shadeName}
                       </option>
                     ))}
                   </SelectField>
-                  <TextField label="Quantity" required unit="m" value={line.quantity} onChange={(event) => setLine(index, 'quantity', event.target.value)} placeholder="6400" />
-                  <TextField label="Unit price" required value={line.unitPrice} onChange={(event) => setLine(index, 'unitPrice', event.target.value)} placeholder="2.8500" />
-                  <TextField label="Over" type="number" unit="%" value={line.over} onChange={(event) => setLine(index, 'over', event.target.value)} />
-                  <TextField label="Under" type="number" unit="%" value={line.under} onChange={(event) => setLine(index, 'under', event.target.value)} />
+                  <TextField label={t('Quantity')} required unit="m" value={line.quantity} onChange={(event) => setLine(index, 'quantity', event.target.value)} placeholder="6400" />
+                  <TextField label={t('Unit price')} required value={line.unitPrice} onChange={(event) => setLine(index, 'unitPrice', event.target.value)} placeholder="2.8500" />
+                  <TextField label={t('Over')} type="number" unit="%" value={line.over} onChange={(event) => setLine(index, 'over', event.target.value)} />
+                  <TextField label={t('Under')} type="number" unit="%" value={line.under} onChange={(event) => setLine(index, 'under', event.target.value)} />
                   <button
                     type="button"
                     aria-label={`Remove line ${index + 1}`}
@@ -147,9 +149,7 @@ export function NewPurchaseOrderDialog({ open, onClose }: { open: boolean; onClo
             })}
           </div>
           <Button size="sm" className="mt-3" onClick={() => setLines((current) => [...current, { skuCode: '', quantity: '', unitPrice: '', over: '5', under: '5' }])}>
-            <Plus size={14} aria-hidden="true" />
-            Add line
-          </Button>
+            <Plus size={14} aria-hidden="true" />{t('Add line')}</Button>
         </fieldset>
 
         {error && (
@@ -158,10 +158,8 @@ export function NewPurchaseOrderDialog({ open, onClose }: { open: boolean; onClo
           </p>
         )}
         <div className="flex justify-end gap-3 sm:col-span-3">
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" busy={create.isPending} busyLabel="Saving">
-            Create draft
-          </Button>
+          <Button onClick={onClose}>{t('Cancel')}</Button>
+          <Button type="submit" variant="primary" busy={create.isPending} busyLabel={t('Saving')}>{t('Create draft')}</Button>
         </div>
       </form>
     </Dialog>

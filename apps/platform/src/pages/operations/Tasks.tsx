@@ -13,6 +13,7 @@ import { useT } from '../../i18n';
 // due and the overdue rule raises what is late.
 
 export function NewTaskDialog({ open, onClose, entityType = '', entityId = '' }: { open: boolean; onClose: () => void; entityType?: string; entityId?: string }) {
+  const t = useT();
   const session = useRequiredSession();
   const staff = useStaff();
   const create = useCreateTask();
@@ -34,29 +35,27 @@ export function NewTaskDialog({ open, onClose, entityType = '', entityId = '' }:
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title="New task" description={entityId ? `About ${entityId}.` : undefined}>
+    <Dialog open={open} onClose={onClose} title={t('New task')} description={entityId ? `About ${entityId}.` : undefined}>
       <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-        <TextField label="What needs doing" required value={form.title} onChange={set('title')} className="sm:col-span-2" />
-        <TextArea label="Details" value={form.details} onChange={set('details')} className="sm:col-span-2" />
-        <SelectField label="Assigned to" value={form.assigneeUid} onChange={set('assigneeUid')}>
-          <option value="">Unassigned</option>
+        <TextField label={t('What needs doing')} required value={form.title} onChange={set('title')} className="sm:col-span-2" />
+        <TextArea label={t('Details')} value={form.details} onChange={set('details')} className="sm:col-span-2" />
+        <SelectField label={t('Assigned to')} value={form.assigneeUid} onChange={set('assigneeUid')}>
+          <option value="">{t('Unassigned')}</option>
           {staff.data?.map((person) => (
             <option key={person.uid} value={person.uid}>
               {person.name}
             </option>
           ))}
         </SelectField>
-        <TextField label="Due" type="date" value={form.dueOn} onChange={set('dueOn')} />
+        <TextField label={t('Due')} type="date" value={form.dueOn} onChange={set('dueOn')} />
         {error && (
           <p role="alert" className="text-[0.8125rem] font-medium text-critical sm:col-span-2">
             {error}
           </p>
         )}
         <div className="flex justify-end gap-3 sm:col-span-2">
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" busy={create.isPending} busyLabel="Saving">
-            Create task
-          </Button>
+          <Button onClick={onClose}>{t('Cancel')}</Button>
+          <Button type="submit" variant="primary" busy={create.isPending} busyLabel={t('Saving')}>{t('Create task')}</Button>
         </div>
       </form>
     </Dialog>
@@ -64,10 +63,11 @@ export function NewTaskDialog({ open, onClose, entityType = '', entityId = '' }:
 }
 
 function Due({ task, today }: { task: TaskView; today: string }) {
-  if (!task.dueOn) return <span className="text-ink-muted">No date</span>;
+  const t = useT();
+  if (!task.dueOn) return <span className="text-ink-muted">{t('No date')}</span>;
   const late = daysBetween(task.dueOn, today as never);
   if (late > 0) return <StatusChip tone="critical">{formatLocalDate(task.dueOn)}</StatusChip>;
-  if (late === 0) return <StatusChip tone="caution">Today</StatusChip>;
+  if (late === 0) return <StatusChip tone="caution">{t('Today')}</StatusChip>;
   return <span className="code text-ink-soft">{formatLocalDate(task.dueOn)}</span>;
 }
 
@@ -100,19 +100,17 @@ export function Tasks() {
             <p className="px-5 py-8 text-ink-muted">{t('Loading tasks')}</p>
           ) : rows.length === 0 ? (
             <div className="p-5">
-              <EmptyState title="Nothing open" action={<Button variant="primary" onClick={() => setCreating(true)}>New task</Button>}>
-                Tasks are what people owe: a lab dip to approve, a document to chase, a supplier to answer.
-              </EmptyState>
+              <EmptyState title={t('Nothing open')} action={<Button variant="primary" onClick={() => setCreating(true)}>{t('New task')}</Button>}>{t('Tasks are what people owe: a lab dip to approve, a document to chase, a supplier to answer.')}</EmptyState>
             </div>
           ) : (
-            <Ledger caption="Open tasks">
+            <Ledger caption={t('Open tasks')}>
               <thead>
                 <tr>
-                  <Th>Task</Th>
-                  <Th>About</Th>
-                  <Th>Assigned to</Th>
-                  <Th>Due</Th>
-                  <Th>Done</Th>
+                  <Th>{t('Task')}</Th>
+                  <Th>{t('About')}</Th>
+                  <Th>{t('Assigned to')}</Th>
+                  <Th>{t('Due')}</Th>
+                  <Th>{t('Done')}</Th>
                 </tr>
               </thead>
               <tbody>
@@ -136,9 +134,7 @@ export function Tasks() {
                       <Due task={task} today={today} />
                     </Td>
                     <Td>
-                      <Button size="sm" onClick={() => complete.mutate(task.id)} disabled={complete.isPending}>
-                        Mark done
-                      </Button>
+                      <Button size="sm" onClick={() => complete.mutate(task.id)} disabled={complete.isPending}>{t('Mark done')}</Button>
                     </Td>
                   </Tr>
                 ))}

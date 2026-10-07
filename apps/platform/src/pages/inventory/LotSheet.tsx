@@ -10,6 +10,7 @@ import { useRecordNote, useTimeline } from '../../data/timeline';
 import { useDocument } from '../../lib/documents';
 import { useRequiredSession } from '../../session';
 import { NotFound } from '../NotFound';
+import { useT } from '../../i18n';
 
 // A lot: the unit of shade consistency, followed from the mill through
 // quality into cartons. Its rolls are the physical truth underneath.
@@ -18,6 +19,7 @@ const metres = (stored: string) => formatQuantity(quantityFromStored(stored, 'm'
 const dateOrDash = (value: string | null) => (value ? formatLocalDate(value as never) : '—');
 
 function QualityDialog({ lot, open, onClose }: { lot: LotDetail; open: boolean; onClose: () => void }) {
+  const t = useT();
   const set = useSetLotQuality();
   const [state, setState] = useState<LotQualityState>(lot.qualityState === 'pending' ? 'released' : lot.qualityState);
   const [note, setNote] = useState('');
@@ -33,26 +35,24 @@ function QualityDialog({ lot, open, onClose }: { lot: LotDetail; open: boolean; 
     }
   };
   return (
-    <Dialog open={open} onClose={onClose} title={`Quality of ${lot.number}`} description="Only released metres count as ready to ship. Inspections will record this from their results; until then QC records it here.">
+    <Dialog open={open} onClose={onClose} title={`Quality of ${lot.number}`} description={t('Only released metres count as ready to ship. Inspections will record this from their results; until then QC records it here.')}>
       <form onSubmit={submit} className="grid gap-4">
-        <SelectField label="State" value={state} onChange={(event) => setState(event.target.value as LotQualityState)}>
+        <SelectField label={t('State')} value={state} onChange={(event) => setState(event.target.value as LotQualityState)}>
           {LOT_QUALITY_STATES.map((candidate) => (
             <option key={candidate} value={candidate}>
-              {LOT_QUALITY_LABEL[candidate]}
+              {t(LOT_QUALITY_LABEL[candidate])}
             </option>
           ))}
         </SelectField>
-        <TextArea label="Finding" required value={note} onChange={(event) => setNote(event.target.value)} rows={3} placeholder="Pre-shipment inspection passed; ΔE 0.4 against MLK-02." />
+        <TextArea label={t('Finding')} required value={note} onChange={(event) => setNote(event.target.value)} rows={3} placeholder={t('Pre-shipment inspection passed; ΔE 0.4 against MLK-02.')} />
         {error && (
           <p role="alert" className="text-[0.8125rem] font-medium text-critical">
             {error}
           </p>
         )}
         <div className="flex justify-end gap-3">
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" busy={set.isPending} busyLabel="Recording">
-            Record
-          </Button>
+          <Button onClick={onClose}>{t('Cancel')}</Button>
+          <Button type="submit" variant="primary" busy={set.isPending} busyLabel={t('Recording')}>{t('Record')}</Button>
         </div>
       </form>
     </Dialog>
@@ -60,16 +60,18 @@ function QualityDialog({ lot, open, onClose }: { lot: LotDetail; open: boolean; 
 }
 
 function LotTimeline({ number }: { number: string }) {
+  const t = useT();
   const timeline = useTimeline('lot', number);
   const note = useRecordNote('lot', number);
   return (
-    <Panel title="Timeline" count={timeline.data?.length}>
+    <Panel title={t('Timeline')} count={timeline.data?.length}>
       <Timeline events={timeline.data ?? []} onAddNote={(text) => note.mutateAsync(text)} busy={note.isPending} />
     </Panel>
   );
 }
 
 export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
+  const t = useT();
   const session = useRequiredSession();
   const { number = '' } = useParams();
   const lot = useLot(number);
@@ -77,9 +79,9 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
   const pdf = useDocument();
   const quality = session.role === 'owner' || session.role === 'qc';
 
-  if (lot.isPending) return <p className="px-5 py-10 text-ink-muted lg:px-8">Loading lot</p>;
+  if (lot.isPending) return <p className="px-5 py-10 text-ink-muted lg:px-8">{t('Loading lot')}</p>;
   if (lot.error) return <p className="px-5 py-10 text-critical lg:px-8">The lot could not be loaded. {lot.error.message}</p>;
-  if (!lot.data) return <NotFound what="lot" />;
+  if (!lot.data) return <NotFound what={t('lot')} />;
   const data = lot.data;
   const base = `/inventory/lots/${data.number}`;
   const ready = data.qualityState === 'released' ? data.packedQuantity : '0';
@@ -104,7 +106,7 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
         }
         status={
           <>
-            <StatusChip tone={LOT_QUALITY_TONE[data.qualityState]}>{LOT_QUALITY_LABEL[data.qualityState]}</StatusChip>
+            <StatusChip tone={LOT_QUALITY_TONE[data.qualityState]}>{t(LOT_QUALITY_LABEL[data.qualityState])}</StatusChip>
             {pdf.error && (
               <span role="alert" className="text-[0.8125rem] font-medium text-critical">
                 {pdf.error}
@@ -124,37 +126,25 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
           <>
             {!isSample && data.rollCount > 0 && (
               <>
-                <Button onClick={() => pdf.open('roll-labels', data.number)} busy={pdf.busy === 'roll-labels'} busyLabel="Rendering">
-                  Roll labels
-                </Button>
-                <Button onClick={() => pdf.share('roll-labels', data.number, `Roll labels ${data.number} from BASIS INC.`)} busy={pdf.busy === 'share:roll-labels'} busyLabel="Sharing">
-                  WhatsApp
-                </Button>
+                <Button onClick={() => pdf.open('roll-labels', data.number)} busy={pdf.busy === 'roll-labels'} busyLabel={t('Rendering')}>{t('Roll labels')}</Button>
+                <Button onClick={() => pdf.share('roll-labels', data.number, `Roll labels ${data.number} from BASIS INC.`)} busy={pdf.busy === 'share:roll-labels'} busyLabel={t('Sharing')}>{t('WhatsApp')}</Button>
               </>
             )}
             {quality && (
-              <Button variant="primary" onClick={() => setEditing(true)}>
-                Record quality
-              </Button>
+              <Button variant="primary" onClick={() => setEditing(true)}>{t('Record quality')}</Button>
             )}
           </>
         }
       />
       <SheetTabs>
-        <NavLink to={base} end className={({ isActive }) => sheetTabClass(isActive)}>
-          Rolls
-        </NavLink>
-        <NavLink to={`${base}/documents`} className={({ isActive }) => sheetTabClass(isActive)}>
-          Documents
-        </NavLink>
-        <NavLink to={`${base}/timeline`} className={({ isActive }) => sheetTabClass(isActive)}>
-          Timeline
-        </NavLink>
+        <NavLink to={base} end className={({ isActive }) => sheetTabClass(isActive)}>{t('Rolls')}</NavLink>
+        <NavLink to={`${base}/documents`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Documents')}</NavLink>
+        <NavLink to={`${base}/timeline`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Timeline')}</NavLink>
       </SheetTabs>
       <div className="flex flex-col gap-4 px-5 py-6 lg:px-8">
         {tab === 'rolls' && (
           <Panel
-            title="Rolls"
+            title={t('Rolls')}
             count={data.rolls.length}
             flush
             action={
@@ -168,19 +158,19 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
             }
           >
             {data.rolls.length === 0 ? (
-              <p className="px-5 py-6 text-ink-muted">This lot is not tracked by roll.</p>
+              <p className="px-5 py-6 text-ink-muted">{t('This lot is not tracked by roll.')}</p>
             ) : (
               <Ledger caption={`Rolls of ${data.number}`}>
                 <thead>
                   <tr>
-                    <Th>Roll</Th>
-                    <Th>Shade</Th>
-                    <Th numeric>Length</Th>
-                    <Th numeric>Usable width</Th>
-                    <Th numeric>Weight</Th>
-                    <Th>Grade</Th>
-                    <Th numeric>Points</Th>
-                    <Th>Packed in</Th>
+                    <Th>{t('Roll')}</Th>
+                    <Th>{t('Shade')}</Th>
+                    <Th numeric>{t('Length')}</Th>
+                    <Th numeric>{t('Usable width')}</Th>
+                    <Th numeric>{t('Weight')}</Th>
+                    <Th>{t('Grade')}</Th>
+                    <Th numeric>{t('Points')}</Th>
+                    <Th>{t('Packed in')}</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -198,7 +188,7 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
                       <Td numeric className="text-ink-soft">{roll.weightG ? `${(roll.weightG / 1000).toLocaleString('en-GB', { maximumFractionDigits: 1 })} kg` : '—'}</Td>
                       <Td className="text-ink-soft">{roll.grade || '—'}</Td>
                       <Td numeric className="text-ink-soft">{roll.defectPoints ?? '—'}</Td>
-                      <Td className="code whitespace-nowrap">{roll.packedIn ?? <span className="text-ink-muted">Unpacked</span>}</Td>
+                      <Td className="code whitespace-nowrap">{roll.packedIn ?? <span className="text-ink-muted">{t('Unpacked')}</span>}</Td>
                     </Tr>
                   ))}
                 </tbody>

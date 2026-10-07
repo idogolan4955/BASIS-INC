@@ -202,7 +202,7 @@ Depends on: Phase 2, P3.
 | Done | Remaining |
 |---|---|
 | Review of the build: every package's tests, typecheck and lint pass; every platform route checked at phone width in both directions for overflow and error boundaries; all 56 physical left/right utilities replaced with logical ones | A written QA checklist per module; end-to-end tests against the emulators |
-| The platform speaks Hebrew: a locale switch in the rail, `dir="rtl"` on the document, Hebrew faces behind the display serif and the sans (Frank Ruhl Libre, Heebo), codes and measurements isolated left-to-right. Translated: the shell, navigation and module names, roles, the Gateway, Operations, the Manufacturing ledgers, statuses and health, common actions | Every remaining page string through `t()` (sheets, dialogs, Settings, Documents, Products, Suppliers); the user's locale kept on the `User` row; the public site in Hebrew once the locale decision (D8) is taken |
+| The platform speaks Hebrew: a locale switch in the rail, `dir="rtl"` on the document, Hebrew faces behind the display serif and the sans (Frank Ruhl Libre, Heebo), codes and measurements isolated left-to-right. Every visible string in the platform goes through `t()` (about 500 keys): shell, modules, roles, Gateway, Operations, Manufacturing, Products, Suppliers, Customers, Documents, Settings, statuses, timeline kinds, dialogs and empty states | The user's locale kept on the `User` row; Hebrew for data-level text (alert titles, seeded copy) where it is English by design; the public site in Hebrew once the locale decision (D8) is taken |
 
 ### P5 — Quality (L)
 

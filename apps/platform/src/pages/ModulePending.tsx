@@ -2,11 +2,13 @@ import { MODULES, canOpenModule } from '@basis/shared';
 import { ArrowLeft } from '@phosphor-icons/react';
 import { Link, useParams } from 'react-router';
 import { useRequiredSession } from '../session';
+import { useT } from '../i18n';
 
 // A module that is in the index but not built yet says so plainly, with the
 // phase that delivers it, rather than disappearing from the navigation.
 
 export function ModulePending() {
+  const t = useT();
   const session = useRequiredSession();
   const { module: slug } = useParams();
   const definition = MODULES.find((candidate) => candidate.path === `/${slug}`);
@@ -39,9 +41,7 @@ export function ModulePending() {
         </>
       )}
       <Link to="/" className="mt-8 inline-flex items-center gap-2 font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink">
-        <ArrowLeft size={16} aria-hidden="true" />
-        Back to the Gateway
-      </Link>
+        <ArrowLeft size={16} aria-hidden="true" />{t('Back to the Gateway')}</Link>
     </div>
   );
 }

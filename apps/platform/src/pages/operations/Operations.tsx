@@ -17,7 +17,7 @@ export function OperationsTabs({ active }: { active: 'pipeline' | 'tasks' }) {
     </NavLink>
   );
   return (
-    <nav aria-label="Operations sections" className="flex gap-6 border-b border-line bg-panel px-5 lg:px-8">
+    <nav aria-label={t('Operations sections')} className="flex gap-6 border-b border-line bg-panel px-5 lg:px-8">
       {tab('pipeline', '/operations', t('Pipeline and calendar'))}
       {tab('tasks', '/operations/tasks', t('Tasks'))}
     </nav>
