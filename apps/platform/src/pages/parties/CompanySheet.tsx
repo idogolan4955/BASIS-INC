@@ -156,7 +156,7 @@ function Contacts({ company, manage }: { company: CompanyDetail; manage: boolean
                 <Tr key={contact.id}>
                   <Td className="font-medium">
                     {contact.name}
-                    {contact.isPrimary && <span className="code ml-2 text-ink-muted">PRIMARY</span>}
+                    {contact.isPrimary && <span className="code ms-2 text-ink-muted">PRIMARY</span>}
                   </Td>
                   <Td className="text-ink-soft">{contact.title || '—'}</Td>
                   <Td>{contact.email ? <a href={`mailto:${contact.email}`} className="underline decoration-line-strong underline-offset-4">{contact.email}</a> : '—'}</Td>

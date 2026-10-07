@@ -43,12 +43,12 @@ export function Track({ steps, className }: { steps: readonly TrackStep[]; class
           const late = step.late && step.state !== 'done';
           const connector = next === undefined ? null : step.state === 'done' && next.state === 'done' ? 'done' : step.state === 'done' ? 'reaching' : 'ahead';
           return (
-            <li key={step.key} className="relative min-w-0 pr-2">
+            <li key={step.key} className="relative min-w-0 pe-2">
               <p className={cn('truncate text-[0.9375rem] font-medium', step.state === 'pending' ? 'text-ink-muted' : 'text-ink')}>{step.label}</p>
               <div className="relative my-2.5 flex h-4 items-center">
                 {connector && (
                   <span
-                    className={cn('absolute left-4 right-[-0.5rem] top-1/2 -translate-y-1/2 rounded-full', connector === 'ahead' ? 'h-[2px] bg-sand' : 'h-[3px]')}
+                    className={cn('absolute start-4 end-[-0.5rem] top-1/2 -translate-y-1/2 rounded-full', connector === 'ahead' ? 'h-[2px] bg-sand' : 'h-[3px]')}
                     style={
                       connector === 'done'
                         ? { background: 'var(--color-cocoa)' }

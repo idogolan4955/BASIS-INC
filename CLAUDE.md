@@ -17,6 +17,7 @@ What must be remembered even without opening the docs:
 - **Status is derived.** Health and progress come from facts (milestones, legs, inspections, movements). Never add a hand-edited status for them.
 - **Money and quantities** are fixed-point integers, never floats. Arithmetic happens only in the value types in `packages/shared`.
 - **No business data in components**, no mock structures that cannot become real tables, no demo-only paths.
+- **Hebrew and right-to-left.** The platform runs in English and Hebrew (`apps/platform/src/i18n.tsx`, dictionary in `i18n.he.ts`, keyed by the English text). Every visible string in a component goes through `t()`; every layout utility is logical (`ms-`/`me-`/`ps-`/`pe-`/`start-`/`end-`/`text-start`/`text-end`/`border-s`/`border-e`), never `ml-`/`left-`/`text-left`. Codes and measurements stay left-to-right (`.code`, `dir="ltr"`). Check a screen in Hebrew before calling it done.
 - **Design.** `docs/DESIGN_SYSTEM.md` is binding: tokens only, the five signatures, and the "never" list. No generic SaaS dashboard patterns.
 - **Interface checks** run on emulators or sample data, not on production data. `pnpm --filter @basis/platform dev:sample` (port 5180) runs the platform on sample records with no backend; `.claude/launch.json` has it as `platform-sample`.
 - **Design work** is done with the owner's design skills: impeccable, ui-ux-pro-max and design-taste-frontend. The owner's reference for the back office and how it was read are in `docs/DESIGN_SYSTEM.md` §0.

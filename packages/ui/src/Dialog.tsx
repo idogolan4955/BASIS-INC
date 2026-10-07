@@ -53,7 +53,7 @@ export function Dialog({
           <button
             type="submit"
             aria-label="Close"
-            className="-mr-2 -mt-1 grid size-9 place-items-center rounded-xs text-ink-muted hover:bg-sunken hover:text-ink"
+            className="-me-2 -mt-1 grid size-9 place-items-center rounded-xs text-ink-muted hover:bg-sunken hover:text-ink"
           >
             <X size={18} aria-hidden="true" />
           </button>

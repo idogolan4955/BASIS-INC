@@ -175,7 +175,7 @@ export function Companies({ door }: { door: Door }) {
                         {company.name}
                       </Link>
                       {company.tradingName && company.tradingName !== company.legalName && (
-                        <span className="ml-3 text-ink-muted">{company.legalName}</span>
+                        <span className="ms-3 text-ink-muted">{company.legalName}</span>
                       )}
                     </Td>
                     <Td className="whitespace-nowrap text-ink-soft">{company.countryName || '—'}</Td>

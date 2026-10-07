@@ -7,6 +7,7 @@ import { useCompleteTask, useCreateTask, useOpenTasks, useStaff, type TaskView }
 import { useRequiredSession } from '../../session';
 import { ModuleTitle } from '../products/ProductsIndex';
 import { OperationsTabs } from './Operations';
+import { useT } from '../../i18n';
 
 // What people owe. A task can point at a record; the Gateway lists what is
 // due and the overdue rule raises what is late.
@@ -71,6 +72,7 @@ function Due({ task, today }: { task: TaskView; today: string }) {
 }
 
 export function Tasks() {
+  const t = useT();
   const tasks = useOpenTasks();
   const complete = useCompleteTask();
   const [creating, setCreating] = useState(false);
@@ -81,21 +83,21 @@ export function Tasks() {
     <>
       <ModuleTitle
         number="01"
-        title="Operations"
+        title={t('Operations')}
         actions={
           <Button variant="primary" onClick={() => setCreating(true)}>
             <Plus size={16} aria-hidden="true" />
-            New task
+            {t('New task')}
           </Button>
         }
       >
-        Open tasks across the company, soonest due first.
+        {t('Open tasks across the company, soonest due first.')}
       </ModuleTitle>
       <OperationsTabs active="tasks" />
       <div className="px-5 py-6 lg:px-8">
-        <Panel title="Open tasks" count={rows.length} flush>
+        <Panel title={t('Open tasks')} count={rows.length} flush>
           {tasks.isPending ? (
-            <p className="px-5 py-8 text-ink-muted">Loading tasks</p>
+            <p className="px-5 py-8 text-ink-muted">{t('Loading tasks')}</p>
           ) : rows.length === 0 ? (
             <div className="p-5">
               <EmptyState title="Nothing open" action={<Button variant="primary" onClick={() => setCreating(true)}>New task</Button>}>

@@ -25,6 +25,7 @@ import { SkuLedger, SkuSheet } from './pages/products/Skus';
 import { Loading, NoRole, SignIn } from './pages/access/SignIn';
 import { Gateway } from './pages/gateway/Gateway';
 import { SessionProvider, useSessionState } from './session';
+import { LocaleProvider } from './i18n';
 
 function Root() {
   const state = useSessionState();
@@ -90,10 +91,12 @@ if (!root) throw new Error('Missing #root');
 
 createRoot(root).render(
   <StrictMode>
+    <LocaleProvider>
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
         <RouterProvider router={router} />
       </SessionProvider>
     </QueryClientProvider>
+    </LocaleProvider>
   </StrictMode>,
 );

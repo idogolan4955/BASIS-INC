@@ -78,7 +78,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
   const [menu, setMenu] = useState(false);
   return (
     <div className="flex min-h-dvh flex-col bg-surface text-ink">
-      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:bg-panel focus:px-3 focus:py-2">
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-50 focus:bg-panel focus:px-3 focus:py-2">
         Skip to content
       </a>
       <header className="sticky top-0 z-30 border-b border-line bg-bone/90 backdrop-blur-[2px]">
@@ -123,7 +123,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
               {families.flatMap((family) => family.products).map((product) => (
                 <li key={product.code}>
                   <Link to={`/fabrics/${families.find((family) => family.code === product.family)!.slug}/${product.slug}`} className="hover:underline">
-                    <Index className="mr-2">{String(product.index).padStart(2, '0')}</Index>
+                    <Index className="me-2">{String(product.index).padStart(2, '0')}</Index>
                     {product.name}
                   </Link>
                 </li>

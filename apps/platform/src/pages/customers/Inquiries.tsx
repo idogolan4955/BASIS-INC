@@ -79,7 +79,7 @@ export function Inquiries() {
                       <Td className="text-ink-soft">{INQUIRY_KIND_LABEL[inquiry.kind] ?? inquiry.kind}</Td>
                       <Td className="font-medium">
                         {inquiry.company || inquiry.name}
-                        {inquiry.company && <span className="ml-2 font-normal text-ink-muted">{inquiry.name}</span>}
+                        {inquiry.company && <span className="ms-2 font-normal text-ink-muted">{inquiry.name}</span>}
                       </Td>
                       <Td className="text-ink-soft">{inquiry.country || '—'}</Td>
                       <Td className="code whitespace-nowrap text-ink-soft">{inquiry.createdAt.slice(0, 10)}</Td>

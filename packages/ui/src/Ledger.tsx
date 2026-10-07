@@ -2,7 +2,7 @@ import type { ReactNode, TdHTMLAttributes, ThHTMLAttributes } from 'react';
 import { cn } from './cn';
 
 // The ledger: hairline rows, column heads in tracked capitals over a strong
-// rule, numbers right-aligned in tabular figures. No zebra striping.
+// rule, numbers end-aligned in tabular figures. No zebra striping.
 
 export function Ledger({ caption, children, className }: { caption: string; children: ReactNode; className?: string }) {
   return (
@@ -25,8 +25,8 @@ export function Th({
     <th
       scope="col"
       className={cn(
-        'label h-10 whitespace-nowrap border-b border-line-strong px-3 text-ink first:pl-5 last:pr-5',
-        numeric ? 'text-right' : 'text-left',
+        'label h-10 whitespace-nowrap border-b border-line-strong px-3 text-ink first:ps-5 last:pe-5',
+        numeric ? 'text-end' : 'text-start',
         className,
       )}
       {...rest}
@@ -53,8 +53,8 @@ export function Td({
   return (
     <td
       className={cn(
-        'h-11 px-3 align-middle first:pl-5 last:pr-5',
-        numeric && 'tabular whitespace-nowrap text-right',
+        'h-11 px-3 align-middle first:ps-5 last:pe-5',
+        numeric && 'tabular whitespace-nowrap text-end',
         className,
       )}
       {...rest}

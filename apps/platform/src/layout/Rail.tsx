@@ -4,6 +4,7 @@ import { HouseSimple, type Icon } from '@phosphor-icons/react';
 import { NavLink } from 'react-router';
 import { useRequiredSession } from '../session';
 import { MODULE_ICONS, railGroupsFor } from './sections';
+import { LOCALES, useLocale } from '../i18n';
 
 function RailLink({ to, icon: IconMark, label, number, end }: { to: string; icon: Icon; label: string; number?: string; end?: boolean }) {
   return (
@@ -20,7 +21,7 @@ function RailLink({ to, icon: IconMark, label, number, end }: { to: string; icon
       {({ isActive }) => (
         <>
           {/* The selvedge: the open page is marked along its edge. */}
-          {isActive && <span aria-hidden="true" className="absolute inset-y-0 left-0 w-[3px] bg-nude" />}
+          {isActive && <span aria-hidden="true" className="absolute inset-y-0 start-0 w-[3px] bg-nude" />}
           <IconMark size={18} weight="light" aria-hidden="true" className="shrink-0" />
           <span className="flex-1 truncate">{label}</span>
           {number && <span className="code text-[0.625rem] text-rail-muted">{number}</span>}
@@ -33,6 +34,7 @@ function RailLink({ to, icon: IconMark, label, number, end }: { to: string; icon
 export function Rail({ className }: { className?: string }) {
   const session = useRequiredSession();
   const groups = railGroupsFor(session.role);
+  const { t, locale, setLocale } = useLocale();
 
   return (
     <aside className={cn('on-rail flex h-dvh flex-col bg-rail text-rail-ink', className)}>
@@ -40,17 +42,17 @@ export function Rail({ className }: { className?: string }) {
         <Wordmark className="text-[0.9375rem]" />
       </div>
 
-      <nav aria-label="Modules" className="flex-1 overflow-y-auto py-3 [scrollbar-color:var(--color-rail-line)_transparent] [scrollbar-width:thin]">
-        <RailLink to="/" end icon={HouseSimple} label="Gateway" />
+      <nav aria-label={t('Modules')} className="flex-1 overflow-y-auto py-3 [scrollbar-color:var(--color-rail-line)_transparent] [scrollbar-width:thin]">
+        <RailLink to="/" end icon={HouseSimple} label={t('Gateway')} />
         {groups.map((group) => (
           <div key={group.label} className="mt-3.5">
-            <p className="caps px-5 pb-1.5 text-[0.625rem] text-rail-muted">{group.label}</p>
+            <p className="caps px-5 pb-1.5 text-[0.625rem] text-rail-muted">{t(group.label)}</p>
             {group.modules.map((definition) => (
               <RailLink
                 key={definition.key}
                 to={definition.path}
                 icon={MODULE_ICONS[definition.key]}
-                label={definition.name}
+                label={t(definition.name)}
                 number={definition.number}
               />
             ))}
@@ -65,7 +67,7 @@ export function Rail({ className }: { className?: string }) {
           </span>
           <div className="min-w-0">
             <p className="truncate text-sm">{session.name}</p>
-            <p className="code text-[0.625rem] uppercase text-rail-muted">{session.setRole ? 'Sample session' : ROLE_LABELS[session.role]}</p>
+            <p className="code text-[0.625rem] uppercase text-rail-muted">{session.setRole ? t('Sample session') : t(ROLE_LABELS[session.role])}</p>
           </div>
         </div>
         {!session.setRole && (
@@ -74,12 +76,12 @@ export function Rail({ className }: { className?: string }) {
             onClick={() => void session.signOut()}
             className="mt-3 h-8 w-full rounded-xs border border-rail-line text-[0.8125rem] text-rail-ink/85 transition-colors duration-150 hover:bg-rail-raised hover:text-rail-ink"
           >
-            Sign out
+            {t('Sign out')}
           </button>
         )}
         {session.setRole && (
           <label className="mt-3 block">
-            <span className="caps text-[0.625rem] text-rail-muted">View as</span>
+            <span className="caps text-[0.625rem] text-rail-muted">{t('View as')}</span>
             <select
               value={session.role}
               onChange={(event) => isRole(event.target.value) && session.setRole?.(event.target.value)}
@@ -87,12 +89,26 @@ export function Rail({ className }: { className?: string }) {
             >
               {ROLES.map((role) => (
                 <option key={role} value={role}>
-                  {ROLE_LABELS[role]}
+                  {t(ROLE_LABELS[role])}
                 </option>
               ))}
             </select>
           </label>
         )}
+        <label className="mt-3 block">
+          <span className="caps text-[0.625rem] text-rail-muted">{t('Language')}</span>
+          <select
+            value={locale}
+            onChange={(event) => setLocale(event.target.value === 'he' ? 'he' : 'en')}
+            className="mt-1 h-8 w-full rounded-xs border border-rail-line bg-rail-raised px-2 text-[0.8125rem] text-rail-ink"
+          >
+            {LOCALES.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
     </aside>
   );

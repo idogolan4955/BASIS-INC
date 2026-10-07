@@ -153,7 +153,7 @@ function Sourcing({ code, productCode, manage }: { code: string; productCode: st
               <Link to={`/suppliers/${item.supplierId}`} className="font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink">
                 {item.supplierName}
               </Link>
-              {item.factoryName && <span className="ml-3 text-[0.8125rem] text-ink-muted">{item.factoryName}</span>}
+              {item.factoryName && <span className="ms-3 text-[0.8125rem] text-ink-muted">{item.factoryName}</span>}
             </div>
             <div className="flex items-center gap-4 text-[0.8125rem] text-ink-soft">
               {item.isPreferred && <StatusChip tone="positive">Preferred</StatusChip>}

@@ -7,6 +7,7 @@ import { useGateway } from '../data/source';
 import { useRequiredSession } from '../session';
 import { CommandPalette } from './CommandPalette';
 import { Rail } from './Rail';
+import { useT } from '../i18n';
 
 function useAttentionCount(): number {
   const session = useRequiredSession();
@@ -15,15 +16,16 @@ function useAttentionCount(): number {
 }
 
 function AlertsLink({ count, className }: { count: number; className?: string }) {
+  const t = useT();
   return (
     <Link
       to="/#attention"
-      aria-label={count === 0 ? 'Nothing requires attention' : `${count} items require attention`}
+      aria-label={count === 0 ? t('Nothing requires attention') : t('{count} items require attention', { count })}
       className={cn('relative grid size-10 place-items-center rounded-xs transition-colors duration-150 hover:bg-sunken', className)}
     >
       <Bell size={20} weight="light" aria-hidden="true" />
       {count > 0 && (
-        <span className="code absolute right-0.5 top-1 min-w-4 bg-critical px-1 text-center text-[0.625rem] leading-4 text-milk">
+        <span className="code absolute end-0.5 top-1 min-w-4 bg-critical px-1 text-center text-[0.625rem] leading-4 text-milk">
           {count}
         </span>
       )}
@@ -33,6 +35,7 @@ function AlertsLink({ count, className }: { count: number; className?: string })
 
 /** The rail as a drawer on phones: the same index, opened from the bottom bar, closed by navigating. */
 function MenuDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const t = useT();
   const dialog = useRef<HTMLDialogElement>(null);
   const location = useLocation();
   useEffect(() => {
@@ -51,15 +54,15 @@ function MenuDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
       ref={dialog}
       onClose={onClose}
       onClick={(event) => event.target === dialog.current && onClose()}
-      aria-label="Modules"
-      className="m-0 h-dvh max-h-none w-[min(18rem,85vw)] max-w-none -translate-x-full bg-rail p-0 text-rail-ink transition-transform duration-200 ease-out open:translate-x-0 backdrop:bg-charcoal/45 starting:open:-translate-x-full lg:hidden"
+      aria-label={t('Modules')}
+      className="m-0 h-dvh max-h-none w-[min(18rem,85vw)] max-w-none -translate-x-full bg-rail p-0 text-rail-ink transition-transform duration-200 ease-out open:translate-x-0 backdrop:bg-charcoal/45 starting:open:-translate-x-full rtl:translate-x-full rtl:starting:open:translate-x-full lg:hidden"
     >
       <Rail className="h-dvh" />
       <button
         type="button"
         onClick={onClose}
-        aria-label="Close menu"
-        className="absolute right-2 top-3 grid size-10 place-items-center rounded-xs text-rail-ink/80 hover:bg-rail-raised hover:text-rail-ink"
+        aria-label={t('Close menu')}
+        className="absolute end-2 top-3 grid size-10 place-items-center rounded-xs text-rail-ink/80 hover:bg-rail-raised hover:text-rail-ink"
       >
         <X size={18} aria-hidden="true" />
       </button>
@@ -72,6 +75,7 @@ export function Shell() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const attention = useAttentionCount();
+  const t = useT();
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -88,28 +92,28 @@ export function Shell() {
     <div className="min-h-dvh lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:bg-panel focus:px-3 focus:py-2"
+        className="sr-only focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-50 focus:bg-panel focus:px-3 focus:py-2"
       >
-        Skip to content
+        {t('Skip to content')}
       </a>
 
       <Rail className="sticky top-0 hidden lg:flex" />
 
       <div className="flex min-w-0 flex-col">
         <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-4 border-b border-line bg-surface px-5 lg:px-8">
-          <Link to="/" className="lg:hidden" aria-label="Gateway">
+          <Link to="/" className="lg:hidden" aria-label={t('Gateway')}>
             <Wordmark className="text-[0.9375rem] text-ink" />
           </Link>
           <button
             type="button"
             onClick={() => setPaletteOpen(true)}
-            className="hidden h-9 w-full max-w-sm items-center gap-2.5 rounded-[var(--radius-panel)] border border-line bg-panel px-3 text-left text-ink-muted transition-colors duration-150 hover:border-line-strong md:flex"
+            className="hidden h-9 w-full max-w-sm items-center gap-2.5 rounded-[var(--radius-panel)] border border-line bg-panel px-3 text-start text-ink-muted transition-colors duration-150 hover:border-line-strong md:flex"
           >
             <MagnifyingGlass size={16} aria-hidden="true" />
-            <span className="flex-1 truncate">Jump to a module, product, SKU or company</span>
+            <span className="flex-1 truncate">{t('Jump to a module, product, SKU or company')}</span>
             <kbd className="code rounded-xs border border-line px-1.5 py-0.5">⌘K</kbd>
           </button>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ms-auto flex items-center gap-2">
             <AlertsLink count={attention} />
             <span
               title={session.name}
@@ -127,7 +131,7 @@ export function Shell() {
 
       {/* Phones: four thumb-reach destinations; the full index opens as a drawer. */}
       <nav
-        aria-label="Primary"
+        aria-label={t('Primary')}
         className="on-rail fixed inset-x-0 bottom-0 z-30 grid h-16 grid-cols-4 border-t border-rail-line bg-rail text-rail-ink lg:hidden"
       >
         <NavLink
@@ -136,18 +140,18 @@ export function Shell() {
           className={({ isActive }) => cn('flex flex-col items-center justify-center gap-1 text-xs', !isActive && 'text-rail-ink/75')}
         >
           <HouseSimple size={20} weight="light" aria-hidden="true" />
-          Gateway
+          {t('Gateway')}
         </NavLink>
         <Link to="/#attention" className="flex flex-col items-center justify-center gap-1 text-xs text-rail-ink/75">
           <span className="relative">
             <Bell size={20} weight="light" aria-hidden="true" />
             {attention > 0 && (
-              <span className="code absolute -right-3 -top-1 min-w-4 bg-nude px-1 text-center text-[0.625rem] leading-4 text-rail">
+              <span className="code absolute -end-3 -top-1 min-w-4 bg-nude px-1 text-center text-[0.625rem] leading-4 text-rail">
                 {attention}
               </span>
             )}
           </span>
-          Attention
+          {t('Attention')}
         </Link>
         <button
           type="button"
@@ -155,7 +159,7 @@ export function Shell() {
           className="flex flex-col items-center justify-center gap-1 text-xs text-rail-ink/75"
         >
           <MagnifyingGlass size={20} weight="light" aria-hidden="true" />
-          Search
+          {t('Search')}
         </button>
         <button
           type="button"
@@ -164,7 +168,7 @@ export function Shell() {
           className="flex flex-col items-center justify-center gap-1 text-xs text-rail-ink/75"
         >
           <List size={20} weight="light" aria-hidden="true" />
-          Menu
+          {t('Menu')}
         </button>
       </nav>
 

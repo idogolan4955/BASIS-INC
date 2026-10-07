@@ -5,11 +5,13 @@ import { useState } from 'react';
 import { isSample } from '../data/source';
 import { saveCsv, useDocument } from '../lib/documents';
 import { useRequiredSession } from '../session';
+import { useT } from '../i18n';
 
 // A ledger leaves as a file: CSV or XLSX from the api, or CSV built here in
 // sample mode from the rows on screen.
 
 export function ExportMenu({ ledger, scope, rows, size = 'sm' }: { ledger: ExportLedger; scope?: Record<string, string | undefined>; rows?: readonly ExportRow[]; size?: 'sm' | 'md' }) {
+  const t = useT();
   const session = useRequiredSession();
   const documents = useDocument();
   const [open, setOpen] = useState(false);
@@ -30,23 +32,23 @@ export function ExportMenu({ ledger, scope, rows, size = 'sm' }: { ledger: Expor
           {documents.error}
         </span>
       )}
-      <Button size={size} onClick={() => setOpen((value) => !value)} busy={documents.busy?.startsWith('export:') ?? false} busyLabel="Preparing" aria-haspopup="menu" aria-expanded={open} disabled={isSample && !rows}>
+      <Button size={size} onClick={() => setOpen((value) => !value)} busy={documents.busy?.startsWith('export:') ?? false} busyLabel={t('Preparing')} aria-haspopup="menu" aria-expanded={open} disabled={isSample && !rows}>
         <DownloadSimple size={14} aria-hidden="true" />
-        Export
+        {t('Export')}
       </Button>
       {open && (
         <>
           <button type="button" aria-label="Close" className="fixed inset-0 z-10 cursor-default" onClick={() => setOpen(false)} />
-          <span role="menu" className="absolute right-0 top-full z-20 mt-1 min-w-40 rounded-[var(--radius-panel)] border border-line bg-panel py-1 shadow-[0_8px_24px_-12px_rgba(43,39,36,0.35)]">
+          <span role="menu" className="absolute end-0 top-full z-20 mt-1 min-w-40 rounded-[var(--radius-panel)] border border-line bg-panel py-1 shadow-[0_8px_24px_-12px_rgba(43,39,36,0.35)]">
             {formats.map((format) => (
               <button
                 key={format}
                 role="menuitem"
                 type="button"
                 onClick={() => choose(format)}
-                className={cn('flex w-full items-center justify-between gap-4 px-3 py-2 text-left text-sm hover:bg-sunken')}
+                className={cn('flex w-full items-center justify-between gap-4 px-3 py-2 text-start text-sm hover:bg-sunken')}
               >
-                <span>{LEDGERS[ledger].title}</span>
+                <span>{t(LEDGERS[ledger].title)}</span>
                 <span className="code text-ink-muted">{format.toUpperCase()}</span>
               </button>
             ))}

@@ -49,6 +49,7 @@ import { useAcknowledgeAlert, useResolveAlert, useRunChecks } from '../../data/a
 import { isSample, useGateway } from '../../data/source';
 import { useCompleteTask } from '../../data/tasks';
 import { useRequiredSession } from '../../session';
+import { useT } from '../../i18n';
 import { EtaRail } from '../../components/EtaRail';
 import { Pipeline } from '../../components/Pipeline';
 import { useOperations } from '../../data/operations';
@@ -82,28 +83,29 @@ function ViewAll({ to, children }: { to: string; children: ReactNode }) {
 }
 
 function Band({ asOf }: { asOf: LocalDate }) {
+  const t = useT();
   return (
     <section className="relative overflow-hidden border-b border-line bg-sunken">
       {/* Powermesh at macro scale, fading into the paper. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 right-0 w-[72%] text-nude [mask-image:linear-gradient(to_left,black_8%,transparent_92%)]"
+        className="pointer-events-none absolute inset-y-0 end-0 w-[72%] text-nude [mask-image:linear-gradient(to_left,black_8%,transparent_92%)]"
       >
         <Structure kind="mesh" scale={2.4} />
       </div>
       <div className="relative flex items-end justify-between gap-6 px-5 py-8 lg:px-8 lg:py-10">
         <div>
-          <h1 className="font-display text-[2.875rem] font-medium leading-none tracking-[-0.01em] text-ink lg:text-[3.5rem]">Gateway</h1>
-          <p className="caps mt-3 text-ink-soft">Bridal fabric supply chain</p>
+          <h1 className="font-display text-[2.875rem] font-medium leading-none tracking-[-0.01em] text-ink lg:text-[3.5rem]">{t('Gateway')}</h1>
+          <p className="caps mt-3 text-ink-soft">{t('Bridal fabric supply chain')}</p>
         </div>
         <div className="hidden flex-col items-end gap-2 sm:flex">
           <p className="code bg-sunken px-2 py-1 uppercase text-ink">
             {weekdayOf(asOf)} {formatLocalDate(asOf)}
           </p>
-          <p className="code bg-sunken px-2 py-1 uppercase text-ink-soft">Week {isoWeekOf(asOf)}</p>
+          <p className="code bg-sunken px-2 py-1 uppercase text-ink-soft">{t('Week {week}', { week: isoWeekOf(asOf) })}</p>
           {isSample && (
             <p className="bg-sunken px-2 py-1">
-              <StatusChip tone="neutral">Sample data</StatusChip>
+              <StatusChip tone="neutral">{t('Sample data')}</StatusChip>
             </p>
           )}
         </div>
@@ -113,6 +115,7 @@ function Band({ asOf }: { asOf: LocalDate }) {
 }
 
 function Figures({ data, can }: { data: GatewayData; can: (module: ModuleKey) => boolean }) {
+  const t = useT();
   const { orders, production, transit, inventory, quality } = data.figures;
   const onSchedule = production.activeRuns === 0 ? 0 : Math.round((production.onSchedule / production.activeRuns) * 100);
   const rising = orders.changePercent >= 0;
@@ -123,7 +126,7 @@ function Figures({ data, can }: { data: GatewayData; can: (module: ModuleKey) =>
     <section aria-label="Figures" className="grid grid-cols-[repeat(auto-fit,minmax(10.5rem,1fr))] gap-4">
       {can('orders') && (
         <FigureTile
-          label="Orders"
+          label={t('Orders')}
           value={whole.format(orders.count)}
           note={
             <>
@@ -144,7 +147,7 @@ function Figures({ data, can }: { data: GatewayData; can: (module: ModuleKey) =>
       )}
       {can('manufacturing') && (
         <FigureTile
-          label="Production"
+          label={t('Production')}
           value={`${onSchedule}%`}
           note={`${production.onSchedule} of ${production.activeRuns} runs on schedule`}
           visual={<Ring percent={onSchedule} label={`${onSchedule} percent of runs on schedule`} className="hidden @[10rem]:block" />}
@@ -152,7 +155,7 @@ function Figures({ data, can }: { data: GatewayData; can: (module: ModuleKey) =>
       )}
       {can('logistics') && (
         <FigureTile
-          label="In transit"
+          label={t('In transit')}
           value={whole.format(transit.shipments)}
           note={`shipments, ${metres(transit.metres)}`}
           visual={
@@ -166,7 +169,7 @@ function Figures({ data, can }: { data: GatewayData; can: (module: ModuleKey) =>
       )}
       {can('inventory') && (
         <FigureTile
-          label="Inventory"
+          label={t('Inventory')}
           value={whole.format(inventory.rolls)}
           note="rolls in stock"
           visual={
@@ -184,7 +187,7 @@ function Figures({ data, can }: { data: GatewayData; can: (module: ModuleKey) =>
       )}
       {can('qc') && (
         <FigureTile
-          label="QC first pass"
+          label={t('QC first pass')}
           value={`${quality.firstPassPercent}%`}
           note={`${quality.inspections} inspections, ${quality.windowLabel}`}
           visual={
@@ -228,13 +231,14 @@ function ItemActions({ item }: { item: GatewayData['attention'][number] }) {
 }
 
 function Attention({ items, canRun }: { items: GatewayData['attention']; canRun: boolean }) {
+  const t = useT();
   const run = useRunChecks();
   const [creating, setCreating] = useState(false);
   const sorted = [...items].sort((a, b) => (a.state === b.state ? 0 : a.state === 'open' ? -1 : 1));
   return (
     <Panel
       id="attention"
-      title="Requires attention"
+      title={t('Requires attention')}
       count={items.length}
       flush
       className="scroll-mt-20 max-lg:order-first"
@@ -247,12 +251,12 @@ function Attention({ items, canRun }: { items: GatewayData['attention']; canRun:
           )}
           {canRun && !isSample && (
             <Button size="sm" variant="quiet" onClick={() => run.mutate()} busy={run.isPending} busyLabel="Checking">
-              Run checks
+              {t('Run checks')}
             </Button>
           )}
           <Button size="sm" onClick={() => setCreating(true)}>
             <Plus size={14} aria-hidden="true" />
-            New task
+            {t('New task')}
           </Button>
         </span>
       }
@@ -270,7 +274,7 @@ function Attention({ items, canRun }: { items: GatewayData['attention']; canRun:
               <li key={item.id} className="border-b border-line px-5 py-4 last:border-b-0">
                 <div className="flex items-start justify-between gap-3">
                   <p className="font-medium">{item.title}</p>
-                  <StatusChip tone={SEVERITY_TONE[item.severity]}>{SEVERITY_LABEL[item.severity]}</StatusChip>
+                  <StatusChip tone={SEVERITY_TONE[item.severity]}>{t(SEVERITY_LABEL[item.severity])}</StatusChip>
                 </div>
                 <p className="mt-1 text-[0.8125rem] text-ink-soft">{item.detail}</p>
                 <p className="mt-2.5 flex items-center justify-between gap-3">
@@ -284,15 +288,15 @@ function Attention({ items, canRun }: { items: GatewayData['attention']; canRun:
             ))}
           </ul>
           <div className="hidden md:block">
-          <Ledger caption="Items that require attention">
+          <Ledger caption={t('Items that require attention')}>
             <thead>
               <tr>
-                <Th className="w-32">Severity</Th>
-                <Th>What</Th>
-                <Th>Record</Th>
-                <Th>Detail</Th>
-                <Th>Owner</Th>
-                <Th>Action</Th>
+                <Th className="w-32">{t('Severity')}</Th>
+                <Th>{t('What')}</Th>
+                <Th>{t('Record')}</Th>
+                <Th>{t('Detail')}</Th>
+                <Th>{t('Owner')}</Th>
+                <Th>{t('Action')}</Th>
               </tr>
             </thead>
             <tbody>
@@ -300,7 +304,7 @@ function Attention({ items, canRun }: { items: GatewayData['attention']; canRun:
                 <Tr key={item.id} className={item.state === 'acknowledged' ? 'opacity-60' : undefined}>
                   <Td>
                     <StatusChip tone={item.kind === 'task' ? 'transit' : SEVERITY_TONE[item.severity]}>
-                      {item.kind === 'task' ? 'Task' : SEVERITY_LABEL[item.severity]}
+                      {item.kind === 'task' ? t('Task') : t(SEVERITY_LABEL[item.severity])}
                     </StatusChip>
                   </Td>
                   <Td className="min-w-56 font-medium">{item.title}</Td>
@@ -345,25 +349,27 @@ function runSteps(run: RunTimeline, asOf: LocalDate): TrackStep[] {
 }
 
 function InMotion() {
+  const t = useT();
   const operations = useOperations();
   const data = operations.data;
   return (
     <>
-      <Panel id="in-motion" title="In motion" action={<ViewAll to="/operations">Operations</ViewAll>} className="scroll-mt-20 xl:col-span-7">
-        {data ? <Pipeline cells={data.pipeline} /> : <p className="text-ink-muted">{operations.error ? operations.error.message : 'Reading the pipeline'}</p>}
+      <Panel id="in-motion" title={t('In motion')} action={<ViewAll to="/operations">{t('Operations')}</ViewAll>} className="scroll-mt-20 xl:col-span-7">
+        {data ? <Pipeline cells={data.pipeline} /> : <p className="text-ink-muted">{operations.error ? operations.error.message : t('Reading the pipeline')}</p>}
       </Panel>
-      <Panel title="Next 30 days" count={data?.calendar.length} action={<ViewAll to="/operations">Calendar</ViewAll>} className="xl:col-span-5">
-        {data ? <EtaRail entries={data.calendar} asOf={data.asOf} limit={8} /> : <p className="text-ink-muted">Reading the calendar</p>}
+      <Panel title={t('Next 30 days')} count={data?.calendar.length} action={<ViewAll to="/operations">{t('Calendar')}</ViewAll>} className="xl:col-span-5">
+        {data ? <EtaRail entries={data.calendar} asOf={data.asOf} limit={8} /> : <p className="text-ink-muted">{t('Reading the calendar')}</p>}
       </Panel>
     </>
   );
 }
 
 function Production({ runs, asOf }: { runs: readonly RunTimeline[]; asOf: LocalDate }) {
+  const t = useT();
   return (
-    <Panel id="production" title="Production timeline" action={<ViewAll to="/manufacturing/runs">All runs</ViewAll>} className="scroll-mt-20 xl:col-span-7">
+    <Panel id="production" title={t('Production timeline')} action={<ViewAll to="/manufacturing/runs">{t('All runs')}</ViewAll>} className="scroll-mt-20 xl:col-span-7">
       {runs.length === 0 ? (
-        <p className="text-ink-muted">No production runs are active. A run opens when a purchase order is confirmed.</p>
+        <p className="text-ink-muted">{t('No production runs are active. A run opens when a purchase order is confirmed.')}</p>
       ) : (
         <ul>
           {runs.map((run) => (
@@ -373,9 +379,9 @@ function Production({ runs, asOf }: { runs: readonly RunTimeline[]; asOf: LocalD
                 <span className="font-medium">{run.product}</span>
                 <span className="text-[0.8125rem] text-ink-muted">{run.shade}</span>
                 <span className="code text-ink-muted">{metres(run.metres)}</span>
-                <span className="ml-auto flex items-center gap-4">
-                  <span className="code text-ink-muted">Ex-factory {shortDate(run.exFactory)}</span>
-                  <StatusChip tone={HEALTH_TONE[run.health]}>{HEALTH_LABEL[run.health]}</StatusChip>
+                <span className="ms-auto flex items-center gap-4">
+                  <span className="code text-ink-muted">{t('Ex-factory {date}', { date: shortDate(run.exFactory) })}</span>
+                  <StatusChip tone={HEALTH_TONE[run.health]}>{t(HEALTH_LABEL[run.health])}</StatusChip>
                 </span>
               </div>
               <Track steps={runSteps(run, asOf)} />
@@ -411,7 +417,7 @@ function Lane({ shipment }: { shipment: ShipmentLane }) {
       >
         <span className="code text-ink">{shipment.origin.code}</span>
         <span className="relative h-px flex-1 bg-line-strong">
-          <span className="absolute inset-y-0 left-0 bg-ink" style={{ width: position }} />
+          <span className="absolute inset-y-0 start-0 bg-ink" style={{ width: position }} />
           <span
             className={cn(
               'absolute top-1/2 size-[9px] -translate-x-1/2 -translate-y-1/2',
@@ -426,7 +432,7 @@ function Lane({ shipment }: { shipment: ShipmentLane }) {
         <span>
           {shipment.origin.name}, ETD {shortDate(shipment.etd)}
         </span>
-        <span className="text-right">
+        <span className="text-end">
           ETA {shortDate(shipment.eta)}, {shipment.destination.name}
         </span>
       </div>
@@ -435,8 +441,9 @@ function Lane({ shipment }: { shipment: ShipmentLane }) {
 }
 
 function Shipments({ shipments }: { shipments: readonly ShipmentLane[] }) {
+  const t = useT();
   return (
-    <Panel id="shipments" title="Shipment status" action={<ViewAll to="/logistics/shipments">All shipments</ViewAll>} className="scroll-mt-20 xl:col-span-5">
+    <Panel id="shipments" title={t('Shipment status')} action={<ViewAll to="/logistics/shipments">{t('All shipments')}</ViewAll>} className="scroll-mt-20 xl:col-span-5">
       {shipments.length === 0 ? (
         <p className="text-ink-muted">No shipments are booked. Goods ready to ship can be assigned to a shipment in Logistics.</p>
       ) : (
@@ -451,8 +458,9 @@ function Shipments({ shipments }: { shipments: readonly ShipmentLane[] }) {
 }
 
 function Orders({ orders }: { orders: GatewayData['orders'] }) {
+  const t = useT();
   return (
-    <Panel id="orders" title="Recent orders" action={<ViewAll to="/orders">All orders</ViewAll>} flush className="scroll-mt-20 xl:col-span-12 2xl:col-span-8">
+    <Panel id="orders" title={t('Recent orders')} action={<ViewAll to="/orders">{t('All orders')}</ViewAll>} flush className="scroll-mt-20 xl:col-span-12 2xl:col-span-8">
       {orders.length === 0 ? (
         <PanelEmpty>No orders yet. Confirmed sales orders appear here, newest first.</PanelEmpty>
       ) : (
@@ -494,8 +502,9 @@ function Orders({ orders }: { orders: GatewayData['orders'] }) {
 }
 
 function Families({ families }: { families: GatewayData['families'] }) {
+  const t = useT();
   return (
-    <Panel id="families" title="Fabric families" action={<ViewAll to="/products">All products</ViewAll>} className="scroll-mt-20 xl:col-span-12 2xl:col-span-4">
+    <Panel id="families" title={t('Fabric families')} action={<ViewAll to="/products">{t('All products')}</ViewAll>} className="scroll-mt-20 xl:col-span-12 2xl:col-span-4">
       {families.length === 0 ? (
         <p className="text-ink-muted">No fabric families yet. Add the first family in Products.</p>
       ) : (

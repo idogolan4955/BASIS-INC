@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router';
 import { useCompanies } from '../data/parties';
 import { useProducts, useSkus } from '../data/catalog';
 import { useRequiredSession } from '../session';
+import { useT } from '../i18n';
 
 // Jump anywhere by name or index number. Records join the list as their
 // modules are built; today it reaches the Gateway and every module.
@@ -20,6 +21,7 @@ interface Destination {
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const session = useRequiredSession();
   const navigate = useNavigate();
+  const t = useT();
   const dialog = useRef<HTMLDialogElement>(null);
   const [query, setQuery] = useState('');
   const [cursor, setCursor] = useState(0);
@@ -30,8 +32,8 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
 
   const destinations = useMemo<Destination[]>(
     () => [
-      { number: '00', name: 'Gateway', summary: 'What needs attention, what is moving', path: '/' },
-      ...modulesFor(session.role).map(({ number, name, summary, path }) => ({ number, name, summary, path })),
+      { number: '00', name: t('Gateway'), summary: t('What needs attention, what is moving'), path: '/' },
+      ...modulesFor(session.role).map(({ number, name, summary, path }) => ({ number, name: t(name), summary: t(summary), path })),
       ...(products.data ?? []).map((product) => ({ number: product.code, name: product.name, summary: `Product · ${product.familyName}`, path: `/products/${product.code}` })),
       ...(companies.data ?? []).map((company) => ({
         number: company.countryCode,
@@ -41,7 +43,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       })),
       ...(skus.data ?? []).map((sku) => ({ number: sku.code, name: `${sku.productName}, ${sku.shadeName}`, summary: 'SKU', path: `/products/skus/${sku.code}` })),
     ],
-    [session.role, products.data, companies.data, skus.data],
+    [session.role, products.data, companies.data, skus.data, t],
   );
 
   const matches = useMemo(() => {
@@ -79,7 +81,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
     <dialog
       ref={dialog}
       className="palette"
-      aria-label="Jump to"
+      aria-label={t('Jump to')}
       onClose={onClose}
       onClick={(event) => event.target === dialog.current && onClose()}
     >
@@ -104,8 +106,8 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
               go(matches[cursor]);
             }
           }}
-          placeholder="Module, product, SKU or company"
-          aria-label="Module, product, SKU or company"
+          placeholder={t('Jump to a module, product, SKU or company')}
+          aria-label={t('Jump to a module, product, SKU or company')}
           className="h-full flex-1 bg-transparent text-sm outline-none placeholder:text-ink-muted"
         />
         <kbd className="code rounded-xs border border-line px-1.5 py-0.5 text-ink-muted">esc</kbd>
@@ -117,7 +119,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
               type="button"
               onClick={() => go(destination)}
               onMouseEnter={() => setCursor(index)}
-              className={cn('flex h-11 w-full items-center gap-4 px-4 text-left', index === cursor && 'bg-bone')}
+              className={cn('flex h-11 w-full items-center gap-4 px-4 text-start', index === cursor && 'bg-bone')}
             >
               <span className="code w-24 shrink-0 truncate text-ink-muted">{destination.number}</span>
               <span className="w-32 shrink-0 text-sm font-medium">{destination.name}</span>
@@ -127,7 +129,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
         ))}
         {matches.length === 0 && (
           <li className="px-4 py-6 text-[0.8125rem] text-ink-muted">
-            Nothing matches. Try a module name such as Logistics, or its number, 07.
+            {t('Nothing matches. Try a module name such as Logistics, or its number, 07.')}
           </li>
         )}
       </ul>

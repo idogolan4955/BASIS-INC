@@ -50,10 +50,10 @@ export function Timeline({
       {events.length === 0 ? (
         <p className="text-ink-muted">Nothing recorded yet. Changes and notes appear here as they happen.</p>
       ) : (
-        <ol className="relative border-l border-line pl-5">
+        <ol className="relative border-s border-line ps-5">
           {events.map((event) => (
             <li key={event.id} className="relative pb-5 last:pb-0">
-              <span aria-hidden="true" className="absolute -left-[1.4375rem] top-1.5 size-2.5 rounded-full border-2 border-panel bg-cocoa" />
+              <span aria-hidden="true" className="absolute -start-[1.4375rem] top-1.5 size-2.5 rounded-full border-2 border-panel bg-cocoa" />
               <p className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
                 <span className="font-medium">{eventKindLabel(event.kind)}</span>
                 <span className="code text-ink-muted">{when.format(new Date(event.occurredAt))}</span>

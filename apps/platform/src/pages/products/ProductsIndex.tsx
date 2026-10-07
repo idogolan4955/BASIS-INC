@@ -61,7 +61,7 @@ export function ModuleTitle({ number, title, children, actions }: { number: stri
       <div>
         <h1 className="font-display text-[2.375rem] font-medium leading-none tracking-[-0.01em] lg:text-[2.75rem]">
           {title}
-          <span className="code ml-3 align-top text-ink-muted">{number}</span>
+          <span className="code ms-3 align-top text-ink-muted">{number}</span>
         </h1>
         {children && <p className="mt-2 text-ink-soft">{children}</p>}
       </div>
@@ -142,7 +142,7 @@ function ProductRow({ product, shadeHex }: { product: ProductSummary; shadeHex: 
         <Link to={`/products/${product.code}`} className="font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink">
           {product.name}
         </Link>
-        {product.tagline && <span className="ml-3 text-ink-muted">{product.tagline}</span>}
+        {product.tagline && <span className="ms-3 text-ink-muted">{product.tagline}</span>}
       </Td>
       <Td className="code">{product.code}</Td>
       <Td className="text-ink-soft">{product.familyName}</Td>

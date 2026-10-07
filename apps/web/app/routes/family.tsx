@@ -43,12 +43,12 @@ export default function Family() {
       <Section>
         <Eyebrow>{family.products.length > 1 ? 'The products, compared' : 'The product'}</Eyebrow>
         <div className="mt-6 overflow-x-auto">
-          <table className="w-full min-w-[40rem] border-t border-charcoal/70 text-left text-sm">
+          <table className="w-full min-w-[40rem] border-t border-charcoal/70 text-start text-sm">
             <thead>
               <tr>
-                <th scope="col" className="code py-3 pr-4 align-bottom uppercase tracking-[0.14em] text-ink-muted" />
+                <th scope="col" className="code py-3 pe-4 align-bottom uppercase tracking-[0.14em] text-ink-muted" />
                 {family.products.map((product) => (
-                  <th key={product.code} scope="col" className="py-3 pr-4 align-bottom">
+                  <th key={product.code} scope="col" className="py-3 pe-4 align-bottom">
                     <Link to={`/fabrics/${family.slug}/${product.slug}`} className="flex flex-col gap-1 hover:underline">
                       <Index>{String(product.index).padStart(2, '0')}</Index>
                       <Hand className="text-2xl md:text-3xl">{product.name}</Hand>
@@ -61,11 +61,11 @@ export default function Family() {
             <tbody className="divide-y divide-line border-y border-line">
               {SPEC_ROWS.map(([key, label]) => (
                 <tr key={key}>
-                  <th scope="row" className="code py-3 pr-4 font-normal uppercase tracking-[0.12em] text-ink-muted">
+                  <th scope="row" className="code py-3 pe-4 font-normal uppercase tracking-[0.12em] text-ink-muted">
                     {label}
                   </th>
                   {family.products.map((product) => (
-                    <td key={product.code} className="py-3 pr-4">
+                    <td key={product.code} className="py-3 pe-4">
                       {(product.specs as Record<string, string>)[key] ?? '—'}
                     </td>
                   ))}

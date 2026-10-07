@@ -18,7 +18,7 @@ export function ModulePending() {
         <>
           <h1 className="font-display text-[2.75rem] font-medium leading-none tracking-[-0.01em]">
             {definition.name}
-            <span className="code ml-3 align-top text-ink-muted">{definition.number}</span>
+            <span className="code ms-3 align-top text-ink-muted">{definition.number}</span>
           </h1>
           <p className="mt-4 text-base text-ink-soft">{definition.summary}.</p>
           <p className="mt-8 border-t border-line pt-5 text-ink-muted">

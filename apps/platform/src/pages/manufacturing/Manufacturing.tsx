@@ -20,11 +20,13 @@ import { useProcessTemplates, useProductionRuns, usePurchaseOrders } from '../..
 import { useRequiredSession } from '../../session';
 import { ModuleTitle } from '../products/ProductsIndex';
 import { NewPurchaseOrderDialog } from './NewPurchaseOrderDialog';
+import { useT } from '../../i18n';
 
 const metres = (stored: string) => formatQuantity(quantityFromStored(stored, 'm'));
 const dateOrDash = (value: string | null) => (value ? formatLocalDate(value as never) : '—');
 
 export function ManufacturingTabs({ active }: { active: 'orders' | 'runs' | 'templates' }) {
+  const t = useT();
   const tab = (key: typeof active, to: string, label: string) => (
     <NavLink
       key={key}
@@ -40,14 +42,15 @@ export function ManufacturingTabs({ active }: { active: 'orders' | 'runs' | 'tem
   );
   return (
     <nav aria-label="Manufacturing sections" className="flex gap-6 border-b border-line bg-panel px-5 lg:px-8">
-      {tab('orders', '/manufacturing', 'Purchase orders')}
-      {tab('runs', '/manufacturing/runs', 'Production runs')}
-      {tab('templates', '/manufacturing/templates', 'Process templates')}
+      {tab('orders', '/manufacturing', t('Purchase orders'))}
+      {tab('runs', '/manufacturing/runs', t('Production runs'))}
+      {tab('templates', '/manufacturing/templates', t('Process templates'))}
     </nav>
   );
 }
 
 export function PurchaseOrders() {
+  const t = useT();
   const session = useRequiredSession();
   const orders = usePurchaseOrders();
   const [creating, setCreating] = useState(false);
@@ -58,7 +61,7 @@ export function PurchaseOrders() {
     <>
       <ModuleTitle
         number="04"
-        title="Manufacturing"
+        title={t('Manufacturing')}
         actions={
           <>
             <ExportMenu
@@ -69,19 +72,19 @@ export function PurchaseOrders() {
             {manage && (
               <Button variant="primary" onClick={() => setCreating(true)}>
                 <Plus size={16} aria-hidden="true" />
-                New purchase order
+                {t('New purchase order')}
               </Button>
             )}
           </>
         }
       >
-        Purchase orders, production runs and their milestones.
+        {t('Purchase orders, production runs and their milestones.')}
       </ModuleTitle>
       <ManufacturingTabs active="orders" />
       <div className="px-5 py-6 lg:px-8">
-        <Panel title="Purchase orders" count={rows.length} flush>
+        <Panel title={t('Purchase orders')} count={rows.length} flush>
           {orders.isPending ? (
-            <p className="px-5 py-8 text-ink-muted">Loading purchase orders</p>
+            <p className="px-5 py-8 text-ink-muted">{t('Loading purchase orders')}</p>
           ) : orders.error ? (
             <p className="px-5 py-8 text-critical">Purchase orders could not be loaded. {orders.error.message}</p>
           ) : rows.length === 0 ? (
@@ -91,16 +94,16 @@ export function PurchaseOrders() {
               </EmptyState>
             </div>
           ) : (
-            <Ledger caption="Purchase orders">
+            <Ledger caption={t('Purchase orders')}>
               <thead>
                 <tr>
-                  <Th>Order</Th>
-                  <Th>Supplier</Th>
-                  <Th>Products</Th>
-                  <Th numeric>Quantity</Th>
-                  <Th>Ex-factory</Th>
-                  <Th>Production</Th>
-                  <Th>Status</Th>
+                  <Th>{t('Order')}</Th>
+                  <Th>{t('Supplier')}</Th>
+                  <Th>{t('Products')}</Th>
+                  <Th numeric>{t('Quantity')}</Th>
+                  <Th>{t('Ex-factory')}</Th>
+                  <Th>{t('Production')}</Th>
+                  <Th>{t('Status')}</Th>
                 </tr>
               </thead>
               <tbody>
@@ -117,19 +120,19 @@ export function PurchaseOrders() {
                     <Td className="code whitespace-nowrap text-ink-soft">{dateOrDash(po.requestedExFactory)}</Td>
                     <Td>
                       {po.runs.length === 0 ? (
-                        <span className="text-ink-muted">{po.state === 'confirmed' ? 'No run yet' : '—'}</span>
+                        <span className="text-ink-muted">{po.state === 'confirmed' ? t('No run yet') : '—'}</span>
                       ) : (
                         <span className="flex flex-wrap gap-3">
                           {po.runs.map((run) => (
                             <StatusChip key={run.number} tone={HEALTH_TONE[run.health]}>
-                              {run.number} {HEALTH_LABEL[run.health].toLowerCase()}
+                              {run.number} {t(HEALTH_LABEL[run.health]).toLowerCase()}
                             </StatusChip>
                           ))}
                         </span>
                       )}
                     </Td>
                     <Td>
-                      <StatusChip tone={PO_STATE_TONE[po.state]}>{PO_STATE_LABEL[po.state]}</StatusChip>
+                      <StatusChip tone={PO_STATE_TONE[po.state]}>{t(PO_STATE_LABEL[po.state])}</StatusChip>
                     </Td>
                   </Tr>
                 ))}
@@ -144,13 +147,14 @@ export function PurchaseOrders() {
 }
 
 export function ProductionRuns() {
+  const t = useT();
   const runs = useProductionRuns();
   const rows = runs.data ?? [];
   return (
     <>
       <ModuleTitle
         number="04"
-        title="Manufacturing"
+        title={t('Manufacturing')}
         actions={
           <ExportMenu
             ledger="production-runs"
@@ -159,28 +163,28 @@ export function ProductionRuns() {
           />
         }
       >
-        Every run, soonest finish first. Health is read from the milestones.
+        {t('Every run, soonest finish first. Health is read from the milestones.')}
       </ModuleTitle>
       <ManufacturingTabs active="runs" />
       <div className="px-5 py-6 lg:px-8">
-        <Panel title="Production runs" count={rows.length} flush>
+        <Panel title={t('Production runs')} count={rows.length} flush>
           {runs.isPending ? (
-            <p className="px-5 py-8 text-ink-muted">Loading runs</p>
+            <p className="px-5 py-8 text-ink-muted">{t('Loading runs')}</p>
           ) : rows.length === 0 ? (
             <p className="px-5 py-8 text-ink-muted">No production runs. A run opens from a confirmed purchase order.</p>
           ) : (
-            <Ledger caption="Production runs">
+            <Ledger caption={t('Production runs')}>
               <thead>
                 <tr>
-                  <Th>Run</Th>
-                  <Th>Order</Th>
-                  <Th>Products</Th>
-                  <Th numeric>Quantity</Th>
-                  <Th>Progress</Th>
-                  <Th>Planned end</Th>
-                  <Th>Expected</Th>
-                  <Th>Health</Th>
-                  <Th>State</Th>
+                  <Th>{t('Run')}</Th>
+                  <Th>{t('Order')}</Th>
+                  <Th>{t('Products')}</Th>
+                  <Th numeric>{t('Quantity')}</Th>
+                  <Th>{t('Progress')}</Th>
+                  <Th>{t('Planned end')}</Th>
+                  <Th>{t('Expected')}</Th>
+                  <Th>{t('Health')}</Th>
+                  <Th>{t('State')}</Th>
                 </tr>
               </thead>
               <tbody>
@@ -206,10 +210,10 @@ export function ProductionRuns() {
                       {dateOrDash(run.forecastEnd ?? run.plannedEnd)}
                     </Td>
                     <Td>
-                      <StatusChip tone={HEALTH_TONE[run.health]}>{HEALTH_LABEL[run.health]}</StatusChip>
+                      <StatusChip tone={HEALTH_TONE[run.health]}>{t(HEALTH_LABEL[run.health])}</StatusChip>
                     </Td>
                     <Td>
-                      <StatusChip tone={RUN_STATE_TONE[run.state]}>{RUN_STATE_LABEL[run.state]}</StatusChip>
+                      <StatusChip tone={RUN_STATE_TONE[run.state]}>{t(RUN_STATE_LABEL[run.state])}</StatusChip>
                     </Td>
                   </Tr>
                 ))}
@@ -223,11 +227,12 @@ export function ProductionRuns() {
 }
 
 export function ProcessTemplates() {
+  const t = useT();
   const templates = useProcessTemplates();
   return (
     <>
-      <ModuleTitle number="04" title="Manufacturing">
-        Process templates: the steps a run is planned from, by family and supplier.
+      <ModuleTitle number="04" title={t('Manufacturing')}>
+        {t('Process templates: the steps a run is planned from, by family and supplier.')}
       </ModuleTitle>
       <ManufacturingTabs active="templates" />
       <div className="flex flex-col gap-4 px-5 py-6 lg:px-8">

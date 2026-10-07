@@ -37,7 +37,7 @@ export default function Fabrics() {
                         <Index>{String(product.index).padStart(2, '0')}</Index>
                         <Hand className="text-xl">{product.name}</Hand>
                       </span>
-                      <span className="text-right text-sm text-ink-muted">{product.tagline}</span>
+                      <span className="text-end text-sm text-ink-muted">{product.tagline}</span>
                     </Link>
                   </li>
                 ))}

@@ -68,9 +68,9 @@ function Overview({ product }: { product: ProductDetail }) {
             {specRows.map(({ field, value }) => (
               <div key={field.key} className="flex items-baseline justify-between gap-4 border-b border-line px-5 py-3 last:border-b-0">
                 <dt className="text-[0.8125rem] text-ink-muted">{field.label}</dt>
-                <dd className="text-right text-sm">
+                <dd className="text-end text-sm">
                   {value || <span className="text-ink-muted">Not set</span>}
-                  {value && field.unit && <span className="code ml-1 text-ink-muted">{field.unit}</span>}
+                  {value && field.unit && <span className="code ms-1 text-ink-muted">{field.unit}</span>}
                 </dd>
               </div>
             ))}
@@ -168,7 +168,7 @@ function Skus({ product, manage }: { product: ProductDetail; manage: boolean }) 
                         value={sku.status}
                         disabled={setStatus.isPending}
                         onChange={(event) => setStatus.mutate({ code: sku.code, productCode: product.code, status: event.target.value as SkuStatus, previous: sku.status })}
-                        className="-ml-2 h-8 rounded-xs border border-transparent bg-transparent pr-1 text-[0.875rem] font-medium hover:border-line-strong focus:border-charcoal"
+                        className="-ms-2 h-8 rounded-xs border border-transparent bg-transparent pe-1 text-[0.875rem] font-medium hover:border-line-strong focus:border-charcoal"
                       >
                         {SKU_STATUSES.map((status) => (
                           <option key={status} value={status}>

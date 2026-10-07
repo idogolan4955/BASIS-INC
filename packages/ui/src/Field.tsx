@@ -30,7 +30,7 @@ function Frame({
       <label htmlFor={id} className="mb-1.5 block text-xs font-medium text-ink-soft">
         {label}
         {required && (
-          <span aria-hidden="true" className="ml-0.5 text-ink-muted">
+          <span aria-hidden="true" className="ms-0.5 text-ink-muted">
             *
           </span>
         )}
@@ -75,10 +75,10 @@ export function TextField({
           required={required}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy(id, error, help)}
-          className={cn(CONTROL, 'h-10 px-3', unit && 'pr-12', error ? 'border-critical' : 'border-line-strong')}
+          className={cn(CONTROL, 'h-10 px-3', unit && 'pe-12', error ? 'border-critical' : 'border-line-strong')}
           {...rest}
         />
-        {unit && <span className="code pointer-events-none absolute inset-y-0 right-3 flex items-center text-ink-muted">{unit}</span>}
+        {unit && <span className="code pointer-events-none absolute inset-y-0 end-3 flex items-center text-ink-muted">{unit}</span>}
       </div>
     </Frame>
   );

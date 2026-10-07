@@ -6,3 +6,11 @@ import '@fontsource-variable/eb-garamond/wght.css';
 import '@fontsource-variable/source-sans-3/wght.css';
 import '@fontsource-variable/archivo/wdth.css';
 import '@fontsource-variable/martian-mono/wdth.css';
+// Hebrew: the display serif and the interface sans fall back per glyph to
+// faces that carry the Hebrew script, so a Hebrew interface keeps the voices.
+import '@fontsource/frank-ruhl-libre/400.css';
+import '@fontsource/frank-ruhl-libre/500.css';
+import '@fontsource/frank-ruhl-libre/600.css';
+import '@fontsource/heebo/400.css';
+import '@fontsource/heebo/500.css';
+import '@fontsource/heebo/600.css';

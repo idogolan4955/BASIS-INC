@@ -108,7 +108,7 @@ export function Meter({ value, className }: { value: number; className?: string 
   return (
     <span className={cn('inline-flex items-center gap-2.5', className)}>
       <span className="relative block h-[3px] w-12 bg-line">
-        <span className="absolute inset-y-0 left-0 bg-accent" style={{ width: `${percent}%` }} />
+        <span className="absolute inset-y-0 start-0 bg-accent" style={{ width: `${percent}%` }} />
       </span>
       <span className="code w-8 text-ink-muted">{percent}%</span>
     </span>

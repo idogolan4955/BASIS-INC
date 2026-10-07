@@ -99,7 +99,7 @@ export function IntakeForm({ kind, children, submitLabel, onDone }: { kind: Inqu
   return (
     <form onSubmit={submit} className="grid gap-5">
       {children}
-      <div className="absolute -left-[9999px] top-0" aria-hidden="true">
+      <div className="absolute -start-[9999px] top-0" aria-hidden="true">
         <label>
           Leave this empty <input name="website" tabIndex={-1} autoComplete="off" />
         </label>

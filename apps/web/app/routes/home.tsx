@@ -12,7 +12,7 @@ export default function Home() {
     <>
       {/* One screen: what BASIS is. */}
       <section className="relative overflow-hidden px-4 pb-16 pt-10 md:px-12 md:pb-28 md:pt-20 lg:px-24">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-[70%] text-nude-deep/70 [mask-image:linear-gradient(to_left,black_15%,transparent_90%)] md:w-[55%]">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 end-0 w-[70%] text-nude-deep/70 [mask-image:linear-gradient(to_left,black_15%,transparent_90%)] md:w-[55%]">
           <Material kind="mesh" hex="transparent" scale={3.4} className="h-full" />
         </div>
         <div className="relative">

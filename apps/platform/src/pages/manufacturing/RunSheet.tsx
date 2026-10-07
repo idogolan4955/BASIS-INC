@@ -222,7 +222,7 @@ export function RunSheet({ tab }: { tab: 'milestones' | 'lots' | 'packing' | 'do
                         <Td className="code text-ink-muted">{String(milestone.sequence).padStart(2, '0')}</Td>
                         <Td className="font-medium">
                           {milestone.name}
-                          {milestone.gate !== 'none' && <span className="code ml-2 text-ink-muted">{milestone.gate === 'inspection' ? 'QC GATE' : 'APPROVAL'}</span>}
+                          {milestone.gate !== 'none' && <span className="code ms-2 text-ink-muted">{milestone.gate === 'inspection' ? 'QC GATE' : 'APPROVAL'}</span>}
                         </Td>
                         <Td className="code whitespace-nowrap text-ink-soft">
                           {short(milestone.plannedStart)} – {short(milestone.plannedEnd)}

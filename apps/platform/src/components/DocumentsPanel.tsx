@@ -35,13 +35,13 @@ export function DocumentRows({ documents, showEntity = false, shareText }: { doc
             <Tr key={document.id}>
               <Td className="font-medium">
                 {document.title}
-                {document.number && <span className="code ml-2 font-normal text-ink-muted">{document.number}</span>}
+                {document.number && <span className="code ms-2 font-normal text-ink-muted">{document.number}</span>}
               </Td>
               <Td className="text-ink-soft">{DOCUMENT_KIND_LABEL[document.kind] ?? document.kind}</Td>
               {showEntity && (
                 <Td>
                   {document.links.map((link) => (
-                    <Link key={`${link.entityType}-${link.entityId}`} to={entityPath(link.entityType, link.entityId)} className="code mr-3 underline decoration-line-strong underline-offset-4 hover:decoration-ink">
+                    <Link key={`${link.entityType}-${link.entityId}`} to={entityPath(link.entityType, link.entityId)} className="code me-3 underline decoration-line-strong underline-offset-4 hover:decoration-ink">
                       {link.entityId}
                     </Link>
                   ))}

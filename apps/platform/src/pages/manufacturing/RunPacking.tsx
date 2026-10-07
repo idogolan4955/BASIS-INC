@@ -253,7 +253,7 @@ export function PackingPanel({ run, manage }: { run: RunDetail; manage: boolean 
               <tr className="bg-bone">
                 <Td className="font-medium" colSpan={4}>
                   {units.length} {units.length === 1 ? 'unit' : 'units'}
-                  {unpacked > 0 && <span className={cn('ml-3 font-normal text-ink-muted')}>{unpacked} {unpacked === 1 ? 'roll' : 'rolls'} still unpacked</span>}
+                  {unpacked > 0 && <span className={cn('ms-3 font-normal text-ink-muted')}>{unpacked} {unpacked === 1 ? 'roll' : 'rolls'} still unpacked</span>}
                 </Td>
                 <Td numeric className="font-medium">
                   {rolls}

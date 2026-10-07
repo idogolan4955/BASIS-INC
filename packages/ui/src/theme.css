@@ -39,8 +39,8 @@
   --color-line: #e2dacd;
   --color-line-strong: #c9bdad;
 
-  --font-sans: 'Source Sans 3 Variable', 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'EB Garamond Variable', 'EB Garamond', Garamond, 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Source Sans 3 Variable', 'Source Sans 3', 'Heebo', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'EB Garamond Variable', 'EB Garamond', 'Frank Ruhl Libre', Garamond, 'Cormorant Garamond', Georgia, serif;
   --font-brand: 'Archivo Variable', 'Archivo', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'Martian Mono Variable', 'Martian Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
@@ -111,14 +111,25 @@
     line-height: 1rem;
   }
 
-  /* Codes, document numbers, dates and measurements. */
+  /* Codes, document numbers, dates and measurements: always left-to-right,
+     isolated from the surrounding paragraph in a right-to-left interface. */
   .code {
+    direction: ltr;
+    unicode-bidi: isolate;
     font-family: var(--font-mono);
     font-size: 0.6875rem;
     font-stretch: 87.5%;
     font-weight: 400;
     letter-spacing: 0.01em;
     font-variant-numeric: tabular-nums;
+  }
+
+  /* Right-to-left: values keep their own direction, so "9,400 m" and
+     "RUN-26-0031" read as written inside Hebrew text. */
+  [dir='rtl'] td,
+  [dir='rtl'] dd,
+  [dir='rtl'] .bidi-auto {
+    unicode-bidi: plaintext;
   }
 
   :focus-visible {

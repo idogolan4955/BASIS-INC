@@ -337,7 +337,7 @@ Motion is taken from how fabric behaves. Each principle has a defined technique 
 2. The platform is desktop-first for ledgers and sheets, **mobile-first for field tasks** (inspection, receiving, photo capture, approvals, Gateway attention list).
 3. Touch targets ≥ 44 px on touch devices; platform density tokens switch on pointer type.
 4. No horizontal page scroll. Wide tables scroll inside their container with a sticky identity column.
-5. Use logical CSS properties throughout so right-to-left locales are possible without rework.
+5. Use logical CSS properties throughout: the platform runs in Hebrew, right-to-left, from the same components. Codes, numbers and measurements keep left-to-right inside Hebrew text; the wordmark never mirrors.
 
 ## 12. Accessibility
 
