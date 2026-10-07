@@ -247,6 +247,37 @@ export const RULES: Rule[] = [
     },
   },
   {
+    key: 'quality.inspection_overdue',
+    async evaluate(now) {
+      const { inspections } = await graphql<{ inspections: { number: string; type: string; state: string; scheduledOn: string | null; entityId: string; submittedAt: string | null }[] }>(
+        `query { inspections(where: { state: { in: [scheduled, in_progress, submitted] } }, limit: 500) { number type state scheduledOn entityId submittedAt } }`,
+      );
+      const today = isoDate(now);
+      const findings: Finding[] = [];
+      for (const inspection of inspections) {
+        if ((inspection.state === 'scheduled' || inspection.state === 'in_progress') && inspection.scheduledOn && daysBetween(inspection.scheduledOn, today) > 0) {
+          findings.push({ entityType: 'inspection', entityId: inspection.number, title: `${inspection.number} is ${daysBetween(inspection.scheduledOn, today)} days past its date`, detail: `${inspection.type.replace('_', ' ')} inspection of ${inspection.entityId}, scheduled ${inspection.scheduledOn}, not submitted.`, severity: 'caution' as Severity, ownerRole: 'qc' as Role, dedupeKey: `quality.inspection_overdue:${inspection.number}` });
+        }
+        if (inspection.state === 'submitted' && inspection.submittedAt && daysBetween(inspection.submittedAt.slice(0, 10), today) >= 2) {
+          findings.push({ entityType: 'inspection', entityId: inspection.number, title: `${inspection.number} waiting ${daysBetween(inspection.submittedAt.slice(0, 10), today)} days for sign-off`, detail: `${inspection.entityId} cannot move until the inspection is signed off.`, severity: 'caution' as Severity, ownerRole: 'qc' as Role, dedupeKey: `quality.sign_off_waiting:${inspection.number}` });
+        }
+      }
+      return findings;
+    },
+  },
+  {
+    key: 'quality.action_overdue',
+    async evaluate(now) {
+      const { correctiveActions } = await graphql<{ correctiveActions: { number: string; title: string; dueOn: string | null; state: string; ownerName: string | null }[] }>(
+        `query { correctiveActions(where: { state: { in: [open, in_progress, verification] } }, limit: 500) { number title dueOn state ownerName } }`,
+      );
+      const today = isoDate(now);
+      return correctiveActions
+        .filter((action) => action.dueOn && daysBetween(action.dueOn, today) > 0)
+        .map((action) => ({ entityType: 'corrective_action', entityId: action.number, title: `${action.number} is ${daysBetween(action.dueOn!, today)} days overdue`, detail: `${action.title}${action.ownerName ? `, with ${action.ownerName}` : ''}; ${action.state.replace('_', ' ')}.`, severity: 'caution' as Severity, ownerRole: 'qc' as Role, dedupeKey: `quality.action_overdue:${action.number}` }));
+    },
+  },
+  {
     key: 'customers.inquiry_new',
     async evaluate() {
       const { inquiries } = await graphql<{ inquiries: { reference: string; kind: string; name: string; company: string | null; country: string | null; createdAt: string }[] }>(

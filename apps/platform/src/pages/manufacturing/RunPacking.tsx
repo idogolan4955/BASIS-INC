@@ -267,8 +267,8 @@ export function PackingPanel({ run, manage }: { run: RunDetail; manage: boolean 
           </Ledger>
         )}
       </Panel>
-      {manage && <PackDialog key={packing ? 'open' : 'closed'} run={run} open={packing} onClose={() => setPacking(false)} />}
-      {!isSample && <EmailDialog key={emailing ? 'open' : 'closed'} kind="packing-list" number={run.number} subject={`Packing list ${run.number} from BASIS INC.`} open={emailing} onClose={() => setEmailing(false)} />}
+      {manage && <PackDialog key={packing ? 'pack-open' : 'pack-closed'} run={run} open={packing} onClose={() => setPacking(false)} />}
+      {!isSample && <EmailDialog key={emailing ? 'email-open' : 'email-closed'} kind="packing-list" number={run.number} subject={`Packing list ${run.number} from BASIS INC.`} open={emailing} onClose={() => setEmailing(false)} />}
     </>
   );
 }

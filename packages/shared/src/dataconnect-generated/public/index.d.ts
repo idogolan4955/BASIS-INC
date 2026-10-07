@@ -64,6 +64,11 @@ export interface Contact_Key {
   __typename?: 'Contact_Key';
 }
 
+export interface CorrectiveAction_Key {
+  id: UUIDString;
+  __typename?: 'CorrectiveAction_Key';
+}
+
 export interface Country_Key {
   code: string;
   __typename?: 'Country_Key';
@@ -72,6 +77,11 @@ export interface Country_Key {
 export interface Currency_Key {
   code: string;
   __typename?: 'Currency_Key';
+}
+
+export interface Defect_Key {
+  id: UUIDString;
+  __typename?: 'Defect_Key';
 }
 
 export interface DocumentLink_Key {
@@ -117,6 +127,26 @@ export interface Incoterm_Key {
 export interface Inquiry_Key {
   id: UUIDString;
   __typename?: 'Inquiry_Key';
+}
+
+export interface InspectionCheck_Key {
+  id: UUIDString;
+  __typename?: 'InspectionCheck_Key';
+}
+
+export interface InspectionTemplateCheck_Key {
+  id: UUIDString;
+  __typename?: 'InspectionTemplateCheck_Key';
+}
+
+export interface InspectionTemplate_Key {
+  id: UUIDString;
+  __typename?: 'InspectionTemplate_Key';
+}
+
+export interface Inspection_Key {
+  id: UUIDString;
+  __typename?: 'Inspection_Key';
 }
 
 export interface LegalEntity_Key {
@@ -231,6 +261,11 @@ export interface Roll_Key {
 export interface ShadeCollection_Key {
   code: string;
   __typename?: 'ShadeCollection_Key';
+}
+
+export interface ShadeReading_Key {
+  id: UUIDString;
+  __typename?: 'ShadeReading_Key';
 }
 
 export interface ShadeStandard_Key {

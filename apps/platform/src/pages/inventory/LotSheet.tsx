@@ -8,6 +8,9 @@ import { ExportMenu } from '../../components/ExportMenu';
 import { isSample } from '../../data/source';
 import { useRecordNote, useTimeline } from '../../data/timeline';
 import { useDocument } from '../../lib/documents';
+import { useInspectionsFor } from '../../data/quality';
+import { NewInspectionDialog } from '../qc/Qc';
+import { INSPECTION_RESULT_LABEL, INSPECTION_RESULT_TONE, INSPECTION_STATE_LABEL, INSPECTION_STATE_TONE, INSPECTION_TYPE_LABEL } from '@basis/shared';
 import { useRequiredSession } from '../../session';
 import { NotFound } from '../NotFound';
 import { useT } from '../../i18n';
@@ -76,6 +79,8 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
   const { number = '' } = useParams();
   const lot = useLot(number);
   const [editing, setEditing] = useState(false);
+  const [inspecting, setInspecting] = useState(false);
+  const inspections = useInspectionsFor('lot', number);
   const pdf = useDocument();
   const quality = session.role === 'owner' || session.role === 'qc';
 
@@ -130,8 +135,13 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
                 <Button onClick={() => pdf.share('roll-labels', data.number, `Roll labels ${data.number} from BASIS INC.`)} busy={pdf.busy === 'share:roll-labels'} busyLabel={t('Sharing')}>{t('WhatsApp')}</Button>
               </>
             )}
+            {['owner', 'operations', 'qc'].includes(session.role) && (
+              <Button variant="primary" onClick={() => setInspecting(true)}>
+                {t('New inspection')}
+              </Button>
+            )}
             {quality && (
-              <Button variant="primary" onClick={() => setEditing(true)}>{t('Record quality')}</Button>
+              <Button onClick={() => setEditing(true)}>{t('Record quality')}</Button>
             )}
           </>
         }
@@ -142,6 +152,38 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
         <NavLink to={`${base}/timeline`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Timeline')}</NavLink>
       </SheetTabs>
       <div className="flex flex-col gap-4 px-5 py-6 lg:px-8">
+        {tab === 'rolls' && (inspections.data ?? []).length > 0 && (
+          <Panel title={t('Inspections')} count={(inspections.data ?? []).length} flush>
+            <Ledger caption={t('Inspections')}>
+              <thead>
+                <tr>
+                  <Th>{t('Inspection')}</Th>
+                  <Th>{t('Type')}</Th>
+                  <Th>{t('Scheduled')}</Th>
+                  <Th>{t('Result')}</Th>
+                  <Th>{t('State')}</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {(inspections.data ?? []).map((inspection) => (
+                  <Tr key={inspection.id}>
+                    <Td>
+                      <Link to={`/qc/inspections/${inspection.number}`} className="code underline decoration-line-strong underline-offset-4 hover:decoration-ink">
+                        {inspection.number}
+                      </Link>
+                    </Td>
+                    <Td className="text-ink-soft">{t(INSPECTION_TYPE_LABEL[inspection.type])}</Td>
+                    <Td className="code text-ink-soft">{inspection.scheduledOn ? formatLocalDate(inspection.scheduledOn) : '\u2014'}</Td>
+                    <Td>{inspection.result ? <StatusChip tone={INSPECTION_RESULT_TONE[inspection.result]}>{t(INSPECTION_RESULT_LABEL[inspection.result])}</StatusChip> : '\u2014'}</Td>
+                    <Td>
+                      <StatusChip tone={INSPECTION_STATE_TONE[inspection.state]}>{t(INSPECTION_STATE_LABEL[inspection.state])}</StatusChip>
+                    </Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </Ledger>
+          </Panel>
+        )}
         {tab === 'rolls' && (
           <Panel
             title={t('Rolls')}
@@ -207,7 +249,8 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
         )}
         {tab === 'timeline' && <LotTimeline number={data.number} />}
       </div>
-      {quality && <QualityDialog key={editing ? 'open' : 'closed'} lot={data} open={editing} onClose={() => setEditing(false)} />}
+      {['owner', 'operations', 'qc'].includes(session.role) && <NewInspectionDialog key={inspecting ? 'inspect-open' : 'inspect-closed'} open={inspecting} onClose={() => setInspecting(false)} subject={data.number} />}
+      {quality && <QualityDialog key={editing ? 'quality-open' : 'quality-closed'} lot={data} open={editing} onClose={() => setEditing(false)} />}
     </>
   );
 }

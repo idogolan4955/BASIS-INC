@@ -216,6 +216,16 @@ Depends on: Phase 2, P3.
 Exit: an inspector completes a pre-shipment inspection on a phone at a factory; a conditional pass holds the lot until its corrective action is verified.
 Depends on: P4; the China reachability check ([SYSTEM_ARCHITECTURE](SYSTEM_ARCHITECTURE.md) O5).
 
+#### Phase 5 progress (2026-10-07)
+
+| Done | Remaining |
+|---|---|
+| Schema for quality (`dataconnect/schema/quality.gql`): inspection templates with checks (category, method, kind, unit, expected and tolerances in thousandths, critical flag), sampling rule and thresholds (defect points per 100 m, ΔE in hundredths); inspections on a lot or a run with their recorded checks, shade readings (L\*a\*b\*, ΔE, grade, standard) and defects per roll (4-point); corrective actions with owner, due date and verification | Inspections on shipments (receiving at the warehouse, P6/P7); photos on defects once Storage runs |
+| Rules in `packages/shared/src/quality.ts` with tests: a measurement judged by its tolerance; defect points per 100 m; the result read from the checks, readings and defects against the template's thresholds (critical fail → fail; shade or defect rate beyond threshold → fail; non-critical fails → conditional); the dispositions a result allows; the lot state a disposition produces; a conditional release only with a corrective action or a concession | Supplier performance snapshot from inspections and actions |
+| Functions: `createInspection` (template by type, family-specific first; checks copied), `recordInspection` (checks, readings, defects, on a phone, in any number of saves), `submitInspection` (result derived, refused while checks are pending), `signOffInspection` (QC or owner; moves the lot through the one lot transition and completes the run's gated inspection milestone on a release), `createCorrectiveAction`, `updateCorrectiveAction` (closing only from verification, by QC or the owner). Alert rules: inspection past its date, submitted and waiting for sign-off, corrective action overdue. Templates seeded: pre-shipment, lab dip, receiving | Lab-dip approvals linked to the approval-gated milestone; inline inspections against a run's lines |
+| Module 05 QC: inspection queue (work first, then sign-off), the inspection sheet built for a phone (one check per row with Pass / Fail / N/A targets at 44 px, measurements typed in their unit, a draft kept in the browser until saved), shade readings and defects per roll with the running rate against the threshold, submit and sign-off with the allowed dispositions, corrective actions with their own ledger and update dialog, templates. Lot sheet opens an inspection and lists its inspections. Hebrew throughout | Defect library and shade-reading history across lots; the inspection as a PDF report |
+| Verified against the emulators: INS-26-0001 opened on LOT-26-0002 from the seeded template, ten checks recorded with measurements and a failed packaging check, one reading and one defect, submitted as a conditional pass, a release refused without an action, CAR-26-0001 opened, signed off as release: the lot released and the run's inspection milestone done | |
+
 ### P6 — Logistics and landed cost (XL)
 
 - Shipments with flow, mode and load type; legs with planned and actual dates; references (booking, BL, AWB, container, tracking).

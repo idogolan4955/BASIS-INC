@@ -42,6 +42,8 @@ export interface Caller {
   readonly email?: string;
   /** Set when a machine acts with a token issued by `uid`. */
   readonly via?: string;
+  /** Set when an inspection's sign-off closes a gated milestone. */
+  readonly viaInspection?: string;
 }
 
 /** The signed-in caller with a known role, or a `forbidden` failure. */

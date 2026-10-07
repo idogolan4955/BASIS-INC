@@ -35,6 +35,14 @@ export const FUNCTION_NAMES = {
   connectorStatus: 'connectorStatus',
   /** Callable, commercial roles: an inquiry from the site has been answered. */
   markInquiry: 'markInquiry',
+  /** Callable, QC and operations: inspections, from opening to sign-off. */
+  createInspection: 'createInspection',
+  recordInspection: 'recordInspection',
+  submitInspection: 'submitInspection',
+  signOffInspection: 'signOffInspection',
+  /** Callable, QC and operations: corrective actions. */
+  createCorrectiveAction: 'createCorrectiveAction',
+  updateCorrectiveAction: 'updateCorrectiveAction',
   /** Callable, owner and operations: run the alert rules now. */
   evaluateAlerts: 'evaluateAlerts',
   /** Scheduled: consume domain events, evaluate alert rules. */

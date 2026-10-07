@@ -191,6 +191,52 @@ const TEMPLATES = [
   ] },
 ];
 
+// Inspection checklists. Thresholds and tolerances are working assumptions
+// until the production standards fix them per fabric.
+const INSPECTION_TEMPLATES = [
+  { name: 'Pre-shipment, mesh and tulle', type: 'pre_shipment', family: null, sampling: '10% of rolls, at least 3, full length', maxPoints: 20, maxDeltaE: 100, checks: [
+    ['shade_std', 'shade', 'Shade against the standard', 'Spectrophotometer, D65, three readings per roll', 'measurement', 'dE', 0, 0, 1000, true],
+    ['shade_lot', 'shade', 'Shade within the lot', 'Roll to roll, D65', 'pass_fail', null, null, null, null, false],
+    ['width', 'dimension', 'Usable width', 'Measured at three points per roll', 'measurement', 'cm', 158000, 2000, 5000, true],
+    ['gsm', 'dimension', 'Weight', 'Cut and weighed, three samples', 'measurement', 'gsm', null, null, null, false],
+    ['length', 'quantity', 'Roll length against the label', 'Measured on the table', 'measurement', '%', 100000, 2000, 5000, false],
+    ['stretch', 'dimension', 'Stretch and recovery', 'Against the specification', 'pass_fail', null, null, null, null, true],
+    ['defects', 'defect', 'Defects per roll', '4-point system, continuous', 'count', 'pts', null, null, null, false],
+    ['rolls', 'quantity', 'Rolls and metres against the packing list', 'Counted', 'pass_fail', null, null, null, null, true],
+    ['packaging', 'packaging', 'Wrap, core and end-cap labels', 'Shade, product code, lot, width, length, origin present', 'pass_fail', null, null, null, null, false],
+    ['cartons', 'packaging', 'Cartons and marks', 'Against the packing list', 'pass_fail', null, null, null, null, false],
+  ] },
+  { name: 'Lab dip', type: 'lab_dip', family: null, sampling: 'One dip card per shade', maxPoints: null, maxDeltaE: 80, checks: [
+    ['shade_std', 'shade', 'Shade against the standard', 'Spectrophotometer, D65', 'measurement', 'dE', 0, 0, 800, true],
+    ['visual', 'shade', 'Visual match in daylight', 'Light box D65, then daylight', 'pass_fail', null, null, null, null, true],
+    ['hand', 'dimension', 'Hand feel after dyeing', 'Against the approved standard', 'pass_fail', null, null, null, null, false],
+  ] },
+  { name: 'Receiving', type: 'receiving', family: null, sampling: 'Every carton opened; 10% of rolls measured', maxPoints: null, maxDeltaE: null, checks: [
+    ['cartons', 'packaging', 'Cartons intact and marks legible', 'Visual', 'pass_fail', null, null, null, null, false],
+    ['count', 'quantity', 'Rolls against the packing list', 'Counted', 'pass_fail', null, null, null, null, true],
+    ['labels', 'packaging', 'Roll labels match the lot', 'Shade, product code, lot', 'pass_fail', null, null, null, null, true],
+    ['damage', 'defect', 'Transit damage', 'Visual, every roll', 'count', 'pts', null, null, null, false],
+  ] },
+];
+
+async function seedInspectionTemplates() {
+  for (const template of INSPECTION_TEMPLATES) {
+    const existing = await gql(`query ($name: String!) { inspectionTemplates(where: { name: { eq: $name } }, limit: 1) { id } }`, { name: template.name });
+    if (existing.inspectionTemplates[0]) continue;
+    const inserted = await gql(`mutation ($name: String!, $type: InspectionType!, $sampling: String, $maxPoints: Int, $maxDeltaE: Int) {
+      inspectionTemplate_insert(data: { name: $name, type: $type, isDefault: true, samplingRule: $sampling, maxDefectPointsPer100m: $maxPoints, maxDeltaE: $maxDeltaE }) }`,
+      { name: template.name, type: template.type, sampling: template.sampling, maxPoints: template.maxPoints, maxDeltaE: template.maxDeltaE });
+    const id = inserted.inspectionTemplate_insert.id;
+    let sequence = 1;
+    for (const [key, category, parameter, method, kind, unit, expected, minus, plus, critical] of template.checks) {
+      await gql(`mutation ($id: UUID!, $key: String!, $sequence: Int!, $category: CheckCategory!, $parameter: String!, $method: String, $kind: CheckKind!, $unit: String, $expected: Int64, $minus: Int64, $plus: Int64, $critical: Boolean!) {
+        inspectionTemplateCheck_insert(data: { templateId: $id, key: $key, sequence: $sequence, category: $category, parameter: $parameter, method: $method, kind: $kind, unit: $unit, expected: $expected, toleranceMinus: $minus, tolerancePlus: $plus, isCritical: $critical }) }`,
+        { id, key, sequence, category, parameter, method, kind, unit, expected: expected === null ? null : String(expected), minus: minus === null ? null : String(minus), plus: plus === null ? null : String(plus), critical });
+      sequence += 1;
+    }
+  }
+}
+
 async function seedTemplates() {
   for (const template of TEMPLATES) {
     const existing = await gql(`query ($name: String!) { processTemplates(where: { name: { eq: $name } }, limit: 1) { id } }`, { name: template.name });
@@ -209,6 +255,7 @@ async function seedTemplates() {
 
 const uid = await seedOwner();
 await seedTemplates();
+await seedInspectionTemplates();
 await seedReference();
 const skuCount = await seedCatalog();
-console.log(`Seeded emulators: owner ${OWNER.email} (${uid}), ${COUNTRIES.length} countries, ${CURRENCIES.length} currencies, ${UOMS.length} units, ${INCOTERMS.length} Incoterms, number sequences, ${catalog.products.length} products, ${skuCount} SKUs, ${TEMPLATES.length} process templates.`);
+console.log(`Seeded emulators: owner ${OWNER.email} (${uid}), ${COUNTRIES.length} countries, ${CURRENCIES.length} currencies, ${UOMS.length} units, ${INCOTERMS.length} Incoterms, number sequences, ${catalog.products.length} products, ${skuCount} SKUs, ${TEMPLATES.length} process templates, ${INSPECTION_TEMPLATES.length} inspection templates.`);

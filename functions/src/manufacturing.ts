@@ -9,6 +9,7 @@ import {
   runStateFrom,
   rollNumber,
   QUANTITY_SCALE,
+  type Health,
   type MilestoneFacts,
   type MilestoneState,
   type RunState,
@@ -17,7 +18,7 @@ import {
 import { onCall } from 'firebase-functions/v2/https';
 import { z } from 'zod';
 import { fileGenerated } from './documents';
-import { REGION, audit, callerOf, emit, failure, graphql, requireRole } from './lib';
+import { REGION, audit, callerOf, emit, failure, graphql, requireRole, type Caller } from './lib';
 
 // Purchasing and manufacturing commands: the ones that allocate numbers,
 // move lifecycle states and derive run health. Reads go through the connector.
@@ -30,7 +31,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 const int64 = z.string().regex(/^-?\d+$/, 'Fixed-point integer expected');
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date expected');
 
-async function allocateNumber(prefix: string): Promise<string> {
+export async function allocateNumber(prefix: string): Promise<string> {
   const year = new Date().getFullYear();
   const { numberSequence } = await graphql<{ numberSequence: { nextValue: number } | null }>(
     `query ($prefix: String!, $year: Int!) { numberSequence(key: { prefix: $prefix, year: $year }) { nextValue } }`,
@@ -44,7 +45,7 @@ async function allocateNumber(prefix: string): Promise<string> {
   return formatBusinessNumber({ prefix, year, sequence });
 }
 
-async function timeline(entityType: string, entityId: string, kind: string, actorUid: string, summary: string): Promise<void> {
+export async function timeline(entityType: string, entityId: string, kind: string, actorUid: string, summary: string): Promise<void> {
   await graphql(
     `mutation ($entityType: String!, $entityId: String!, $kind: String!, $actorUid: String!, $payload: Any) {
       timelineEvent_insert(data: { entityType: $entityType, entityId: $entityId, kind: $kind, actorUid: $actorUid, payload: $payload }) }`,
@@ -362,12 +363,9 @@ async function deriveRun(run: RunRow, chain: RunRow['productionMilestones_on_run
   return { health, state, forecastEnd };
 }
 
-export const updateMilestone = onCall({ region: REGION }, async (request) => {
-  const caller = callerOf(request);
-  requireRole(caller, PRODUCTION, 'Updating milestones');
-  const parsed = updateMilestoneInput.safeParse(request.data);
-  if (!parsed.success) validationFailure(parsed.error);
-  const input = parsed.data;
+/** The milestone change itself, shared with the sign-off of a gated inspection. */
+export async function updateMilestoneCore(runNumber: string, milestoneId: string, change: Omit<z.infer<typeof updateMilestoneInput>, 'runNumber' | 'milestoneId'>, caller: Caller): Promise<{ runNumber: string; health: Health; state: RunState; forecastEnd: string | null }> {
+  const input = { runNumber, milestoneId, ...change };
 
   const { productionRuns } = await graphql<{ productionRuns: RunRow[] }>(
     `query ($number: String!) { productionRuns(where: { number: { eq: $number } }, limit: 1) { ${RUN_WITH_MILESTONES} } }`,
@@ -383,7 +381,7 @@ export const updateMilestone = onCall({ region: REGION }, async (request) => {
   const nextState = input.state ?? milestone.state;
   // An inspection gate closes only through QC; until that module lands, a QC
   // role must be the one to complete it.
-  if (nextState === 'done' && milestone.gate === 'inspection' && caller.role !== 'qc' && caller.role !== 'owner') {
+  if (nextState === 'done' && milestone.gate === 'inspection' && caller.role !== 'qc' && caller.role !== 'owner' && !caller.viaInspection) {
     throw failure('forbidden', 'An inspection milestone is completed by QC.');
   }
   const actualStart = input.actualStart !== undefined ? input.actualStart : milestone.actualStart ?? (nextState === 'in_progress' || nextState === 'done' ? now : null);
@@ -418,6 +416,15 @@ export const updateMilestone = onCall({ region: REGION }, async (request) => {
   await emit('production_milestone.updated', 'production_run', input.runNumber, { milestone: milestone.key, state: nextState, health });
   await timeline('production_run', input.runNumber, 'status_changed', caller.uid, summary);
   return { runNumber: input.runNumber, health, state, forecastEnd: runForecast };
+}
+
+export const updateMilestone = onCall({ region: REGION }, async (request) => {
+  const caller = callerOf(request);
+  requireRole(caller, PRODUCTION, 'Updating milestones');
+  const parsed = updateMilestoneInput.safeParse(request.data);
+  if (!parsed.success) validationFailure(parsed.error);
+  const { runNumber, milestoneId, ...change } = parsed.data;
+  return updateMilestoneCore(runNumber, milestoneId, change, caller);
 });
 
 // ---------------------------------------------------------------- lots and packing
@@ -591,27 +598,31 @@ const lotQualityInput = z.object({
 
 const LOT_QUALITY_WORDS: Record<string, string> = { pending: 'awaiting quality', on_hold: 'on hold', released: 'released', rejected: 'rejected' };
 
-// Until inspections land, this is how QC records a disposition; the
-// inspection module will call the same transition from its results.
+/** The one transition a lot's quality state goes through, whoever drives it. */
+export async function applyLotQuality(number: string, state: 'pending' | 'on_hold' | 'released' | 'rejected', note: string, actorUid: string, source: string): Promise<{ from: string; run: string }> {
+  const { lots } = await graphql<{ lots: { id: string; qualityState: string; run: { number: string } }[] }>(
+    `query ($number: String!) { lots(where: { number: { eq: $number } }, limit: 1) { id qualityState run { number } } }`,
+    { number },
+  );
+  const lot = lots[0];
+  if (!lot) throw failure('not_found', `No lot ${number}.`);
+  await graphql(`mutation ($id: UUID!, $state: LotQualityState!) { lot_update(id: $id, data: { qualityState: $state }) }`, { id: lot.id, state });
+  const words = LOT_QUALITY_WORDS[state] ?? state;
+  await audit(actorUid, 'lot.quality', 'lot', number, { qualityState: lot.qualityState }, { qualityState: state, note, source });
+  await emit('lot.quality_changed', 'lot', number, { from: lot.qualityState, to: state, run: lot.run.number, source });
+  await timeline('lot', number, 'status_changed', actorUid, `${words[0]!.toUpperCase()}${words.slice(1)}: ${note}`);
+  await timeline('production_run', lot.run.number, 'status_changed', actorUid, `${number} ${words}: ${note}`);
+  return { from: lot.qualityState, run: lot.run.number };
+}
+
+// QC records a disposition by hand only where no inspection is involved; an
+// inspection's sign-off drives the same transition.
 export const setLotQuality = onCall({ region: REGION }, async (request) => {
   const caller = callerOf(request);
   requireRole(caller, QUALITY, 'Releasing lots');
   const parsed = lotQualityInput.safeParse(request.data);
   if (!parsed.success) validationFailure(parsed.error);
   const input = parsed.data;
-
-  const { lots } = await graphql<{ lots: { id: string; qualityState: string; run: { number: string } }[] }>(
-    `query ($number: String!) { lots(where: { number: { eq: $number } }, limit: 1) { id qualityState run { number } } }`,
-    { number: input.number },
-  );
-  const lot = lots[0];
-  if (!lot) throw failure('not_found', `No lot ${input.number}.`);
-  await graphql(`mutation ($id: UUID!, $state: LotQualityState!) { lot_update(id: $id, data: { qualityState: $state }) }`, { id: lot.id, state: input.state });
-
-  const words = LOT_QUALITY_WORDS[input.state] ?? input.state;
-  await audit(caller.uid, 'lot.quality', 'lot', input.number, { qualityState: lot.qualityState }, { qualityState: input.state, note: input.note });
-  await emit('lot.quality_changed', 'lot', input.number, { from: lot.qualityState, to: input.state, run: lot.run.number });
-  await timeline('lot', input.number, 'status_changed', caller.uid, `${words[0]!.toUpperCase()}${words.slice(1)}: ${input.note}`);
-  await timeline('production_run', lot.run.number, 'status_changed', caller.uid, `${input.number} ${words}: ${input.note}`);
+  await applyLotQuality(input.number, input.state, input.note, caller.uid, 'manual');
   return { number: input.number, qualityState: input.state };
 });

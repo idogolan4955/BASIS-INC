@@ -291,7 +291,7 @@ export const sampleManufacturing = {
     if (!run) return null;
     const po = store.pos.find((candidate) => candidate.number === run.purchaseOrderNumber)!;
     const lots = store.lots.filter((lot) => lot.runNumber === run.number).map(lotView);
-    return {
+    return structuredClone({
       ...runSummary(run),
       purchaseOrderState: po.state,
       supplierId: po.supplierId,
@@ -304,14 +304,15 @@ export const sampleManufacturing = {
       lots,
       handlingUnits: store.units.filter((unit) => unit.runNumber === run.number).map(unitView),
       availableToShip: availableToShip(lots),
-    };
+    });
   },
   async lot(number: string): Promise<LotDetail | null> {
     const lot = store.lots.find((candidate) => candidate.number === number);
     if (!lot) return null;
     const run = store.runs.find((candidate) => candidate.number === lot.runNumber)!;
     const po = store.pos.find((candidate) => candidate.number === run.purchaseOrderNumber)!;
-    return { ...lotView(lot), runNumber: run.number, purchaseOrderNumber: po.number, supplierName: po.supplierName };
+    // A copy: the store is mutated in place and a cached read must not change underneath its query.
+    return structuredClone({ ...lotView(lot), runNumber: run.number, purchaseOrderNumber: po.number, supplierName: po.supplierName });
   },
   async templates(): Promise<ProcessTemplateView[]> {
     return TEMPLATES;

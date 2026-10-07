@@ -14,6 +14,9 @@ import { LotSheet } from './pages/inventory/LotSheet';
 import { Documents } from './pages/documents/Documents';
 import { Settings } from './pages/settings/Settings';
 import { Inquiries } from './pages/customers/Inquiries';
+import { Inspections, InspectionTemplates } from './pages/qc/Qc';
+import { InspectionSheet } from './pages/qc/InspectionSheet';
+import { CorrectiveActions } from './pages/qc/CorrectiveActions';
 import { Tasks } from './pages/operations/Tasks';
 import { Operations } from './pages/operations/Operations';
 import { Companies } from './pages/parties/Companies';
@@ -63,6 +66,15 @@ const router = createBrowserRouter([
       { path: 'documents', element: <Documents /> },
       { path: 'settings', element: <Settings /> },
       { path: 'customers/inquiries', element: <Inquiries /> },
+      { path: 'qc', element: <Inspections /> },
+      { path: 'qc/inspections', element: <Inspections /> },
+      { path: 'qc/inspections/:number', element: <InspectionSheet tab="checks" /> },
+      { path: 'qc/inspections/:number/findings', element: <InspectionSheet tab="findings" /> },
+      { path: 'qc/inspections/:number/actions', element: <InspectionSheet tab="actions" /> },
+      { path: 'qc/inspections/:number/timeline', element: <InspectionSheet tab="timeline" /> },
+      { path: 'qc/corrective-actions', element: <CorrectiveActions /> },
+      { path: 'qc/corrective-actions/:number', element: <CorrectiveActions /> },
+      { path: 'qc/templates', element: <InspectionTemplates /> },
       { path: 'customers/inquiries/:reference', element: <Inquiries /> },
       { path: 'products', element: <ProductsIndex /> },
       { path: 'products/skus', element: <SkuLedger /> },

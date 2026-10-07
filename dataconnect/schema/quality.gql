@@ -1,0 +1,190 @@
+# Quality: inspections against templates, what they measured and found, the
+# disposition that moves a lot, and the corrective actions that follow.
+
+enum InspectionType {
+  lab_dip
+  inline
+  pre_shipment
+  receiving
+}
+
+enum InspectionState {
+  scheduled
+  in_progress
+  submitted
+  signed_off
+  cancelled
+}
+
+enum InspectionResult {
+  pass
+  conditional_pass
+  fail
+}
+
+enum Disposition {
+  release
+  rework
+  reject
+  accept_with_concession
+}
+
+enum CheckCategory {
+  shade
+  dimension
+  defect
+  quantity
+  packaging
+  documentation
+}
+
+enum CheckKind {
+  pass_fail
+  measurement
+  count
+}
+
+enum CheckOutcome {
+  pending
+  pass
+  fail
+  not_applicable
+}
+
+enum ActionState {
+  open
+  in_progress
+  verification
+  closed
+}
+
+# A checklist for one kind of inspection, optionally for one family.
+type InspectionTemplate @table {
+  name: String! @col(dataType: "varchar(120)")
+  type: InspectionType!
+  family: FabricFamily
+  isDefault: Boolean!
+  # How much to look at: "10% of rolls, min 3", "all rolls", "one lab dip card".
+  samplingRule: String @col(dataType: "varchar(160)")
+  # Defect points per 100 m above which the lot fails (4-point system).
+  maxDefectPointsPer100m: Int
+  # Hundredths of a Delta E unit above which shade fails.
+  maxDeltaE: Int
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type InspectionTemplateCheck @table {
+  template: InspectionTemplate!
+  key: String! @col(dataType: "varchar(32)")
+  sequence: Int!
+  category: CheckCategory!
+  parameter: String! @col(dataType: "varchar(120)")
+  method: String @col(dataType: "varchar(200)")
+  kind: CheckKind!
+  unit: String @col(dataType: "varchar(16)")
+  # Thousandths of the unit, for measurements.
+  expected: Int64
+  toleranceMinus: Int64
+  tolerancePlus: Int64
+  isCritical: Boolean!
+}
+
+# One inspection event. The subject is a lot or a run; later a shipment.
+type Inspection @table {
+  number: String! @col(dataType: "varchar(16)") @unique
+  type: InspectionType!
+  state: InspectionState!
+  template: InspectionTemplate
+  entityType: String! @col(dataType: "varchar(40)")
+  entityId: String! @col(dataType: "varchar(80)")
+  lot: Lot
+  run: ProductionRun
+  inspectorUid: String @col(dataType: "varchar(128)")
+  inspectorName: String @col(dataType: "varchar(160)")
+  location: String @col(dataType: "varchar(160)")
+  scheduledOn: Date
+  performedOn: Date
+  sampleSize: String @col(dataType: "varchar(80)")
+  # Derived from the checks and defects at submission; the sign-off confirms it.
+  result: InspectionResult
+  disposition: Disposition
+  concession: String
+  note: String
+  submittedAt: Timestamp
+  signedOffByUid: String @col(dataType: "varchar(128)")
+  signedOffAt: Timestamp
+  createdByUid: String! @col(dataType: "varchar(128)")
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+# A recorded check, copied from the template when the inspection opens.
+type InspectionCheck @table {
+  inspection: Inspection!
+  key: String! @col(dataType: "varchar(32)")
+  sequence: Int!
+  category: CheckCategory!
+  parameter: String! @col(dataType: "varchar(120)")
+  method: String @col(dataType: "varchar(200)")
+  kind: CheckKind!
+  unit: String @col(dataType: "varchar(16)")
+  expected: Int64
+  toleranceMinus: Int64
+  tolerancePlus: Int64
+  isCritical: Boolean!
+  outcome: CheckOutcome!
+  # Thousandths of the unit.
+  measured: Int64
+  note: String
+}
+
+# A colour measurement against the shade standard.
+type ShadeReading @table {
+  inspection: Inspection!
+  roll: Roll
+  illuminant: String! @col(dataType: "varchar(16)")
+  # L*a*b* in thousandths.
+  lStar: Int!
+  aStar: Int!
+  bStar: Int!
+  # Hundredths of a Delta E unit against the standard.
+  deltaE: Int!
+  visualGrade: String @col(dataType: "varchar(16)")
+  standardRef: String @col(dataType: "varchar(80)")
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# A defect found on a roll, scored by the 4-point convention.
+type Defect @table {
+  inspection: Inspection!
+  roll: Roll
+  type: String! @col(dataType: "varchar(80)")
+  points: Int!
+  # Metres from the roll start, thousandths.
+  positionM: Int64
+  sizeCm: Int
+  note: String
+  photoPath: String @col(dataType: "varchar(400)")
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# What follows a finding: owned, dated, verified before it closes.
+type CorrectiveAction @table {
+  number: String! @col(dataType: "varchar(16)") @unique
+  inspection: Inspection
+  lot: Lot
+  supplier: Company
+  title: String! @col(dataType: "varchar(200)")
+  description: String
+  rootCause: String
+  action: String
+  ownerUid: String @col(dataType: "varchar(128)")
+  ownerName: String @col(dataType: "varchar(160)")
+  dueOn: Date
+  state: ActionState!
+  verifiedByUid: String @col(dataType: "varchar(128)")
+  verifiedAt: Timestamp
+  createdByUid: String! @col(dataType: "varchar(128)")
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}

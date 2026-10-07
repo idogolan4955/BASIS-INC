@@ -4,6 +4,7 @@ import { api } from './api';
 import { connectorStatus, createApiToken, revokeApiToken, saveConnector, sendDocumentEmail } from './connectors';
 import { fileGeneratedDocument } from './documents';
 import { markInquiry } from './intake';
+import { createCorrectiveAction, createInspection, recordInspection, signOffInspection, submitInspection, updateCorrectiveAction } from './quality';
 import { cancelPurchaseOrder, confirmPurchaseOrder, createProductionRun, createPurchaseOrder, issuePurchaseOrder, packHandlingUnit, recordLot, setLotQuality, updateMilestone } from './manufacturing';
 import { sweepEvents } from './sweep';
 import { inviteUser, setUserRole } from './users';
@@ -32,7 +33,13 @@ const registry: Record<FunctionName, unknown> = {
   saveConnector,
   connectorStatus,
   markInquiry,
+  createInspection,
+  recordInspection,
+  submitInspection,
+  signOffInspection,
+  createCorrectiveAction,
+  updateCorrectiveAction,
 };
 void registry;
 
-export { api, evaluateAlerts, inviteUser, setUserRole, sweepEvents, createPurchaseOrder, issuePurchaseOrder, confirmPurchaseOrder, cancelPurchaseOrder, createProductionRun, updateMilestone, recordLot, packHandlingUnit, setLotQuality, fileGeneratedDocument, sendDocumentEmail, createApiToken, revokeApiToken, saveConnector, connectorStatus, markInquiry };
+export { api, evaluateAlerts, inviteUser, setUserRole, sweepEvents, createPurchaseOrder, issuePurchaseOrder, confirmPurchaseOrder, cancelPurchaseOrder, createProductionRun, updateMilestone, recordLot, packHandlingUnit, setLotQuality, fileGeneratedDocument, sendDocumentEmail, createApiToken, revokeApiToken, saveConnector, connectorStatus, markInquiry, createInspection, recordInspection, submitInspection, signOffInspection, createCorrectiveAction, updateCorrectiveAction };

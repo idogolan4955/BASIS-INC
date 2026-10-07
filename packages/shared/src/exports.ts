@@ -193,7 +193,7 @@ function csvCell(value: ExportValue): string {
 export function toCsv(columns: readonly ExportColumn[], rows: readonly ExportRow[]): string {
   const lines = [columns.map((column) => csvCell(column.label)).join(',')];
   for (const row of rows) lines.push(columns.map((column) => csvCell(row[column.key] ?? null)).join(','));
-  return `﻿${lines.join('\r\n')}\r\n`;
+  return `\uFEFF${lines.join('\r\n')}\r\n`;
 }
 
 /** Fixed-point thousandths to a plain number for a spreadsheet cell. */

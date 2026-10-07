@@ -14,38 +14,38 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { listFamilies, listProducts, getProduct, listSkus, getSku, getSkuSourcing, listShades, listPutUps, upsertFamily, upsertProduct } from '@basis/dataconnect-platform';
+import { acknowledgeAlert, createTask, completeTask, addNote, updateMyPreferences, recordEvent, resolveAlert, reopenTask, listCompanies, getCompany } from '@basis/dataconnect-platform';
 
 
-// Operation ListFamilies: 
-const { data } = await ListFamilies(dataConnect);
+// Operation AcknowledgeAlert:  For variables, look at type AcknowledgeAlertVars in ../index.d.ts
+const { data } = await AcknowledgeAlert(dataConnect, acknowledgeAlertVars);
 
-// Operation ListProducts: 
-const { data } = await ListProducts(dataConnect);
+// Operation CreateTask:  For variables, look at type CreateTaskVars in ../index.d.ts
+const { data } = await CreateTask(dataConnect, createTaskVars);
 
-// Operation GetProduct:  For variables, look at type GetProductVars in ../index.d.ts
-const { data } = await GetProduct(dataConnect, getProductVars);
+// Operation CompleteTask:  For variables, look at type CompleteTaskVars in ../index.d.ts
+const { data } = await CompleteTask(dataConnect, completeTaskVars);
 
-// Operation ListSkus: 
-const { data } = await ListSkus(dataConnect);
+// Operation AddNote:  For variables, look at type AddNoteVars in ../index.d.ts
+const { data } = await AddNote(dataConnect, addNoteVars);
 
-// Operation GetSku:  For variables, look at type GetSkuVars in ../index.d.ts
-const { data } = await GetSku(dataConnect, getSkuVars);
+// Operation UpdateMyPreferences:  For variables, look at type UpdateMyPreferencesVars in ../index.d.ts
+const { data } = await UpdateMyPreferences(dataConnect, updateMyPreferencesVars);
 
-// Operation GetSkuSourcing:  For variables, look at type GetSkuSourcingVars in ../index.d.ts
-const { data } = await GetSkuSourcing(dataConnect, getSkuSourcingVars);
+// Operation RecordEvent:  For variables, look at type RecordEventVars in ../index.d.ts
+const { data } = await RecordEvent(dataConnect, recordEventVars);
 
-// Operation ListShades: 
-const { data } = await ListShades(dataConnect);
+// Operation ResolveAlert:  For variables, look at type ResolveAlertVars in ../index.d.ts
+const { data } = await ResolveAlert(dataConnect, resolveAlertVars);
 
-// Operation ListPutUps: 
-const { data } = await ListPutUps(dataConnect);
+// Operation ReopenTask:  For variables, look at type ReopenTaskVars in ../index.d.ts
+const { data } = await ReopenTask(dataConnect, reopenTaskVars);
 
-// Operation UpsertFamily:  For variables, look at type UpsertFamilyVars in ../index.d.ts
-const { data } = await UpsertFamily(dataConnect, upsertFamilyVars);
+// Operation ListCompanies: 
+const { data } = await ListCompanies(dataConnect);
 
-// Operation UpsertProduct:  For variables, look at type UpsertProductVars in ../index.d.ts
-const { data } = await UpsertProduct(dataConnect, upsertProductVars);
+// Operation GetCompany:  For variables, look at type GetCompanyVars in ../index.d.ts
+const { data } = await GetCompany(dataConnect, getCompanyVars);
 
 
 ```

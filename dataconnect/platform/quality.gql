@@ -1,0 +1,227 @@
+# Quality: reads for the QC module. No prices anywhere here.
+
+fragment InspectionRow on Inspection {
+  id
+  number
+  type
+  state
+  entityType
+  entityId
+  inspectorName
+  location
+  scheduledOn
+  performedOn
+  sampleSize
+  result
+  disposition
+  submittedAt
+  signedOffAt
+  createdAt
+  template {
+    id
+    name
+  }
+  lot {
+    number
+    sku {
+      code
+      product {
+        name
+      }
+      shade {
+        code
+        name
+        hex
+      }
+    }
+  }
+  run {
+    number
+    purchaseOrder {
+      number
+      supplier {
+        tradingName
+        legalName
+      }
+    }
+  }
+}
+
+query ListInspections @auth(level: USER) {
+  inspections(orderBy: { createdAt: DESC }, limit: 500) {
+    ...InspectionRow
+  }
+}
+
+query ListInspectionsFor($entityType: String!, $entityId: String!) @auth(level: USER) {
+  inspections(where: { entityType: { eq: $entityType }, entityId: { eq: $entityId } }, orderBy: { createdAt: DESC }, limit: 50) {
+    ...InspectionRow
+  }
+}
+
+query GetInspection($number: String!) @auth(level: USER) {
+  inspections(where: { number: { eq: $number } }, limit: 1) {
+    id
+    number
+    type
+    state
+    entityType
+    entityId
+    inspectorName
+    location
+    scheduledOn
+    performedOn
+    sampleSize
+    result
+    disposition
+    concession
+    note
+    submittedAt
+    signedOffAt
+    createdAt
+    template {
+      id
+      name
+      samplingRule
+      maxDefectPointsPer100m
+      maxDeltaE
+    }
+    lot {
+      id
+      number
+      producedQuantity
+      qualityState
+      sku {
+        code
+        product {
+          name
+        }
+        shade {
+          code
+          name
+          hex
+        }
+      }
+      rolls_on_lot(orderBy: { rollNo: ASC }, limit: 500) {
+        id
+        number
+        rollNo
+        measuredLength
+      }
+    }
+    run {
+      number
+      purchaseOrder {
+        number
+        supplier {
+          tradingName
+          legalName
+        }
+      }
+    }
+    inspectionChecks_on_inspection(orderBy: { sequence: ASC }, limit: 100) {
+      id
+      key
+      sequence
+      category
+      parameter
+      method
+      kind
+      unit
+      expected
+      toleranceMinus
+      tolerancePlus
+      isCritical
+      outcome
+      measured
+      note
+    }
+    shadeReadings_on_inspection(orderBy: { createdAt: ASC }, limit: 200) {
+      id
+      illuminant
+      lStar
+      aStar
+      bStar
+      deltaE
+      visualGrade
+      standardRef
+      roll {
+        number
+      }
+    }
+    defects_on_inspection(orderBy: { createdAt: ASC }, limit: 500) {
+      id
+      type
+      points
+      positionM
+      sizeCm
+      note
+      roll {
+        number
+      }
+    }
+    correctiveActions_on_inspection(orderBy: { createdAt: ASC }, limit: 50) {
+      id
+      number
+      title
+      state
+      dueOn
+      ownerName
+    }
+  }
+}
+
+query ListInspectionTemplates @auth(level: USER) {
+  inspectionTemplates(orderBy: { name: ASC }, limit: 50) {
+    id
+    name
+    type
+    isDefault
+    samplingRule
+    maxDefectPointsPer100m
+    maxDeltaE
+    family {
+      code
+      name
+    }
+    inspectionTemplateChecks_on_template(orderBy: { sequence: ASC }, limit: 100) {
+      key
+      sequence
+      category
+      parameter
+      method
+      kind
+      unit
+      expected
+      toleranceMinus
+      tolerancePlus
+      isCritical
+    }
+  }
+}
+
+query ListCorrectiveActions @auth(level: USER) {
+  correctiveActions(orderBy: { createdAt: DESC }, limit: 500) {
+    id
+    number
+    title
+    description
+    rootCause
+    action
+    ownerName
+    dueOn
+    state
+    verifiedAt
+    createdAt
+    inspection {
+      number
+    }
+    lot {
+      number
+    }
+    supplier {
+      tradingName
+      legalName
+    }
+  }
+}
