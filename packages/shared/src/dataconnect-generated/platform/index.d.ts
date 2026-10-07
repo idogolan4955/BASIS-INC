@@ -72,6 +72,13 @@ export enum DocumentKind {
   other = "other",
 };
 
+export enum HandlingUnitKind {
+  roll = "roll",
+  carton = "carton",
+  pallet = "pallet",
+  container_load = "container_load",
+};
+
 export enum Health {
   on_track = "on_track",
   at_risk = "at_risk",
@@ -98,6 +105,12 @@ export enum InspectionType {
   inline = "inline",
   pre_shipment = "pre_shipment",
   receiving = "receiving",
+};
+
+export enum LoadType {
+  fcl = "fcl",
+  lcl = "lcl",
+  none = "none",
 };
 
 export enum LocationType {
@@ -163,6 +176,20 @@ export enum ShadeStatus {
   inactive = "inactive",
 };
 
+export enum ShipmentFlow {
+  inbound = "inbound",
+  outbound = "outbound",
+  direct = "direct",
+  transfer = "transfer",
+};
+
+export enum ShipmentState {
+  draft = "draft",
+  booked = "booked",
+  closed = "closed",
+  cancelled = "cancelled",
+};
+
 export enum SkuStatus {
   development = "development",
   sampling = "sampling",
@@ -175,6 +202,13 @@ export enum TaskState {
   open = "open",
   done = "done",
   cancelled = "cancelled",
+};
+
+export enum TransportMode {
+  sea = "sea",
+  air = "air",
+  courier = "courier",
+  road = "road",
 };
 
 export enum UomDimension {
@@ -311,6 +345,11 @@ export interface Defect_Key {
 export interface DocumentLink_Key {
   id: UUIDString;
   __typename?: 'DocumentLink_Key';
+}
+
+export interface DocumentRequirement_Key {
+  id: UUIDString;
+  __typename?: 'DocumentRequirement_Key';
 }
 
 export interface Document_Key {
@@ -953,6 +992,150 @@ export interface GetPurchaseOrderVariables {
   number: string;
 }
 
+export interface GetShipmentData {
+  shipments: ({
+    id: UUIDString;
+    number: string;
+    flow: ShipmentFlow;
+    mode: TransportMode;
+    loadType: LoadType;
+    state: ShipmentState;
+    health: Health;
+    namedPlace?: string | null;
+    consigneeName?: string | null;
+    notes?: string | null;
+    bookedOn?: DateString | null;
+    createdAt: TimestampString;
+    incoterm?: {
+      code: string;
+    } & Incoterm_Key;
+    origin: {
+      id: UUIDString;
+      name: string;
+      city?: string | null;
+      locationCode?: string | null;
+    } & Location_Key;
+    destination: {
+      id: UUIDString;
+      name: string;
+      city?: string | null;
+      locationCode?: string | null;
+      country?: {
+        code: string;
+      } & Country_Key;
+    } & Location_Key;
+    forwarder?: {
+      id: UUIDString;
+      legalName: string;
+      tradingName?: string | null;
+    } & Company_Key;
+    consignee?: {
+      legalName: string;
+      tradingName?: string | null;
+    };
+    shipmentLegs_on_shipment: ({
+      id: UUIDString;
+      type: LegType;
+      sequence: number;
+      mode: TransportMode;
+      vessel?: string | null;
+      voyage?: string | null;
+      plannedEtd?: DateString | null;
+      plannedEta?: DateString | null;
+      etd?: DateString | null;
+      eta?: DateString | null;
+      atd?: DateString | null;
+      ata?: DateString | null;
+      note?: string | null;
+      fromLocation?: {
+        name: string;
+        city?: string | null;
+        locationCode?: string | null;
+      };
+      toLocation?: {
+        name: string;
+        city?: string | null;
+        locationCode?: string | null;
+      };
+      provider?: {
+        legalName: string;
+        tradingName?: string | null;
+      };
+    } & ShipmentLeg_Key)[];
+    shipmentLines_on_shipment: ({
+      id: UUIDString;
+      quantity: Int64String;
+      uom: string;
+      purchaseOrderLine: {
+        lineNo: number;
+        purchaseOrder: {
+          number: string;
+        };
+        sku: {
+          code: string;
+          product: {
+            name: string;
+          };
+          shade: {
+            code: string;
+            name: string;
+            hex?: string | null;
+          } & Shade_Key;
+        } & Sku_Key;
+      };
+      lot: {
+        number: string;
+      };
+    } & ShipmentLine_Key)[];
+    handlingUnits_on_shipment: ({
+      id: UUIDString;
+      number: string;
+      kind: HandlingUnitKind;
+      marks?: string | null;
+      lengthCm?: number | null;
+      widthCm?: number | null;
+      heightCm?: number | null;
+      grossWeightG?: number | null;
+      netWeightG?: number | null;
+      packedOn?: DateString | null;
+      parent?: {
+        number: string;
+      };
+      run?: {
+        number: string;
+      };
+      handlingUnitContents_on_handlingUnit: ({
+        quantity?: Int64String | null;
+        roll?: {
+          number: string;
+          measuredLength: Int64String;
+          lot: {
+            number: string;
+            sku: {
+              code: string;
+            } & Sku_Key;
+          };
+        };
+        lot?: {
+          number: string;
+          sku: {
+            code: string;
+          } & Sku_Key;
+        };
+      })[];
+    } & HandlingUnit_Key)[];
+    shipmentReferences_on_shipment: ({
+      id: UUIDString;
+      type: ReferenceType;
+      value: string;
+    } & ShipmentReference_Key)[];
+  } & Shipment_Key)[];
+}
+
+export interface GetShipmentVariables {
+  number: string;
+}
+
 export interface GetSkuData {
   sku?: {
     code: string;
@@ -1284,6 +1467,21 @@ export interface ListCurrenciesData {
   } & Currency_Key)[];
 }
 
+export interface ListDocumentRequirementsData {
+  documentRequirements: ({
+    id: UUIDString;
+    mode?: TransportMode | null;
+    flow?: ShipmentFlow | null;
+    documentKind: DocumentKind;
+    daysBeforeEtd: number;
+    note?: string | null;
+    destinationCountry?: {
+      code: string;
+      name: string;
+    } & Country_Key;
+  } & DocumentRequirement_Key)[];
+}
+
 export interface ListDocumentsData {
   documents: ({
     id: UUIDString;
@@ -1553,6 +1751,24 @@ export interface ListLegalEntitiesData {
       code: string;
     } & Currency_Key;
   } & LegalEntity_Key)[];
+}
+
+export interface ListLocationsData {
+  locations: ({
+    id: UUIDString;
+    type: LocationType;
+    name: string;
+    city?: string | null;
+    locationCode?: string | null;
+    country?: {
+      code: string;
+      name: string;
+    } & Country_Key;
+    company?: {
+      legalName: string;
+      tradingName?: string | null;
+    };
+  } & Location_Key)[];
 }
 
 export interface ListMessagesForData {
@@ -1832,6 +2048,142 @@ export interface ListShadesData {
       } & Product_Key;
     } & Sku_Key)[];
   } & Shade_Key)[];
+}
+
+export interface ListShipmentsData {
+  shipments: ({
+    id: UUIDString;
+    number: string;
+    flow: ShipmentFlow;
+    mode: TransportMode;
+    loadType: LoadType;
+    state: ShipmentState;
+    health: Health;
+    namedPlace?: string | null;
+    bookedOn?: DateString | null;
+    createdAt: TimestampString;
+    incoterm?: {
+      code: string;
+    } & Incoterm_Key;
+    origin: {
+      name: string;
+      city?: string | null;
+      locationCode?: string | null;
+    };
+    destination: {
+      name: string;
+      city?: string | null;
+      locationCode?: string | null;
+      country?: {
+        code: string;
+      } & Country_Key;
+    };
+    forwarder?: {
+      legalName: string;
+      tradingName?: string | null;
+    };
+    shipmentLegs_on_shipment: ({
+      type: LegType;
+      sequence: number;
+      plannedEtd?: DateString | null;
+      plannedEta?: DateString | null;
+      etd?: DateString | null;
+      eta?: DateString | null;
+      atd?: DateString | null;
+      ata?: DateString | null;
+    })[];
+    shipmentLines_on_shipment: ({
+      quantity: Int64String;
+      purchaseOrderLine: {
+        purchaseOrder: {
+          number: string;
+        };
+        sku: {
+          product: {
+            name: string;
+          };
+        };
+      };
+    })[];
+    handlingUnits_on_shipment: ({
+      kind: HandlingUnitKind;
+      lengthCm?: number | null;
+      widthCm?: number | null;
+      heightCm?: number | null;
+      grossWeightG?: number | null;
+      netWeightG?: number | null;
+      parent?: {
+        number: string;
+      };
+      handlingUnitContents_on_handlingUnit: ({
+        quantity?: Int64String | null;
+        roll?: {
+          measuredLength: Int64String;
+        };
+      })[];
+    })[];
+  } & Shipment_Key)[];
+}
+
+export interface ListShippableUnitsData {
+  handlingUnits: ({
+    id: UUIDString;
+    number: string;
+    kind: HandlingUnitKind;
+    marks?: string | null;
+    lengthCm?: number | null;
+    widthCm?: number | null;
+    heightCm?: number | null;
+    grossWeightG?: number | null;
+    netWeightG?: number | null;
+    packedOn?: DateString | null;
+    parent?: {
+      number: string;
+    };
+    run?: {
+      number: string;
+      purchaseOrder: {
+        number: string;
+        supplier: {
+          legalName: string;
+          tradingName?: string | null;
+        };
+      };
+    };
+    handlingUnitContents_on_handlingUnit: ({
+      quantity?: Int64String | null;
+      roll?: {
+        number: string;
+        measuredLength: Int64String;
+        lot: {
+          number: string;
+          qualityState: LotQualityState;
+          sku: {
+            code: string;
+            product: {
+              name: string;
+            };
+            shade: {
+              name: string;
+            };
+          } & Sku_Key;
+        };
+      };
+      lot?: {
+        number: string;
+        qualityState: LotQualityState;
+        sku: {
+          code: string;
+          product: {
+            name: string;
+          };
+          shade: {
+            name: string;
+          };
+        } & Sku_Key;
+      };
+    })[];
+  } & HandlingUnit_Key)[];
 }
 
 export interface ListSkusData {
@@ -2142,6 +2494,26 @@ export interface Shade_Key {
   __typename?: 'Shade_Key';
 }
 
+export interface ShipmentLeg_Key {
+  id: UUIDString;
+  __typename?: 'ShipmentLeg_Key';
+}
+
+export interface ShipmentLine_Key {
+  id: UUIDString;
+  __typename?: 'ShipmentLine_Key';
+}
+
+export interface ShipmentReference_Key {
+  id: UUIDString;
+  __typename?: 'ShipmentReference_Key';
+}
+
+export interface Shipment_Key {
+  id: UUIDString;
+  __typename?: 'Shipment_Key';
+}
+
 export interface Sku_Key {
   code: string;
   __typename?: 'Sku_Key';
@@ -2353,102 +2725,6 @@ export interface User_Key {
   uid: string;
   __typename?: 'User_Key';
 }
-
-interface AcknowledgeAlertRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: AcknowledgeAlertVariables): MutationRef<AcknowledgeAlertData, AcknowledgeAlertVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: AcknowledgeAlertVariables): MutationRef<AcknowledgeAlertData, AcknowledgeAlertVariables>;
-  operationName: string;
-}
-export const acknowledgeAlertRef: AcknowledgeAlertRef;
-
-export function acknowledgeAlert(vars: AcknowledgeAlertVariables): MutationPromise<AcknowledgeAlertData, AcknowledgeAlertVariables>;
-export function acknowledgeAlert(dc: DataConnect, vars: AcknowledgeAlertVariables): MutationPromise<AcknowledgeAlertData, AcknowledgeAlertVariables>;
-
-interface CreateTaskRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: CreateTaskVariables): MutationRef<CreateTaskData, CreateTaskVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: CreateTaskVariables): MutationRef<CreateTaskData, CreateTaskVariables>;
-  operationName: string;
-}
-export const createTaskRef: CreateTaskRef;
-
-export function createTask(vars: CreateTaskVariables): MutationPromise<CreateTaskData, CreateTaskVariables>;
-export function createTask(dc: DataConnect, vars: CreateTaskVariables): MutationPromise<CreateTaskData, CreateTaskVariables>;
-
-interface CompleteTaskRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: CompleteTaskVariables): MutationRef<CompleteTaskData, CompleteTaskVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: CompleteTaskVariables): MutationRef<CompleteTaskData, CompleteTaskVariables>;
-  operationName: string;
-}
-export const completeTaskRef: CompleteTaskRef;
-
-export function completeTask(vars: CompleteTaskVariables): MutationPromise<CompleteTaskData, CompleteTaskVariables>;
-export function completeTask(dc: DataConnect, vars: CompleteTaskVariables): MutationPromise<CompleteTaskData, CompleteTaskVariables>;
-
-interface AddNoteRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: AddNoteVariables): MutationRef<AddNoteData, AddNoteVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: AddNoteVariables): MutationRef<AddNoteData, AddNoteVariables>;
-  operationName: string;
-}
-export const addNoteRef: AddNoteRef;
-
-export function addNote(vars: AddNoteVariables): MutationPromise<AddNoteData, AddNoteVariables>;
-export function addNote(dc: DataConnect, vars: AddNoteVariables): MutationPromise<AddNoteData, AddNoteVariables>;
-
-interface UpdateMyPreferencesRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars?: UpdateMyPreferencesVariables): MutationRef<UpdateMyPreferencesData, UpdateMyPreferencesVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars?: UpdateMyPreferencesVariables): MutationRef<UpdateMyPreferencesData, UpdateMyPreferencesVariables>;
-  operationName: string;
-}
-export const updateMyPreferencesRef: UpdateMyPreferencesRef;
-
-export function updateMyPreferences(vars?: UpdateMyPreferencesVariables): MutationPromise<UpdateMyPreferencesData, UpdateMyPreferencesVariables>;
-export function updateMyPreferences(dc: DataConnect, vars?: UpdateMyPreferencesVariables): MutationPromise<UpdateMyPreferencesData, UpdateMyPreferencesVariables>;
-
-interface RecordEventRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: RecordEventVariables): MutationRef<RecordEventData, RecordEventVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: RecordEventVariables): MutationRef<RecordEventData, RecordEventVariables>;
-  operationName: string;
-}
-export const recordEventRef: RecordEventRef;
-
-export function recordEvent(vars: RecordEventVariables): MutationPromise<RecordEventData, RecordEventVariables>;
-export function recordEvent(dc: DataConnect, vars: RecordEventVariables): MutationPromise<RecordEventData, RecordEventVariables>;
-
-interface ResolveAlertRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: ResolveAlertVariables): MutationRef<ResolveAlertData, ResolveAlertVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: ResolveAlertVariables): MutationRef<ResolveAlertData, ResolveAlertVariables>;
-  operationName: string;
-}
-export const resolveAlertRef: ResolveAlertRef;
-
-export function resolveAlert(vars: ResolveAlertVariables): MutationPromise<ResolveAlertData, ResolveAlertVariables>;
-export function resolveAlert(dc: DataConnect, vars: ResolveAlertVariables): MutationPromise<ResolveAlertData, ResolveAlertVariables>;
-
-interface ReopenTaskRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: ReopenTaskVariables): MutationRef<ReopenTaskData, ReopenTaskVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: ReopenTaskVariables): MutationRef<ReopenTaskData, ReopenTaskVariables>;
-  operationName: string;
-}
-export const reopenTaskRef: ReopenTaskRef;
-
-export function reopenTask(vars: ReopenTaskVariables): MutationPromise<ReopenTaskData, ReopenTaskVariables>;
-export function reopenTask(dc: DataConnect, vars: ReopenTaskVariables): MutationPromise<ReopenTaskData, ReopenTaskVariables>;
 
 interface ListCompaniesRef {
   /* Allow users to create refs without passing in DataConnect */
@@ -3146,6 +3422,66 @@ export const insertShadeStandardRef: InsertShadeStandardRef;
 export function insertShadeStandard(vars: InsertShadeStandardVariables): MutationPromise<InsertShadeStandardData, InsertShadeStandardVariables>;
 export function insertShadeStandard(dc: DataConnect, vars: InsertShadeStandardVariables): MutationPromise<InsertShadeStandardData, InsertShadeStandardVariables>;
 
+interface ListShipmentsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListShipmentsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListShipmentsData, undefined>;
+  operationName: string;
+}
+export const listShipmentsRef: ListShipmentsRef;
+
+export function listShipments(options?: ExecuteQueryOptions): QueryPromise<ListShipmentsData, undefined>;
+export function listShipments(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListShipmentsData, undefined>;
+
+interface GetShipmentRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetShipmentVariables): QueryRef<GetShipmentData, GetShipmentVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetShipmentVariables): QueryRef<GetShipmentData, GetShipmentVariables>;
+  operationName: string;
+}
+export const getShipmentRef: GetShipmentRef;
+
+export function getShipment(vars: GetShipmentVariables, options?: ExecuteQueryOptions): QueryPromise<GetShipmentData, GetShipmentVariables>;
+export function getShipment(dc: DataConnect, vars: GetShipmentVariables, options?: ExecuteQueryOptions): QueryPromise<GetShipmentData, GetShipmentVariables>;
+
+interface ListShippableUnitsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListShippableUnitsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListShippableUnitsData, undefined>;
+  operationName: string;
+}
+export const listShippableUnitsRef: ListShippableUnitsRef;
+
+export function listShippableUnits(options?: ExecuteQueryOptions): QueryPromise<ListShippableUnitsData, undefined>;
+export function listShippableUnits(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListShippableUnitsData, undefined>;
+
+interface ListLocationsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListLocationsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListLocationsData, undefined>;
+  operationName: string;
+}
+export const listLocationsRef: ListLocationsRef;
+
+export function listLocations(options?: ExecuteQueryOptions): QueryPromise<ListLocationsData, undefined>;
+export function listLocations(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListLocationsData, undefined>;
+
+interface ListDocumentRequirementsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListDocumentRequirementsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListDocumentRequirementsData, undefined>;
+  operationName: string;
+}
+export const listDocumentRequirementsRef: ListDocumentRequirementsRef;
+
+export function listDocumentRequirements(options?: ExecuteQueryOptions): QueryPromise<ListDocumentRequirementsData, undefined>;
+export function listDocumentRequirements(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListDocumentRequirementsData, undefined>;
+
 interface ListPurchaseOrdersRef {
   /* Allow users to create refs without passing in DataConnect */
   (): QueryRef<ListPurchaseOrdersData, undefined>;
@@ -3241,4 +3577,100 @@ export const operationsFactsRef: OperationsFactsRef;
 
 export function operationsFacts(options?: ExecuteQueryOptions): QueryPromise<OperationsFactsData, undefined>;
 export function operationsFacts(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<OperationsFactsData, undefined>;
+
+interface AcknowledgeAlertRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AcknowledgeAlertVariables): MutationRef<AcknowledgeAlertData, AcknowledgeAlertVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: AcknowledgeAlertVariables): MutationRef<AcknowledgeAlertData, AcknowledgeAlertVariables>;
+  operationName: string;
+}
+export const acknowledgeAlertRef: AcknowledgeAlertRef;
+
+export function acknowledgeAlert(vars: AcknowledgeAlertVariables): MutationPromise<AcknowledgeAlertData, AcknowledgeAlertVariables>;
+export function acknowledgeAlert(dc: DataConnect, vars: AcknowledgeAlertVariables): MutationPromise<AcknowledgeAlertData, AcknowledgeAlertVariables>;
+
+interface CreateTaskRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CreateTaskVariables): MutationRef<CreateTaskData, CreateTaskVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CreateTaskVariables): MutationRef<CreateTaskData, CreateTaskVariables>;
+  operationName: string;
+}
+export const createTaskRef: CreateTaskRef;
+
+export function createTask(vars: CreateTaskVariables): MutationPromise<CreateTaskData, CreateTaskVariables>;
+export function createTask(dc: DataConnect, vars: CreateTaskVariables): MutationPromise<CreateTaskData, CreateTaskVariables>;
+
+interface CompleteTaskRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CompleteTaskVariables): MutationRef<CompleteTaskData, CompleteTaskVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CompleteTaskVariables): MutationRef<CompleteTaskData, CompleteTaskVariables>;
+  operationName: string;
+}
+export const completeTaskRef: CompleteTaskRef;
+
+export function completeTask(vars: CompleteTaskVariables): MutationPromise<CompleteTaskData, CompleteTaskVariables>;
+export function completeTask(dc: DataConnect, vars: CompleteTaskVariables): MutationPromise<CompleteTaskData, CompleteTaskVariables>;
+
+interface AddNoteRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AddNoteVariables): MutationRef<AddNoteData, AddNoteVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: AddNoteVariables): MutationRef<AddNoteData, AddNoteVariables>;
+  operationName: string;
+}
+export const addNoteRef: AddNoteRef;
+
+export function addNote(vars: AddNoteVariables): MutationPromise<AddNoteData, AddNoteVariables>;
+export function addNote(dc: DataConnect, vars: AddNoteVariables): MutationPromise<AddNoteData, AddNoteVariables>;
+
+interface UpdateMyPreferencesRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: UpdateMyPreferencesVariables): MutationRef<UpdateMyPreferencesData, UpdateMyPreferencesVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: UpdateMyPreferencesVariables): MutationRef<UpdateMyPreferencesData, UpdateMyPreferencesVariables>;
+  operationName: string;
+}
+export const updateMyPreferencesRef: UpdateMyPreferencesRef;
+
+export function updateMyPreferences(vars?: UpdateMyPreferencesVariables): MutationPromise<UpdateMyPreferencesData, UpdateMyPreferencesVariables>;
+export function updateMyPreferences(dc: DataConnect, vars?: UpdateMyPreferencesVariables): MutationPromise<UpdateMyPreferencesData, UpdateMyPreferencesVariables>;
+
+interface RecordEventRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RecordEventVariables): MutationRef<RecordEventData, RecordEventVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RecordEventVariables): MutationRef<RecordEventData, RecordEventVariables>;
+  operationName: string;
+}
+export const recordEventRef: RecordEventRef;
+
+export function recordEvent(vars: RecordEventVariables): MutationPromise<RecordEventData, RecordEventVariables>;
+export function recordEvent(dc: DataConnect, vars: RecordEventVariables): MutationPromise<RecordEventData, RecordEventVariables>;
+
+interface ResolveAlertRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ResolveAlertVariables): MutationRef<ResolveAlertData, ResolveAlertVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ResolveAlertVariables): MutationRef<ResolveAlertData, ResolveAlertVariables>;
+  operationName: string;
+}
+export const resolveAlertRef: ResolveAlertRef;
+
+export function resolveAlert(vars: ResolveAlertVariables): MutationPromise<ResolveAlertData, ResolveAlertVariables>;
+export function resolveAlert(dc: DataConnect, vars: ResolveAlertVariables): MutationPromise<ResolveAlertData, ResolveAlertVariables>;
+
+interface ReopenTaskRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ReopenTaskVariables): MutationRef<ReopenTaskData, ReopenTaskVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ReopenTaskVariables): MutationRef<ReopenTaskData, ReopenTaskVariables>;
+  operationName: string;
+}
+export const reopenTaskRef: ReopenTaskRef;
+
+export function reopenTask(vars: ReopenTaskVariables): MutationPromise<ReopenTaskData, ReopenTaskVariables>;
+export function reopenTask(dc: DataConnect, vars: ReopenTaskVariables): MutationPromise<ReopenTaskData, ReopenTaskVariables>;
 

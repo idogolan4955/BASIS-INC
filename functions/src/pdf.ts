@@ -559,6 +559,153 @@ export async function renderPackingList(runNumber: string): Promise<{ pdf: Buffe
   return { pdf: await finish(), filename: `${run.number}-packing-list.pdf` };
 }
 
+// ---------------------------------------------------------------- shipment packing list
+
+interface ShipmentPackingRow {
+  number: string;
+  mode: string;
+  loadType: string;
+  namedPlace: string | null;
+  incoterm: { code: string } | null;
+  consigneeName: string | null;
+  origin: { name: string; city: string | null; country: { name: string } | null };
+  destination: { name: string; city: string | null; country: { name: string } | null };
+  forwarder: { legalName: string; tradingName: string | null } | null;
+  shipmentLegs_on_shipment: { type: string; plannedEtd: string | null; plannedEta: string | null; etd: string | null; eta: string | null; atd: string | null; ata: string | null; vessel: string | null; voyage: string | null }[];
+  shipmentReferences_on_shipment: { type: string; value: string }[];
+  shipmentLines_on_shipment: { quantity: string; purchaseOrderLine: { lineNo: number; purchaseOrder: { number: string; legalEntity: { name: string } | null }; sku: { code: string; product: { name: string }; shade: { name: string } } }; lot: { number: string } }[];
+  handlingUnits_on_shipment: RunRow['handlingUnits_on_run'];
+}
+
+/** The packing list of a shipment: every package it carries, whichever runs they came from, with the lines by order and lot. */
+export async function renderShipmentPackingList(shipmentNumber: string): Promise<{ pdf: Buffer; filename: string }> {
+  const { shipments } = await graphql<{ shipments: ShipmentPackingRow[] }>(
+    `query ($number: String!) { shipments(where: { number: { eq: $number } }, limit: 1) {
+       number mode loadType namedPlace consigneeName incoterm { code }
+       origin { name city country { name } } destination { name city country { name } } forwarder { legalName tradingName }
+       shipmentLegs_on_shipment(orderBy: { sequence: ASC }) { type plannedEtd plannedEta etd eta atd ata vessel voyage }
+       shipmentReferences_on_shipment { type value }
+       shipmentLines_on_shipment { quantity purchaseOrderLine { lineNo purchaseOrder { number legalEntity { name } } sku { code product { name } shade { name } } } lot { number } }
+       handlingUnits_on_shipment(orderBy: { createdAt: ASC }) { number kind marks lengthCm widthCm heightCm grossWeightG netWeightG packedOn parent { number }
+         handlingUnitContents_on_handlingUnit { quantity roll { number rollNo measuredLength lot { number sku { code } } } lot { number sku { code } } } } } }`,
+    { number: shipmentNumber },
+  );
+  const shipment = shipments[0];
+  if (!shipment) throw failure('not_found', `No shipment ${shipmentNumber}.`);
+  if (shipment.handlingUnits_on_shipment.length === 0) throw failure('invariant_violation', 'Nothing is loaded yet.');
+
+  const issuer = shipment.shipmentLines_on_shipment[0]?.purchaseOrderLine.purchaseOrder.legalEntity?.name ?? 'BASIS INC.';
+  const page = { kind: 'Packing list', number: shipment.number, issuer };
+  const { doc, finish } = open(page, { landscape: true });
+  const paginate = chrome(doc, page);
+
+  const units = shipment.handlingUnits_on_shipment.map((unit) => {
+    const contents = unit.handlingUnitContents_on_handlingUnit;
+    const rolls = contents.filter((content) => content.roll);
+    const quantity = contents.reduce((sum, content) => sum + BigInt(content.roll ? content.roll.measuredLength : (content.quantity ?? '0')), 0n);
+    const lots = [...new Set(contents.map((content) => content.roll?.lot.number ?? content.lot?.number ?? ''))].filter(Boolean);
+    const skus = [...new Set(contents.map((content) => content.roll?.lot.sku.code ?? content.lot?.sku.code ?? ''))].filter(Boolean);
+    return { ...unit, rolls, quantity, lots, skus, cbmMilli: cubicMetresMilli(unit.lengthCm, unit.widthCm, unit.heightCm) };
+  });
+  const outer = units.filter((unit) => !unit.parent);
+  const totals = {
+    cartons: units.filter((unit) => unit.kind === 'carton').length,
+    pallets: units.filter((unit) => unit.kind === 'pallet').length,
+    rolls: units.reduce((sum, unit) => sum + unit.rolls.length, 0),
+    quantity: units.reduce((sum, unit) => sum + unit.quantity, 0n),
+    cbm: outer.some((unit) => unit.cbmMilli !== null) ? outer.reduce((sum, unit) => sum + (unit.cbmMilli ?? 0), 0) : null,
+    gross: outer.some((unit) => unit.grossWeightG !== null) ? outer.reduce((sum, unit) => sum + (unit.grossWeightG ?? 0), 0) : null,
+    net: units.some((unit) => unit.netWeightG !== null) ? units.reduce((sum, unit) => sum + (unit.netWeightG ?? 0), 0) : null,
+  };
+  const place = (location: ShipmentPackingRow['origin']) => [location.name, location.city, location.country?.name].filter(Boolean).join(', ');
+  const main = shipment.shipmentLegs_on_shipment.find((leg) => leg.type === 'main_carriage');
+  const first = shipment.shipmentLegs_on_shipment[0];
+  const last = shipment.shipmentLegs_on_shipment[shipment.shipmentLegs_on_shipment.length - 1];
+  const mode = shipment.mode === 'sea' ? `Sea ${shipment.loadType.toUpperCase()}` : shipment.mode[0]!.toUpperCase() + shipment.mode.slice(1);
+  const references = shipment.shipmentReferences_on_shipment.map((reference) => `${reference.type.toUpperCase()} ${reference.value}`).join(' · ');
+
+  title(doc, `Packing list ${shipment.number}`, `${mode} · ${place(shipment.origin)} → ${place(shipment.destination)}${shipment.incoterm ? ` · ${[shipment.incoterm.code, shipment.namedPlace].filter(Boolean).join(' ')}` : ''}${shipment.forwarder ? ` · ${shipment.forwarder.tradingName || shipment.forwarder.legalName}` : ''}${references ? ` · ${references}` : ''}`);
+  facts(
+    doc,
+    [
+      { label: 'Cartons', value: String(totals.cartons) },
+      { label: 'Pallets', value: String(totals.pallets || '—') },
+      { label: 'Rolls', value: String(totals.rolls) },
+      { label: 'Metres', value: metres(totals.quantity) },
+      { label: 'CBM', value: cbm(totals.cbm) },
+      { label: 'Gross', value: kilos(totals.gross) },
+      { label: 'Net', value: kilos(totals.net) },
+      { label: 'ETD', value: first ? (first.atd ?? first.etd ?? first.plannedEtd ?? '—') : '—' },
+      { label: 'ETA', value: last ? (last.ata ?? last.eta ?? last.plannedEta ?? '—') : '—' },
+      { label: 'Vessel / flight', value: main?.vessel ? `${main.vessel}${main.voyage ? ` ${main.voyage}` : ''}` : '—' },
+    ],
+    [1, 1, 1, 1.2, 1, 1, 1, 1.2, 1.2, 1.6],
+  );
+
+  const width = contentWidth(doc);
+  const fixed = 84 + 112 + 40 + 64 + 84 + 50 + 60 + 60;
+  table(
+    doc,
+    [
+      { key: 'unit', label: 'Package', width: 84, font: 'mono' },
+      { key: 'marks', label: 'Marks', width: width - fixed },
+      { key: 'lot', label: 'Lot · SKU', width: 112, font: 'mono' },
+      { key: 'rolls', label: 'Rolls', width: 40, align: 'right' },
+      { key: 'metres', label: 'Metres', width: 64, align: 'right' },
+      { key: 'size', label: 'L×W×H cm', width: 84, align: 'right' },
+      { key: 'cbm', label: 'CBM', width: 50, align: 'right' },
+      { key: 'gross', label: 'Gross', width: 60, align: 'right' },
+      { key: 'net', label: 'Net', width: 60, align: 'right' },
+    ],
+    units.map((unit) => ({
+      unit: unit.number,
+      marks: `${unit.marks ?? '—'}${unit.parent ? `  (on ${unit.parent.number})` : ''}`,
+      lot: { main: unit.lots.join('\n'), sub: unit.skus.join('\n') },
+      rolls: String(unit.rolls.length || '—'),
+      metres: thousands(unit.quantity, QUANTITY_DECIMALS, 1),
+      size: unit.lengthCm && unit.widthCm && unit.heightCm ? `${unit.lengthCm} × ${unit.widthCm} × ${unit.heightCm}` : '—',
+      cbm: cbm(unit.cbmMilli),
+      gross: kilos(unit.grossWeightG),
+      net: kilos(unit.netWeightG),
+    })),
+    {
+      total: { unit: `${totals.cartons} cartons${totals.pallets ? `, ${totals.pallets} pallets` : ''}`, rolls: String(totals.rolls), metres: thousands(totals.quantity, QUANTITY_DECIMALS, 1), cbm: cbm(totals.cbm), gross: kilos(totals.gross), net: kilos(totals.net) },
+    },
+  );
+
+  table(
+    doc,
+    [
+      { key: 'order', label: 'Order · line', width: 110, font: 'mono' },
+      { key: 'lot', label: 'Lot', width: 96, font: 'mono' },
+      { key: 'sku', label: 'SKU', width: 96, font: 'mono' },
+      { key: 'product', label: 'Product', width: width - 110 - 96 - 96 - 90 },
+      { key: 'metres', label: 'Metres', width: 90, align: 'right' },
+    ],
+    shipment.shipmentLines_on_shipment.map((line) => ({
+      order: `${line.purchaseOrderLine.purchaseOrder.number} · ${line.purchaseOrderLine.lineNo}`,
+      lot: line.lot.number,
+      sku: line.purchaseOrderLine.sku.code,
+      product: `${line.purchaseOrderLine.sku.product.name}, ${line.purchaseOrderLine.sku.shade.name}`,
+      metres: metres(line.quantity),
+    })),
+    { caption: 'Lines', total: { order: `${shipment.shipmentLines_on_shipment.length} lines`, metres: metres(shipment.shipmentLines_on_shipment.reduce((sum, line) => sum + BigInt(line.quantity), 0n)) } },
+  );
+
+  const detail = units
+    .filter((unit) => unit.rolls.length > 0)
+    .map((unit) => ({
+      unit: unit.number,
+      rolls: unit.rolls.map((content) => `${content.roll!.lot.number.slice(-4)}-${String(content.roll!.rollNo).padStart(2, '0')} · ${formatFixed(BigInt(content.roll!.measuredLength), QUANTITY_DECIMALS, 1)} m`).join('    '),
+    }));
+  if (detail.length > 0) {
+    table(doc, [{ key: 'unit', label: 'Package', width: 84, font: 'mono' }, { key: 'rolls', label: 'Rolls (lot-no. · measured length)', width: width - 84 }], detail, { caption: 'Roll detail' });
+  }
+
+  paginate();
+  return { pdf: await finish(), filename: `${shipment.number}-packing-list.pdf` };
+}
+
 // ---------------------------------------------------------------- roll labels
 
 interface LotRow {

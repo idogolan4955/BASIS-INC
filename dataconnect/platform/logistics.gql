@@ -1,0 +1,317 @@
+# Logistics reads. Shipments, their legs, lines and packages carry no purchase
+# prices; costs join in the costing operations. Writes with rules (numbers,
+# booking, leg dates, derived health) go through the logistics functions.
+
+query ListShipments
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'logistics' || auth.token.role == 'sales' || auth.token.role == 'finance' || auth.token.role == 'viewer'") {
+  shipments(orderBy: { createdAt: DESC }, limit: 500) {
+    id
+    number
+    flow
+    mode
+    loadType
+    state
+    health
+    namedPlace
+    bookedOn
+    createdAt
+    incoterm {
+      code
+    }
+    origin {
+      name
+      city
+      locationCode
+    }
+    destination {
+      name
+      city
+      locationCode
+      country {
+        code
+      }
+    }
+    forwarder {
+      legalName
+      tradingName
+    }
+    shipmentLegs_on_shipment(orderBy: { sequence: ASC }, limit: 20) {
+      type
+      sequence
+      plannedEtd
+      plannedEta
+      etd
+      eta
+      atd
+      ata
+    }
+    shipmentLines_on_shipment(limit: 200) {
+      quantity
+      purchaseOrderLine {
+        purchaseOrder {
+          number
+        }
+        sku {
+          product {
+            name
+          }
+        }
+      }
+    }
+    handlingUnits_on_shipment(limit: 500) {
+      kind
+      lengthCm
+      widthCm
+      heightCm
+      grossWeightG
+      netWeightG
+      parent {
+        number
+      }
+      handlingUnitContents_on_handlingUnit(limit: 100) {
+        quantity
+        roll {
+          measuredLength
+        }
+      }
+    }
+  }
+}
+
+query GetShipment($number: String!)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'logistics' || auth.token.role == 'sales' || auth.token.role == 'finance' || auth.token.role == 'viewer'") {
+  shipments(where: { number: { eq: $number } }, limit: 1) {
+    id
+    number
+    flow
+    mode
+    loadType
+    state
+    health
+    namedPlace
+    consigneeName
+    notes
+    bookedOn
+    createdAt
+    incoterm {
+      code
+    }
+    origin {
+      id
+      name
+      city
+      locationCode
+    }
+    destination {
+      id
+      name
+      city
+      locationCode
+      country {
+        code
+      }
+    }
+    forwarder {
+      id
+      legalName
+      tradingName
+    }
+    consignee {
+      legalName
+      tradingName
+    }
+    shipmentLegs_on_shipment(orderBy: { sequence: ASC }, limit: 20) {
+      id
+      type
+      sequence
+      mode
+      vessel
+      voyage
+      plannedEtd
+      plannedEta
+      etd
+      eta
+      atd
+      ata
+      note
+      fromLocation {
+        name
+        city
+        locationCode
+      }
+      toLocation {
+        name
+        city
+        locationCode
+      }
+      provider {
+        legalName
+        tradingName
+      }
+    }
+    shipmentLines_on_shipment(limit: 200) {
+      id
+      quantity
+      uom
+      purchaseOrderLine {
+        lineNo
+        purchaseOrder {
+          number
+        }
+        sku {
+          code
+          product {
+            name
+          }
+          shade {
+            code
+            name
+            hex
+          }
+        }
+      }
+      lot {
+        number
+      }
+    }
+    handlingUnits_on_shipment(orderBy: { createdAt: ASC }, limit: 500) {
+      id
+      number
+      kind
+      marks
+      lengthCm
+      widthCm
+      heightCm
+      grossWeightG
+      netWeightG
+      packedOn
+      parent {
+        number
+      }
+      run {
+        number
+      }
+      handlingUnitContents_on_handlingUnit(limit: 100) {
+        quantity
+        roll {
+          number
+          measuredLength
+          lot {
+            number
+            sku {
+              code
+            }
+          }
+        }
+        lot {
+          number
+          sku {
+            code
+          }
+        }
+      }
+    }
+    shipmentReferences_on_shipment(limit: 50) {
+      id
+      type
+      value
+    }
+  }
+}
+
+# Packages that can go on a shipment: packed, not yet assigned. The lot's
+# quality state decides in the browser and again in the function.
+query ListShippableUnits
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'logistics'") {
+  handlingUnits(where: { shipmentId: { isNull: true }, kind: { in: [carton, pallet] } }, orderBy: { createdAt: ASC }, limit: 1000) {
+    id
+    number
+    kind
+    marks
+    lengthCm
+    widthCm
+    heightCm
+    grossWeightG
+    netWeightG
+    packedOn
+    parent {
+      number
+    }
+    run {
+      number
+      purchaseOrder {
+        number
+        supplier {
+          legalName
+          tradingName
+        }
+      }
+    }
+    handlingUnitContents_on_handlingUnit(limit: 100) {
+      quantity
+      roll {
+        number
+        measuredLength
+        lot {
+          number
+          qualityState
+          sku {
+            code
+            product {
+              name
+            }
+            shade {
+              name
+            }
+          }
+        }
+      }
+      lot {
+        number
+        qualityState
+        sku {
+          code
+          product {
+            name
+          }
+          shade {
+            name
+          }
+        }
+      }
+    }
+  }
+}
+
+query ListLocations @auth(level: USER) {
+  locations(orderBy: { name: ASC }, limit: 1000) {
+    id
+    type
+    name
+    city
+    locationCode
+    country {
+      code
+      name
+    }
+    company {
+      legalName
+      tradingName
+    }
+  }
+}
+
+query ListDocumentRequirements @auth(level: USER) {
+  documentRequirements(limit: 200) {
+    id
+    mode
+    flow
+    documentKind
+    daysBeforeEtd
+    note
+    destinationCountry {
+      code
+      name
+    }
+  }
+}

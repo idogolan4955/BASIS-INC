@@ -1,3 +1,4 @@
+import { documentsCheck, expectedEta, expectedEtd, legStatus, shipmentDates, type DocumentRequirementRule, type LegFacts, type LocalDate } from '@basis/shared';
 import { onCall } from 'firebase-functions/v2/https';
 import { REGION, callerOf, graphql, requireRole } from './lib';
 
@@ -275,6 +276,79 @@ export const RULES: Rule[] = [
       return correctiveActions
         .filter((action) => action.dueOn && daysBetween(action.dueOn, today) > 0)
         .map((action) => ({ entityType: 'corrective_action', entityId: action.number, title: `${action.number} is ${daysBetween(action.dueOn!, today)} days overdue`, detail: `${action.title}${action.ownerName ? `, with ${action.ownerName}` : ''}; ${action.state.replace('_', ' ')}.`, severity: 'caution' as Severity, ownerRole: 'qc' as Role, dedupeKey: `quality.action_overdue:${action.number}` }));
+    },
+  },
+  {
+    key: 'logistics.shipment_dates',
+    async evaluate(now) {
+      const { shipments } = await graphql<{ shipments: { number: string; destination: { name: string }; shipmentLegs_on_shipment: (LegFacts & { id: string; toLocation: { name: string; city: string | null } | null })[] }[] }>(
+        `query { shipments(where: { state: { eq: booked } }, limit: 500) { number destination { name } shipmentLegs_on_shipment(orderBy: { sequence: ASC }) { id type sequence plannedEtd plannedEta etd eta atd ata toLocation { name city } } } }`,
+      );
+      const today = isoDate(now) as LocalDate;
+      const findings: Finding[] = [];
+      for (const shipment of shipments) {
+        const legs = shipment.shipmentLegs_on_shipment;
+        const { eta, plannedEta } = shipmentDates(legs);
+        const slip = eta && plannedEta ? daysBetween(plannedEta, eta) : 0;
+        if (slip >= 1 && legs.some((leg) => legStatus(leg) !== 'arrived')) {
+          findings.push({ entityType: 'shipment', entityId: shipment.number, title: `${shipment.number}: arrival slipped by ${slip} day${slip === 1 ? '' : 's'}`, detail: `Planned to reach ${shipment.destination.name} ${plannedEta}, now expected ${eta}.`, severity: slip >= 3 ? 'critical' : 'caution', ownerRole: 'logistics', dedupeKey: `logistics.eta_slipped:${shipment.number}:${eta}` });
+        }
+        const current = legs.find((leg) => legStatus(leg) !== 'arrived');
+        if (!current) continue;
+        const label = current.type.replace(/_/g, ' ');
+        if (legStatus(current) === 'pending') {
+          const departure = expectedEtd(current);
+          const late = departure ? daysBetween(departure, today) : 0;
+          if (late >= 1) findings.push({ entityType: 'shipment', entityId: shipment.number, title: `${shipment.number}: ${label} has not departed`, detail: `Due to leave ${departure}, ${late} day${late === 1 ? '' : 's'} ago; no departure recorded.`, severity: late > 2 ? 'critical' : 'caution', ownerRole: 'logistics', dedupeKey: `logistics.departure_overdue:${current.id}` });
+        } else {
+          const arrival = expectedEta(current);
+          const late = arrival ? daysBetween(arrival, today) : 0;
+          if (late >= 1) findings.push({ entityType: 'shipment', entityId: shipment.number, title: `${shipment.number}: ${label} overdue at ${current.toLocation ? current.toLocation.city || current.toLocation.name : 'destination'}`, detail: `Expected ${arrival}, ${late} day${late === 1 ? '' : 's'} ago; no arrival recorded.`, severity: late > 3 ? 'critical' : 'caution', ownerRole: 'logistics', dedupeKey: `logistics.arrival_overdue:${current.id}` });
+        }
+      }
+      return findings;
+    },
+  },
+  {
+    key: 'logistics.document_missing',
+    async evaluate(now) {
+      const [{ shipments }, { documentRequirements }] = await Promise.all([
+        graphql<{ shipments: { number: string; mode: string; flow: string; destination: { country: { code: string } | null }; shipmentLegs_on_shipment: LegFacts[] }[] }>(
+          `query { shipments(where: { state: { in: [draft, booked] } }, limit: 500) { number mode flow destination { country { code } } shipmentLegs_on_shipment(orderBy: { sequence: ASC }) { type sequence plannedEtd plannedEta etd eta atd ata } } }`,
+        ),
+        graphql<{ documentRequirements: { mode: string | null; flow: string | null; documentKind: string; daysBeforeEtd: number; destinationCountry: { code: string } | null }[] }>(
+          `query { documentRequirements(limit: 200) { mode flow documentKind daysBeforeEtd destinationCountry { code } } }`,
+        ),
+      ]);
+      if (documentRequirements.length === 0) return [];
+      const rules: DocumentRequirementRule[] = documentRequirements.map((rule) => ({ mode: rule.mode as DocumentRequirementRule['mode'], flow: rule.flow as DocumentRequirementRule['flow'], destinationCountry: rule.destinationCountry?.code ?? null, documentKind: rule.documentKind, daysBeforeEtd: rule.daysBeforeEtd }));
+      const today = isoDate(now) as LocalDate;
+      const findings: Finding[] = [];
+      for (const shipment of shipments) {
+        const { etd } = shipmentDates(shipment.shipmentLegs_on_shipment);
+        if (!etd) continue;
+        const { documentLinks } = await graphql<{ documentLinks: { document: { kind: string; archivedAt: string | null } }[] }>(
+          `query ($id: String!) { documentLinks(where: { entityType: { eq: "shipment" }, entityId: { eq: $id } }) { document { kind archivedAt } } }`,
+          { id: shipment.number },
+        );
+        const filed = documentLinks.filter((link) => !link.document.archivedAt).map((link) => link.document.kind);
+        const check = documentsCheck(rules, { mode: shipment.mode as never, flow: shipment.flow as never, destinationCountry: shipment.destination.country?.code ?? null, etd }, filed, today);
+        for (const item of check) {
+          if (item.filed || !item.dueOn || daysBetween(today, item.dueOn) > 3) continue;
+          const kind = item.documentKind.replace(/_/g, ' ');
+          const departed = shipment.shipmentLegs_on_shipment.some((leg) => legStatus(leg) !== 'pending');
+          findings.push({
+            entityType: 'shipment',
+            entityId: shipment.number,
+            title: `${shipment.number}: ${kind} missing${departed ? ' after departure' : ' before departure'}`,
+            detail: `Required ${item.dueOn} for a ${shipment.mode} shipment departing ${etd}; nothing filed.`,
+            severity: item.overdue ? 'critical' : 'caution',
+            ownerRole: 'logistics',
+            dedupeKey: `logistics.document_missing:${shipment.number}:${item.documentKind}`,
+          });
+        }
+      }
+      return findings;
     },
   },
   {

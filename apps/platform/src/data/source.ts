@@ -1,4 +1,4 @@
-import { ROLE_LABELS, daysBetween, entityPath, formatLocalDate, isRole, moduleForEntity, todayIn, type AttentionItem, type GatewayData } from '@basis/shared';
+import { ROLE_LABELS, daysBetween, entityPath, formatLocalDate, isRole, moduleForEntity, todayIn, type AttentionItem, type GatewayData, type ShipmentLane } from '@basis/shared';
 import { sampleDecisions } from './alerts';
 import { loadOpenTasks } from './tasks';
 import { daysBetween as between, type RunTimeline } from '@basis/shared';
@@ -22,7 +22,7 @@ async function loadLiveGateway(): Promise<GatewayData> {
     import('@basis/shared/dataconnect/platform'),
     loadOpenTasks(),
   ]);
-  const [{ data }, runRows] = await Promise.all([listOpenAlerts(dataConnect), loadLiveRuns()]);
+  const [{ data }, runRows, lanes] = await Promise.all([listOpenAlerts(dataConnect), loadLiveRuns(), loadLanes()]);
   const today = todayIn(zone());
   const openRuns = runRows.filter((run) => run.state === 'planned' || run.state === 'active');
   const runs: RunTimeline[] = openRuns
@@ -69,7 +69,7 @@ async function loadLiveGateway(): Promise<GatewayData> {
     figures: {
       orders: { count: 0, periodLabel: 'Last 30 days', changePercent: 0, comparedTo: 'previous 30 days', weekly: [] },
       production: { activeRuns: openRuns.length, onSchedule: openRuns.filter((run) => run.health === 'on_track').length },
-      transit: { shipments: 0, metres: '0', progress: [] },
+      transit: lanes.transit,
       inventory: { rolls: 0, byFamily: [] },
       quality: { firstPassPercent: 0, inspections: 0, windowLabel: 'last 90 days', monthly: [] },
     },
@@ -89,9 +89,30 @@ async function loadLiveGateway(): Promise<GatewayData> {
       ...dueTasks,
     ],
     runs,
-    shipments: [],
+    shipments: lanes.shipments,
     orders: [],
     families: [],
+  };
+}
+
+// Booked shipments on their lanes, soonest arrival first, and the in-transit
+// figure: what is on the water, in the air or in customs right now.
+async function loadLanes(): Promise<{ shipments: ShipmentLane[]; transit: GatewayData['figures']['transit'] }> {
+  const { laneOf } = await import('../pages/logistics/Logistics');
+  const today = todayIn(zone());
+  const all = await (async () => {
+    if (import.meta.env.MODE === 'sample') return (await import('./sample-logistics')).sampleLogistics.shipments();
+    const [{ dataConnect }, sdk, { summaryOf }] = await Promise.all([import('../lib/firebase'), import('@basis/shared/dataconnect/platform'), import('./logistics')]);
+    const { data } = await sdk.listShipments(dataConnect);
+    return data.shipments.map((row) => summaryOf(row as never, today));
+  })();
+  const booked = all.filter((shipment) => shipment.state === 'booked');
+  const open = booked.filter((shipment) => shipment.stage !== 'delivered').sort((a, b) => (a.eta ?? '').localeCompare(b.eta ?? ''));
+  const recent = booked.filter((shipment) => shipment.stage === 'delivered' && shipment.eta && between(shipment.eta, today) <= 7);
+  const moving = booked.filter((shipment) => shipment.stage === 'in_transit' || shipment.stage === 'arrived' || shipment.stage === 'customs');
+  return {
+    shipments: [...open, ...recent].slice(0, 5).map((shipment) => laneOf(shipment, today)),
+    transit: { shipments: moving.length, metres: moving.reduce((sum, shipment) => sum + BigInt(shipment.totals.metres), 0n).toString(), progress: moving.map((shipment) => shipment.progress) },
   };
 }
 
@@ -115,7 +136,7 @@ async function loadLiveRuns() {
 
 async function loadGateway(): Promise<GatewayData> {
   if (import.meta.env.MODE === 'sample') {
-    const [{ sampleGateway }, { sampleManufacturing }, tasks] = await Promise.all([import('./sample'), import('./sample-manufacturing'), loadOpenTasks()]);
+    const [{ sampleGateway }, { sampleManufacturing }, tasks, lanes] = await Promise.all([import('./sample'), import('./sample-manufacturing'), loadOpenTasks(), loadLanes()]);
     const today = todayIn(zone());
     const data = sampleGateway(today);
     // The run the manufacturing sample store holds is the one the Gateway shows,
@@ -157,6 +178,8 @@ async function loadGateway(): Promise<GatewayData> {
       }));
     return {
       ...data,
+      figures: { ...data.figures, transit: lanes.transit },
+      shipments: lanes.shipments,
       runs,
       attention: [
         ...data.attention

@@ -18,3 +18,4 @@ export * from './exports';
 export * from './connectors';
 export * from './operations';
 export * from './quality';
+export * from './logistics';

@@ -6,7 +6,7 @@ import { useT } from '../i18n';
 // The next thirty days as a rail with a mark per day that carries something,
 // and the dates beneath, grouped by day. Overdue open items lead.
 
-const KIND_LABEL: Record<CalendarEntry['kind'], string> = { milestone: 'Milestone', run_end: 'Run end', ex_factory: 'Ex-factory', payment: 'Payment', task: 'Task' };
+const KIND_LABEL: Record<CalendarEntry['kind'], string> = { milestone: 'Milestone', run_end: 'Run end', ex_factory: 'Ex-factory', payment: 'Payment', task: 'Task', departure: 'Departure', arrival: 'Arrival' };
 const short = (date: LocalDate) => formatLocalDate(date).slice(0, 6);
 
 export function EtaRail({ entries, asOf, horizonDays = 30, limit }: { entries: readonly CalendarEntry[]; asOf: LocalDate; horizonDays?: number; limit?: number }) {
@@ -42,7 +42,7 @@ export function EtaRail({ entries, asOf, horizonDays = 30, limit }: { entries: r
               <ul className="space-y-2">
                 {group.entries.map((entry) => (
                   <li key={`${entry.kind}-${entry.entityId}-${entry.title}`} className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                    <StatusChip tone={entry.overdue ? 'critical' : entry.moved ? 'caution' : entry.kind === 'payment' ? 'transit' : 'neutral'}>{t(KIND_LABEL[entry.kind])}</StatusChip>
+                    <StatusChip tone={entry.overdue ? 'critical' : entry.moved ? 'caution' : entry.kind === 'payment' || entry.kind === 'arrival' || entry.kind === 'departure' ? 'transit' : 'neutral'}>{t(KIND_LABEL[entry.kind])}</StatusChip>
                     <Link to={entityPath(entry.entityType, entry.entityId)} className="font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink">
                       {entry.title}
                     </Link>

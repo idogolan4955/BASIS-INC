@@ -216,12 +216,12 @@ export function SkuSheet({ tab }: { tab: 'overview' | 'sourcing' }) {
           </>
         }
         facts={[
-          { label: 'Product', value: <Link to={`/products/${data.productCode}`} className="underline decoration-line-strong underline-offset-4">{data.productName}</Link> },
-          { label: 'Family', value: data.familyName },
-          { label: 'Shade', value: `${data.shadeName} (${data.shadeCode})` },
-          { label: 'Width', value: data.widthCm === null ? 'tbc' : `${data.widthCm} cm` },
-          { label: 'Roll', value: `${data.rollLengthM} m` },
-          { label: 'Sales unit', value: data.salesUom },
+          { label: t('Product'), value: <Link to={`/products/${data.productCode}`} className="underline decoration-line-strong underline-offset-4">{data.productName}</Link> },
+          { label: t('Family'), value: data.familyName },
+          { label: t('Shade'), value: `${data.shadeName} (${data.shadeCode})` },
+          { label: t('Width'), value: data.widthCm === null ? 'tbc' : `${data.widthCm} cm` },
+          { label: t('Roll'), value: `${data.rollLengthM} m` },
+          { label: t('Sales unit'), value: data.salesUom },
         ]}
       />
       <SheetTabs>

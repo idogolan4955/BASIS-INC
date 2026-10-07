@@ -25,7 +25,7 @@ export interface LedgerDefinition {
   readonly scopes: readonly ('run' | 'po' | 'lot')[];
 }
 
-export const EXPORT_LEDGERS = ['purchase-orders', 'purchase-order-lines', 'production-runs', 'lots', 'rolls', 'handling-units', 'skus'] as const;
+export const EXPORT_LEDGERS = ['purchase-orders', 'purchase-order-lines', 'production-runs', 'lots', 'rolls', 'handling-units', 'skus', 'shipments'] as const;
 export type ExportLedger = (typeof EXPORT_LEDGERS)[number];
 
 export function isExportLedger(value: string): value is ExportLedger {
@@ -151,6 +151,32 @@ export const LEDGERS: Record<ExportLedger, LedgerDefinition> = {
       { key: 'grossKg', label: 'Gross (kg)', kind: 'number' },
       { key: 'netKg', label: 'Net (kg)', kind: 'number' },
       { key: 'packedOn', label: 'Packed', kind: 'date' },
+    ],
+  },
+  shipments: {
+    key: 'shipments',
+    title: 'Shipments',
+    scopes: [],
+    columns: [
+      { key: 'number', label: 'Shipment' },
+      { key: 'state', label: 'State' },
+      { key: 'stage', label: 'Stage' },
+      { key: 'health', label: 'Health' },
+      { key: 'flow', label: 'Flow' },
+      { key: 'mode', label: 'Mode' },
+      { key: 'incoterm', label: 'Incoterm' },
+      { key: 'origin', label: 'Origin' },
+      { key: 'destination', label: 'Destination' },
+      { key: 'forwarder', label: 'Forwarder' },
+      { key: 'etd', label: 'ETD', kind: 'date' },
+      { key: 'eta', label: 'ETA', kind: 'date' },
+      { key: 'plannedEta', label: 'Planned ETA', kind: 'date' },
+      { key: 'orders', label: 'Orders' },
+      { key: 'cartons', label: 'Cartons', kind: 'number' },
+      { key: 'rolls', label: 'Rolls', kind: 'number' },
+      { key: 'quantityM', label: 'Metres', kind: 'number' },
+      { key: 'cbm', label: 'CBM', kind: 'number' },
+      { key: 'grossKg', label: 'Gross (kg)', kind: 'number' },
     ],
   },
   skus: {

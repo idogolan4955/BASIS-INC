@@ -43,6 +43,14 @@ export const FUNCTION_NAMES = {
   /** Callable, QC and operations: corrective actions. */
   createCorrectiveAction: 'createCorrectiveAction',
   updateCorrectiveAction: 'updateCorrectiveAction',
+  /** Callable, logistics roles: shipments, their packages, booking and legs. */
+  createShipment: 'createShipment',
+  updateShipment: 'updateShipment',
+  assignHandlingUnits: 'assignHandlingUnits',
+  removeHandlingUnits: 'removeHandlingUnits',
+  bookShipment: 'bookShipment',
+  cancelShipment: 'cancelShipment',
+  updateLeg: 'updateLeg',
   /** Callable, owner and operations: run the alert rules now. */
   evaluateAlerts: 'evaluateAlerts',
   /** Scheduled: consume domain events, evaluate alert rules. */

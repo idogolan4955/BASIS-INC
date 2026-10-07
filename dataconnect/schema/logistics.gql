@@ -1,0 +1,122 @@
+# Logistics: a shipment is legs (the journey), lines (what it carries, by
+# purchase-order line and lot) and the packages assigned to it. Where the
+# goods are and whether they are late are read from the legs' dates by the
+# logistics function; the lifecycle state is the only one anyone sets.
+
+enum ShipmentFlow {
+  inbound
+  outbound
+  direct
+  transfer
+}
+
+enum TransportMode {
+  sea
+  air
+  courier
+  road
+}
+
+enum LoadType {
+  fcl
+  lcl
+  none
+}
+
+enum ShipmentState {
+  draft
+  booked
+  closed
+  cancelled
+}
+
+enum LegType {
+  pickup
+  consolidation
+  export_handling
+  main_carriage
+  customs
+  local_delivery
+}
+
+enum ReferenceType {
+  booking
+  mbl
+  hbl
+  awb
+  container
+  seal
+  tracking
+}
+
+type Shipment @table {
+  number: String! @col(dataType: "varchar(16)") @unique
+  flow: ShipmentFlow!
+  mode: TransportMode!
+  loadType: LoadType!
+  incoterm: Incoterm
+  namedPlace: String @col(dataType: "varchar(120)")
+  origin: Location!
+  destination: Location!
+  forwarder: Company
+  consignee: Company
+  consigneeName: String @col(dataType: "varchar(200)")
+  state: ShipmentState!
+  # Derived by the logistics function from the legs; never typed in.
+  health: Health!
+  bookedOn: Date
+  notes: String
+  createdByUid: String @col(dataType: "varchar(128)")
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+# One stage of the journey. Planned dates are the booking; etd and eta the
+# current expectation when it differs; atd and ata what happened.
+type ShipmentLeg @table {
+  shipment: Shipment!
+  sequence: Int!
+  type: LegType!
+  mode: TransportMode!
+  fromLocation: Location
+  toLocation: Location
+  provider: Company
+  vessel: String @col(dataType: "varchar(120)")
+  voyage: String @col(dataType: "varchar(80)")
+  plannedEtd: Date
+  plannedEta: Date
+  etd: Date
+  eta: Date
+  atd: Date
+  ata: Date
+  note: String
+}
+
+# The link between orders and shipments: one shipment carries lines from many
+# purchase-order lines, one line is split across many shipments. Quantities
+# follow from the packages assigned, in thousandths of the unit.
+type ShipmentLine @table {
+  shipment: Shipment!
+  purchaseOrderLine: PurchaseOrderLine!
+  lot: Lot!
+  quantity: Int64!
+  uom: String! @col(dataType: "varchar(8)")
+}
+
+type ShipmentReference @table {
+  shipment: Shipment!
+  type: ReferenceType!
+  value: String! @col(dataType: "varchar(120)")
+  note: String @col(dataType: "varchar(200)")
+}
+
+# What a shipment must carry, by mode, flow and destination; a missing
+# document before departure raises an alert.
+type DocumentRequirement @table {
+  mode: TransportMode
+  flow: ShipmentFlow
+  destinationCountry: Country
+  documentKind: DocumentKind!
+  daysBeforeEtd: Int!
+  note: String @col(dataType: "varchar(200)")
+}

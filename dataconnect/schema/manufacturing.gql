@@ -197,6 +197,8 @@ type HandlingUnit @table {
   kind: HandlingUnitKind!
   run: ProductionRun
   parent: HandlingUnit
+  # Assigned to a shipment once it leaves the factory's packing floor.
+  shipment: Shipment
   marks: String @col(dataType: "varchar(120)")
   lengthCm: Int
   widthCm: Int

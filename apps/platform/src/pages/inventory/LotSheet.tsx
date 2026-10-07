@@ -120,12 +120,12 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
           </>
         }
         facts={[
-          { label: 'Reported', value: metres(data.producedQuantity) },
-          { label: 'Measured', value: data.rollCount > 0 ? metres(data.measuredQuantity) : '—' },
-          { label: 'Rolls', value: data.rollCount > 0 ? `${data.packedRollCount} of ${data.rollCount} packed` : 'Not tracked' },
-          { label: 'Mill lot', value: data.millLotRef || '—' },
-          { label: 'Produced', value: dateOrDash(data.producedOn) },
-          { label: 'Ready to ship', value: <span className={ready !== '0' ? 'text-positive' : undefined}>{metres(ready)}</span> },
+          { label: t('Reported'), value: metres(data.producedQuantity) },
+          { label: t('Measured'), value: data.rollCount > 0 ? metres(data.measuredQuantity) : '—' },
+          { label: t('Rolls'), value: data.rollCount > 0 ? `${data.packedRollCount} of ${data.rollCount} packed` : 'Not tracked' },
+          { label: t('Mill lot'), value: data.millLotRef || '—' },
+          { label: t('Produced'), value: dateOrDash(data.producedOn) },
+          { label: t('Ready to ship'), value: <span className={ready !== '0' ? 'text-positive' : undefined}>{metres(ready)}</span> },
         ]}
         actions={
           <>

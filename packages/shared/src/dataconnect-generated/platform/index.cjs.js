@@ -72,6 +72,14 @@ const DocumentKind = {
 }
 exports.DocumentKind = DocumentKind;
 
+const HandlingUnitKind = {
+  roll: "roll",
+  carton: "carton",
+  pallet: "pallet",
+  container_load: "container_load",
+}
+exports.HandlingUnitKind = HandlingUnitKind;
+
 const Health = {
   on_track: "on_track",
   at_risk: "at_risk",
@@ -103,6 +111,13 @@ const InspectionType = {
   receiving: "receiving",
 }
 exports.InspectionType = InspectionType;
+
+const LoadType = {
+  fcl: "fcl",
+  lcl: "lcl",
+  none: "none",
+}
+exports.LoadType = LoadType;
 
 const LocationType = {
   factory: "factory",
@@ -175,6 +190,22 @@ const ShadeStatus = {
 }
 exports.ShadeStatus = ShadeStatus;
 
+const ShipmentFlow = {
+  inbound: "inbound",
+  outbound: "outbound",
+  direct: "direct",
+  transfer: "transfer",
+}
+exports.ShipmentFlow = ShipmentFlow;
+
+const ShipmentState = {
+  draft: "draft",
+  booked: "booked",
+  closed: "closed",
+  cancelled: "cancelled",
+}
+exports.ShipmentState = ShipmentState;
+
 const SkuStatus = {
   development: "development",
   sampling: "sampling",
@@ -190,6 +221,14 @@ const TaskState = {
   cancelled: "cancelled",
 }
 exports.TaskState = TaskState;
+
+const TransportMode = {
+  sea: "sea",
+  air: "air",
+  courier: "courier",
+  road: "road",
+}
+exports.TransportMode = TransportMode;
 
 const UomDimension = {
   length: "length",
@@ -211,118 +250,6 @@ const connectorConfig = {
   location: 'europe-west1'
 };
 exports.connectorConfig = connectorConfig;
-
-const acknowledgeAlertRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'AcknowledgeAlert', inputVars);
-}
-acknowledgeAlertRef.operationName = 'AcknowledgeAlert';
-exports.acknowledgeAlertRef = acknowledgeAlertRef;
-
-exports.acknowledgeAlert = function acknowledgeAlert(dcOrVars, vars) {
-  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
-  return executeMutation(acknowledgeAlertRef(dcInstance, inputVars));
-}
-;
-
-const createTaskRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'CreateTask', inputVars);
-}
-createTaskRef.operationName = 'CreateTask';
-exports.createTaskRef = createTaskRef;
-
-exports.createTask = function createTask(dcOrVars, vars) {
-  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
-  return executeMutation(createTaskRef(dcInstance, inputVars));
-}
-;
-
-const completeTaskRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'CompleteTask', inputVars);
-}
-completeTaskRef.operationName = 'CompleteTask';
-exports.completeTaskRef = completeTaskRef;
-
-exports.completeTask = function completeTask(dcOrVars, vars) {
-  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
-  return executeMutation(completeTaskRef(dcInstance, inputVars));
-}
-;
-
-const addNoteRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'AddNote', inputVars);
-}
-addNoteRef.operationName = 'AddNote';
-exports.addNoteRef = addNoteRef;
-
-exports.addNote = function addNote(dcOrVars, vars) {
-  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
-  return executeMutation(addNoteRef(dcInstance, inputVars));
-}
-;
-
-const updateMyPreferencesRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
-  dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'UpdateMyPreferences', inputVars);
-}
-updateMyPreferencesRef.operationName = 'UpdateMyPreferences';
-exports.updateMyPreferencesRef = updateMyPreferencesRef;
-
-exports.updateMyPreferences = function updateMyPreferences(dcOrVars, vars) {
-  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars);
-  return executeMutation(updateMyPreferencesRef(dcInstance, inputVars));
-}
-;
-
-const recordEventRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'RecordEvent', inputVars);
-}
-recordEventRef.operationName = 'RecordEvent';
-exports.recordEventRef = recordEventRef;
-
-exports.recordEvent = function recordEvent(dcOrVars, vars) {
-  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
-  return executeMutation(recordEventRef(dcInstance, inputVars));
-}
-;
-
-const resolveAlertRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'ResolveAlert', inputVars);
-}
-resolveAlertRef.operationName = 'ResolveAlert';
-exports.resolveAlertRef = resolveAlertRef;
-
-exports.resolveAlert = function resolveAlert(dcOrVars, vars) {
-  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
-  return executeMutation(resolveAlertRef(dcInstance, inputVars));
-}
-;
-
-const reopenTaskRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'ReopenTask', inputVars);
-}
-reopenTaskRef.operationName = 'ReopenTask';
-exports.reopenTaskRef = reopenTaskRef;
-
-exports.reopenTask = function reopenTask(dcOrVars, vars) {
-  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
-  return executeMutation(reopenTaskRef(dcInstance, inputVars));
-}
-;
 
 const listCompaniesRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
@@ -1171,6 +1098,81 @@ exports.insertShadeStandard = function insertShadeStandard(dcOrVars, vars) {
 }
 ;
 
+const listShipmentsRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListShipments');
+}
+listShipmentsRef.operationName = 'ListShipments';
+exports.listShipmentsRef = listShipmentsRef;
+
+exports.listShipments = function listShipments(dcOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(listShipmentsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getShipmentRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetShipment', inputVars);
+}
+getShipmentRef.operationName = 'GetShipment';
+exports.getShipmentRef = getShipmentRef;
+
+exports.getShipment = function getShipment(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getShipmentRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const listShippableUnitsRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListShippableUnits');
+}
+listShippableUnitsRef.operationName = 'ListShippableUnits';
+exports.listShippableUnitsRef = listShippableUnitsRef;
+
+exports.listShippableUnits = function listShippableUnits(dcOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(listShippableUnitsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const listLocationsRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListLocations');
+}
+listLocationsRef.operationName = 'ListLocations';
+exports.listLocationsRef = listLocationsRef;
+
+exports.listLocations = function listLocations(dcOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(listLocationsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const listDocumentRequirementsRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListDocumentRequirements');
+}
+listDocumentRequirementsRef.operationName = 'ListDocumentRequirements';
+exports.listDocumentRequirementsRef = listDocumentRequirementsRef;
+
+exports.listDocumentRequirements = function listDocumentRequirements(dcOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(listDocumentRequirementsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
 const listPurchaseOrdersRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
@@ -1288,5 +1290,117 @@ exports.operationsFacts = function operationsFacts(dcOrOptions, options) {
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(operationsFactsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const acknowledgeAlertRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AcknowledgeAlert', inputVars);
+}
+acknowledgeAlertRef.operationName = 'AcknowledgeAlert';
+exports.acknowledgeAlertRef = acknowledgeAlertRef;
+
+exports.acknowledgeAlert = function acknowledgeAlert(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(acknowledgeAlertRef(dcInstance, inputVars));
+}
+;
+
+const createTaskRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CreateTask', inputVars);
+}
+createTaskRef.operationName = 'CreateTask';
+exports.createTaskRef = createTaskRef;
+
+exports.createTask = function createTask(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(createTaskRef(dcInstance, inputVars));
+}
+;
+
+const completeTaskRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CompleteTask', inputVars);
+}
+completeTaskRef.operationName = 'CompleteTask';
+exports.completeTaskRef = completeTaskRef;
+
+exports.completeTask = function completeTask(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(completeTaskRef(dcInstance, inputVars));
+}
+;
+
+const addNoteRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AddNote', inputVars);
+}
+addNoteRef.operationName = 'AddNote';
+exports.addNoteRef = addNoteRef;
+
+exports.addNote = function addNote(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(addNoteRef(dcInstance, inputVars));
+}
+;
+
+const updateMyPreferencesRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'UpdateMyPreferences', inputVars);
+}
+updateMyPreferencesRef.operationName = 'UpdateMyPreferences';
+exports.updateMyPreferencesRef = updateMyPreferencesRef;
+
+exports.updateMyPreferences = function updateMyPreferences(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars);
+  return executeMutation(updateMyPreferencesRef(dcInstance, inputVars));
+}
+;
+
+const recordEventRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RecordEvent', inputVars);
+}
+recordEventRef.operationName = 'RecordEvent';
+exports.recordEventRef = recordEventRef;
+
+exports.recordEvent = function recordEvent(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(recordEventRef(dcInstance, inputVars));
+}
+;
+
+const resolveAlertRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ResolveAlert', inputVars);
+}
+resolveAlertRef.operationName = 'ResolveAlert';
+exports.resolveAlertRef = resolveAlertRef;
+
+exports.resolveAlert = function resolveAlert(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(resolveAlertRef(dcInstance, inputVars));
+}
+;
+
+const reopenTaskRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ReopenTask', inputVars);
+}
+reopenTaskRef.operationName = 'ReopenTask';
+exports.reopenTaskRef = reopenTaskRef;
+
+exports.reopenTask = function reopenTask(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(reopenTaskRef(dcInstance, inputVars));
 }
 ;

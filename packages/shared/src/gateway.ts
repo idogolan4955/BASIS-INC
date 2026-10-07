@@ -76,22 +76,26 @@ export interface RunTimeline {
   readonly milestones: readonly MilestoneView[];
 }
 
-export type ShipmentStage = 'booked' | 'in_transit' | 'arrived' | 'customs' | 'delivered';
+export type ShipmentStage = 'draft' | 'booked' | 'in_transit' | 'arrived' | 'customs' | 'delivered' | 'cancelled';
 
 export const SHIPMENT_STAGE_LABEL: Record<ShipmentStage, string> = {
+  draft: 'Draft',
   booked: 'Booked',
   in_transit: 'In transit',
   arrived: 'Arrived',
   customs: 'In customs',
   delivered: 'Delivered',
+  cancelled: 'Cancelled',
 };
 
 export const SHIPMENT_STAGE_TONE: Record<ShipmentStage, StatusTone> = {
+  draft: 'neutral',
   booked: 'neutral',
   in_transit: 'transit',
   arrived: 'transit',
   customs: 'caution',
   delivered: 'positive',
+  cancelled: 'critical',
 };
 
 export interface ShipmentLane {

@@ -169,12 +169,12 @@ export function RunSheet({ tab }: { tab: 'milestones' | 'lots' | 'packing' | 'do
           </>
         }
         facts={[
-          { label: 'Quantity', value: metres(data.totalQuantity) },
-          { label: 'Process', value: data.templateName || '—' },
-          { label: 'Planned', value: `${short(data.plannedStart)} to ${short(data.plannedEnd)}` },
-          { label: 'Expected end', value: <span className={cn(slip > 0 && 'text-critical')}>{dateOrDash(expectedEnd)}{slip > 0 ? ` (+${slip}d)` : ''}</span> },
-          { label: 'Progress', value: <Meter value={data.progress} /> },
-          { label: 'Ready to ship', value: <span className={cn(data.availableToShip !== '0' && 'text-positive')}>{metres(data.availableToShip)}</span> },
+          { label: t('Quantity'), value: metres(data.totalQuantity) },
+          { label: t('Process'), value: data.templateName || '—' },
+          { label: t('Planned'), value: `${short(data.plannedStart)} to ${short(data.plannedEnd)}` },
+          { label: t('Expected end'), value: <span className={cn(slip > 0 && 'text-critical')}>{dateOrDash(expectedEnd)}{slip > 0 ? ` (+${slip}d)` : ''}</span> },
+          { label: t('Progress'), value: <Meter value={data.progress} /> },
+          { label: t('Ready to ship'), value: <span className={cn(data.availableToShip !== '0' && 'text-positive')}>{metres(data.availableToShip)}</span> },
         ]}
       />
       <SheetTabs>

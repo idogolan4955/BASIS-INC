@@ -1,4 +1,4 @@
-import { calendarFrom, isLocalDate, lotQuantities, pipelineFrom, todayIn, type CalendarEntry, type LocalDate, type OperationsRun, type OperationsTask, type PipelineCell } from '@basis/shared';
+import { calendarFrom, isLocalDate, lotQuantities, pipelineFrom, todayIn, type CalendarEntry, type LocalDate, type OperationsRun, type OperationsShipment, type OperationsTask, type PipelineCell, type ShipmentSummary } from '@basis/shared';
 import { useQuery } from '@tanstack/react-query';
 import { isSample } from './source';
 import { loadOpenTasks } from './tasks';
@@ -69,11 +69,22 @@ async function liveRuns(): Promise<OperationsRun[]> {
   }));
 }
 
+const shipmentFacts = (shipment: ShipmentSummary): OperationsShipment => ({ number: shipment.number, stage: shipment.stage, health: shipment.health, metres: shipment.totals.metres, etd: shipment.etd, eta: shipment.eta, plannedEta: shipment.plannedEta, originName: shipment.originName, destinationName: shipment.destinationName });
+
+/** Booked shipments, as the pipeline and the calendar read them. */
+export async function loadShipmentFacts(): Promise<OperationsShipment[]> {
+  if (isSample) return (await (await import('./sample-logistics')).sampleLogistics.shipments()).filter((shipment) => shipment.state === 'booked').map(shipmentFacts);
+  const [{ dataConnect }, sdk, { summaryOf }] = await Promise.all([import('../lib/firebase'), import('@basis/shared/dataconnect/platform'), import('./logistics')]);
+  const { data } = await sdk.listShipments(dataConnect);
+  const today = todayIn(zone());
+  return data.shipments.filter((shipment) => shipment.state === 'booked').map((row) => shipmentFacts(summaryOf(row as never, today)));
+}
+
 export async function loadOperations(): Promise<OperationsView> {
   const asOf = todayIn(zone());
-  const [runs, tasks] = await Promise.all([isSample ? sampleRuns() : liveRuns(), loadOpenTasks()]);
+  const [runs, tasks, shipments] = await Promise.all([isSample ? sampleRuns() : liveRuns(), loadOpenTasks(), loadShipmentFacts()]);
   const taskFacts: OperationsTask[] = tasks.map((task) => ({ id: task.id, title: task.title, dueOn: task.dueOn, entityType: task.entityType ?? '', entityId: task.entityId ?? '', assigneeName: task.assigneeName ?? '' }));
-  return { asOf, runs, pipeline: pipelineFrom(runs), calendar: calendarFrom(runs, taskFacts, asOf) };
+  return { asOf, runs, pipeline: pipelineFrom(runs, shipments), calendar: calendarFrom(runs, taskFacts, asOf, 30, shipments) };
 }
 
 export function useOperations() {

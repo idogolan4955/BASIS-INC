@@ -253,9 +253,51 @@ async function seedTemplates() {
   }
 }
 
+
+// Places goods pass through, and what a shipment must carry. Ports and
+// airports carry their UN/LOCODE or IATA code; the warehouse is BASIS's own.
+const PLACES = [
+  ['port', 'Port of Ningbo', 'Ningbo', 'CN', 'CNNGB', 'Asia/Shanghai'],
+  ['port', 'Port of Shanghai', 'Shanghai', 'CN', 'CNSHA', 'Asia/Shanghai'],
+  ['airport', 'Shanghai Pudong', 'Shanghai', 'CN', 'PVG', 'Asia/Shanghai'],
+  ['consolidation_hub', 'Ningbo consolidation hub', 'Ningbo', 'CN', '', 'Asia/Shanghai'],
+  ['port', 'Port of Ashdod', 'Ashdod', 'IL', 'ILASH', 'Asia/Jerusalem'],
+  ['port', 'Port of Haifa', 'Haifa', 'IL', 'ILHFA', 'Asia/Jerusalem'],
+  ['airport', 'Ben Gurion', 'Tel Aviv', 'IL', 'TLV', 'Asia/Jerusalem'],
+  ['port', 'Port of Rotterdam', 'Rotterdam', 'NL', 'NLRTM', 'Europe/Amsterdam'],
+  ['port', 'Port of Genoa', 'Genoa', 'IT', 'ITGOA', 'Europe/Rome'],
+  ['airport', 'JFK', 'New York', 'US', 'JFK', 'America/New_York'],
+  ['warehouse', 'BASIS warehouse', 'Tel Aviv', 'IL', '', 'Asia/Jerusalem'],
+];
+const DOCUMENT_REQUIREMENTS = [
+  // mode, flow, destination country, document kind, days before departure
+  [null, 'inbound', null, 'commercial_invoice', 2],
+  [null, 'inbound', null, 'packing_list', 2],
+  ['sea', null, null, 'bill_of_lading', 0],
+  ['air', null, null, 'air_waybill', 0],
+  [null, null, 'IL', 'certificate_of_origin', 3],
+];
+async function seedLogistics() {
+  for (const [type, name, city, country, locationCode, timeZone] of PLACES) {
+    const existing = await gql(`query ($name: String!) { locations(where: { name: { eq: $name }, companyId: { isNull: true } }, limit: 1) { id } }`, { name });
+    if (existing.locations[0]) continue;
+    await gql(`mutation ($type: LocationType!, $name: String!, $city: String!, $country: String!, $code: String, $tz: String!) {
+      location_insert(data: { type: $type, name: $name, city: $city, countryCode: $country, locationCode: $code, timeZone: $tz }) }`,
+      { type, name, city, country, code: locationCode || null, tz: timeZone });
+  }
+  const { documentRequirements } = await gql(`query { documentRequirements(limit: 200) { documentKind mode flow destinationCountry { code } } }`);
+  for (const [mode, flow, country, documentKind, daysBeforeEtd] of DOCUMENT_REQUIREMENTS) {
+    if (documentRequirements.some((rule) => rule.documentKind === documentKind && (rule.mode ?? null) === mode && (rule.flow ?? null) === flow && (rule.destinationCountry?.code ?? null) === country)) continue;
+    await gql(`mutation ($mode: TransportMode, $flow: ShipmentFlow, $country: String, $kind: DocumentKind!, $days: Int!) {
+      documentRequirement_insert(data: { mode: $mode, flow: $flow, destinationCountryCode: $country, documentKind: $kind, daysBeforeEtd: $days }) }`,
+      { mode, flow, country, kind: documentKind, days: daysBeforeEtd });
+  }
+}
+
 const uid = await seedOwner();
 await seedTemplates();
 await seedInspectionTemplates();
 await seedReference();
 const skuCount = await seedCatalog();
-console.log(`Seeded emulators: owner ${OWNER.email} (${uid}), ${COUNTRIES.length} countries, ${CURRENCIES.length} currencies, ${UOMS.length} units, ${INCOTERMS.length} Incoterms, number sequences, ${catalog.products.length} products, ${skuCount} SKUs, ${TEMPLATES.length} process templates, ${INSPECTION_TEMPLATES.length} inspection templates.`);
+await seedLogistics();
+console.log(`Seeded emulators: owner ${OWNER.email} (${uid}), ${COUNTRIES.length} countries, ${CURRENCIES.length} currencies, ${UOMS.length} units, ${INCOTERMS.length} Incoterms, number sequences, ${catalog.products.length} products, ${skuCount} SKUs, ${TEMPLATES.length} process templates, ${INSPECTION_TEMPLATES.length} inspection templates, ${PLACES.length} places, ${DOCUMENT_REQUIREMENTS.length} document requirements.`);

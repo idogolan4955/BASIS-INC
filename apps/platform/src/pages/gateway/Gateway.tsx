@@ -5,8 +5,6 @@ import {
   ORDER_STAGE_TONE,
   SEVERITY_LABEL,
   SEVERITY_TONE,
-  SHIPMENT_STAGE_LABEL,
-  SHIPMENT_STAGE_TONE,
   canOpenModule,
   daysBetween,
   formatLocalDate,
@@ -52,6 +50,7 @@ import { useRequiredSession } from '../../session';
 import { useT } from '../../i18n';
 import { EtaRail } from '../../components/EtaRail';
 import { Pipeline } from '../../components/Pipeline';
+import { Lane } from '../../components/Lane';
 import { useOperations } from '../../data/operations';
 import { NewTaskDialog } from '../operations/Tasks';
 
@@ -383,54 +382,6 @@ function Production({ runs, asOf }: { runs: readonly RunTimeline[]; asOf: LocalD
         </ul>
       )}
     </Panel>
-  );
-}
-
-function Lane({ shipment }: { shipment: ShipmentLane }) {
-  const t = useT();
-  const position = `${Math.max(0, Math.min(1, shipment.progress)) * 100}%`;
-  const late = shipment.health === 'delayed' || shipment.health === 'blocked';
-  return (
-    <li className="border-b border-line py-4 first:pt-0 last:border-b-0 last:pb-0">
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
-        <div className="flex items-baseline gap-3">
-          <RecordLink to={shipment.path}>{shipment.number}</RecordLink>
-          <span className="text-[0.8125rem] text-ink-muted">{shipment.mode}</span>
-        </div>
-        <div className="flex items-center gap-4">
-          {shipment.health !== 'on_track' && (
-            <StatusChip tone={HEALTH_TONE[shipment.health]}>{t(HEALTH_LABEL[shipment.health])}</StatusChip>
-          )}
-          <StatusChip tone={SHIPMENT_STAGE_TONE[shipment.stage]}>{SHIPMENT_STAGE_LABEL[shipment.stage]}</StatusChip>
-        </div>
-      </div>
-      <div
-        role="img"
-        aria-label={`${Math.round(shipment.progress * 100)} percent of the way from ${shipment.origin.name} to ${shipment.destination.name}`}
-        className="mt-3 flex items-center gap-3"
-      >
-        <span className="code text-ink">{shipment.origin.code}</span>
-        <span className="relative h-px flex-1 bg-line-strong">
-          <span className="absolute inset-y-0 start-0 bg-ink" style={{ width: position }} />
-          <span
-            className={cn(
-              'absolute top-1/2 size-[9px] -translate-x-1/2 -translate-y-1/2',
-              late ? 'rotate-45 bg-critical' : 'bg-ink',
-            )}
-            style={{ left: position }}
-          />
-        </span>
-        <span className="code text-ink">{shipment.destination.code}</span>
-      </div>
-      <div className="code mt-2 flex justify-between gap-4 text-ink-muted">
-        <span>
-          {shipment.origin.name}, ETD {shortDate(shipment.etd)}
-        </span>
-        <span className="text-end">
-          ETA {shortDate(shipment.eta)}, {shipment.destination.name}
-        </span>
-      </div>
-    </li>
   );
 }
 

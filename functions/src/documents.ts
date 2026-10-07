@@ -3,19 +3,20 @@ import { getStorage } from 'firebase-admin/storage';
 import { onCall } from 'firebase-functions/v2/https';
 import { z } from 'zod';
 import { REGION, audit, callerOf, failure, graphql, requireRole } from './lib';
-import { renderPackingList, renderPurchaseOrder, renderRollLabels } from './pdf';
+import { renderPackingList, renderPurchaseOrder, renderRollLabels, renderShipmentPackingList } from './pdf';
 
 // Filing: a generated document becomes a `Document` record linked to its
 // record, with the rendered bytes kept in Storage where Storage is reachable.
 // Without Storage (the local emulators without Java), the record still exists
 // and points at the generator, so the document can always be opened again.
 
-export type GeneratedKind = 'purchase-order' | 'packing-list' | 'roll-labels';
+export type GeneratedKind = 'purchase-order' | 'packing-list' | 'roll-labels' | 'shipment-packing-list';
 
 const GENERATED: Record<GeneratedKind, { documentKind: string; entityType: string; roles: readonly string[]; title: (number: string) => string; render: (number: string) => Promise<{ pdf: Buffer; filename: string }> }> = {
   'purchase-order': { documentKind: 'purchase_order', entityType: 'purchase_order', roles: ['owner', 'operations', 'purchasing', 'finance'], title: (number) => `Purchase order ${number}`, render: renderPurchaseOrder },
   'packing-list': { documentKind: 'packing_list', entityType: 'production_run', roles: ['owner', 'operations', 'purchasing', 'qc', 'logistics'], title: (number) => `Packing list ${number}`, render: renderPackingList },
   'roll-labels': { documentKind: 'other', entityType: 'lot', roles: ['owner', 'operations', 'purchasing', 'qc', 'logistics'], title: (number) => `Roll labels ${number}`, render: renderRollLabels },
+  'shipment-packing-list': { documentKind: 'packing_list', entityType: 'shipment', roles: ['owner', 'operations', 'purchasing', 'qc', 'logistics'], title: (number) => `Packing list ${number}`, render: renderShipmentPackingList },
 };
 
 export function isGeneratedKind(value: string): value is GeneratedKind {
@@ -62,7 +63,7 @@ export async function fileGenerated(kind: GeneratedKind, number: string, actorUi
   return { id: document_insert.id, storagePath, filename, sizeBytes: pdf.length };
 }
 
-const input = z.object({ kind: z.enum(['purchase-order', 'packing-list', 'roll-labels']), number: z.string().regex(/^[A-Z]{2,4}-\d{2}-\d{4}$/) });
+const input = z.object({ kind: z.enum(['purchase-order', 'packing-list', 'roll-labels', 'shipment-packing-list']), number: z.string().regex(/^[A-Z]{2,4}-\d{2}-\d{4}$/) });
 
 export const fileGeneratedDocument = onCall({ region: REGION, memory: '512MiB' }, async (request) => {
   const caller = callerOf(request);

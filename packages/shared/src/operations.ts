@@ -1,4 +1,5 @@
 import { addDays, daysBetween, type LocalDate } from './local-date';
+import type { ShipmentStage } from './gateway';
 import { availableToShip, lotQuantities, runProgress, type LotQualityState, type MilestoneFacts, type RunState } from './manufacturing';
 import type { Health } from './status';
 
@@ -43,6 +44,19 @@ export interface OperationsRun {
   readonly payments: readonly { readonly label: string; readonly dueOn: LocalDate | null; readonly paidOn: LocalDate | null }[];
 }
 
+export interface OperationsShipment {
+  readonly number: string;
+  readonly stage: ShipmentStage;
+  readonly health: Health;
+  /** Fixed-point metres loaded. */
+  readonly metres: string;
+  readonly etd: LocalDate | null;
+  readonly eta: LocalDate | null;
+  readonly plannedEta: LocalDate | null;
+  readonly originName: string;
+  readonly destinationName: string;
+}
+
 export interface OperationsTask {
   readonly id: string;
   readonly title: string;
@@ -54,10 +68,10 @@ export interface OperationsTask {
 
 /**
  * What is where, in metres: planned metres still in production, lots awaiting
- * quality, released metres already packed. Transit, customs and stock arrive
- * with the logistics and inventory modules and are reported as pending.
+ * quality, released metres already packed, metres on the water and in
+ * customs. Stock arrives with the inventory module and is reported as pending.
  */
-export function pipelineFrom(runs: readonly OperationsRun[]): PipelineCell[] {
+export function pipelineFrom(runs: readonly OperationsRun[], shipments: readonly OperationsShipment[] = []): PipelineCell[] {
   let production = 0n;
   let productionRuns = 0;
   let qc = 0n;
@@ -83,17 +97,20 @@ export function pipelineFrom(runs: readonly OperationsRun[]): PipelineCell[] {
     }
     ready += readyHere;
   }
+  const moving = shipments.filter((shipment) => shipment.stage === 'in_transit' || shipment.stage === 'arrived');
+  const customs = shipments.filter((shipment) => shipment.stage === 'customs');
+  const sum = (list: readonly OperationsShipment[]) => list.reduce((total, shipment) => total + BigInt(shipment.metres), 0n).toString();
   return [
     { stage: 'in_production', metres: production.toString(), records: productionRuns },
     { stage: 'in_qc', metres: qc.toString(), records: qcLots },
     { stage: 'ready_to_ship', metres: ready.toString(), records: readyLots },
-    { stage: 'in_transit', metres: '0', records: 0, pending: true },
-    { stage: 'in_customs', metres: '0', records: 0, pending: true },
+    { stage: 'in_transit', metres: sum(moving), records: moving.length },
+    { stage: 'in_customs', metres: sum(customs), records: customs.length },
     { stage: 'in_stock', metres: '0', records: 0, pending: true },
   ];
 }
 
-export type CalendarKind = 'milestone' | 'run_end' | 'ex_factory' | 'payment' | 'task';
+export type CalendarKind = 'milestone' | 'run_end' | 'ex_factory' | 'payment' | 'task' | 'departure' | 'arrival';
 
 export interface CalendarEntry {
   readonly date: LocalDate;
@@ -111,7 +128,7 @@ export interface CalendarEntry {
 const expected = (milestone: MilestoneFacts) => milestone.actualEnd ?? milestone.forecastEnd ?? milestone.plannedEnd;
 
 /** Every date that falls within the horizon, soonest first; overdue open items lead. */
-export function calendarFrom(runs: readonly OperationsRun[], tasks: readonly OperationsTask[], today: LocalDate, horizonDays = 30): CalendarEntry[] {
+export function calendarFrom(runs: readonly OperationsRun[], tasks: readonly OperationsTask[], today: LocalDate, horizonDays = 30, shipments: readonly OperationsShipment[] = []): CalendarEntry[] {
   const until = addDays(today, horizonDays);
   const within = (date: LocalDate) => daysBetween(date, until) >= 0;
   const entries: CalendarEntry[] = [];
@@ -138,6 +155,15 @@ export function calendarFrom(runs: readonly OperationsRun[], tasks: readonly Ope
     for (const payment of run.payments) {
       if (!payment.dueOn || payment.paidOn || !within(payment.dueOn)) continue;
       entries.push({ date: payment.dueOn, kind: 'payment', title: `${payment.label} · ${run.purchaseOrderNumber}`, detail: run.supplierName, entityType: 'purchase_order', entityId: run.purchaseOrderNumber, overdue: daysBetween(payment.dueOn, today) > 0, moved: false });
+    }
+  }
+  for (const shipment of shipments) {
+    if (shipment.stage === 'delivered' || shipment.stage === 'cancelled' || shipment.stage === 'draft') continue;
+    if (shipment.etd && within(shipment.etd) && shipment.stage === 'booked') {
+      entries.push({ date: shipment.etd, kind: 'departure', title: `${shipment.number} departs ${shipment.originName}`, detail: `to ${shipment.destinationName}`, entityType: 'shipment', entityId: shipment.number, overdue: daysBetween(shipment.etd, today) > 0, moved: false });
+    }
+    if (shipment.eta && within(shipment.eta)) {
+      entries.push({ date: shipment.eta, kind: 'arrival', title: `${shipment.number} arrives ${shipment.destinationName}`, detail: `from ${shipment.originName}`, entityType: 'shipment', entityId: shipment.number, overdue: daysBetween(shipment.eta, today) > 0, moved: Boolean(shipment.plannedEta && shipment.eta !== shipment.plannedEta) });
     }
   }
   for (const task of tasks) {

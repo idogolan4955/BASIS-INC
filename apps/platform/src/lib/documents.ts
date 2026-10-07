@@ -6,7 +6,7 @@ import { useState } from 'react';
 // /api rewrite. The browser fetches with the session token and hands the
 // file over, shares it, or opens it.
 
-export type DocumentKind = 'purchase-order' | 'packing-list' | 'roll-labels';
+export type DocumentKind = 'purchase-order' | 'packing-list' | 'roll-labels' | 'shipment-packing-list';
 
 const base = import.meta.env.DEV ? `http://127.0.0.1:5001/basis-inc/${FUNCTIONS_REGION}/api` : '/api';
 

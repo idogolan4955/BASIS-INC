@@ -258,12 +258,12 @@ export function CompanySheet({ tab, base }: { tab: 'overview' | 'contacts' | 'pl
           )
         }
         facts={[
-          { label: 'Country', value: data.countryName || '—' },
-          { label: 'Contacts', value: data.contactCount },
-          { label: 'Factories', value: data.factories.length },
-          { label: 'Locations', value: data.locations.length },
-          { label: 'Currency', value: data.defaultCurrency || '—' },
-          { label: 'Website', value: data.website ? <a href={data.website} className="underline decoration-line-strong underline-offset-4" target="_blank" rel="noreferrer">{data.website.replace(/^https?:\/\//, '')}</a> : '—' },
+          { label: t('Country'), value: data.countryName || '—' },
+          { label: t('Contacts'), value: data.contactCount },
+          { label: t('Factories'), value: data.factories.length },
+          { label: t('Locations'), value: data.locations.length },
+          { label: t('Currency'), value: data.defaultCurrency || '—' },
+          { label: t('Website'), value: data.website ? <a href={data.website} className="underline decoration-line-strong underline-offset-4" target="_blank" rel="noreferrer">{data.website.replace(/^https?:\/\//, '')}</a> : '—' },
         ]}
       />
       <SheetTabs>

@@ -16,3 +16,6 @@ coverage/
 graphify-out/
 .claude/settings.local.json
 .dataconnect-data/
+
+# Playwright MCP session output
+.playwright-mcp/

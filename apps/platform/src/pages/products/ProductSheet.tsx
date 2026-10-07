@@ -326,11 +326,11 @@ export function ProductSheet({ tab }: { tab: 'overview' | 'skus' | 'shades' }) {
           </>
         }
         facts={[
-          { label: 'Family', value: data.familyName },
-          { label: 'Variants', value: data.variants.length },
-          { label: 'SKUs', value: data.skuCount },
-          { label: 'Shades available', value: data.availableShades.length },
-          { label: 'Slug', value: <span className="code">/{data.familyCode.toLowerCase()}/{data.slug}</span> },
+          { label: t('Family'), value: data.familyName },
+          { label: t('Variants'), value: data.variants.length },
+          { label: t('SKUs'), value: data.skuCount },
+          { label: t('Shades available'), value: data.availableShades.length },
+          { label: t('Slug'), value: <span className="code">/{data.familyCode.toLowerCase()}/{data.slug}</span> },
         ]}
         visual={
           <div className="size-full bg-sunken text-nude-deep">

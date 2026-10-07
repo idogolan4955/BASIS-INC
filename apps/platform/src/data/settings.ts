@@ -110,7 +110,7 @@ export function useMessagesFor(entityType: string, entityId: string) {
 export function useSendDocumentEmail() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { kind: 'purchase-order' | 'packing-list' | 'roll-labels'; number: string; to: string; subject: string; message: string }): Promise<void> => {
+    mutationFn: async (input: { kind: 'purchase-order' | 'packing-list' | 'roll-labels' | 'shipment-packing-list'; number: string; to: string; subject: string; message: string }): Promise<void> => {
       if (isSample) throw new Error('Email leaves through the platform’s functions; the sample has none.');
       await callFunction(FUNCTION_NAMES.sendDocumentEmail, input);
     },

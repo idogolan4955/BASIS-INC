@@ -34,7 +34,15 @@ describe('pipeline', () => {
     expect(cells.find((cell) => cell.stage === 'in_production')).toMatchObject({ metres: '400000', records: 1 });
     expect(cells.find((cell) => cell.stage === 'in_qc')).toMatchObject({ metres: '4500000', records: 1 });
     expect(cells.find((cell) => cell.stage === 'ready_to_ship')).toMatchObject({ metres: '3600000', records: 1 });
-    expect(cells.find((cell) => cell.stage === 'in_transit')?.pending).toBe(true);
+    expect(cells.find((cell) => cell.stage === 'in_transit')).toMatchObject({ metres: '0', records: 0 });
+    expect(cells.find((cell) => cell.stage === 'in_stock')?.pending).toBe(true);
+    const moving = pipelineFrom([run], [
+      { number: 'SHP-1', stage: 'in_transit', health: 'on_track', metres: '6300000', etd: null, eta: null, plannedEta: null, originName: 'Ningbo', destinationName: 'Rotterdam' },
+      { number: 'SHP-2', stage: 'customs', health: 'at_risk', metres: '1200000', etd: null, eta: null, plannedEta: null, originName: 'Shanghai', destinationName: 'New York' },
+      { number: 'SHP-3', stage: 'booked', health: 'on_track', metres: '900000', etd: null, eta: null, plannedEta: null, originName: 'Ningbo', destinationName: 'Tel Aviv' },
+    ]);
+    expect(moving.find((cell) => cell.stage === 'in_transit')).toMatchObject({ metres: '6300000', records: 1 });
+    expect(moving.find((cell) => cell.stage === 'in_customs')).toMatchObject({ metres: '1200000', records: 1 });
   });
 });
 

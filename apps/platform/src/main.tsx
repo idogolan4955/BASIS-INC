@@ -19,6 +19,8 @@ import { InspectionSheet } from './pages/qc/InspectionSheet';
 import { CorrectiveActions } from './pages/qc/CorrectiveActions';
 import { Tasks } from './pages/operations/Tasks';
 import { Operations } from './pages/operations/Operations';
+import { Arrivals, Requirements, Shipments } from './pages/logistics/Logistics';
+import { ShipmentSheet } from './pages/logistics/ShipmentSheet';
 import { Companies } from './pages/parties/Companies';
 import { CompanySheet } from './pages/parties/CompanySheet';
 import { ProductSheet } from './pages/products/ProductSheet';
@@ -76,6 +78,14 @@ const router = createBrowserRouter([
       { path: 'qc/corrective-actions/:number', element: <CorrectiveActions /> },
       { path: 'qc/templates', element: <InspectionTemplates /> },
       { path: 'customers/inquiries/:reference', element: <Inquiries /> },
+      { path: 'logistics', element: <Shipments /> },
+      { path: 'logistics/shipments', element: <Shipments /> },
+      { path: 'logistics/shipments/:number', element: <ShipmentSheet tab="route" /> },
+      { path: 'logistics/shipments/:number/contents', element: <ShipmentSheet tab="contents" /> },
+      { path: 'logistics/shipments/:number/documents', element: <ShipmentSheet tab="documents" /> },
+      { path: 'logistics/shipments/:number/timeline', element: <ShipmentSheet tab="timeline" /> },
+      { path: 'logistics/arrivals', element: <Arrivals /> },
+      { path: 'logistics/requirements', element: <Requirements /> },
       { path: 'products', element: <ProductsIndex /> },
       { path: 'products/skus', element: <SkuLedger /> },
       { path: 'products/skus/:code', element: <SkuSheet tab="overview" /> },

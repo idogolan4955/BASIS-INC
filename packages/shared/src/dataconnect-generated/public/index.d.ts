@@ -89,6 +89,11 @@ export interface DocumentLink_Key {
   __typename?: 'DocumentLink_Key';
 }
 
+export interface DocumentRequirement_Key {
+  id: UUIDString;
+  __typename?: 'DocumentRequirement_Key';
+}
+
 export interface Document_Key {
   id: UUIDString;
   __typename?: 'Document_Key';
@@ -276,6 +281,26 @@ export interface ShadeStandard_Key {
 export interface Shade_Key {
   code: string;
   __typename?: 'Shade_Key';
+}
+
+export interface ShipmentLeg_Key {
+  id: UUIDString;
+  __typename?: 'ShipmentLeg_Key';
+}
+
+export interface ShipmentLine_Key {
+  id: UUIDString;
+  __typename?: 'ShipmentLine_Key';
+}
+
+export interface ShipmentReference_Key {
+  id: UUIDString;
+  __typename?: 'ShipmentReference_Key';
+}
+
+export interface Shipment_Key {
+  id: UUIDString;
+  __typename?: 'Shipment_Key';
 }
 
 export interface Sku_Key {

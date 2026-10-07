@@ -19,7 +19,7 @@ export function Pipeline({ cells }: { cells: readonly PipelineCell[] }) {
             <li key={cell.stage} className={cn('relative flex min-h-28 flex-col justify-between bg-panel px-4 py-3', cell.pending && 'text-ink-muted')}>
               <span className="caps text-ink-soft">{t(PIPELINE_STAGE_LABEL[cell.stage])}</span>
               <span className="mt-3 font-display text-[1.75rem] leading-none tracking-[-0.01em] text-ink">{cell.pending ? '—' : metres(cell.metres)}</span>
-              <span className="code mt-2 text-ink-muted">{cell.pending ? t('with logistics') : `${cell.records} ${t(cell.stage === 'in_production' ? (cell.records === 1 ? 'run' : 'runs') : cell.records === 1 ? 'lot' : 'lots')}`}</span>
+              <span className="code mt-2 text-ink-muted">{cell.pending ? t('with inventory') : `${cell.records} ${t(cell.stage === 'in_production' ? (cell.records === 1 ? 'run' : 'runs') : cell.stage === 'in_transit' || cell.stage === 'in_customs' ? (cell.records === 1 ? 'shipment' : 'shipments') : cell.records === 1 ? 'lot' : 'lots')}`}</span>
               {/* The bar carries the metres behind the figure. */}
               <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[3px] bg-sunken">
                 <span className="block h-full bg-nude-deep transition-[width] duration-700 ease-[var(--ease-soft)]" style={{ width: `${Math.round(share * 100)}%` }} />

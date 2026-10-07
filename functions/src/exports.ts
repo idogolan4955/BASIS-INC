@@ -14,6 +14,7 @@ import {
   type ExportRow,
   type MilestoneFacts,
 } from '@basis/shared';
+import { shipmentDates, shipmentStage, shipmentTotals, type LegFacts, type ShipmentState } from '@basis/shared';
 import ExcelJS from 'exceljs';
 import { failure, graphql, type Caller } from './lib';
 
@@ -199,6 +200,49 @@ async function skus(): Promise<ExportRow[]> {
   return skus.map((sku) => ({ code: sku.code, product: sku.product.name, variant: sku.variant.name, shade: sku.shade.name, shadeCode: sku.shade.code, putUp: sku.putUp.name, status: sku.status, public: sku.isPublic ? 'yes' : 'no', rollTracking: sku.rollTracking ? 'yes' : 'no' }));
 }
 
+async function shipments(): Promise<ExportRow[]> {
+  const { shipments } = await graphql<{
+    shipments: { number: string; state: ShipmentState; health: string; flow: string; mode: string; loadType: string; incoterm: { code: string } | null; origin: { name: string; city: string | null }; destination: { name: string; city: string | null }; forwarder: { legalName: string; tradingName: string | null } | null;
+      shipmentLegs_on_shipment: LegFacts[]; shipmentLines_on_shipment: { purchaseOrderLine: { purchaseOrder: { number: string } } }[];
+      handlingUnits_on_shipment: { kind: 'carton' | 'pallet' | 'roll' | 'container_load'; lengthCm: number | null; widthCm: number | null; heightCm: number | null; grossWeightG: number | null; netWeightG: number | null; parent: { number: string } | null; handlingUnitContents_on_handlingUnit: { quantity: string | null; roll: { number: string; measuredLength: string } | null }[] }[] }[];
+  }>(
+    `query { shipments(orderBy: { createdAt: DESC }, limit: 5000) { number state health flow mode loadType incoterm { code } origin { name city } destination { name city } forwarder { legalName tradingName }
+       shipmentLegs_on_shipment(orderBy: { sequence: ASC }) { type sequence plannedEtd plannedEta etd eta atd ata }
+       shipmentLines_on_shipment { purchaseOrderLine { purchaseOrder { number } } }
+       handlingUnits_on_shipment { kind lengthCm widthCm heightCm grossWeightG netWeightG parent { number } handlingUnitContents_on_handlingUnit { quantity roll { number measuredLength } } } } }`,
+  );
+  return shipments.map((shipment) => {
+    const dates = shipmentDates(shipment.shipmentLegs_on_shipment);
+    const totals = shipmentTotals(
+      shipment.handlingUnits_on_shipment.map((unit) => {
+        const contents = unit.handlingUnitContents_on_handlingUnit.map((content) => ({ rollNumber: content.roll?.number ?? null, lotNumber: '', skuCode: '', quantity: content.roll ? content.roll.measuredLength : (content.quantity ?? '0') }));
+        return { kind: unit.kind, contents, quantity: contents.reduce((sum, content) => sum + BigInt(content.quantity), 0n).toString(), cbmMilli: cubicMetresMilli(unit.lengthCm, unit.widthCm, unit.heightCm), grossWeightG: unit.grossWeightG, netWeightG: unit.netWeightG, parentNumber: unit.parent?.number ?? null };
+      }),
+    );
+    return {
+      number: shipment.number,
+      state: shipment.state,
+      stage: shipmentStage(shipment.state, shipment.shipmentLegs_on_shipment),
+      health: shipment.health,
+      flow: shipment.flow,
+      mode: shipment.mode === 'sea' ? `sea ${shipment.loadType.toUpperCase()}` : shipment.mode,
+      incoterm: shipment.incoterm?.code ?? null,
+      origin: shipment.origin.city || shipment.origin.name,
+      destination: shipment.destination.city || shipment.destination.name,
+      forwarder: shipment.forwarder ? shipment.forwarder.tradingName || shipment.forwarder.legalName : null,
+      etd: dates.etd,
+      eta: dates.eta,
+      plannedEta: dates.plannedEta,
+      orders: [...new Set(shipment.shipmentLines_on_shipment.map((line) => line.purchaseOrderLine.purchaseOrder.number))].join(', '),
+      cartons: totals.cartons,
+      rolls: totals.rolls,
+      quantityM: metresNumber(totals.metres),
+      cbm: totals.cbmMilli === null ? null : totals.cbmMilli / 1000,
+      grossKg: kilos(totals.grossWeightG),
+    };
+  });
+}
+
 const SOURCES: Record<ExportLedger, (scope: ExportScope) => Promise<ExportRow[]>> = {
   'purchase-orders': purchaseOrders,
   'purchase-order-lines': purchaseOrderLines,
@@ -207,6 +251,7 @@ const SOURCES: Record<ExportLedger, (scope: ExportScope) => Promise<ExportRow[]>
   rolls,
   'handling-units': handlingUnits,
   skus,
+  shipments,
 };
 
 async function xlsx(title: string, columns: readonly ExportColumn[], rows: readonly ExportRow[]): Promise<Buffer> {

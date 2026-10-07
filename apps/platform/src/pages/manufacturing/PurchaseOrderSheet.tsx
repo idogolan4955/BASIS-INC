@@ -315,12 +315,12 @@ export function PurchaseOrderSheet({ tab }: { tab: 'overview' | 'production' | '
           </>
         }
         facts={[
-          { label: 'Quantity', value: metres(data.totalQuantity) },
-          { label: 'Currency', value: data.currency },
-          { label: 'Terms', value: [data.incoterm, data.namedPlace].filter(Boolean).join(' ') || '—' },
-          { label: 'Issued', value: dateOrDash(data.issuedOn) },
-          { label: 'Confirmed', value: dateOrDash(data.confirmedOn) },
-          { label: 'Ex-factory', value: dateOrDash(data.requestedExFactory) },
+          { label: t('Quantity'), value: metres(data.totalQuantity) },
+          { label: t('Currency'), value: data.currency },
+          { label: t('Terms'), value: [data.incoterm, data.namedPlace].filter(Boolean).join(' ') || '—' },
+          { label: t('Issued'), value: dateOrDash(data.issuedOn) },
+          { label: t('Confirmed'), value: dateOrDash(data.confirmedOn) },
+          { label: t('Ex-factory'), value: dateOrDash(data.requestedExFactory) },
         ]}
         actions={
           <>

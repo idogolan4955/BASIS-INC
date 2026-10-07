@@ -317,6 +317,11 @@ export const sampleManufacturing = {
   async templates(): Promise<ProcessTemplateView[]> {
     return TEMPLATES;
   },
+  /** One package by number, with the run it was packed on; for the shipments that carry it. */
+  async unit(number: string): Promise<(HandlingUnitView & { runNumber: string }) | null> {
+    const unit = store.units.find((candidate) => candidate.number === number);
+    return unit ? structuredClone({ ...unitView(unit), runNumber: unit.runNumber }) : null;
+  },
   async createPurchaseOrder(input: NewPurchaseOrderInput): Promise<string> {
     store.sequence.PO += 1;
     const number = `PO-26-${String(store.sequence.PO).padStart(4, '0')}`;
