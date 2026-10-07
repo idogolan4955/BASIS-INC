@@ -22,7 +22,7 @@ async function loadLiveGateway(): Promise<GatewayData> {
     import('@basis/shared/dataconnect/platform'),
     loadOpenTasks(),
   ]);
-  const [{ data }, runRows, lanes, stock] = await Promise.all([listOpenAlerts(dataConnect), loadLiveRuns(), loadLanes(), loadStockFigure()]);
+  const [{ data }, runRows, lanes, stock, orderFacts] = await Promise.all([listOpenAlerts(dataConnect), loadLiveRuns(), loadLanes(), loadStockFigure(), loadOrderFacts()]);
   const today = todayIn(zone());
   const openRuns = runRows.filter((run) => run.state === 'planned' || run.state === 'active');
   const runs: RunTimeline[] = openRuns
@@ -67,7 +67,7 @@ async function loadLiveGateway(): Promise<GatewayData> {
   return {
     asOf: today,
     figures: {
-      orders: { count: 0, periodLabel: 'Last 30 days', changePercent: 0, comparedTo: 'previous 30 days', weekly: [] },
+      orders: orderFacts.figure,
       production: { activeRuns: openRuns.length, onSchedule: openRuns.filter((run) => run.health === 'on_track').length },
       transit: lanes.transit,
       inventory: stock,
@@ -90,8 +90,30 @@ async function loadLiveGateway(): Promise<GatewayData> {
     ],
     runs,
     shipments: lanes.shipments,
-    orders: [],
+    orders: orderFacts.recent,
     families: [],
+  };
+}
+
+// Orders confirmed in the last 30 days against the 30 before, by week, and the five most recent.
+async function loadOrderFacts(): Promise<{ figure: GatewayData['figures']['orders']; recent: GatewayData['orders'] }> {
+  const today = todayIn(zone());
+  const orders = import.meta.env.MODE === 'sample'
+    ? await (await import('./sample-commercial')).sampleCommercial.orders()
+    : await (async () => {
+        const [{ dataConnect }, sdk, { orderSummary }] = await Promise.all([import('../lib/firebase'), import('@basis/shared/dataconnect/platform'), import('./commercial')]);
+        const { data } = await sdk.listSalesOrders(dataConnect);
+        return data.salesOrders.map((row) => orderSummary(row as never));
+      })();
+  const live = orders.filter((order) => order.state !== 'draft' && order.state !== 'cancelled');
+  const age = (order: (typeof live)[number]) => (order.confirmedOn ? between(order.confirmedOn, today) : between(order.createdAt.slice(0, 10) as never, today));
+  const recent30 = live.filter((order) => age(order) <= 30).length;
+  const previous30 = live.filter((order) => age(order) > 30 && age(order) <= 60).length;
+  const weekly = Array.from({ length: 12 }, (_, index) => live.filter((order) => Math.floor(age(order) / 7) === 11 - index).length);
+  const stageOf = (order: (typeof live)[number]): GatewayData['orders'][number]['stage'] => (order.state === 'closed' || order.stage === 'delivered' ? 'delivered' : order.stage === 'shipped' ? 'shipped' : order.stage === 'allocated' || order.stage === 'partly_allocated' ? 'in_production' : 'confirmed');
+  return {
+    figure: { count: recent30, periodLabel: 'Last 30 days', changePercent: previous30 === 0 ? (recent30 > 0 ? 100 : 0) : Math.round(((recent30 - previous30) / previous30) * 1000) / 10, comparedTo: 'previous 30 days', weekly },
+    recent: live.slice(0, 5).map((order) => ({ number: order.number, path: `/orders/${order.number}`, customer: order.customerName, fabric: order.products.join(', '), metres: order.metres, fulfilment: order.progress, shipDate: order.requestedDelivery ?? today, stage: stageOf(order) })),
   };
 }
 
@@ -155,7 +177,7 @@ async function loadLiveRuns() {
 
 async function loadGateway(): Promise<GatewayData> {
   if (import.meta.env.MODE === 'sample') {
-    const [{ sampleGateway }, { sampleManufacturing }, tasks, lanes, stock] = await Promise.all([import('./sample'), import('./sample-manufacturing'), loadOpenTasks(), loadLanes(), loadStockFigure()]);
+    const [{ sampleGateway }, { sampleManufacturing }, tasks, lanes, stock, orderFacts] = await Promise.all([import('./sample'), import('./sample-manufacturing'), loadOpenTasks(), loadLanes(), loadStockFigure(), loadOrderFacts()]);
     const today = todayIn(zone());
     const data = sampleGateway(today);
     // The run the manufacturing sample store holds is the one the Gateway shows,
@@ -197,8 +219,9 @@ async function loadGateway(): Promise<GatewayData> {
       }));
     return {
       ...data,
-      figures: { ...data.figures, transit: lanes.transit, inventory: stock },
+      figures: { ...data.figures, transit: lanes.transit, inventory: stock, orders: orderFacts.figure },
       shipments: lanes.shipments,
+      orders: orderFacts.recent,
       runs,
       attention: [
         ...data.attention

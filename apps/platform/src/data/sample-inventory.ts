@@ -225,6 +225,12 @@ export const sampleInventory = {
     push({ skuCode, lotNumber: input.lotNumber, rollNumber: input.rollNumber ?? null, quantity: quantity.toString(), fromLocationId: fromId, toLocationId: toId, reason: input.kind as MovementReason, sourceType: 'manual', sourceId: '', note: input.note, occurredAt: new Date().toISOString() });
     return { lotNumber: input.lotNumber, quantity: quantity.toString() };
   },
+  /** A ship movement for an allocation: out of the warehouse to "with customers". */
+  async shipOut(input: { skuCode: string; lotNumber: string; rollNumber: string | null; quantity: string; locationName: string; orderNumber: string }): Promise<void> {
+    const from = store.locations.find((location) => location.name === input.locationName)?.id ?? 'sl-wh';
+    const to = store.locations.find((location) => location.kind === 'customer')!.id;
+    push({ skuCode: input.skuCode, lotNumber: input.lotNumber, rollNumber: input.rollNumber, quantity: input.quantity, fromLocationId: from, toLocationId: to, reason: 'ship', sourceType: 'sales_order', sourceId: input.orderNumber, note: '', occurredAt: new Date().toISOString() });
+  },
   async setReorder(input: ReorderInput): Promise<{ skuCode: string }> {
     const existing = store.policies.find((policy) => policy.skuCode === input.skuCode);
     const facts = SKUS[input.skuCode];

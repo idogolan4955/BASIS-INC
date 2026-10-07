@@ -47,7 +47,7 @@ type ShipmentRow = {
   id: string; number: string; flow: ShipmentFlow; mode: TransportMode; loadType: LoadType; state: ShipmentState; health: Health; namedPlace?: string | null; bookedOn?: string | null; createdAt: string;
   incoterm?: { code: string } | null; origin: PlaceRow & { id?: string }; destination: PlaceRow & { id?: string }; forwarder?: { id?: string; legalName: string; tradingName?: string | null } | null;
   shipmentLegs_on_shipment: LegRow[];
-  shipmentLines_on_shipment: { id?: string; quantity: string; uom?: string; purchaseOrderLine: { lineNo?: number; purchaseOrder: { number: string }; sku: { code?: string; product: { name: string }; shade?: { code: string; name: string; hex?: string | null } } }; lot?: { number: string } }[];
+  shipmentLines_on_shipment: { id?: string; quantity: string; uom?: string; purchaseOrderLine?: { lineNo?: number; purchaseOrder: { number: string }; sku: { code?: string; product: { name: string }; shade?: { code: string; name: string; hex?: string | null } } } | null; salesOrderLine?: { lineNo?: number; order: { number: string }; sku: { code?: string; product: { name: string }; shade?: { code: string; name: string; hex?: string | null } } } | null; lot?: { number: string } }[];
   handlingUnits_on_shipment: UnitRow[];
 };
 
@@ -109,8 +109,8 @@ export function summaryOf(row: ShipmentRow, today: LocalDate): ShipmentSummary {
     plannedEta: dates.plannedEta,
     progress: shipmentProgress(legs, today),
     totals: shipmentTotals(row.handlingUnits_on_shipment.map(unitView)),
-    purchaseOrderNumbers: [...new Set(row.shipmentLines_on_shipment.map((line) => line.purchaseOrderLine.purchaseOrder.number))],
-    products: [...new Set(row.shipmentLines_on_shipment.map((line) => line.purchaseOrderLine.sku.product.name))],
+    purchaseOrderNumbers: [...new Set(row.shipmentLines_on_shipment.map((line) => line.purchaseOrderLine?.purchaseOrder.number ?? line.salesOrderLine?.order.number ?? ''))].filter(Boolean),
+    products: [...new Set(row.shipmentLines_on_shipment.map((line) => (line.purchaseOrderLine ?? line.salesOrderLine)?.sku.product.name ?? ''))].filter(Boolean),
     bookedOn: asDate(row.bookedOn),
     createdAt: row.createdAt,
   };
@@ -144,19 +144,22 @@ export function detailOf(row: ShipmentRow & { notes?: string | null; consigneeNa
         note: leg.note ?? '',
       };
     }),
-    lines: row.shipmentLines_on_shipment.map((line, index) => ({
-      id: line.id ?? String(index),
-      purchaseOrderNumber: line.purchaseOrderLine.purchaseOrder.number,
-      purchaseOrderLineNo: line.purchaseOrderLine.lineNo ?? 0,
-      lotNumber: line.lot?.number ?? '',
-      skuCode: line.purchaseOrderLine.sku.code ?? '',
-      productName: line.purchaseOrderLine.sku.product.name,
-      shadeCode: line.purchaseOrderLine.sku.shade?.code ?? '',
-      shadeName: line.purchaseOrderLine.sku.shade?.name ?? '',
-      shadeHex: line.purchaseOrderLine.sku.shade?.hex ?? '#CCCCCC',
-      quantity: line.quantity,
-      uom: line.uom ?? 'm',
-    })),
+    lines: row.shipmentLines_on_shipment.map((line, index) => {
+      const ref = line.purchaseOrderLine ? { number: line.purchaseOrderLine.purchaseOrder.number, lineNo: line.purchaseOrderLine.lineNo, sku: line.purchaseOrderLine.sku } : line.salesOrderLine ? { number: line.salesOrderLine.order.number, lineNo: line.salesOrderLine.lineNo, sku: line.salesOrderLine.sku } : null;
+      return {
+        id: line.id ?? String(index),
+        purchaseOrderNumber: ref?.number ?? '',
+        purchaseOrderLineNo: ref?.lineNo ?? 0,
+        lotNumber: line.lot?.number ?? '',
+        skuCode: ref?.sku.code ?? '',
+        productName: ref?.sku.product.name ?? '',
+        shadeCode: ref?.sku.shade?.code ?? '',
+        shadeName: ref?.sku.shade?.name ?? '',
+        shadeHex: ref?.sku.shade?.hex ?? '#CCCCCC',
+        quantity: line.quantity,
+        uom: line.uom ?? 'm',
+      };
+    }),
     units: row.handlingUnits_on_shipment.map(unitView),
     references: row.shipmentReferences_on_shipment.map((reference) => ({ id: reference.id, type: reference.type, value: reference.value })),
   };

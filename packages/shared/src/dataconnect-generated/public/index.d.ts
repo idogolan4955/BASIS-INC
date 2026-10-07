@@ -29,6 +29,11 @@ export interface Alert_Key {
   __typename?: 'Alert_Key';
 }
 
+export interface Allocation_Key {
+  id: UUIDString;
+  __typename?: 'Allocation_Key';
+}
+
 export interface ApiToken_Key {
   id: UUIDString;
   __typename?: 'ApiToken_Key';
@@ -87,6 +92,11 @@ export interface Country_Key {
 export interface Currency_Key {
   code: string;
   __typename?: 'Currency_Key';
+}
+
+export interface CustomerProfile_Key {
+  id: UUIDString;
+  __typename?: 'CustomerProfile_Key';
 }
 
 export interface CustomsEntry_Key {
@@ -172,6 +182,11 @@ export interface InspectionTemplate_Key {
 export interface Inspection_Key {
   id: UUIDString;
   __typename?: 'Inspection_Key';
+}
+
+export interface InvoiceRef_Key {
+  id: UUIDString;
+  __typename?: 'InvoiceRef_Key';
 }
 
 export interface LegalEntity_Key {
@@ -277,6 +292,16 @@ export interface PutUp_Key {
   __typename?: 'PutUp_Key';
 }
 
+export interface QuoteLine_Key {
+  id: UUIDString;
+  __typename?: 'QuoteLine_Key';
+}
+
+export interface Quote_Key {
+  id: UUIDString;
+  __typename?: 'Quote_Key';
+}
+
 export interface ReceiptLine_Key {
   id: UUIDString;
   __typename?: 'ReceiptLine_Key';
@@ -301,6 +326,16 @@ export interface RolePermission_Key {
 export interface Roll_Key {
   id: UUIDString;
   __typename?: 'Roll_Key';
+}
+
+export interface SalesOrderLine_Key {
+  id: UUIDString;
+  __typename?: 'SalesOrderLine_Key';
+}
+
+export interface SalesOrder_Key {
+  id: UUIDString;
+  __typename?: 'SalesOrder_Key';
 }
 
 export interface ShadeCollection_Key {

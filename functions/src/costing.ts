@@ -207,7 +207,7 @@ interface CostingRow {
   mode: TransportMode;
   state: string;
   shipmentCosts_on_shipment: { id: string; category: CostFacts['category']; kind: CostFacts['kind']; amountBase: string; isRecoverable: boolean }[];
-  shipmentLines_on_shipment: { id: string; quantity: string; lot: { id: string; number: string }; purchaseOrderLine: { unitPrice: string; purchaseOrder: { currency: string; fxRateToBase: string | null; issuedOn: string | null } } }[];
+  shipmentLines_on_shipment: { id: string; quantity: string; lot: { id: string; number: string }; purchaseOrderLine: { unitPrice: string; purchaseOrder: { currency: string; fxRateToBase: string | null; issuedOn: string | null } } | null }[];
   handlingUnits_on_shipment: { lengthCm: number | null; widthCm: number | null; heightCm: number | null; grossWeightG: number | null; parent: { number: string } | null; handlingUnitContents_on_handlingUnit: { quantity: string | null; roll: { measuredLength: string; lot: { number: string } } | null; lot: { number: string } | null }[] }[];
   costAllocationRuns_on_shipment: { version: number }[];
 }
@@ -257,6 +257,7 @@ export const allocateShipmentCosts_ = onCall({ region: REGION }, async (request)
   }
   const lines: (LineFacts & { lotId: string; purchaseUnitCostBase: string })[] = [];
   for (const line of shipment.shipmentLines_on_shipment) {
+    if (!line.purchaseOrderLine) throw failure('invariant_violation', 'Landed cost is allocated on inbound shipments; an outbound shipment carries stock already costed.');
     const po = line.purchaseOrderLine.purchaseOrder;
     const fx = po.fxRateToBase ?? (await rateFor(base, po.currency, po.issuedOn ?? today()));
     if (!fx) throw failure('invariant_violation', `No rate from ${po.currency} to ${base} for the purchase price of ${line.lot.number}. Record one in Costing › FX rates.`);

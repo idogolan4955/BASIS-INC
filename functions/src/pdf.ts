@@ -573,7 +573,7 @@ interface ShipmentPackingRow {
   forwarder: { legalName: string; tradingName: string | null } | null;
   shipmentLegs_on_shipment: { type: string; plannedEtd: string | null; plannedEta: string | null; etd: string | null; eta: string | null; atd: string | null; ata: string | null; vessel: string | null; voyage: string | null }[];
   shipmentReferences_on_shipment: { type: string; value: string }[];
-  shipmentLines_on_shipment: { quantity: string; purchaseOrderLine: { lineNo: number; purchaseOrder: { number: string; legalEntity: { name: string } | null }; sku: { code: string; product: { name: string }; shade: { name: string } } }; lot: { number: string } }[];
+  shipmentLines_on_shipment: { quantity: string; purchaseOrderLine: { lineNo: number; purchaseOrder: { number: string; legalEntity: { name: string } | null }; sku: { code: string; product: { name: string }; shade: { name: string } } } | null; salesOrderLine: { lineNo: number; order: { number: string }; sku: { code: string; product: { name: string }; shade: { name: string } } } | null; lot: { number: string } }[];
   handlingUnits_on_shipment: RunRow['handlingUnits_on_run'];
 }
 
@@ -585,7 +585,7 @@ export async function renderShipmentPackingList(shipmentNumber: string): Promise
        origin { name city country { name } } destination { name city country { name } } forwarder { legalName tradingName }
        shipmentLegs_on_shipment(orderBy: { sequence: ASC }) { type plannedEtd plannedEta etd eta atd ata vessel voyage }
        shipmentReferences_on_shipment { type value }
-       shipmentLines_on_shipment { quantity purchaseOrderLine { lineNo purchaseOrder { number legalEntity { name } } sku { code product { name } shade { name } } } lot { number } }
+       shipmentLines_on_shipment { quantity purchaseOrderLine { lineNo purchaseOrder { number legalEntity { name } } sku { code product { name } shade { name } } } salesOrderLine { lineNo order { number } sku { code product { name } shade { name } } } lot { number } }
        handlingUnits_on_shipment(orderBy: { createdAt: ASC }) { number kind marks lengthCm widthCm heightCm grossWeightG netWeightG packedOn parent { number }
          handlingUnitContents_on_handlingUnit { quantity roll { number rollNo measuredLength lot { number sku { code } } } lot { number sku { code } } } } } }`,
     { number: shipmentNumber },
@@ -594,7 +594,7 @@ export async function renderShipmentPackingList(shipmentNumber: string): Promise
   if (!shipment) throw failure('not_found', `No shipment ${shipmentNumber}.`);
   if (shipment.handlingUnits_on_shipment.length === 0) throw failure('invariant_violation', 'Nothing is loaded yet.');
 
-  const issuer = shipment.shipmentLines_on_shipment[0]?.purchaseOrderLine.purchaseOrder.legalEntity?.name ?? 'BASIS INC.';
+  const issuer = shipment.shipmentLines_on_shipment[0]?.purchaseOrderLine?.purchaseOrder.legalEntity?.name ?? 'BASIS INC.';
   const page = { kind: 'Packing list', number: shipment.number, issuer };
   const { doc, finish } = open(page, { landscape: true });
   const paginate = chrome(doc, page);
@@ -682,13 +682,16 @@ export async function renderShipmentPackingList(shipmentNumber: string): Promise
       { key: 'product', label: 'Product', width: width - 110 - 96 - 96 - 90 },
       { key: 'metres', label: 'Metres', width: 90, align: 'right' },
     ],
-    shipment.shipmentLines_on_shipment.map((line) => ({
-      order: `${line.purchaseOrderLine.purchaseOrder.number} · ${line.purchaseOrderLine.lineNo}`,
-      lot: line.lot.number,
-      sku: line.purchaseOrderLine.sku.code,
-      product: `${line.purchaseOrderLine.sku.product.name}, ${line.purchaseOrderLine.sku.shade.name}`,
-      metres: metres(line.quantity),
-    })),
+    shipment.shipmentLines_on_shipment.map((line) => {
+      const ref = line.purchaseOrderLine ? { number: line.purchaseOrderLine.purchaseOrder.number, lineNo: line.purchaseOrderLine.lineNo, sku: line.purchaseOrderLine.sku } : line.salesOrderLine ? { number: line.salesOrderLine.order.number, lineNo: line.salesOrderLine.lineNo, sku: line.salesOrderLine.sku } : null;
+      return {
+        order: ref ? `${ref.number} · ${ref.lineNo}` : '—',
+        lot: line.lot.number,
+        sku: ref?.sku.code ?? '—',
+        product: ref ? `${ref.sku.product.name}, ${ref.sku.shade.name}` : '—',
+        metres: metres(line.quantity),
+      };
+    }),
     { caption: 'Lines', total: { order: `${shipment.shipmentLines_on_shipment.length} lines`, metres: metres(shipment.shipmentLines_on_shipment.reduce((sum, line) => sum + BigInt(line.quantity), 0n)) } },
   );
 

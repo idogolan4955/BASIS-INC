@@ -21,3 +21,4 @@ export * from './quality';
 export * from './logistics';
 export * from './costing';
 export * from './inventory';
+export * from './commercial';

@@ -23,6 +23,9 @@ import { Arrivals, Requirements, Shipments } from './pages/logistics/Logistics';
 import { ShipmentSheet } from './pages/logistics/ShipmentSheet';
 import { FxRates, LandedCost } from './pages/costing/Costing';
 import { Movements, Places, Receipts, Stock } from './pages/inventory/Inventory';
+import { Quotes, SalesOrders } from './pages/orders/Orders';
+import { QuoteSheet } from './pages/orders/QuoteSheet';
+import { OrderSheet } from './pages/orders/OrderSheet';
 import { Companies } from './pages/parties/Companies';
 import { CompanySheet } from './pages/parties/CompanySheet';
 import { ProductSheet } from './pages/products/ProductSheet';
@@ -92,6 +95,13 @@ const router = createBrowserRouter([
       { path: 'logistics/shipments/:number/documents', element: <ShipmentSheet tab="documents" /> },
       { path: 'logistics/shipments/:number/costs', element: <ShipmentSheet tab="costs" /> },
       { path: 'logistics/shipments/:number/timeline', element: <ShipmentSheet tab="timeline" /> },
+      { path: 'orders', element: <SalesOrders /> },
+      { path: 'orders/quotes', element: <Quotes /> },
+      { path: 'orders/quotes/:number', element: <QuoteSheet tab="lines" /> },
+      { path: 'orders/quotes/:number/timeline', element: <QuoteSheet tab="timeline" /> },
+      { path: 'orders/:number', element: <OrderSheet tab="lines" /> },
+      { path: 'orders/:number/invoices', element: <OrderSheet tab="invoices" /> },
+      { path: 'orders/:number/timeline', element: <OrderSheet tab="timeline" /> },
       { path: 'costing', element: <LandedCost /> },
       { path: 'costing/fx', element: <FxRates /> },
       { path: 'logistics/arrivals', element: <Arrivals /> },
@@ -112,6 +122,7 @@ const router = createBrowserRouter([
       { path: 'customers/:id', element: <CompanySheet tab="overview" base="/customers" /> },
       { path: 'customers/:id/contacts', element: <CompanySheet tab="contacts" base="/customers" /> },
       { path: 'customers/:id/places', element: <CompanySheet tab="places" base="/customers" /> },
+      { path: 'customers/:id/orders', element: <CompanySheet tab="orders" base="/customers" /> },
       { path: ':module/*', element: <ModulePending /> },
     ],
   },

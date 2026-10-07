@@ -16,6 +16,7 @@ import { EditCompanyDialog } from './EditCompanyDialog';
 import { useRequiredSession } from '../../session';
 import { NotFound } from '../NotFound';
 import { useT } from '../../i18n';
+import { CustomerOrders } from './CustomerOrders';
 
 function NewContactDialog({ companyId, open, onClose }: { companyId: string; open: boolean; onClose: () => void }) {
   const t = useT();
@@ -231,7 +232,7 @@ function Places({ company }: { company: CompanyDetail }) {
   );
 }
 
-export function CompanySheet({ tab, base }: { tab: 'overview' | 'contacts' | 'places'; base: '/suppliers' | '/customers' }) {
+export function CompanySheet({ tab, base }: { tab: 'overview' | 'contacts' | 'places' | 'orders'; base: '/suppliers' | '/customers' }) {
   const t = useT();
   const session = useRequiredSession();
   const { id = '' } = useParams();
@@ -270,11 +271,13 @@ export function CompanySheet({ tab, base }: { tab: 'overview' | 'contacts' | 'pl
         <NavLink to={path} end className={({ isActive }) => sheetTabClass(isActive)}>{t('Overview')}</NavLink>
         <NavLink to={`${path}/contacts`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Contacts')}</NavLink>
         <NavLink to={`${path}/places`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Factories and locations')}</NavLink>
+        {base === '/customers' && <NavLink to={`${path}/orders`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Orders')}</NavLink>}
       </SheetTabs>
       <div className="px-5 py-6 lg:px-8">
         {tab === 'overview' && <Overview company={data} />}
         {tab === 'contacts' && <Contacts company={data} manage={manage} />}
         {tab === 'places' && <Places company={data} />}
+        {tab === 'orders' && <CustomerOrders company={data} manage={manage} />}
       </div>
       {manage && <EditCompanyDialog key={`${data.id}-${editing}`} company={data} open={editing} onClose={() => setEditing(false)} />}
     </>

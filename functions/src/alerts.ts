@@ -425,6 +425,49 @@ export const RULES: Rule[] = [
     },
   },
   {
+    key: 'orders.quote_expiring',
+    async evaluate(now) {
+      const { quotes } = await graphql<{ quotes: { number: string; state: string; validUntil: string | null; customer: { legalName: string; tradingName: string | null } }[] }>(
+        `query { quotes(where: { state: { eq: sent }, validUntil: { isNull: false } }, limit: 500) { number state validUntil customer { legalName tradingName } } }`,
+      );
+      const today = isoDate(now);
+      return quotes
+        .map((quote) => ({ quote, days: daysBetween(today, quote.validUntil!) }))
+        .filter(({ days }) => days <= 3)
+        .map(({ quote, days }) => ({
+          entityType: 'quote',
+          entityId: quote.number,
+          title: days < 0 ? `${quote.number} to ${quote.customer.tradingName || quote.customer.legalName} has expired` : `${quote.number} to ${quote.customer.tradingName || quote.customer.legalName} expires in ${days} day${days === 1 ? '' : 's'}`,
+          detail: `Sent and unanswered; valid until ${quote.validUntil}. Follow up, extend, or mark it declined.`,
+          severity: (days < 0 ? 'caution' : 'info') as Severity,
+          ownerRole: 'sales' as Role,
+          dedupeKey: `orders.quote_expiring:${quote.number}:${days < 0 ? 'expired' : 'soon'}`,
+        }));
+    },
+  },
+  {
+    key: 'orders.unfulfilled',
+    async evaluate(now) {
+      const { salesOrders } = await graphql<{ salesOrders: { number: string; requestedDelivery: string | null; customer: { legalName: string; tradingName: string | null }; salesOrderLines_on_order: { quantity: string; allocations_on_orderLine: { quantity: string; shippedOn: string | null }[] }[] }[] }>(
+        `query { salesOrders(where: { state: { eq: confirmed } }, limit: 500) { number requestedDelivery customer { legalName tradingName } salesOrderLines_on_order { quantity allocations_on_orderLine { quantity shippedOn } } } }`,
+      );
+      const today = isoDate(now);
+      return salesOrders.flatMap((order) => {
+        const ordered = order.salesOrderLines_on_order.reduce((sum, line) => sum + BigInt(line.quantity), 0n);
+        const held = order.salesOrderLines_on_order.reduce((sum, line) => sum + line.allocations_on_orderLine.reduce((inner, allocation) => inner + BigInt(allocation.quantity), 0n), 0n);
+        const customer = order.customer.tradingName || order.customer.legalName;
+        const daysToDelivery = order.requestedDelivery ? daysBetween(today, order.requestedDelivery) : null;
+        if (daysToDelivery === null || daysToDelivery > 7) return [];
+        if (held >= ordered) {
+          return daysToDelivery < 0
+            ? [{ entityType: 'sales_order', entityId: order.number, title: `${order.number} for ${customer} is ${-daysToDelivery} day${daysToDelivery === -1 ? '' : 's'} past its delivery date`, detail: 'Stock is held; it has not shipped.', severity: 'critical' as Severity, ownerRole: 'logistics' as Role, dedupeKey: `orders.unfulfilled:${order.number}:late` }]
+            : [];
+        }
+        return [{ entityType: 'sales_order', entityId: order.number, title: `${order.number} for ${customer}: stock short ${daysToDelivery < 0 ? 'past' : 'ahead of'} its delivery date`, detail: `${(Number(ordered - held) / 1000).toLocaleString('en-GB', { maximumFractionDigits: 0 })} m not held; requested ${order.requestedDelivery}.`, severity: (daysToDelivery < 0 ? 'critical' : 'caution') as Severity, ownerRole: 'sales' as Role, dedupeKey: `orders.unfulfilled:${order.number}:short` }];
+      });
+    },
+  },
+  {
     key: 'customers.inquiry_new',
     async evaluate() {
       const { inquiries } = await graphql<{ inquiries: { reference: string; kind: string; name: string; company: string | null; country: string | null; createdAt: string }[] }>(

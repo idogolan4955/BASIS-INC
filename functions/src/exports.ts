@@ -203,12 +203,12 @@ async function skus(): Promise<ExportRow[]> {
 async function shipments(): Promise<ExportRow[]> {
   const { shipments } = await graphql<{
     shipments: { number: string; state: ShipmentState; health: string; flow: string; mode: string; loadType: string; incoterm: { code: string } | null; origin: { name: string; city: string | null }; destination: { name: string; city: string | null }; forwarder: { legalName: string; tradingName: string | null } | null;
-      shipmentLegs_on_shipment: LegFacts[]; shipmentLines_on_shipment: { purchaseOrderLine: { purchaseOrder: { number: string } } }[];
+      shipmentLegs_on_shipment: LegFacts[]; shipmentLines_on_shipment: { purchaseOrderLine: { purchaseOrder: { number: string } } | null; salesOrderLine: { order: { number: string } } | null }[];
       handlingUnits_on_shipment: { kind: 'carton' | 'pallet' | 'roll' | 'container_load'; lengthCm: number | null; widthCm: number | null; heightCm: number | null; grossWeightG: number | null; netWeightG: number | null; parent: { number: string } | null; handlingUnitContents_on_handlingUnit: { quantity: string | null; roll: { number: string; measuredLength: string } | null }[] }[] }[];
   }>(
     `query { shipments(orderBy: { createdAt: DESC }, limit: 5000) { number state health flow mode loadType incoterm { code } origin { name city } destination { name city } forwarder { legalName tradingName }
        shipmentLegs_on_shipment(orderBy: { sequence: ASC }) { type sequence plannedEtd plannedEta etd eta atd ata }
-       shipmentLines_on_shipment { purchaseOrderLine { purchaseOrder { number } } }
+       shipmentLines_on_shipment { purchaseOrderLine { purchaseOrder { number } } salesOrderLine { order { number } } }
        handlingUnits_on_shipment { kind lengthCm widthCm heightCm grossWeightG netWeightG parent { number } handlingUnitContents_on_handlingUnit { quantity roll { number measuredLength } } } } }`,
   );
   return shipments.map((shipment) => {
@@ -233,7 +233,7 @@ async function shipments(): Promise<ExportRow[]> {
       etd: dates.etd,
       eta: dates.eta,
       plannedEta: dates.plannedEta,
-      orders: [...new Set(shipment.shipmentLines_on_shipment.map((line) => line.purchaseOrderLine.purchaseOrder.number))].join(', '),
+      orders: [...new Set(shipment.shipmentLines_on_shipment.map((line) => line.purchaseOrderLine?.purchaseOrder.number ?? line.salesOrderLine?.order.number ?? ''))].filter(Boolean).join(', '),
       cartons: totals.cartons,
       rolls: totals.rolls,
       quantityM: metresNumber(totals.metres),

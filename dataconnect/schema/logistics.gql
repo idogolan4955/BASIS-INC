@@ -95,9 +95,12 @@ type ShipmentLeg @table {
 # The link between orders and shipments: one shipment carries lines from many
 # purchase-order lines, one line is split across many shipments. Quantities
 # follow from the packages assigned, in thousandths of the unit.
+# Inbound lines point at the purchase-order line they fulfil; outbound lines
+# at the sales-order line they deliver. One of the two is set.
 type ShipmentLine @table {
   shipment: Shipment!
-  purchaseOrderLine: PurchaseOrderLine!
+  purchaseOrderLine: PurchaseOrderLine
+  salesOrderLine: SalesOrderLine
   lot: Lot!
   quantity: Int64!
   uom: String! @col(dataType: "varchar(8)")

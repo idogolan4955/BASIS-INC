@@ -57,6 +57,16 @@ query ListShipments
           }
         }
       }
+      salesOrderLine {
+        order {
+          number
+        }
+        sku {
+          product {
+            name
+          }
+        }
+      }
     }
     handlingUnits_on_shipment(limit: 500) {
       kind
@@ -156,6 +166,23 @@ query GetShipment($number: String!)
       purchaseOrderLine {
         lineNo
         purchaseOrder {
+          number
+        }
+        sku {
+          code
+          product {
+            name
+          }
+          shade {
+            code
+            name
+            hex
+          }
+        }
+      }
+      salesOrderLine {
+        lineNo
+        order {
           number
         }
         sku {

@@ -61,6 +61,15 @@ export const FUNCTION_NAMES = {
   receiveShipment: 'receiveShipment',
   recordStockMovement: 'recordStockMovement',
   setReorderPolicy: 'setReorderPolicy',
+  /** Callable, sales roles: customers, quotes, orders; fulfilment for logistics too; invoices for finance. */
+  upsertCustomerProfile: 'upsertCustomerProfile',
+  saveQuote: 'saveQuote',
+  transitionQuote: 'transitionQuote',
+  createSalesOrder: 'createSalesOrder',
+  transitionSalesOrder: 'transitionSalesOrder',
+  allocateSalesOrder: 'allocateSalesOrder',
+  shipSalesOrder: 'shipSalesOrder',
+  recordInvoice: 'recordInvoice',
   /** Callable, owner and operations: run the alert rules now. */
   evaluateAlerts: 'evaluateAlerts',
   /** Scheduled: consume domain events, evaluate alert rules. */

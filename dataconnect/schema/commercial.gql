@@ -1,0 +1,129 @@
+# Commercial: who buys, what was offered, what was ordered, which rolls are
+# held for it, and the invoice and payment pointers. Fulfilment is read from
+# allocations and the outbound shipment; nothing here is a hand-set status
+# beyond the lifecycle ones. Money is Int64 ten-thousandths.
+
+enum CustomerType {
+  designer
+  atelier
+  salon
+  manufacturer
+  distributor
+  wholesaler
+}
+
+enum CustomerTier {
+  standard
+  preferred
+  key
+}
+
+enum QuoteState {
+  draft
+  sent
+  accepted
+  declined
+  expired
+}
+
+enum SalesOrderState {
+  draft
+  confirmed
+  shipped
+  closed
+  cancelled
+}
+
+# Commercial terms on a company with the customer role.
+type CustomerProfile @table {
+  company: Company!
+  type: CustomerType
+  tier: CustomerTier!
+  paymentTerms: String @col(dataType: "varchar(120)")
+  currency: String @col(dataType: "varchar(3)")
+  notes: String
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type Quote @table {
+  number: String! @col(dataType: "varchar(16)") @unique
+  customer: Company!
+  contact: Contact
+  currency: String! @col(dataType: "varchar(3)")
+  incoterm: Incoterm
+  namedPlace: String @col(dataType: "varchar(120)")
+  paymentTerms: String @col(dataType: "varchar(120)")
+  validUntil: Date
+  state: QuoteState!
+  sentOn: Date
+  notes: String
+  createdByUid: String @col(dataType: "varchar(128)")
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type QuoteLine @table {
+  quote: Quote!
+  lineNo: Int!
+  sku: Sku!
+  quantity: Int64!
+  unitPrice: Int64!
+  leadTimeDays: Int
+  note: String @col(dataType: "varchar(200)")
+}
+
+type SalesOrder @table {
+  number: String! @col(dataType: "varchar(16)") @unique
+  customer: Company!
+  quote: Quote
+  contact: Contact
+  currency: String! @col(dataType: "varchar(3)")
+  incoterm: Incoterm
+  namedPlace: String @col(dataType: "varchar(120)")
+  paymentTerms: String @col(dataType: "varchar(120)")
+  requestedDelivery: Date
+  shipToName: String @col(dataType: "varchar(200)")
+  shipToAddress: String
+  state: SalesOrderState!
+  confirmedOn: Date
+  notes: String
+  createdByUid: String @col(dataType: "varchar(128)")
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type SalesOrderLine @table {
+  order: SalesOrder!
+  lineNo: Int!
+  sku: Sku!
+  quantity: Int64!
+  uom: String! @col(dataType: "varchar(8)")
+  unitPrice: Int64!
+}
+
+# Stock held for an order line: a lot, a roll when tracked, at a place.
+# Shipping consumes it; cancelling the order releases it.
+type Allocation @table {
+  orderLine: SalesOrderLine!
+  lot: Lot!
+  roll: Roll
+  location: StockLocation!
+  quantity: Int64!
+  shippedOn: Date
+  shipment: Shipment
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# Pointers to the accounting system: the invoice and what was paid against it.
+type InvoiceRef @table {
+  order: SalesOrder!
+  number: String! @col(dataType: "varchar(80)")
+  amount: Int64!
+  currency: String! @col(dataType: "varchar(3)")
+  issuedOn: Date
+  dueOn: Date
+  paidOn: Date
+  paidAmount: Int64
+  externalId: String @col(dataType: "varchar(120)")
+  createdAt: Timestamp! @default(expr: "request.time")
+}

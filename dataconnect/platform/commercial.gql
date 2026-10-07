@@ -1,0 +1,269 @@
+# Commercial reads: quotes, sales orders, their allocations and invoices.
+# Sales sees prices to customers; landed cost and margin come from the
+# costing operations, for the cost roles only.
+
+query ListQuotes
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'sales' || auth.token.role == 'finance' || auth.token.role == 'viewer'") {
+  quotes(orderBy: { createdAt: DESC }, limit: 500) {
+    id
+    number
+    state
+    currency
+    validUntil
+    createdAt
+    customer {
+      id
+      legalName
+      tradingName
+    }
+    quoteLines_on_quote(limit: 100) {
+      quantity
+      unitPrice
+      sku {
+        product {
+          name
+        }
+      }
+    }
+    salesOrders_on_quote(limit: 1) {
+      number
+    }
+  }
+}
+
+query GetQuote($number: String!)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'sales' || auth.token.role == 'finance' || auth.token.role == 'viewer'") {
+  quotes(where: { number: { eq: $number } }, limit: 1) {
+    id
+    number
+    state
+    currency
+    namedPlace
+    paymentTerms
+    validUntil
+    sentOn
+    notes
+    createdAt
+    customer {
+      id
+      legalName
+      tradingName
+    }
+    contact {
+      name
+    }
+    incoterm {
+      code
+    }
+    quoteLines_on_quote(orderBy: { lineNo: ASC }, limit: 100) {
+      id
+      lineNo
+      quantity
+      unitPrice
+      leadTimeDays
+      note
+      sku {
+        code
+        product {
+          name
+        }
+        shade {
+          code
+          name
+          hex
+        }
+      }
+    }
+    salesOrders_on_quote(limit: 1) {
+      number
+    }
+  }
+}
+
+query ListSalesOrders
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'logistics' || auth.token.role == 'sales' || auth.token.role == 'finance' || auth.token.role == 'viewer'") {
+  salesOrders(orderBy: { createdAt: DESC }, limit: 500) {
+    id
+    number
+    state
+    currency
+    requestedDelivery
+    confirmedOn
+    createdAt
+    customer {
+      id
+      legalName
+      tradingName
+    }
+    salesOrderLines_on_order(limit: 100) {
+      id
+      quantity
+      unitPrice
+      sku {
+        product {
+          name
+        }
+      }
+      allocations_on_orderLine(limit: 500) {
+        quantity
+        shippedOn
+        shipment {
+          number
+        }
+      }
+    }
+  }
+}
+
+query GetSalesOrder($number: String!)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'logistics' || auth.token.role == 'sales' || auth.token.role == 'finance' || auth.token.role == 'viewer'") {
+  salesOrders(where: { number: { eq: $number } }, limit: 1) {
+    id
+    number
+    state
+    currency
+    namedPlace
+    paymentTerms
+    requestedDelivery
+    shipToName
+    shipToAddress
+    confirmedOn
+    notes
+    createdAt
+    customer {
+      id
+      legalName
+      tradingName
+    }
+    quote {
+      number
+    }
+    contact {
+      name
+    }
+    incoterm {
+      code
+    }
+    salesOrderLines_on_order(orderBy: { lineNo: ASC }, limit: 100) {
+      id
+      lineNo
+      quantity
+      uom
+      unitPrice
+      sku {
+        code
+        product {
+          name
+        }
+        shade {
+          code
+          name
+          hex
+        }
+      }
+      allocations_on_orderLine(orderBy: { createdAt: ASC }, limit: 500) {
+        id
+        quantity
+        shippedOn
+        lot {
+          number
+        }
+        roll {
+          number
+        }
+        location {
+          name
+        }
+        shipment {
+          number
+        }
+      }
+    }
+    invoiceRefs_on_order(orderBy: { createdAt: ASC }, limit: 50) {
+      id
+      number
+      amount
+      currency
+      issuedOn
+      dueOn
+      paidOn
+      paidAmount
+    }
+  }
+}
+
+# What can be allocated for a SKU: balances in the warehouses with their
+# rolls, and what other orders already hold.
+query StockForSku($skuCode: String!)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'logistics' || auth.token.role == 'sales'") {
+  stockBalances(where: { skuCode: { eq: $skuCode }, onHand: { gt: 0 } }, limit: 500) {
+    onHand
+    updatedAt
+    lot {
+      id
+      number
+      createdAt
+      rolls_on_lot(limit: 500) {
+        number
+        remainingLength
+        stockLocation {
+          id
+        }
+      }
+    }
+    location {
+      id
+      name
+      kind
+    }
+  }
+  allocations(where: { shippedOn: { isNull: true }, lot: { skuCode: { eq: $skuCode } } }, limit: 2000) {
+    quantity
+    lot {
+      number
+    }
+    roll {
+      number
+    }
+    location {
+      id
+    }
+  }
+}
+
+query ListSalesOrdersFor($customerId: UUID!)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'logistics' || auth.token.role == 'sales' || auth.token.role == 'finance' || auth.token.role == 'viewer'") {
+  salesOrders(where: { customerId: { eq: $customerId } }, orderBy: { createdAt: DESC }, limit: 200) {
+    id
+    number
+    state
+    currency
+    requestedDelivery
+    confirmedOn
+    createdAt
+    salesOrderLines_on_order(limit: 100) {
+      id
+      quantity
+      unitPrice
+      sku {
+        product {
+          name
+        }
+      }
+      allocations_on_orderLine(limit: 500) {
+        quantity
+        shippedOn
+        shipment {
+          number
+        }
+      }
+    }
+  }
+  customerProfiles(where: { companyId: { eq: $customerId } }, limit: 1) {
+    type
+    tier
+    paymentTerms
+    currency
+    notes
+  }
+}

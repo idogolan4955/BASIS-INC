@@ -292,7 +292,7 @@ function ContentsPanel({ shipment, manage }: { shipment: ShipmentDetail; manage:
               {shipment.lines.map((line) => (
                 <Tr key={line.id}>
                   <Td>
-                    <Link to={`/manufacturing/purchase-orders/${line.purchaseOrderNumber}`} className="code whitespace-nowrap underline decoration-line-strong underline-offset-4 hover:decoration-ink">
+                    <Link to={line.purchaseOrderNumber.startsWith('SO-') ? `/orders/${line.purchaseOrderNumber}` : `/manufacturing/purchase-orders/${line.purchaseOrderNumber}`} className="code whitespace-nowrap underline decoration-line-strong underline-offset-4 hover:decoration-ink">
                       {line.purchaseOrderNumber}
                     </Link>
                     <span className="code ms-2 text-ink-muted">{line.purchaseOrderLineNo ? `· ${line.purchaseOrderLineNo}` : ''}</span>
@@ -572,7 +572,7 @@ export function ShipmentSheet({ tab }: { tab: 'route' | 'contents' | 'documents'
                 {data.purchaseOrderNumbers.map((po, index) => (
                   <span key={po}>
                     {index > 0 && ', '}
-                    <Link to={`/manufacturing/purchase-orders/${po}`} className="code underline decoration-line-strong underline-offset-4">
+                    <Link to={po.startsWith('SO-') ? `/orders/${po}` : `/manufacturing/purchase-orders/${po}`} className="code underline decoration-line-strong underline-offset-4">
                       {po}
                     </Link>
                   </span>
