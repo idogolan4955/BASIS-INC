@@ -24,6 +24,7 @@ import {
   type LocalDate,
   type ReferenceType,
   type ShipmentDetail,
+  canViewLogisticsCosts,
 } from '@basis/shared';
 import { Button, CheckField, Dialog, LabelHeader, Ledger, Panel, SelectField, ShadeDot, SheetTabs, StatusChip, Td, TextArea, TextField, Th, Timeline, Tr, Track, cn, sheetTabClass, type TrackStep } from '@basis/ui';
 import { useState, type FormEvent } from 'react';
@@ -40,6 +41,7 @@ import { useDocument } from '../../lib/documents';
 import { useRequiredSession } from '../../session';
 import { NotFound } from '../NotFound';
 import { laneOf } from './Logistics';
+import { CostsPanel } from './ShipmentCosts';
 
 // The shipment sheet: its route as a track of legs, what it carries, the
 // documents it must have, and its timeline. Legs record what happened; the
@@ -521,7 +523,7 @@ function ShipmentTimeline({ number }: { number: string }) {
   );
 }
 
-export function ShipmentSheet({ tab }: { tab: 'route' | 'contents' | 'documents' | 'timeline' }) {
+export function ShipmentSheet({ tab }: { tab: 'route' | 'contents' | 'documents' | 'costs' | 'timeline' }) {
   const t = useT();
   const session = useRequiredSession();
   const { number = '' } = useParams();
@@ -533,6 +535,7 @@ export function ShipmentSheet({ tab }: { tab: 'route' | 'contents' | 'documents'
   const [emailing, setEmailing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const manage = ['owner', 'operations', 'logistics'].includes(session.role);
+  const costs = canViewLogisticsCosts(session.role);
   const today = todayIn(Intl.DateTimeFormat().resolvedOptions().timeZone);
 
   if (shipment.isPending) return <p className="px-5 py-10 text-ink-muted lg:px-8">{t('Loading shipment')}</p>;
@@ -623,6 +626,7 @@ export function ShipmentSheet({ tab }: { tab: 'route' | 'contents' | 'documents'
         <NavLink to={base} end className={({ isActive }) => sheetTabClass(isActive)}>{t('Route')}</NavLink>
         <NavLink to={`${base}/contents`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Contents')}</NavLink>
         <NavLink to={`${base}/documents`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Documents')}</NavLink>
+        {costs && <NavLink to={`${base}/costs`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Costs')}</NavLink>}
         <NavLink to={`${base}/timeline`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Timeline')}</NavLink>
       </SheetTabs>
       <div className="flex flex-col gap-4 px-5 py-6 lg:px-8">
@@ -641,6 +645,7 @@ export function ShipmentSheet({ tab }: { tab: 'route' | 'contents' | 'documents'
             <DocumentsPanel entityType="shipment" entityId={data.number} generated={[{ kind: 'shipment-packing-list', label: 'packing list', available: data.units.length > 0 }]} canFile={manage} shareText={`Packing list ${data.number} from BASIS INC.`} />
           </>
         )}
+        {tab === 'costs' && costs && <CostsPanel shipment={data} />}
         {tab === 'timeline' && <ShipmentTimeline number={data.number} />}
       </div>
       {manage && <DetailsDialog key={editing ? 'details-open' : 'details-closed'} shipment={data} open={editing} onClose={() => setEditing(false)} />}

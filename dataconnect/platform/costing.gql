@@ -1,0 +1,171 @@
+# Costing reads. Shipment costs are for the logistics cost roles; landed
+# costs carry purchase prices and are for the cost roles only.
+
+query GetShipmentCosts($number: String!)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'logistics' || auth.token.role == 'finance'") {
+  shipments(where: { number: { eq: $number } }, limit: 1) {
+    id
+    number
+    mode
+    shipmentCosts_on_shipment(orderBy: { createdAt: ASC }, limit: 200) {
+      id
+      category
+      kind
+      amount
+      currency
+      fxRateToBase
+      amountBase
+      invoiceRef
+      invoiceDate
+      isRecoverable
+      note
+      vendor {
+        legalName
+        tradingName
+      }
+    }
+    customsEntries_on_shipment(orderBy: { createdAt: ASC }, limit: 10) {
+      id
+      entryNumber
+      declaredValue
+      declaredCurrency
+      duties
+      taxes
+      state
+      submittedOn
+      clearedOn
+      note
+      country {
+        code
+        name
+      }
+      broker {
+        legalName
+        tradingName
+      }
+    }
+    costAllocationRuns_on_shipment(orderBy: { version: DESC }, limit: 20) {
+      id
+      version
+      kind
+      baseCurrency
+      rules
+      totalBase
+      performedByUid
+      performedAt
+    }
+  }
+}
+
+# Cost-bearing: the lines of a run with what landed on each lot.
+query GetAllocationRun($id: UUID!)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'finance'") {
+  costAllocationRun(id: $id) {
+    id
+    version
+    kind
+    baseCurrency
+    rules
+    totalBase
+    performedAt
+    costAllocationLines_on_run(limit: 2000) {
+      amountBase
+      shipmentCost {
+        category
+      }
+      shipmentLine {
+        id
+        quantity
+        lot {
+          number
+          sku {
+            code
+          }
+        }
+      }
+    }
+    lotCosts_on_run(limit: 200) {
+      lot {
+        number
+      }
+      quantity
+      purchaseUnitCost
+      allocatedUnit
+      landedUnitCost
+      allocated
+    }
+  }
+}
+
+query ListLotCosts
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'finance'") {
+  lotCosts(orderBy: { computedAt: DESC }, limit: 1000) {
+    id
+    version
+    currency
+    quantity
+    purchaseUnitCost
+    allocated
+    allocatedUnit
+    landedUnitCost
+    isFinal
+    computedAt
+    lot {
+      number
+      sku {
+        code
+        product {
+          name
+        }
+        shade {
+          name
+        }
+      }
+    }
+    shipment {
+      number
+    }
+  }
+}
+
+query ListLotCostsFor($lotNumber: String!)
+  @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'finance'") {
+  lotCosts(where: { lot: { number: { eq: $lotNumber } } }, orderBy: { computedAt: DESC }, limit: 20) {
+    id
+    version
+    currency
+    quantity
+    purchaseUnitCost
+    allocated
+    allocatedUnit
+    landedUnitCost
+    isFinal
+    computedAt
+    lot {
+      number
+      sku {
+        code
+        product {
+          name
+        }
+        shade {
+          name
+        }
+      }
+    }
+    shipment {
+      number
+    }
+  }
+}
+
+query ListFxRates @auth(level: USER) {
+  fxRates(orderBy: { rateDate: DESC }, limit: 500) {
+    id
+    base
+    quote
+    rateDate
+    rate
+    source
+  }
+}

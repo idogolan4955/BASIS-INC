@@ -77,6 +77,7 @@ describe('health', () => {
   it('is on track while the plan holds', () => {
     expect(shipmentHealth('booked', seaRoute(), d('2026-09-28'))).toBe('on_track');
     expect(shipmentHealth('draft', seaRoute(), d('2026-12-01'))).toBe('on_track');
+    expect(shipmentHealth('booked', seaRoute(), d('2026-09-28'), true)).toBe('blocked');
   });
   it('slips with the final arrival', () => {
     expect(shipmentHealth('booked', seaRoute({ 5: { eta: d('2026-11-11') } }), d('2026-09-28'))).toBe('at_risk');

@@ -1,4 +1,4 @@
-import { LOT_QUALITY_LABEL, LOT_QUALITY_STATES, LOT_QUALITY_TONE, formatLocalDate, formatQuantity, metresNumber, quantityFromStored, type LotDetail, type LotQualityState } from '@basis/shared';
+import { LOT_QUALITY_LABEL, LOT_QUALITY_STATES, LOT_QUALITY_TONE, canViewCosts, formatLocalDate, formatMoney, formatQuantity, metresNumber, moneyFromStored, quantityFromStored, type LotDetail, type LotQualityState } from '@basis/shared';
 import { Button, Dialog, LabelHeader, Ledger, Panel, SelectField, ShadeDot, SheetTabs, StatusChip, Td, TextArea, Th, Timeline, Tr, sheetTabClass } from '@basis/ui';
 import { useState, type FormEvent } from 'react';
 import { Link, NavLink, useParams } from 'react-router';
@@ -12,6 +12,7 @@ import { useInspectionsFor } from '../../data/quality';
 import { NewInspectionDialog } from '../qc/Qc';
 import { INSPECTION_RESULT_LABEL, INSPECTION_RESULT_TONE, INSPECTION_STATE_LABEL, INSPECTION_STATE_TONE, INSPECTION_TYPE_LABEL } from '@basis/shared';
 import { useRequiredSession } from '../../session';
+import { useLotCostsFor } from '../../data/costing';
 import { NotFound } from '../NotFound';
 import { useT } from '../../i18n';
 
@@ -83,6 +84,9 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
   const inspections = useInspectionsFor('lot', number);
   const pdf = useDocument();
   const quality = session.role === 'owner' || session.role === 'qc';
+  const costRole = canViewCosts(session.role);
+  const lotCosts = useLotCostsFor(number, costRole);
+  const landed = lotCosts.data?.[0] ?? null;
 
   if (lot.isPending) return <p className="px-5 py-10 text-ink-muted lg:px-8">{t('Loading lot')}</p>;
   if (lot.error) return <p className="px-5 py-10 text-critical lg:px-8">The lot could not be loaded. {lot.error.message}</p>;
@@ -126,6 +130,7 @@ export function LotSheet({ tab }: { tab: 'rolls' | 'documents' | 'timeline' }) {
           { label: t('Mill lot'), value: data.millLotRef || '—' },
           { label: t('Produced'), value: dateOrDash(data.producedOn) },
           { label: t('Ready to ship'), value: <span className={ready !== '0' ? 'text-positive' : undefined}>{metres(ready)}</span> },
+          ...(costRole && landed ? [{ label: t('Landed cost'), value: <Link to={`/logistics/shipments/${landed.shipmentNumber}/costs`} className="underline decoration-line-strong underline-offset-4">{formatMoney(moneyFromStored(landed.landedUnitCost, landed.currency), 4)} / m{landed.isFinal ? '' : ` (${t('estimate')})`}</Link> }] : []),
         ]}
         actions={
           <>

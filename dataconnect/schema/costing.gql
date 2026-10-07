@@ -1,0 +1,117 @@
+# Costing: what a shipment cost and how it lands on the goods. Costs are
+# recorded as estimates and then actuals; an allocation run spreads them over
+# the shipment's lines by a basis per category and writes each lot's landed
+# cost. Amounts are Int64 ten-thousandths; rates are decimal strings.
+
+enum CostCategory {
+  freight
+  origin_charges
+  insurance
+  duty
+  tax
+  brokerage
+  local_delivery
+  other
+}
+
+enum CostKind {
+  estimate
+  actual
+}
+
+enum AllocationKind {
+  estimate
+  final
+}
+
+enum CustomsState {
+  preparing
+  submitted
+  held
+  cleared
+}
+
+# A daily rate from one currency to another, as recorded or fetched.
+type FxRate @table {
+  base: String! @col(dataType: "varchar(3)")
+  quote: String! @col(dataType: "varchar(3)")
+  rateDate: Date!
+  # One unit of quote in base, as a decimal string.
+  rate: String! @col(dataType: "varchar(24)")
+  source: String @col(dataType: "varchar(40)")
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type ShipmentCost @table {
+  shipment: Shipment!
+  category: CostCategory!
+  kind: CostKind!
+  amount: Int64!
+  currency: String! @col(dataType: "varchar(3)")
+  # The rate used to carry the amount into the base currency, as a decimal string.
+  fxRateToBase: String! @col(dataType: "varchar(24)")
+  amountBase: Int64!
+  vendor: Company
+  invoiceRef: String @col(dataType: "varchar(80)")
+  invoiceDate: Date
+  # Recoverable taxes (VAT) are recorded but never land on the goods.
+  isRecoverable: Boolean!
+  note: String
+  createdByUid: String @col(dataType: "varchar(128)")
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type CustomsEntry @table {
+  shipment: Shipment!
+  country: Country
+  broker: Company
+  entryNumber: String @col(dataType: "varchar(80)")
+  declaredValue: Int64
+  declaredCurrency: String @col(dataType: "varchar(3)")
+  duties: Int64
+  taxes: Int64
+  state: CustomsState!
+  submittedOn: Date
+  clearedOn: Date
+  note: String
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+# One spreading of a shipment's costs. An estimate when booked; a final run
+# when every cost is actual. Finalising is audited.
+type CostAllocationRun @table {
+  shipment: Shipment!
+  version: Int!
+  kind: AllocationKind!
+  baseCurrency: String! @col(dataType: "varchar(3)")
+  # { category: basis } as used by this run.
+  rules: Any
+  totalBase: Int64!
+  performedByUid: String @col(dataType: "varchar(128)")
+  performedAt: Timestamp! @default(expr: "request.time")
+}
+
+type CostAllocationLine @table {
+  run: CostAllocationRun!
+  shipmentCost: ShipmentCost!
+  shipmentLine: ShipmentLine!
+  amountBase: Int64!
+}
+
+# A lot's cost per unit after a run: purchase price plus what landed on it.
+type LotCost @table {
+  lot: Lot!
+  shipment: Shipment
+  run: CostAllocationRun
+  version: Int!
+  currency: String! @col(dataType: "varchar(3)")
+  quantity: Int64!
+  purchaseUnitCost: Int64!
+  # { category: amount } landed on the lot, in the base currency.
+  allocated: Any
+  allocatedUnit: Int64!
+  landedUnitCost: Int64!
+  isFinal: Boolean!
+  computedAt: Timestamp! @default(expr: "request.time")
+}

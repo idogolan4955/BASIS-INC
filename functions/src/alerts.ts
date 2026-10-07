@@ -352,6 +352,32 @@ export const RULES: Rule[] = [
     },
   },
   {
+    key: 'costing.final_pending',
+    async evaluate(now) {
+      const { shipments } = await graphql<{ shipments: { number: string; destination: { name: string }; shipmentLegs_on_shipment: LegFacts[]; costAllocationRuns_on_shipment: { kind: string }[]; shipmentCosts_on_shipment: { kind: string }[] }[] }>(
+        `query { shipments(where: { state: { eq: booked } }, limit: 500) { number destination { name } shipmentLegs_on_shipment(orderBy: { sequence: ASC }) { type sequence plannedEtd plannedEta etd eta atd ata } costAllocationRuns_on_shipment { kind } shipmentCosts_on_shipment { kind } } }`,
+      );
+      const today = isoDate(now) as LocalDate;
+      return shipments
+        .filter((shipment) => shipment.shipmentLegs_on_shipment.length > 0 && shipment.shipmentLegs_on_shipment.every((leg) => legStatus(leg) === 'arrived') && !shipment.costAllocationRuns_on_shipment.some((run) => run.kind === 'final'))
+        .map((shipment) => {
+          const delivered = shipmentDates(shipment.shipmentLegs_on_shipment).eta;
+          const days = delivered ? daysBetween(delivered, today) : 0;
+          return { shipment, days };
+        })
+        .filter(({ days }) => days >= 7)
+        .map(({ shipment, days }) => ({
+          entityType: 'shipment',
+          entityId: shipment.number,
+          title: `${shipment.number}: landed cost not final`,
+          detail: `Delivered to ${shipment.destination.name} ${days} days ago; ${shipment.shipmentCosts_on_shipment.some((cost) => cost.kind === 'actual') ? 'actual costs recorded but not finalised' : 'no actual costs recorded yet'}.`,
+          severity: (days > 30 ? 'critical' : 'caution') as Severity,
+          ownerRole: 'finance' as Role,
+          dedupeKey: `costing.final_pending:${shipment.number}`,
+        }));
+    },
+  },
+  {
     key: 'customers.inquiry_new',
     async evaluate() {
       const { inquiries } = await graphql<{ inquiries: { reference: string; kind: string; name: string; company: string | null; country: string | null; createdAt: string }[] }>(

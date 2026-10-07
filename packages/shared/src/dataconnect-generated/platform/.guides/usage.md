@@ -14,38 +14,38 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { listCompanies, getCompany, listFactories, insertCompany, updateCompany, archiveCompany, addCompanyRole, removeCompanyRole, insertContact, updateContact } from '@basis/dataconnect-platform';
+import { listInspections, listInspectionsFor, getInspection, listInspectionTemplates, listCorrectiveActions, getMe, listUsers, listOpenAlerts, listMyTasks, listTimeline } from '@basis/dataconnect-platform';
 
 
-// Operation ListCompanies: 
-const { data } = await ListCompanies(dataConnect);
+// Operation ListInspections: 
+const { data } = await ListInspections(dataConnect);
 
-// Operation GetCompany:  For variables, look at type GetCompanyVars in ../index.d.ts
-const { data } = await GetCompany(dataConnect, getCompanyVars);
+// Operation ListInspectionsFor:  For variables, look at type ListInspectionsForVars in ../index.d.ts
+const { data } = await ListInspectionsFor(dataConnect, listInspectionsForVars);
 
-// Operation ListFactories: 
-const { data } = await ListFactories(dataConnect);
+// Operation GetInspection:  For variables, look at type GetInspectionVars in ../index.d.ts
+const { data } = await GetInspection(dataConnect, getInspectionVars);
 
-// Operation InsertCompany:  For variables, look at type InsertCompanyVars in ../index.d.ts
-const { data } = await InsertCompany(dataConnect, insertCompanyVars);
+// Operation ListInspectionTemplates: 
+const { data } = await ListInspectionTemplates(dataConnect);
 
-// Operation UpdateCompany:  For variables, look at type UpdateCompanyVars in ../index.d.ts
-const { data } = await UpdateCompany(dataConnect, updateCompanyVars);
+// Operation ListCorrectiveActions: 
+const { data } = await ListCorrectiveActions(dataConnect);
 
-// Operation ArchiveCompany:  For variables, look at type ArchiveCompanyVars in ../index.d.ts
-const { data } = await ArchiveCompany(dataConnect, archiveCompanyVars);
+// Operation GetMe: 
+const { data } = await GetMe(dataConnect);
 
-// Operation AddCompanyRole:  For variables, look at type AddCompanyRoleVars in ../index.d.ts
-const { data } = await AddCompanyRole(dataConnect, addCompanyRoleVars);
+// Operation ListUsers: 
+const { data } = await ListUsers(dataConnect);
 
-// Operation RemoveCompanyRole:  For variables, look at type RemoveCompanyRoleVars in ../index.d.ts
-const { data } = await RemoveCompanyRole(dataConnect, removeCompanyRoleVars);
+// Operation ListOpenAlerts: 
+const { data } = await ListOpenAlerts(dataConnect);
 
-// Operation InsertContact:  For variables, look at type InsertContactVars in ../index.d.ts
-const { data } = await InsertContact(dataConnect, insertContactVars);
+// Operation ListMyTasks: 
+const { data } = await ListMyTasks(dataConnect);
 
-// Operation UpdateContact:  For variables, look at type UpdateContactVars in ../index.d.ts
-const { data } = await UpdateContact(dataConnect, updateContactVars);
+// Operation ListTimeline:  For variables, look at type ListTimelineVars in ../index.d.ts
+const { data } = await ListTimeline(dataConnect, listTimelineVars);
 
 
 ```

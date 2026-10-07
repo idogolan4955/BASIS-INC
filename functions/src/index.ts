@@ -7,6 +7,7 @@ import { markInquiry } from './intake';
 import { createCorrectiveAction, createInspection, recordInspection, signOffInspection, submitInspection, updateCorrectiveAction } from './quality';
 import { cancelPurchaseOrder, confirmPurchaseOrder, createProductionRun, createPurchaseOrder, issuePurchaseOrder, packHandlingUnit, recordLot, setLotQuality, updateMilestone } from './manufacturing';
 import { assignHandlingUnits, bookShipment, cancelShipment, createShipment, removeHandlingUnits, updateLeg, updateShipment } from './logistics';
+import { allocateShipmentCosts, recordCustomsEntry, recordShipmentCost, setFxRate } from './costing';
 import { sweepEvents } from './sweep';
 import { inviteUser, setUserRole } from './users';
 
@@ -47,7 +48,11 @@ const registry: Record<FunctionName, unknown> = {
   bookShipment,
   cancelShipment,
   updateLeg,
+  recordShipmentCost,
+  recordCustomsEntry,
+  setFxRate,
+  allocateShipmentCosts,
 };
 void registry;
 
-export { api, evaluateAlerts, inviteUser, setUserRole, sweepEvents, createPurchaseOrder, issuePurchaseOrder, confirmPurchaseOrder, cancelPurchaseOrder, createProductionRun, updateMilestone, recordLot, packHandlingUnit, setLotQuality, fileGeneratedDocument, sendDocumentEmail, createApiToken, revokeApiToken, saveConnector, connectorStatus, markInquiry, createInspection, recordInspection, submitInspection, signOffInspection, createCorrectiveAction, updateCorrectiveAction, createShipment, updateShipment, assignHandlingUnits, removeHandlingUnits, bookShipment, cancelShipment, updateLeg };
+export { api, evaluateAlerts, inviteUser, setUserRole, sweepEvents, createPurchaseOrder, issuePurchaseOrder, confirmPurchaseOrder, cancelPurchaseOrder, createProductionRun, updateMilestone, recordLot, packHandlingUnit, setLotQuality, fileGeneratedDocument, sendDocumentEmail, createApiToken, revokeApiToken, saveConnector, connectorStatus, markInquiry, createInspection, recordInspection, submitInspection, signOffInspection, createCorrectiveAction, updateCorrectiveAction, createShipment, updateShipment, assignHandlingUnits, removeHandlingUnits, bookShipment, cancelShipment, updateLeg, recordShipmentCost, recordCustomsEntry, setFxRate, allocateShipmentCosts };

@@ -51,6 +51,11 @@ export const FUNCTION_NAMES = {
   bookShipment: 'bookShipment',
   cancelShipment: 'cancelShipment',
   updateLeg: 'updateLeg',
+  /** Callable, logistics cost roles: costs, customs and rates; landed cost allocation for owner, operations and finance. */
+  recordShipmentCost: 'recordShipmentCost',
+  recordCustomsEntry: 'recordCustomsEntry',
+  setFxRate: 'setFxRate',
+  allocateShipmentCosts: 'allocateShipmentCosts',
   /** Callable, owner and operations: run the alert rules now. */
   evaluateAlerts: 'evaluateAlerts',
   /** Scheduled: consume domain events, evaluate alert rules. */

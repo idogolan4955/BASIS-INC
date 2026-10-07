@@ -69,6 +69,16 @@ export interface CorrectiveAction_Key {
   __typename?: 'CorrectiveAction_Key';
 }
 
+export interface CostAllocationLine_Key {
+  id: UUIDString;
+  __typename?: 'CostAllocationLine_Key';
+}
+
+export interface CostAllocationRun_Key {
+  id: UUIDString;
+  __typename?: 'CostAllocationRun_Key';
+}
+
 export interface Country_Key {
   code: string;
   __typename?: 'Country_Key';
@@ -77,6 +87,11 @@ export interface Country_Key {
 export interface Currency_Key {
   code: string;
   __typename?: 'Currency_Key';
+}
+
+export interface CustomsEntry_Key {
+  id: UUIDString;
+  __typename?: 'CustomsEntry_Key';
 }
 
 export interface Defect_Key {
@@ -112,6 +127,11 @@ export interface FabricFamily_Key {
 export interface Factory_Key {
   id: UUIDString;
   __typename?: 'Factory_Key';
+}
+
+export interface FxRate_Key {
+  id: UUIDString;
+  __typename?: 'FxRate_Key';
 }
 
 export interface HandlingUnitContent_Key {
@@ -169,6 +189,11 @@ export interface ListCountriesPublicData {
 export interface Location_Key {
   id: UUIDString;
   __typename?: 'Location_Key';
+}
+
+export interface LotCost_Key {
+  id: UUIDString;
+  __typename?: 'LotCost_Key';
 }
 
 export interface Lot_Key {
@@ -281,6 +306,11 @@ export interface ShadeStandard_Key {
 export interface Shade_Key {
   code: string;
   __typename?: 'Shade_Key';
+}
+
+export interface ShipmentCost_Key {
+  id: UUIDString;
+  __typename?: 'ShipmentCost_Key';
 }
 
 export interface ShipmentLeg_Key {

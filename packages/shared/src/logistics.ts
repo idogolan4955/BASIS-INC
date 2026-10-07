@@ -159,10 +159,12 @@ export function shipmentProgress(legs: readonly LegFacts[], today: LocalDate): n
  * Health read from the legs against their plan. Delayed when the final
  * arrival has slipped three days or more, a leg underway is past its
  * arrival, or a departure is more than two days overdue; at risk on a
- * smaller slip or a departure that is late by a day or two.
+ * smaller slip or a departure that is late by a day or two. Blocked while
+ * customs holds it.
  */
-export function shipmentHealth(state: ShipmentState, legs: readonly LegFacts[], today: LocalDate): Health {
+export function shipmentHealth(state: ShipmentState, legs: readonly LegFacts[], today: LocalDate, customsHeld = false): Health {
   if (state !== 'booked') return 'on_track';
+  if (customsHeld) return 'blocked';
   const sorted = forecastLegs(legs);
   const open = sorted.filter((leg) => legStatus(leg) !== 'arrived');
   if (open.length === 0) return 'on_track';

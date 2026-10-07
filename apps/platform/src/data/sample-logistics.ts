@@ -75,6 +75,7 @@ interface ShipmentRecord {
   shipmentLines_on_shipment: LineRecord[];
   /** Package numbers; the packages themselves live with their run or in `fictionalUnits`. */
   unitNumbers: string[];
+  customsHeld?: boolean;
   shipmentReferences_on_shipment: { id: string; type: ReferenceType; value: string }[];
 }
 
@@ -239,7 +240,7 @@ function find(number: string): ShipmentRecord {
 const departed = (shipment: ShipmentRecord) => shipment.shipmentLegs_on_shipment.some((leg) => legStatus(leg as never) !== 'pending');
 
 function derive(shipment: ShipmentRecord): void {
-  shipment.health = shipmentHealth(shipment.state, shipment.shipmentLegs_on_shipment as never, today());
+  shipment.health = shipmentHealth(shipment.state, shipment.shipmentLegs_on_shipment as never, today(), shipment.customsHeld ?? false);
 }
 
 export const sampleLogistics = {
@@ -357,6 +358,11 @@ export const sampleLogistics = {
     shipment.unitNumbers = [];
     shipment.shipmentLines_on_shipment = [];
     return { number, state: 'cancelled' };
+  },
+  async setCustomsHeld(number: string, held: boolean): Promise<void> {
+    const shipment = find(number);
+    shipment.customsHeld = held;
+    derive(shipment);
   },
   async updateLeg(input: LegUpdateInput): Promise<{ number: string; health: ShipmentRecord['health']; stage: string }> {
     const shipment = find(input.number);

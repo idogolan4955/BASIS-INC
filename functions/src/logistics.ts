@@ -39,19 +39,21 @@ interface ShipmentRow {
   state: 'draft' | 'booked' | 'closed' | 'cancelled';
   health: string;
   origin: { id: string; name: string };
-  destination: { id: string; name: string };
+  destination: { id: string; name: string; country: { code: string } | null };
   shipmentLegs_on_shipment: LegRow[];
   handlingUnits_on_shipment: { id: string; number: string }[];
   shipmentLines_on_shipment: { id: string; purchaseOrderLine: { id: string; purchaseOrder: { number: string } } }[];
+  customsEntries_on_shipment: { state: string }[];
 }
 
-async function loadShipment(number: string): Promise<ShipmentRow> {
+export async function loadShipment(number: string): Promise<ShipmentRow> {
   const { shipments } = await graphql<{ shipments: ShipmentRow[] }>(
     `query ($number: String!) { shipments(where: { number: { eq: $number } }, limit: 1) {
-       id number flow mode state health origin { id name } destination { id name }
+       id number flow mode state health origin { id name } destination { id name country { code } }
        shipmentLegs_on_shipment(orderBy: { sequence: ASC }) { id type sequence mode plannedEtd plannedEta etd eta atd ata fromLocation { name city } toLocation { name city } }
        handlingUnits_on_shipment { id number }
-       shipmentLines_on_shipment { id purchaseOrderLine { id purchaseOrder { number } } } } }`,
+       shipmentLines_on_shipment { id purchaseOrderLine { id purchaseOrder { number } } }
+       customsEntries_on_shipment { state } } }`,
     { number },
   );
   const shipment = shipments[0];
@@ -62,8 +64,8 @@ async function loadShipment(number: string): Promise<ShipmentRow> {
 const departed = (shipment: ShipmentRow) => shipment.shipmentLegs_on_shipment.some((leg) => legStatus(leg) !== 'pending');
 
 /** Writes the health the legs imply; returns what the shipment now looks like. */
-async function deriveShipment(shipment: ShipmentRow, legs: readonly LegFacts[]): Promise<{ health: string; stage: string }> {
-  const health = shipmentHealth(shipment.state, legs, today());
+export async function deriveShipment(shipment: ShipmentRow, legs: readonly LegFacts[]): Promise<{ health: string; stage: string }> {
+  const health = shipmentHealth(shipment.state, legs, today(), shipment.customsEntries_on_shipment.some((entry) => entry.state === 'held'));
   const stage = shipmentStage(shipment.state, legs);
   if (health !== shipment.health) {
     await graphql(`mutation ($id: UUID!, $health: Health!) { shipment_update(id: $id, data: { health: $health, updatedAt_expr: "request.time" }) }`, { id: shipment.id, health });
