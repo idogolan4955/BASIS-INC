@@ -15,6 +15,9 @@
   --color-bone: #f3eee6;
   --color-linen: #ece5d9;
   --color-sand: #e3d8c8;
+  /* Two light powders: the brand's blush, for tints that must read as skin rather than paper. */
+  --color-powder: #f0dfd5;
+  --color-powder-deep: #e5c9ba;
   --color-nude: #c4a88e;
   --color-nude-deep: #9f7a5c;
   --color-cocoa: #6b4f3f;

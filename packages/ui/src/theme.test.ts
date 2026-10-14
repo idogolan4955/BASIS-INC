@@ -43,8 +43,16 @@ describe('contrast', () => {
     for (const surface of SURFACES) expect(contrast('nude-deep', surface)).toBeGreaterThanOrEqual(3);
   });
 
+  it('charcoal and cocoa stay readable on the powders', () => {
+    for (const ground of ['powder', 'powder-deep']) {
+      expect(contrast('charcoal', ground)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast('cocoa', ground)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
   it('nude and sand are never text colours on light surfaces', () => {
     expect(contrast('nude', 'milk')).toBeLessThan(4.5);
     expect(contrast('sand', 'milk')).toBeLessThan(4.5);
+    expect(contrast('powder', 'milk')).toBeLessThan(4.5);
+    expect(contrast('powder-deep', 'milk')).toBeLessThan(4.5);
   });
 });

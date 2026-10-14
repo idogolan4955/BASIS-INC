@@ -93,6 +93,8 @@ Both share palette, typefaces, borders, radii, the five signatures and iconograp
 | `bone` | `#F3EEE6` | The page |
 | `linen` | `#ECE5D9` | Sunken areas, the title band |
 | `sand` | `#E3D8C8` | Selection, strong tints |
+| `powder` | `#F0DFD5` | Light powder. Tints that must read as skin rather than paper: a shade chip's ground, the warm highlight behind a brand moment, a hover on nude elements |
+| `powder-deep` | `#E5C9BA` | Deeper powder. Selected rows in a skin-tone context, the fill of a fabric drawing, a tag on bone |
 | `nude` | `#C4A88E` | Brand skin tone. The selvedge, avatars, fabric drawings |
 | `nude-deep` | `#9F7A5C` | The accent wherever it must be seen as a graphic on a light surface |
 | `cocoa` | `#6B4F3F` | Secondary text |
