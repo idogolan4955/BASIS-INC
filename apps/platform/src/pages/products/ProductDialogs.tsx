@@ -252,7 +252,7 @@ export function NewSkusDialog({ product, shades, open, onClose }: { product: Pro
         <div className="flex justify-end gap-3 sm:col-span-2">
           <Button onClick={onClose}>{t('Cancel')}</Button>
           <Button type="submit" variant="primary" busy={create.isPending} busyLabel={t('Saving')}>
-            Create {chosen.length > 0 ? `${chosen.length} ` : ''}SKU{chosen.length === 1 ? '' : 's'}
+            {chosen.length > 0 ? t('Create {count} SKUs', { count: chosen.length }) : t('Create SKUs')}
           </Button>
         </div>
       </form>

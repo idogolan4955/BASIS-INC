@@ -1196,4 +1196,6 @@ export const HE: Record<string, string> = {
   'Leave empty to add variants later.': 'השאירו ריק כדי להוסיף וריאנטים אחר כך.',
   'Shades offered': 'גוונים מוצעים',
   'Create product and {count} SKUs': 'יצירת מוצר ו-{count} מק״טים',
+  'Create {count} SKUs': 'יצירת {count} מק״טים',
+  'Create SKUs': 'יצירת מק״טים',
 };
