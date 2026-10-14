@@ -9,7 +9,7 @@ import {
   type ShadeView,
   type SkuStatus,
 } from '@basis/shared';
-import { Button, CheckField, Dialog, SelectField, ShadeDot, TextArea, TextField } from '@basis/ui';
+import { Button, CheckField, Dialog, SelectField, ShadePalette, TextArea, TextField } from '@basis/ui';
 import { useState, type FormEvent } from 'react';
 import { useAddShadeStandard, useCreateSkus, useCreateVariant, usePutUps, useUpdateProduct } from '../../data/catalog';
 import { useFactories } from '../../data/parties';
@@ -212,7 +212,7 @@ export function NewSkusDialog({ product, shades, open, onClose }: { product: Pro
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title={t('New SKUs')} description={t('One SKU per chosen shade: the variant, in the shade, in the put-up.')}>
+    <Dialog open={open} onClose={onClose} title={t('New SKUs')} description={t('One SKU per chosen shade: the variant, in the shade, in the put-up.')} className="w-[min(64rem,calc(100vw-2rem))]">
       <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
         <SelectField label={t('Variant')} required value={variantId} onChange={(event) => setVariantId(event.target.value)}>
           {product.variants.length === 0 && <option value="">{t('No variants yet')}</option>}
@@ -230,26 +230,15 @@ export function NewSkusDialog({ product, shades, open, onClose }: { product: Pro
           ))}
         </SelectField>
         <fieldset className="sm:col-span-2">
-          <legend className="mb-2 text-xs font-medium text-ink-soft">{t('Shades')}</legend>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {shades.map((shade) => {
-              const taken = existing.has(shade.code);
-              return (
-                <label key={shade.code} className={`flex items-center gap-3 rounded-xs border px-3 py-2 ${taken ? 'border-line text-ink-muted' : 'cursor-pointer border-line-strong'}`}>
-                  <input
-                    type="checkbox"
-                    disabled={taken}
-                    checked={chosen.includes(shade.code)}
-                    onChange={() => setChosen((current) => (current.includes(shade.code) ? current.filter((c) => c !== shade.code) : [...current, shade.code]))}
-                    className="size-4 accent-charcoal"
-                  />
-                  <ShadeDot hex={shade.hex} name={shade.name} code={shade.code} size="sm" />
-                  <span className="flex-1 text-sm">{shade.name}</span>
-                  <span className="code text-ink-muted">{taken ? 'exists' : variant ? skuCode(product.code, variant.code, shade.code) : shade.code}</span>
-                </label>
-              );
-            })}
-          </div>
+          <legend className="caps mb-3 text-ink-soft">{t('Shades')}</legend>
+          <ShadePalette
+            shades={shades}
+            selected={new Set(chosen)}
+            onToggle={(code) => setChosen((current) => (current.includes(code) ? current.filter((c) => c !== code) : [...current, code]))}
+            taken={new Map([...existing].map((code) => [code, t('exists')]))}
+            captionFor={(code) => (variant ? skuCode(product.code, variant.code, code) : code)}
+            words={{ all: t('Choose all'), none: t('Clear'), chosen: t('chosen') }}
+          />
         </fieldset>
         <SelectField label={t('Starting status')} value={status} onChange={(event) => setStatus(event.target.value as SkuStatus)}>
           {SKU_STATUSES.map((candidate) => (

@@ -1178,4 +1178,22 @@ export const HE: Record<string, string> = {
   'Awaiting stock': 'ממתין למלאי',
   'Partly allocated': 'הוקצה חלקית',
   Allocated: 'הוקצה',
+
+  // Shade palette
+  'Choose all': 'בחירת הכל',
+  exists: 'קיים',
+  'The product code is 2 to 8 letters or digits, such as PWM.': 'קוד המוצר הוא 2 עד 8 אותיות או ספרות, כמו PWM.',
+  'Choose the fabric family.': 'בחרו את משפחת הבד.',
+  'The index is the product’s number in the range, 1 or more.': 'האינדקס הוא מספר המוצר בקולקציה, 1 ומעלה.',
+  'Give the product its name.': 'תנו למוצר את שמו.',
+  'The variant code is 1 to 8 letters or digits, such as 160.': 'קוד הווריאנט הוא 1 עד 8 אותיות או ספרות, כמו 160.',
+  'No put-up is defined yet; add one before creating SKUs.': 'עדיין לא הוגדרה אריזה; הוסיפו אחת לפני יצירת מק״טים.',
+  'The product could not be saved.': 'לא ניתן היה לשמור את המוצר.',
+  'A named fabric within a family, its first variant, and the shades it is offered in: one SKU per chosen shade, in development until approved.': 'בד עם שם בתוך משפחה, הווריאנט הראשון שלו, והגוונים שבהם הוא מוצע: מק״ט אחד לכל גוון שנבחר, בפיתוח עד לאישור.',
+  'First variant': 'וריאנט ראשון',
+  'Variant code': 'קוד וריאנט',
+  'Variant name': 'שם וריאנט',
+  'Leave empty to add variants later.': 'השאירו ריק כדי להוסיף וריאנטים אחר כך.',
+  'Shades offered': 'גוונים מוצעים',
+  'Create product and {count} SKUs': 'יצירת מוצר ו-{count} מק״טים',
 };

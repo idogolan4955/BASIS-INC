@@ -62,7 +62,7 @@ These recur across the public site and the platform and are what make both unmis
 | Signature | What it is | Where it appears |
 |---|---|---|
 | **The index number** | Two-digit numerals in mono — `01`, `02` — as on a swatch book | Product names, module numbers, section numbering, steps |
-| **The swatch** | A square chip for a state; a round swatch for a shade or material | Status indicators, filters, legends; shades and material windows |
+| **The swatch** | A square chip for a state; a round swatch for a shade or material. One exception: the **shade palette** (`ShadePalette` in `@basis/ui`), where a person chooses the shades an item is offered in, lays every shade out as a large numbered colour chip grouped by collection, like a mill's colour card; it is a choosing surface, not a status, and the chosen chips carry a ring and a tick | Status indicators, filters, legends; shades and material windows; the palette in the new-product and new-SKU dialogs |
 | **The selvedge** | A thin strip along one edge carrying identity, like the woven edge of a fabric | Active navigation, row state, section markers, page edges |
 | **The label** | A bordered block of key facts set in mono and caps, like a roll label | Record headers in the platform; specification blocks on the site |
 | **The hand** | A bold marker-written word | Product names on the site; nowhere in operational UI except the product's own name |

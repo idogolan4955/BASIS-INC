@@ -3,6 +3,7 @@ import {
   PRODUCT_STATUS_LABEL,
   PRODUCT_STATUS_TONE,
   canManageModule,
+  skuCode,
   type ProductStatus,
   type ProductSummary,
 } from '@basis/shared';
@@ -14,6 +15,7 @@ import {
   Panel,
   SelectField,
   ShadeDot,
+  ShadePalette,
   StatusChip,
   Structure,
   Td,
@@ -25,8 +27,8 @@ import {
 } from '@basis/ui';
 import { Plus } from '@phosphor-icons/react';
 import { useState, type FormEvent } from 'react';
-import { Link, NavLink } from 'react-router';
-import { useCreateProduct, useFamilies, useProducts, useShades } from '../../data/catalog';
+import { Link, NavLink, useNavigate } from 'react-router';
+import { useCreateProduct, useCreateSkus, useCreateVariant, useFamilies, useProducts, usePutUps, useShades } from '../../data/catalog';
 import { useRequiredSession } from '../../session';
 import { useT } from '../../i18n';
 
@@ -74,33 +76,52 @@ export function ModuleTitle({ number, title, children, actions }: { number: stri
 
 function NewProductDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useT();
+  const navigate = useNavigate();
   const families = useFamilies();
+  const shades = useShades();
+  const putUps = usePutUps();
   const create = useCreateProduct();
-  const [form, setForm] = useState({ code: '', family: '', index: '', name: '', tagline: '', description: '', status: 'draft' as ProductStatus });
+  const createVariant = useCreateVariant();
+  const createSkus = useCreateSkus();
+  const [form, setForm] = useState({ code: '', family: '', index: '', name: '', tagline: '', description: '', status: 'draft' as ProductStatus, variantCode: '160', variantName: '160 cm', widthCm: '160', usableWidthCm: '', gsm: '' });
+  const [chosen, setChosen] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const set = (key: keyof typeof form) => (event: { target: { value: string } }) => setForm((f) => ({ ...f, [key]: event.target.value }));
+  const busy = create.isPending || createVariant.isPending || createSkus.isPending;
+  const code = form.code.trim().toUpperCase();
+  const variantCode = form.variantCode.trim().toUpperCase();
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setError(null);
-    const code = form.code.trim().toUpperCase();
-    if (!/^[A-Z0-9]{2,8}$/.test(code)) return setError('The product code is 2 to 8 letters or digits, such as PWM.');
-    if (!form.family) return setError('Choose the fabric family.');
+    if (!/^[A-Z0-9]{2,8}$/.test(code)) return setError(t('The product code is 2 to 8 letters or digits, such as PWM.'));
+    if (!form.family) return setError(t('Choose the fabric family.'));
     const index = Number(form.index);
-    if (!Number.isInteger(index) || index < 1) return setError('The index is the product’s number in the range, 1 or more.');
-    if (!form.name.trim()) return setError('Give the product its name.');
+    if (!Number.isInteger(index) || index < 1) return setError(t('The index is the product\u2019s number in the range, 1 or more.'));
+    if (!form.name.trim()) return setError(t('Give the product its name.'));
+    const withVariant = chosen.size > 0 || form.variantCode.trim() !== '';
+    if (withVariant && !/^[A-Z0-9]{1,8}$/.test(variantCode)) return setError(t('The variant code is 1 to 8 letters or digits, such as 160.'));
     try {
       await create.mutateAsync({ code, family: form.family, index, name: form.name.trim(), tagline: form.tagline.trim(), description: form.description.trim(), status: form.status });
-      setForm({ code: '', family: '', index: '', name: '', tagline: '', description: '', status: 'draft' });
+      if (withVariant) {
+        const numberOrNull = (value: string) => (value.trim() ? Number(value) : null);
+        const variant = await createVariant.mutateAsync({ productCode: code, code: variantCode, name: form.variantName.trim() || `${form.widthCm} cm`, widthCm: numberOrNull(form.widthCm), usableWidthCm: numberOrNull(form.usableWidthCm), gsm: numberOrNull(form.gsm), stretchWarpPercent: null, stretchWeftPercent: null, finish: '' });
+        if (chosen.size > 0) {
+          const putUp = putUps.data?.[0]?.code;
+          if (!putUp) throw new Error(t('No put-up is defined yet; add one before creating SKUs.'));
+          await createSkus.mutateAsync({ productCode: code, variantId: variant.id, variantCode, shadeCodes: [...chosen], putUpCode: putUp, status: 'development', rollTracking: true });
+        }
+      }
       onClose();
+      navigate(`/products/${code}`);
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : 'The product could not be saved.');
+      setError(failure instanceof Error ? failure.message : t('The product could not be saved.'));
     }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title={t('New product')} description={t('A named fabric within a family. Variants, shades and SKUs are added on its sheet.')}>
-      <form id="new-product" onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
+    <Dialog open={open} onClose={onClose} title={t('New product')} description={t('A named fabric within a family, its first variant, and the shades it is offered in: one SKU per chosen shade, in development until approved.')} className="w-[min(64rem,calc(100vw-2rem))]">
+      <form id="new-product" onSubmit={submit} className="grid gap-4 sm:grid-cols-4">
         <TextField label={t('Code')} required value={form.code} onChange={set('code')} placeholder={t('PWM')} help={t('Short, upper case; becomes part of every SKU code.')} />
         <TextField label={t('Index')} required type="number" min={1} value={form.index} onChange={set('index')} placeholder="6" help={t('Position in the range.')} />
         <SelectField label={t('Family')} required value={form.family} onChange={set('family')} className="sm:col-span-2">
@@ -112,8 +133,7 @@ function NewProductDialog({ open, onClose }: { open: boolean; onClose: () => voi
           ))}
         </SelectField>
         <TextField label={t('Name')} required value={form.name} onChange={set('name')} className="sm:col-span-2" />
-        <TextField label={t('Tagline')} value={form.tagline} onChange={set('tagline')} placeholder={t('Shaping / support mesh')} className="sm:col-span-2" />
-        <TextArea label={t('Description')} value={form.description} onChange={set('description')} className="sm:col-span-2" />
+        <TextField label={t('Tagline')} value={form.tagline} onChange={set('tagline')} placeholder={t('Shaping / support mesh')} />
         <SelectField label={t('Status')} value={form.status} onChange={set('status')}>
           {PRODUCT_STATUSES.map((status) => (
             <option key={status} value={status}>
@@ -121,14 +141,43 @@ function NewProductDialog({ open, onClose }: { open: boolean; onClose: () => voi
             </option>
           ))}
         </SelectField>
+        <TextArea label={t('Description')} value={form.description} onChange={set('description')} rows={2} className="sm:col-span-4" />
+
+        <fieldset className="border-t border-line pt-4 sm:col-span-4">
+          <legend className="caps mb-3 text-ink-soft">{t('First variant')}</legend>
+          <div className="grid gap-4 sm:grid-cols-5">
+            <TextField label={t('Variant code')} value={form.variantCode} onChange={set('variantCode')} placeholder="160" help={t('Leave empty to add variants later.')} />
+            <TextField label={t('Variant name')} value={form.variantName} onChange={set('variantName')} placeholder={t('160 cm')} />
+            <TextField label={t('Width')} type="number" unit="cm" value={form.widthCm} onChange={set('widthCm')} />
+            <TextField label={t('Usable width')} type="number" unit="cm" value={form.usableWidthCm} onChange={set('usableWidthCm')} />
+            <TextField label={t('Weight')} type="number" unit="gsm" value={form.gsm} onChange={set('gsm')} />
+          </div>
+        </fieldset>
+
+        <fieldset className="border-t border-line pt-4 sm:col-span-4">
+          <legend className="caps mb-3 text-ink-soft">{t('Shades offered')}</legend>
+          {shades.data ? (
+            <ShadePalette
+              shades={shades.data}
+              selected={chosen}
+              onToggle={(shade) => setChosen((current) => { const next = new Set(current); if (next.has(shade)) next.delete(shade); else next.add(shade); return next; })}
+              captionFor={(shade) => (code && variantCode ? skuCode(code, variantCode, shade) : shade)}
+              words={{ all: t('Choose all'), none: t('Clear'), chosen: t('chosen') }}
+            />
+          ) : (
+            <p className="text-ink-muted">{t('Loading shades')}</p>
+          )}
+        </fieldset>
         {error && (
-          <p role="alert" className="text-[0.8125rem] font-medium text-critical sm:col-span-2">
+          <p role="alert" className="text-[0.8125rem] font-medium text-critical sm:col-span-4">
             {error}
           </p>
         )}
-        <div className="flex justify-end gap-3 sm:col-span-2">
+        <div className="flex justify-end gap-3 sm:col-span-4">
           <Button onClick={onClose}>{t('Cancel')}</Button>
-          <Button type="submit" variant="primary" busy={create.isPending} busyLabel={t('Saving')}>{t('Create product')}</Button>
+          <Button type="submit" variant="primary" busy={busy} busyLabel={t('Saving')}>
+            {chosen.size > 0 ? t('Create product and {count} SKUs', { count: chosen.size }) : t('Create product')}
+          </Button>
         </div>
       </form>
     </Dialog>

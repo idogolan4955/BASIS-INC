@@ -12,3 +12,4 @@ export * from './Structure';
 export * from './Timeline';
 export * from './Track';
 export * from './Wordmark';
+export * from './ShadePalette';

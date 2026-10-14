@@ -388,13 +388,14 @@ export interface NewVariantInput {
 export function useCreateVariant() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: async (input: NewVariantInput): Promise<string> => {
+    mutationFn: async (input: NewVariantInput): Promise<{ fullCode: string; id: string }> => {
       const fullCode = `${input.productCode}-${input.code}`.toUpperCase();
+      let id = fullCode;
       if (isSample) {
         await (await sample()).createVariant(input);
       } else {
         const { dc, sdk } = await live();
-        await sdk.insertVariant(dc, {
+        const { data } = await sdk.insertVariant(dc, {
           productCode: input.productCode,
           fullCode,
           code: input.code.toUpperCase(),
@@ -409,9 +410,10 @@ export function useCreateVariant() {
           status: sdk.ProductStatus.active,
           sort: 99,
         });
+        id = data.productVariant_insert.id;
       }
       await recordEvent('product', input.productCode, 'variant_added', undefined, { summary: `${input.name} (${fullCode})` });
-      return fullCode;
+      return { fullCode, id };
     },
     onSuccess: async (_, input) => {
       await client.invalidateQueries({ queryKey: ['catalog'] });
