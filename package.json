@@ -2,7 +2,7 @@
   "name": "basis",
   "private": true,
   "version": "0.1.0",
-  "description": "BASIS INC. — brand site and operating platform",
+  "description": "BASIS INC. \u2014 brand site and operating platform",
   "engines": {
     "node": ">=20"
   },
@@ -16,7 +16,8 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "seed:emulator": "node functions/scripts/seed-emulator.mjs",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "seed:production": "node functions/scripts/seed-production.mjs --production"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

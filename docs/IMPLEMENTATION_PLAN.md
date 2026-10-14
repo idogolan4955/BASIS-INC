@@ -364,7 +364,7 @@ Depends on: B4; decisions D7, D8.
 
 | # | Needed from the owner | Recommendation |
 |---|---|---|
-| F1 | Switch the Firebase project to the Blaze plan (required for Data Connect and Functions; the Cloud SQL instance has a monthly cost). The project `basis-inc` and its two Hosting sites already exist (created 2026-10-06) | Upgrade in the Firebase console before the first Data Connect deploy |
+| F1 | ~~Switch the Firebase project to the Blaze plan~~ Done 2026-10-14: billing account linked, APIs enabled. The remaining go-live steps (Auth, Storage, first deploys, production seed) are in [GO_LIVE](GO_LIVE.md) | Follow GO_LIVE.md in order |
 | F2 | Create the GitHub repository | `idogolan4955/basis`, private, empty. `origin` already points there |
 
 ### Needed soon, with working defaults

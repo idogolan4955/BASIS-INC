@@ -111,7 +111,7 @@ basis/
 | Forms | react-hook-form + zod |
 | Tables | TanStack Table + virtualisation |
 | Identity | Firebase Auth; role in custom claim; accounts created by invitation only |
-| Server logic | Cloud Functions v2, Node 20, `europe-west1` |
+| Server logic | Cloud Functions v2, Node 22, `europe-west1` |
 | Files | Firebase Storage |
 | Hosting | Firebase Hosting, two sites in one project |
 | Motion (site) | CSS scroll-driven animation first; Motion for component choreography; GSAP ScrollTrigger for long sequences; WebGL as isolated lazy islands — see [DESIGN_SYSTEM](DESIGN_SYSTEM.md) §9 |
