@@ -211,7 +211,7 @@ export function SkuSheet({ tab }: { tab: 'overview' | 'sourcing' }) {
         status={
           <>
             <StatusChip tone={SKU_STATUS_TONE[data.status]}>{t(SKU_STATUS_LABEL[data.status])}</StatusChip>
-            <span className="text-[0.8125rem] text-ink-muted">{data.isPublic ? 'Published' : 'Not published'}</span>
+            <span className="text-[0.8125rem] text-ink-muted">{data.isPublic ? t('Published') : t('Not published')}</span>
             <span className="text-[0.8125rem] text-ink-muted">{data.rollTracking ? 'Tracked by roll' : 'Tracked by lot'}</span>
           </>
         }

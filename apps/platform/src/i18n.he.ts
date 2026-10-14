@@ -1198,4 +1198,7 @@ export const HE: Record<string, string> = {
   'Create product and {count} SKUs': 'יצירת מוצר ו-{count} מק״טים',
   'Create {count} SKUs': 'יצירת {count} מק״טים',
   'Create SKUs': 'יצירת מק״טים',
+  'Not published': 'לא מפורסם',
+  'Available': 'זמין',
+  'Not offered': 'לא מוצע',
 };

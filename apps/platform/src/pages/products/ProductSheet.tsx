@@ -197,7 +197,7 @@ function Skus({ product, manage }: { product: ProductDetail; manage: boolean }) 
                       {sku.isPublic ? 'Published' : 'Publish'}
                     </Button>
                   ) : (
-                    <span className="text-ink-soft">{sku.isPublic ? 'Published' : 'Not published'}</span>
+                    <span className="text-ink-soft">{sku.isPublic ? t('Published') : t('Not published')}</span>
                   )}
                 </Td>
               </Tr>
@@ -280,7 +280,7 @@ function ShadeAvailability({ product, shades }: { product: ProductDetail; shades
         {shades.map((shade) => {
           const skus = byShade.get(shade.code) ?? [];
           const active = skus.some((sku) => sku.status === 'active');
-          const state = active ? 'Available' : skus.length > 0 ? SKU_STATUS_LABEL[skus[0]!.status] : 'Not offered';
+          const state = active ? t('Available') : skus.length > 0 ? t(SKU_STATUS_LABEL[skus[0]!.status]) : t('Not offered');
           return (
             <li key={shade.code} className="flex items-center gap-4 rounded-[var(--radius-panel)] border border-line bg-panel px-4 py-3">
               <ShadeDot hex={shade.hex} name={shade.name} code={shade.code} size="lg" className={active ? '' : 'opacity-50'} />
@@ -322,7 +322,7 @@ export function ProductSheet({ tab }: { tab: 'overview' | 'skus' | 'shades' }) {
         status={
           <>
             <StatusChip tone={PRODUCT_STATUS_TONE[data.status]}>{t(PRODUCT_STATUS_LABEL[data.status])}</StatusChip>
-            <span className="text-[0.8125rem] text-ink-muted">{data.isPublic ? 'Published on the website' : 'Not published'}</span>
+            <span className="text-[0.8125rem] text-ink-muted">{data.isPublic ? t('Published on the website') : t('Not published')}</span>
           </>
         }
         facts={[
