@@ -205,14 +205,15 @@ export function seeder(dc) {
       let id = existing.productVariants[0]?.id;
       if (!id) {
         const inserted = await gql(
-          `mutation ($productCode: String!, $fullCode: String!, $code: String!, $name: String!, $widthCm: Int) {
-        productVariant_insert(data: { productCode: $productCode, fullCode: $fullCode, code: $code, name: $name, widthCm: $widthCm, status: active, sort: 1 }) }`,
+          `mutation ($productCode: String!, $fullCode: String!, $code: String!, $name: String!, $widthCm: Int, $gsm: Int) {
+        productVariant_insert(data: { productCode: $productCode, fullCode: $fullCode, code: $code, name: $name, widthCm: $widthCm, gsm: $gsm, status: active, sort: 1 }) }`,
           {
             productCode: variant.product,
             fullCode,
             code: variant.code,
             name: variant.name,
             widthCm: variant.widthCm,
+            gsm: variant.gsm ?? null,
           },
         );
         id = inserted.productVariant_insert.id;

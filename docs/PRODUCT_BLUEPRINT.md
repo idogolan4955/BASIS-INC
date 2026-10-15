@@ -42,6 +42,7 @@ The owner's brand booklet (*BASIS INC. Foundation Fabrics, Brand / Product Archi
 | 03 | Mesh | **N58 Semi-Stretch Mesh** | Controlled semi-stretch mesh: balanced stretch and stability for controlled support and coverage |
 | 04 | Lining | **Shanel Lining** | Premium lining: smooth, soft, breathable foundation layer |
 | 05 | Tulle | **Bridal Tulle** | Fine bridal tulle: lightweight, ethereal, for layering, volume and veils |
+| 06 | Lining | **Esti Lining** | Light satin lining, 55 gsm: the foundation layer that weighs nothing (added 2026-10-15, from the owner's Fabrica range; supplier item A0455) |
 
 - **Shade System.** One shared shade language across products, packaging, samples, website and operations: **Skin 01, Skin 02, Skin 03, Milk, Bone, Pure**. A shade exists globally; its availability is product-specific until that fabric is approved in production.
 - **Put-up.** Shade-matched matte rolls with the product name in the hand on the roll and an end-cap label: shade / product code / lot, width / length / origin. The booklet shows 160 cm width and 50 m rolls.
@@ -90,7 +91,7 @@ BASIS is built as five connected layers over one shared data foundation.
 
 **Purpose.** Everything about what BASIS sells and how it is made.
 
-- **Products** — the catalog as a strict hierarchy: Fabric Family → Product → Variant → Shade → SKU → Batch/Lot → Roll. Launching with three families holding five products (see §2a); structured so a new family or product is data, not a code change.
+- **Products** — the catalog as a strict hierarchy: Fabric Family → Product → Variant → Shade → SKU → Batch/Lot → Roll. Launching with three families holding six products (see §2a); structured so a new family or product is data, not a code change.
 - **Suppliers & factories** — companies, their factories, contacts, capabilities, terms, quotations, certifications and a performance history that is computed from real outcomes.
 - **Manufacturing** — Purchase Order → Production Run → Milestones → QC → Packaging → Ready to Ship, on an extensible timeline rather than a single status.
 - **Quality control** — inspections with shade matching, dimensional checks, defect logging, quantity and packaging verification, photographic evidence, a three-way result (pass / conditional pass / fail) and corrective actions.

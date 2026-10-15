@@ -33,7 +33,7 @@ Until the brand domain is connected, each site is served on its Firebase Hosting
 | `/` | Brand Home | Static (prerendered; rebuilt on publish) |
 | `/fabrics` | Fabrics index | Static |
 | `/fabrics/[family]` | Fabric family — `/fabrics/mesh`, `/fabrics/lining`, `/fabrics/tulle` | Static per published family |
-| `/fabrics/[family]/[product]` | Product — `/fabrics/mesh/powermesh`, `/fabrics/mesh/illusion-stretch-mesh`, `/fabrics/mesh/n58`, `/fabrics/lining/shanel-lining`, `/fabrics/tulle/bridal-tulle` | Static per published product |
+| `/fabrics/[family]/[product]` | Product — `/fabrics/mesh/powermesh`, `/fabrics/mesh/illusion-stretch-mesh`, `/fabrics/mesh/n58`, `/fabrics/lining/shanel-lining`, `/fabrics/lining/esti-lining`, `/fabrics/tulle/bridal-tulle` | Static per published product |
 | `/shades` | Shade System | Static |
 | `/shades/[shade]` | Shade — `/shades/skin-02`, `/shades/milk` | Static |
 | `/applications` | Applications index | Static |

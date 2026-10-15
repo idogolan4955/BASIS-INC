@@ -93,7 +93,7 @@ const store = {
     name: variant.name,
     widthCm: variant.widthCm,
     usableWidthCm: null,
-    gsm: null,
+    gsm: (variant as { gsm?: number }).gsm ?? null,
     stretchWarpPercent: null,
     stretchWeftPercent: null,
     finish: '',
