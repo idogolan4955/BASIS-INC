@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react';
+import type { FabricStructure } from '@basis/shared';
 import { cn } from './cn';
+import { Structure } from './Structure';
+import { isLight } from './tone';
 
 // The shade palette: every shade of the Shade System as a large, numbered
 // chip, grouped by collection, laid out like a colour card. Used wherever a
@@ -24,18 +27,12 @@ export interface ShadePaletteProps {
   readonly captionFor?: (code: string) => ReactNode;
   /** Words the host supplies: the group action and the counts. */
   readonly words?: { readonly all: string; readonly none: string; readonly chosen: string };
+  /** When given, each chip shows the fabric drawn in the shade instead of a flat tile. */
+  readonly structure?: FabricStructure;
   readonly className?: string;
 }
 
-const isLight = (hex: string) => {
-  const value = hex.replace('#', '');
-  const r = parseInt(value.slice(0, 2), 16);
-  const g = parseInt(value.slice(2, 4), 16);
-  const b = parseInt(value.slice(4, 6), 16);
-  return (r * 299 + g * 587 + b * 114) / 1000 > 170;
-};
-
-export function ShadePalette({ shades, selected, onToggle, taken, captionFor, words, className }: ShadePaletteProps) {
+export function ShadePalette({ shades, selected, onToggle, taken, captionFor, words, structure, className }: ShadePaletteProps) {
   const ordered = [...shades].sort((a, b) => a.collection.localeCompare(b.collection) || a.sort - b.sort || a.code.localeCompare(b.code));
   const collections = [...new Set(ordered.map((shade) => shade.collection))];
   const number = new Map(ordered.map((shade, index) => [shade.code, String(index + 1).padStart(2, '0')]));
@@ -82,6 +79,7 @@ export function ShadePalette({ shades, selected, onToggle, taken, captionFor, wo
                       )}
                     >
                       <span className="relative block h-20" style={{ backgroundColor: shade.hex }}>
+                        {structure && <Structure kind={structure} scale={0.8} tone={shade.hex} className="absolute inset-0" />}
                         <span className={cn('code absolute start-2 top-2 rounded-[3px] px-1.5 py-0.5 text-[0.6875rem]', light ? 'bg-milk/90 text-charcoal' : 'bg-charcoal/70 text-milk')}>{number.get(shade.code)}</span>
                         {chosen && (
                           <span aria-hidden="true" className="absolute end-2 top-2 grid size-6 place-items-center rounded-full bg-charcoal text-milk">

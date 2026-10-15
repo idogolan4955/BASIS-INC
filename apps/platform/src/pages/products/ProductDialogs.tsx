@@ -8,6 +8,7 @@ import {
   type ProductStatus,
   type ShadeView,
   type SkuStatus,
+  structureOf,
 } from '@basis/shared';
 import { Button, CheckField, Dialog, SelectField, ShadePalette, TextArea, TextField } from '@basis/ui';
 import { useState, type FormEvent } from 'react';
@@ -233,6 +234,7 @@ export function NewSkusDialog({ product, shades, open, onClose }: { product: Pro
           <legend className="caps mb-3 text-ink-soft">{t('Shades')}</legend>
           <ShadePalette
             shades={shades}
+            structure={structureOf(product.familyCode)}
             selected={new Set(chosen)}
             onToggle={(code) => setChosen((current) => (current.includes(code) ? current.filter((c) => c !== code) : [...current, code]))}
             taken={new Map([...existing].map((code) => [code, t('exists')]))}

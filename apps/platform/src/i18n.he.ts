@@ -1201,4 +1201,9 @@ export const HE: Record<string, string> = {
   'Not published': 'לא מפורסם',
   'Available': 'זמין',
   'Not offered': 'לא מוצע',
+  'Shade palette': 'פלטת גוונים',
+  'Add SKU': 'הוספת SKU',
+  'Adding': 'מוסיף',
+  'Every shade of the Shade System, drawn in this fabric. A shade is offered once its SKU is active; a shade without a SKU is listed, not offered.': 'כל גוון במערכת הגוונים, מצויר בבד הזה. גוון מוצע כש-SKU שלו פעיל; גוון בלי SKU רשום, לא מוצע.',
+  'Create a variant first; a SKU is a variant in a shade.': 'קודם צור וריאנט; SKU הוא וריאנט בגוון.',
 };

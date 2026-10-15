@@ -14,38 +14,38 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { listFamilies, listProducts, getProduct, listSkus, getSku, getSkuSourcing, listShades, listPutUps, upsertFamily, upsertProduct } from '@basis/dataconnect-platform';
+import { getShipmentCosts, getAllocationRun, listLotCosts, listLotCostsFor, listFxRates, listStockLocations, listStockBalances, listStockMovements, listRecentMovements, listReceipts } from '@basis/dataconnect-platform';
 
 
-// Operation ListFamilies: 
-const { data } = await ListFamilies(dataConnect);
+// Operation GetShipmentCosts:  For variables, look at type GetShipmentCostsVars in ../index.d.ts
+const { data } = await GetShipmentCosts(dataConnect, getShipmentCostsVars);
 
-// Operation ListProducts: 
-const { data } = await ListProducts(dataConnect);
+// Operation GetAllocationRun:  For variables, look at type GetAllocationRunVars in ../index.d.ts
+const { data } = await GetAllocationRun(dataConnect, getAllocationRunVars);
 
-// Operation GetProduct:  For variables, look at type GetProductVars in ../index.d.ts
-const { data } = await GetProduct(dataConnect, getProductVars);
+// Operation ListLotCosts: 
+const { data } = await ListLotCosts(dataConnect);
 
-// Operation ListSkus: 
-const { data } = await ListSkus(dataConnect);
+// Operation ListLotCostsFor:  For variables, look at type ListLotCostsForVars in ../index.d.ts
+const { data } = await ListLotCostsFor(dataConnect, listLotCostsForVars);
 
-// Operation GetSku:  For variables, look at type GetSkuVars in ../index.d.ts
-const { data } = await GetSku(dataConnect, getSkuVars);
+// Operation ListFxRates: 
+const { data } = await ListFxRates(dataConnect);
 
-// Operation GetSkuSourcing:  For variables, look at type GetSkuSourcingVars in ../index.d.ts
-const { data } = await GetSkuSourcing(dataConnect, getSkuSourcingVars);
+// Operation ListStockLocations: 
+const { data } = await ListStockLocations(dataConnect);
 
-// Operation ListShades: 
-const { data } = await ListShades(dataConnect);
+// Operation ListStockBalances: 
+const { data } = await ListStockBalances(dataConnect);
 
-// Operation ListPutUps: 
-const { data } = await ListPutUps(dataConnect);
+// Operation ListStockMovements:  For variables, look at type ListStockMovementsVars in ../index.d.ts
+const { data } = await ListStockMovements(dataConnect, listStockMovementsVars);
 
-// Operation UpsertFamily:  For variables, look at type UpsertFamilyVars in ../index.d.ts
-const { data } = await UpsertFamily(dataConnect, upsertFamilyVars);
+// Operation ListRecentMovements:  For variables, look at type ListRecentMovementsVars in ../index.d.ts
+const { data } = await ListRecentMovements(dataConnect, listRecentMovementsVars);
 
-// Operation UpsertProduct:  For variables, look at type UpsertProductVars in ../index.d.ts
-const { data } = await UpsertProduct(dataConnect, upsertProductVars);
+// Operation ListReceipts: 
+const { data } = await ListReceipts(dataConnect);
 
 
 ```

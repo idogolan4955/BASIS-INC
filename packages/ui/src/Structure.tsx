@@ -1,6 +1,7 @@
 import type { FabricStructure } from '@basis/shared';
 import { useId } from 'react';
 import { cn } from './cn';
+import { inkOn } from './tone';
 
 // The fabric drawn at macro scale from its own construction: mesh as a
 // hexagonal knit, tulle as two sheer nets laid over each other, lining as a
@@ -71,12 +72,15 @@ export function Structure({
   scale = 1,
   className,
   label,
+  tone,
 }: {
   kind: FabricStructure;
   scale?: number;
   className?: string;
   /** Omit when the drawing is decorative. */
   label?: string;
+  /** A shade to draw the fabric in: the hex fills the ground and picks the ink. Without it the host sets the colours. */
+  tone?: string;
 }) {
   const id = `structure-${useId().replace(/:/g, '')}`;
   return (
@@ -86,10 +90,45 @@ export function Structure({
       aria-hidden={label ? undefined : true}
       className={cn('block size-full', className)}
       preserveAspectRatio="xMidYMid slice"
+      style={tone ? { backgroundColor: tone, color: inkOn(tone) } : undefined}
     >
       {kind === 'mesh' && <Mesh id={id} scale={scale} />}
       {kind === 'tulle' && <Tulle id={id} scale={scale} />}
       {kind === 'lining' && <Lining id={id} scale={scale} />}
     </svg>
+  );
+}
+
+/**
+ * A SKU's image: its family's structure drawn in its shade. The swatch is
+ * derived from two facts, never uploaded, so every SKU has one from the
+ * moment it exists and all of them agree.
+ */
+export function FabricSwatch({
+  structure,
+  hex,
+  name,
+  code,
+  size = 'md',
+  className,
+}: {
+  structure: FabricStructure;
+  hex: string;
+  name: string;
+  code?: string;
+  size?: 'sm' | 'md' | 'lg' | 'fill';
+  className?: string;
+}) {
+  const dimension = size === 'sm' ? 'size-6' : size === 'lg' ? 'size-20' : size === 'fill' ? 'size-full' : 'size-10';
+  const scale = size === 'sm' ? 0.45 : size === 'md' ? 0.6 : size === 'lg' ? 0.8 : 1;
+  return (
+    <span
+      role="img"
+      aria-label={code ? `${name} (${code})` : name}
+      title={code ? `${name} · ${code}` : name}
+      className={cn('inline-block shrink-0 overflow-hidden rounded-xs border border-charcoal/15', dimension, className)}
+    >
+      <Structure kind={structure} scale={scale} tone={hex} />
+    </span>
   );
 }

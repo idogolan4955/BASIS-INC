@@ -240,6 +240,7 @@ function skuRow(sku: SkuRecord): SkuRow {
     productCode: product.code,
     productName: product.name,
     productIndex: product.index,
+    familyCode: product.family,
     variantCode: sku.variantCode,
     variantName: variant?.name ?? sku.variantCode,
     shadeCode: shade.code,

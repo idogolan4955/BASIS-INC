@@ -13,3 +13,4 @@ export * from './Timeline';
 export * from './Track';
 export * from './Wordmark';
 export * from './ShadePalette';
+export * from './tone';

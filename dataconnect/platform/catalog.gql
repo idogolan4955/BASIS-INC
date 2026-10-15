@@ -119,6 +119,9 @@ query ListSkus @auth(level: USER) {
       code
       name
       index
+      family {
+        code
+      }
     }
     variant {
       fullCode

@@ -7,9 +7,10 @@ import {
   formatQuantity,
   moneyFromStored,
   quantityFromStored,
+  structureOf,
   type SkuStatus,
 } from '@basis/shared';
-import { Button, LabelHeader, Ledger, Panel, SelectField, ShadeDot, SheetTabs, StatusChip, Td, TextField, Th, Tr, sheetTabClass } from '@basis/ui';
+import { Button, FabricSwatch, LabelHeader, Ledger, Panel, SelectField, ShadeDot, SheetTabs, StatusChip, Td, TextField, Th, Tr, sheetTabClass } from '@basis/ui';
 import { useMemo, useState } from 'react';
 import { canManageModule } from '@basis/shared';
 import { Link, NavLink, useParams } from 'react-router';
@@ -95,7 +96,7 @@ export function SkuLedger() {
                     <Td>{sku.variantName}</Td>
                     <Td>
                       <span className="flex items-center gap-2.5 whitespace-nowrap">
-                        <ShadeDot hex={sku.shadeHex} name={sku.shadeName} code={sku.shadeCode} size="sm" />
+                        <FabricSwatch structure={structureOf(sku.familyCode)} hex={sku.shadeHex} name={sku.shadeName} code={sku.shadeCode} size="sm" />
                         {sku.shadeName}
                       </span>
                     </Td>
@@ -223,6 +224,7 @@ export function SkuSheet({ tab }: { tab: 'overview' | 'sourcing' }) {
           { label: t('Roll'), value: `${data.rollLengthM} m` },
           { label: t('Sales unit'), value: data.salesUom },
         ]}
+        visual={<FabricSwatch structure={structureOf(data.familyCode)} hex={data.shadeHex} name={data.shadeName} code={data.shadeCode} size="fill" className="rounded-none border-0" />}
       />
       <SheetTabs>
         <NavLink to={base} end className={({ isActive }) => sheetTabClass(isActive)}>{t('Overview')}</NavLink>

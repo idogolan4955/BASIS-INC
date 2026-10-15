@@ -95,6 +95,7 @@ export interface SkuRow {
   readonly productCode: string;
   readonly productName: string;
   readonly productIndex: number;
+  readonly familyCode: string;
   readonly variantCode: string;
   readonly variantName: string;
   readonly shadeCode: string;
@@ -120,7 +121,6 @@ export interface ProductDetail extends ProductSummary {
 }
 
 export interface SkuDetail extends SkuRow {
-  readonly familyCode: string;
   readonly familyName: string;
   readonly barcode: string;
   /** Fixed-point thousandths of the sales unit, or null. */
@@ -193,4 +193,9 @@ export function slugify(text: string): string {
     .normalize('NFKD')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
+}
+
+/** The structure a family is drawn with: mesh, lining or tulle. Unknown families draw as mesh. */
+export function structureOf(familyCode: string): 'mesh' | 'lining' | 'tulle' {
+  return familyCode === 'LIN' ? 'lining' : familyCode === 'TUL' ? 'tulle' : 'mesh';
 }

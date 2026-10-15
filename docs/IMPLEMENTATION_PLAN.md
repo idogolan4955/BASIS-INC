@@ -289,6 +289,12 @@ Delivered in two steps so the website is never blocked:
 Exit: the full lifecycle lead → sample → quote → order → fulfilment → repeat is recorded for a real customer, with margin known from landed cost.
 Depends on: Phase 2 (lite); P7 (full).
 
+#### Phase 2 follow-up, the fabric swatch (2026-10-15)
+
+| Done | Remaining |
+|---|---|
+| A SKU's image is derived, never uploaded: `FabricSwatch` in `@basis/ui` draws the family's structure in the shade (`structureOf` in `@basis/shared`, ink by lightness in `packages/ui/src/tone.ts`). On SKU rows, the SKU sheet, product rows and both shade pickers. The product's Shades tab is its palette: every shade of the Shade System drawn in the fabric, numbered, per variant, with the SKU that offers it, its status, or "Add SKU", which creates the SKU in development in one click | Real material photography replaces the drawing where a media asset exists (B3) |
+
 #### Phase 8 progress, first slice of P8-full (2026-10-07)
 
 | Done | Remaining |

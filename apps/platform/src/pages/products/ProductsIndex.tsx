@@ -4,6 +4,7 @@ import {
   PRODUCT_STATUS_TONE,
   canManageModule,
   skuCode,
+  structureOf,
   type ProductStatus,
   type ProductSummary,
 } from '@basis/shared';
@@ -11,10 +12,10 @@ import {
   Button,
   Dialog,
   EmptyState,
+  FabricSwatch,
   Ledger,
   Panel,
   SelectField,
-  ShadeDot,
   ShadePalette,
   StatusChip,
   Structure,
@@ -32,7 +33,6 @@ import { useCreateProduct, useCreateSkus, useCreateVariant, useFamilies, useProd
 import { useRequiredSession } from '../../session';
 import { useT } from '../../i18n';
 
-const STRUCTURE: Record<string, 'mesh' | 'lining' | 'tulle'> = { MSH: 'mesh', LIN: 'lining', TUL: 'tulle' };
 const pad = (index: number) => String(index).padStart(2, '0');
 
 export function ProductsTabs({ active }: { active: 'products' | 'skus' | 'shades' | 'put-ups' }) {
@@ -159,6 +159,7 @@ function NewProductDialog({ open, onClose }: { open: boolean; onClose: () => voi
           {shades.data ? (
             <ShadePalette
               shades={shades.data}
+              structure={structureOf(form.family)}
               selected={chosen}
               onToggle={(shade) => setChosen((current) => { const next = new Set(current); if (next.has(shade)) next.delete(shade); else next.add(shade); return next; })}
               captionFor={(shade) => (code && variantCode ? skuCode(code, variantCode, shade) : shade)}
@@ -201,7 +202,7 @@ function ProductRow({ product, shadeHex }: { product: ProductSummary; shadeHex: 
         <span className="flex items-center gap-1">
           {product.availableShades.map((code) => {
             const shade = shadeHex.get(code);
-            return shade ? <ShadeDot key={code} hex={shade.hex} name={shade.name} code={code} size="sm" /> : null;
+            return shade ? <FabricSwatch key={code} structure={structureOf(product.familyCode)} hex={shade.hex} name={shade.name} code={code} size="sm" /> : null;
           })}
           {product.availableShades.length === 0 && <span className="text-ink-muted">{t('none yet')}</span>}
         </span>
@@ -244,7 +245,7 @@ export function ProductsIndex() {
             {families.data.map((family) => (
               <div key={family.code} className="rounded-[var(--radius-panel)] border border-line bg-panel">
                 <div className="aspect-[3/1] overflow-hidden border-b border-line bg-sunken text-nude-deep">
-                  <Structure kind={STRUCTURE[family.code] ?? 'mesh'} scale={1.1} label={`${family.name} structure`} />
+                  <Structure kind={structureOf(family.code)} scale={1.1} label={`${family.name} structure`} />
                 </div>
                 <div className="px-5 py-4">
                   <p className="flex items-baseline justify-between gap-3">

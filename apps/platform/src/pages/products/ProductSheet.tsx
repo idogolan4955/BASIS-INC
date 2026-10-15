@@ -9,13 +9,14 @@ import {
   isLocalDate,
   type ProductDetail,
   type ShadeView,
+  structureOf,
   type SkuStatus,
 } from '@basis/shared';
-import { Button, EmptyState, LabelHeader, Ledger, Panel, ShadeDot, SheetTabs, StatusChip, Structure, Td, Th, Timeline, Tr, sheetTabClass } from '@basis/ui';
+import { Button, EmptyState, FabricSwatch, LabelHeader, Ledger, Panel, ShadeDot, SheetTabs, StatusChip, Structure, Td, Th, Timeline, Tr, sheetTabClass } from '@basis/ui';
 import { Plus } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { Link, NavLink, useParams } from 'react-router';
-import { useProduct, useSetSkuPublic, useSetSkuStatus, useShadeStandards, useShades } from '../../data/catalog';
+import { useCreateSkus, usePutUps, useProduct, useSetSkuPublic, useSetSkuStatus, useShadeStandards, useShades } from '../../data/catalog';
 import { useRecordNote, useTimeline } from '../../data/timeline';
 import { useRequiredSession } from '../../session';
 import { NotFound } from '../NotFound';
@@ -33,7 +34,6 @@ function ProductTimeline({ code }: { code: string }) {
   );
 }
 
-const STRUCTURE: Record<string, 'mesh' | 'lining' | 'tulle'> = { MSH: 'mesh', LIN: 'lining', TUL: 'tulle' };
 const pad = (index: number) => String(index).padStart(2, '0');
 
 function Overview({ product }: { product: ProductDetail }) {
@@ -157,7 +157,7 @@ function Skus({ product, manage }: { product: ProductDetail; manage: boolean }) 
                 <Td>{sku.variantName}</Td>
                 <Td>
                   <span className="flex items-center gap-2.5">
-                    <ShadeDot hex={sku.shadeHex} name={sku.shadeName} code={sku.shadeCode} size="sm" />
+                    <FabricSwatch structure={structureOf(product.familyCode)} hex={sku.shadeHex} name={sku.shadeName} code={sku.shadeCode} size="sm" />
                     {sku.shadeName}
                     <span className="code text-ink-muted">{sku.shadeCode}</span>
                   </span>
@@ -269,30 +269,101 @@ function Standards({ product, shades, manage }: { product: ProductDetail; shades
   );
 }
 
-function ShadeAvailability({ product, shades }: { product: ProductDetail; shades: readonly ShadeView[] }) {
+const pad2 = (index: number) => String(index + 1).padStart(2, '0');
+
+// The product's palette: every shade of the Shade System drawn in this
+// fabric, per variant, with the SKU that offers it or the action that would.
+// Adding a shade is one click; the SKU starts in development.
+function SkuPalette({ product, shades, manage }: { product: ProductDetail; shades: readonly ShadeView[]; manage: boolean }) {
   const t = useT();
-  const byShade = new Map<string, ProductDetail['skus'][number][]>();
-  for (const sku of product.skus) byShade.set(sku.shadeCode, [...(byShade.get(sku.shadeCode) ?? []), sku]);
+  const create = useCreateSkus();
+  const setStatus = useSetSkuStatus();
+  const putUps = usePutUps();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const structure = structureOf(product.familyCode);
+  const ordered = [...shades].sort((a, b) => a.collection.localeCompare(b.collection) || a.sort - b.sort || a.code.localeCompare(b.code));
+  const putUp = putUps.data?.[0]?.code ?? '';
+
+  const add = async (variant: ProductDetail['variants'][number], shadeCode: string) => {
+    setError(null);
+    setBusy(`${variant.id}:${shadeCode}`);
+    try {
+      await create.mutateAsync({ productCode: product.code, variantId: variant.id, variantCode: variant.code, shadeCodes: [shadeCode], putUpCode: putUp, status: 'development', rollTracking: true });
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : 'The SKU could not be added.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
   return (
-    <Panel title={t('Shade availability')}>
-      <p className="mb-5 max-w-prose text-[0.8125rem] text-ink-muted">{t('A shade exists once in the Shade System. It is available for this product when one of its SKUs is active; until then it is listed, not offered.')}</p>
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {shades.map((shade) => {
-          const skus = byShade.get(shade.code) ?? [];
-          const active = skus.some((sku) => sku.status === 'active');
-          const state = active ? t('Available') : skus.length > 0 ? t(SKU_STATUS_LABEL[skus[0]!.status]) : t('Not offered');
-          return (
-            <li key={shade.code} className="flex items-center gap-4 rounded-[var(--radius-panel)] border border-line bg-panel px-4 py-3">
-              <ShadeDot hex={shade.hex} name={shade.name} code={shade.code} size="lg" className={active ? '' : 'opacity-50'} />
-              <div className="min-w-0">
-                <p className="font-medium">{shade.name}</p>
-                <p className="code text-ink-muted">{shade.code}</p>
-                <p className={`mt-1 text-xs ${active ? 'text-positive' : 'text-ink-muted'}`}>{state}</p>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+    <Panel title={t('Shade palette')} count={product.skus.length}>
+      <p className="mb-5 max-w-prose text-[0.8125rem] text-ink-muted">{t('Every shade of the Shade System, drawn in this fabric. A shade is offered once its SKU is active; a shade without a SKU is listed, not offered.')}</p>
+      {product.variants.length === 0 ? (
+        <EmptyState title={t('No variants yet')}>{t('Create a variant first; a SKU is a variant in a shade.')}</EmptyState>
+      ) : (
+        product.variants.map((variant) => (
+          <section key={variant.id} aria-label={variant.name} className="mb-6 last:mb-0">
+            <header className="mb-3 flex items-baseline gap-3">
+              <h3 className="caps text-ink-muted">{variant.name}</h3>
+              <span className="code text-ink-muted">{variant.fullCode}</span>
+            </header>
+            <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {ordered.map((shade, index) => {
+                const sku = product.skus.find((candidate) => candidate.variantCode === variant.code && candidate.shadeCode === shade.code);
+                const active = sku?.status === 'active';
+                return (
+                  <li key={shade.code} className={`flex flex-col overflow-hidden rounded-[6px] border bg-panel ${active ? 'border-line-strong' : 'border-line'}`}>
+                    <span className="relative block h-20">
+                      <FabricSwatch structure={structure} hex={shade.hex} name={shade.name} code={shade.code} size="fill" className={`rounded-none border-0 ${sku ? '' : 'opacity-50'}`} />
+                      <span className="code absolute start-2 top-2 rounded-[3px] bg-milk/90 px-1.5 py-0.5 text-[0.6875rem] text-charcoal">{pad2(index)}</span>
+                    </span>
+                    <span className="block px-2.5 pb-2.5 pt-2">
+                      <span className="block truncate text-sm font-medium">{shade.name}</span>
+                      <span className="code block text-ink-muted">{shade.code}</span>
+                      {sku ? (
+                        <span className="mt-1.5 flex items-center justify-between gap-2">
+                          <Link to={`/products/skus/${sku.code}`} className="code truncate text-ink-soft underline decoration-line-strong underline-offset-4 hover:decoration-ink">
+                            {sku.code}
+                          </Link>
+                          {manage ? (
+                            <select
+                              aria-label={`Status of ${sku.code}`}
+                              value={sku.status}
+                              disabled={setStatus.isPending}
+                              onChange={(event) => setStatus.mutate({ code: sku.code, productCode: product.code, status: event.target.value as SkuStatus, previous: sku.status })}
+                              className="h-7 max-w-[7.5rem] rounded-xs border border-transparent bg-transparent text-[0.75rem] font-medium hover:border-line-strong focus:border-charcoal"
+                            >
+                              {SKU_STATUSES.map((status) => (
+                                <option key={status} value={status}>
+                                  {t(SKU_STATUS_LABEL[status])}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <StatusChip tone={SKU_STATUS_TONE[sku.status]}>{t(SKU_STATUS_LABEL[sku.status])}</StatusChip>
+                          )}
+                        </span>
+                      ) : manage ? (
+                        <Button size="sm" variant="quiet" className="mt-1.5 -ms-2" busy={busy === `${variant.id}:${shade.code}`} busyLabel={t('Adding')} disabled={!putUp || busy !== null} onClick={() => void add(variant, shade.code)}>
+                          <Plus size={14} aria-hidden="true" />{t('Add SKU')}</Button>
+                      ) : (
+                        <span className="mt-1.5 block text-xs text-ink-muted">{t('Not offered')}</span>
+                      )}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ))
+      )}
+      {error && (
+        <p role="alert" className="mt-4 text-[0.8125rem] font-medium text-critical">
+          {error}
+        </p>
+      )}
     </Panel>
   );
 }
@@ -334,7 +405,7 @@ export function ProductSheet({ tab }: { tab: 'overview' | 'skus' | 'shades' }) {
         ]}
         visual={
           <div className="size-full bg-sunken text-nude-deep">
-            <Structure kind={STRUCTURE[data.familyCode] ?? 'mesh'} scale={0.8} />
+            <Structure kind={structureOf(data.familyCode)} scale={0.8} />
           </div>
         }
         actions={
@@ -357,7 +428,7 @@ export function ProductSheet({ tab }: { tab: 'overview' | 'skus' | 'shades' }) {
         {tab === 'skus' && <Skus product={data} manage={manage} />}
         {tab === 'shades' && (
           <div className="flex flex-col gap-4">
-            {shades.data ? <ShadeAvailability product={data} shades={shades.data} /> : <EmptyState title={t('Loading shades')} />}
+            {shades.data ? <SkuPalette product={data} shades={shades.data} manage={manage} /> : <EmptyState title={t('Loading shades')} />}
             <Standards product={data} shades={shades.data ?? []} manage={manage || session.role === 'qc'} />
           </div>
         )}
