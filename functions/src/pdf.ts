@@ -1,5 +1,7 @@
 import {
+  BRAND_PALETTE,
   MONEY_DECIMALS,
+  PALETTE_GROUP_LABEL,
   QUANTITY_DECIMALS,
   availableToShip,
   cubicMetresMilli,
@@ -270,15 +272,6 @@ function paragraph(doc: Doc, heading: string, text: string): void {
   doc.y += 14;
 }
 
-interface PaletteEntry {
-  readonly code: string;
-  readonly name: string;
-  readonly hex: string | null;
-  readonly collection: string;
-  /** Whether a line of the order uses it. */
-  readonly ordered: boolean;
-}
-
 const isLight = (hex: string) => {
   const value = hex.replace('#', '');
   const r = parseInt(value.slice(0, 2), 16);
@@ -288,37 +281,34 @@ const isLight = (hex: string) => {
 };
 
 /**
- * The whole shade palette as a colour card: every shade with its number and
- * name, grouped by collection, the ones on the order marked. The mill keeps
- * one card for all of BASIS and ticks what this order asks for.
+ * The BASIS palette as the numbered colour card (docs/design/palette.png):
+ * every tone with its number, name and hex, group by group. The same card on
+ * every order, so a tone is named by its number on both sides.
  */
-function shadePalette(doc: Doc, entries: readonly PaletteEntry[]): void {
-  if (entries.length === 0) return;
+function brandPalette(doc: Doc): void {
   const { left } = MARGIN;
   const width = contentWidth(doc);
-  const perRow = 8;
+  const perRow = 6;
   const gap = 6;
   const chip = (width - gap * (perRow - 1)) / perRow;
-  const swatch = 30;
-  const height = swatch + 20;
-  const ordered = entries.filter((entry) => entry.ordered).length;
+  const swatch = 40;
+  const height = swatch + 36;
   if (doc.y + 16 + 14 + height > bottomOf(doc)) {
     doc.addPage();
     doc.y = MARGIN.top;
   }
-  label(doc, `Shade palette · ${ordered} of ${entries.length} on this order`, left, doc.y);
+  label(doc, `BASIS palette · ${BRAND_PALETTE.length} tones`, left, doc.y);
   // Text calls move the cursor; every chip in a row starts from the row's top.
   let rowY = doc.y + 16;
-  const collections = [...new Set(entries.map((entry) => entry.collection))];
-  for (const collection of collections) {
-    const own = entries.filter((entry) => entry.collection === collection);
+  for (const group of ['material', 'status', 'rail'] as const) {
+    const tones = BRAND_PALETTE.filter((entry) => entry.group === group);
     if (rowY + 12 + height > bottomOf(doc)) {
       doc.addPage();
       rowY = MARGIN.top;
     }
-    doc.font('sans').fontSize(7.5).fillColor(MUTED).text(collection, left, rowY, { lineBreak: false });
+    doc.font('sans').fontSize(7.5).fillColor(MUTED).text(PALETTE_GROUP_LABEL[group], left, rowY, { lineBreak: false });
     rowY += 12;
-    own.forEach((entry, index) => {
+    tones.forEach((entry, index) => {
       const column = index % perRow;
       if (column === 0 && index > 0) {
         rowY += height + gap;
@@ -329,33 +319,22 @@ function shadePalette(doc: Doc, entries: readonly PaletteEntry[]): void {
       }
       const x = left + column * (chip + gap);
       const y = rowY;
+      const light = isLight(entry.hex);
       doc.save();
-      if (entry.hex) {
-        doc.rect(x, y, chip, swatch).fillColor(entry.hex).fill();
-      } else {
-        // No screen reference on file: the physical standard is the only reference.
-        doc.rect(x, y, chip, swatch).fillColor(BONE).fill();
-        doc.moveTo(x, y + swatch).lineTo(x + chip, y).lineWidth(0.4).strokeColor(LINE).stroke();
-      }
-      doc.rect(x, y, chip, height).lineWidth(entry.ordered ? 1.2 : 0.5).strokeColor(entry.ordered ? INK : LINE).stroke();
-      const light = entry.hex ? isLight(entry.hex) : true;
-      // The shade number sits on the swatch, the way the colour card shows it.
+      doc.rect(x, y, chip, swatch).fillColor(entry.hex).fill();
+      doc.rect(x, y, chip, height).lineWidth(0.5).strokeColor(LINE).stroke();
+      // The number sits on the swatch, the way the sheet shows it.
       doc.font('mono').fontSize(7);
-      const badgeWidth = doc.widthOfString(entry.code) + 8;
-      doc.roundedRect(x + 3, y + 3, badgeWidth, 11, 2).fillColor(light ? '#FBF8F3' : INK).fillOpacity(light ? 0.9 : 0.7).fill();
-      doc.fillOpacity(1).fillColor(light ? INK : '#FBF8F3').text(entry.code, x + 7, y + 5, { lineBreak: false });
-      if (entry.ordered) {
-        const cx = x + chip - 9;
-        const cy = y + swatch - 9;
-        doc.circle(cx, cy, 5).fillColor(INK).fill();
-        doc.moveTo(cx - 2.4, cy).lineTo(cx - 0.6, cy + 1.8).lineTo(cx + 2.6, cy - 2).lineWidth(1).strokeColor('#FBF8F3').stroke();
-      }
+      const badgeWidth = doc.widthOfString(entry.number) + 8;
+      doc.roundedRect(x + 4, y + 4, badgeWidth, 11, 2).fillColor('#FBF8F3').fillOpacity(light ? 0.92 : 0.9).fill();
+      doc.fillOpacity(1).fillColor(INK).text(entry.number, x + 8, y + 6, { lineBreak: false });
       doc.restore();
-      doc.font(entry.ordered ? 'sansBold' : 'sans').fontSize(7.5).fillColor(entry.ordered ? INK : MUTED).text(entry.name, x + 5, y + swatch + 5, { width: chip - 10, height: 10, ellipsis: true, lineBreak: false });
+      doc.font('sansBold').fontSize(8.5).fillColor(INK).text(entry.name, x + 6, y + swatch + 6, { width: chip - 12, height: 11, ellipsis: true, lineBreak: false });
+      doc.font('mono').fontSize(6.5).fillColor(MUTED).text(entry.hex, x + 6, y + swatch + 19, { width: chip - 12, height: 9, lineBreak: false });
     });
-    rowY += height + gap + 4;
+    rowY += height + gap + 6;
   }
-  doc.y = rowY + 12;
+  doc.y = rowY + 8;
 }
 
 type Address = { addressLine1?: string | null; addressLine2?: string | null; city?: string | null; region?: string | null; postalCode?: string | null; country?: { name: string } | null } | null | undefined;
@@ -457,16 +436,7 @@ export async function renderPurchaseOrder(number: string): Promise<{ pdf: Buffer
   });
   table(doc, columns, rows, { total: { description: `Total, ${po.currency}`, quantity: `${thousands(totalQuantity, QUANTITY_DECIMALS, 0)} ${po.purchaseOrderLines_on_purchaseOrder[0]?.uom ?? 'm'}`, amount: thousands(total, MONEY_DECIMALS, 2) } });
 
-  const { shades } = await graphql<{ shades: { code: string; name: string; hex: string | null; sort: number; collection: { name: string; sort: number } | null }[] }>(
-    `query { shades(where: { status: { eq: active } }, limit: 500) { code name hex sort collection { name sort } } }`,
-  );
-  const onOrder = new Set(po.purchaseOrderLines_on_purchaseOrder.map((line) => line.sku.shade.code));
-  shadePalette(
-    doc,
-    [...shades]
-      .sort((a, b) => (a.collection?.sort ?? 99) - (b.collection?.sort ?? 99) || a.sort - b.sort || a.code.localeCompare(b.code))
-      .map((shade) => ({ code: shade.code, name: shade.name, hex: shade.hex, collection: shade.collection?.name ?? 'Shades', ordered: onOrder.has(shade.code) })),
-  );
+  brandPalette(doc);
 
   const payments = [...po.paymentMilestones_on_purchaseOrder].sort((a, b) => TRIGGER_ORDER.indexOf(a.trigger) - TRIGGER_ORDER.indexOf(b.trigger));
   if (payments.length > 0) {

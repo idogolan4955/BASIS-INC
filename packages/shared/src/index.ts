@@ -1,4 +1,5 @@
 export * from './access';
+export * from './brand-palette';
 export * from './business-number';
 export * from './catalog';
 export * from './entities';

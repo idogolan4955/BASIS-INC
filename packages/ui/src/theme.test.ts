@@ -56,3 +56,11 @@ describe('contrast', () => {
     expect(contrast('powder-deep', 'milk')).toBeLessThan(4.5);
   });
 });
+
+describe('the numbered palette', () => {
+  it('names the same tones as the tokens, in the same order as the sheet', async () => {
+    const { BRAND_PALETTE } = await import('@basis/shared');
+    expect(BRAND_PALETTE.map((tone) => tone.number)).toEqual(BRAND_PALETTE.map((_, index) => String(index + 1).padStart(2, '0')));
+    for (const tone of BRAND_PALETTE) expect(token(tone.name).toUpperCase()).toBe(tone.hex.toUpperCase());
+  });
+});
