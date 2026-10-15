@@ -179,10 +179,12 @@ async function transitionPo(number: string, from: readonly string[], to: string,
   const vars = Object.keys(extra)
     .map((key) => `$${key}: ${key.endsWith('On') ? 'Date' : 'String'}`)
     .join(', ');
+  // The version is the document as sent to the supplier; a state change
+  // alone does not make a new one. Only an amendment bumps it.
   await graphql(
-    `mutation ($id: UUID!, $version: Int!${vars ? `, ${vars}` : ''}) {
-      purchaseOrder_update(id: $id, data: { state: ${to}, version: $version, updatedAt_expr: "request.time"${sets ? `, ${sets}` : ''} }) }`,
-    { id: po.id, version: po.version + 1, ...extra },
+    `mutation ($id: UUID!${vars ? `, ${vars}` : ''}) {
+      purchaseOrder_update(id: $id, data: { state: ${to}, updatedAt_expr: "request.time"${sets ? `, ${sets}` : ''} }) }`,
+    { id: po.id, ...extra },
   );
   await audit(actorUid, action, 'purchase_order', number, { state: po.state }, { state: to, ...extra });
   await emit(`purchase_order.${to}`, 'purchase_order', number, extra);
