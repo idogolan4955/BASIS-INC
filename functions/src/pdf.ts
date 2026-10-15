@@ -270,6 +270,81 @@ function paragraph(doc: Doc, heading: string, text: string): void {
   doc.y += 14;
 }
 
+interface PaletteEntry {
+  readonly code: string;
+  readonly name: string;
+  readonly hex: string | null;
+  readonly lines: readonly number[];
+  /** Fixed-point metres across those lines. */
+  readonly metres: bigint;
+}
+
+const isLight = (hex: string) => {
+  const value = hex.replace('#', '');
+  const r = parseInt(value.slice(0, 2), 16);
+  const g = parseInt(value.slice(2, 4), 16);
+  const b = parseInt(value.slice(4, 6), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 170;
+};
+
+/**
+ * The shades on an order as a colour card: one chip per shade with its
+ * number, its name and the lines that use it, so the mill reads the shade
+ * list at a glance and checks each roll against the right standard.
+ */
+function shadePalette(doc: Doc, entries: readonly PaletteEntry[]): void {
+  if (entries.length === 0) return;
+  const { left } = MARGIN;
+  const width = contentWidth(doc);
+  const perRow = 6;
+  const gap = 8;
+  const chip = (width - gap * (perRow - 1)) / perRow;
+  const swatch = 38;
+  const height = swatch + 42;
+  const rows = Math.ceil(entries.length / perRow);
+  const needed = 16 + rows * (height + gap);
+  if (doc.y + Math.min(needed, 16 + height + gap) > bottomOf(doc)) {
+    doc.addPage();
+    doc.y = MARGIN.top;
+  }
+  label(doc, `Shades on this order · ${entries.length}`, left, doc.y);
+  // Text calls move the cursor; every chip in a row starts from the row's top.
+  let rowY = doc.y + 16;
+  entries.forEach((entry, index) => {
+    const column = index % perRow;
+    if (column === 0 && index > 0) {
+      rowY += height + gap;
+      if (rowY + height > bottomOf(doc)) {
+        doc.addPage();
+        rowY = MARGIN.top;
+      }
+    }
+    const x = left + column * (chip + gap);
+    const y = rowY;
+    doc.save();
+    doc.rect(x, y, chip, height).lineWidth(0.5).strokeColor(LINE).stroke();
+    if (entry.hex) {
+      doc.rect(x, y, chip, swatch).fillColor(entry.hex).fill();
+    } else {
+      // No screen reference on file: the physical standard is the only reference.
+      doc.rect(x, y, chip, swatch).fillColor(BONE).fill();
+      doc.moveTo(x, y + swatch).lineTo(x + chip, y).lineWidth(0.4).strokeColor(LINE).stroke();
+    }
+    doc.rect(x, y + swatch, chip, 0.5).fillColor(LINE).fill();
+    const light = entry.hex ? isLight(entry.hex) : true;
+    // The shade number sits on the swatch, the way the colour card shows it.
+    doc.font('mono').fontSize(7);
+    const badgeWidth = doc.widthOfString(entry.code) + 8;
+    doc.roundedRect(x + 4, y + 4, badgeWidth, 11, 2).fillColor(light ? '#FBF8F3' : INK).fillOpacity(light ? 0.9 : 0.7).fill();
+    doc.fillOpacity(1).fillColor(light ? INK : '#FBF8F3').text(entry.code, x + 8, y + 6, { lineBreak: false });
+    doc.restore();
+    doc.font('sansBold').fontSize(8.5).fillColor(INK).text(entry.name, x + 6, y + swatch + 6, { width: chip - 12, height: 11, ellipsis: true, lineBreak: false });
+    doc.font('sans').fontSize(7.5).fillColor(MUTED).text(`Lines ${entry.lines.map((line) => String(line).padStart(2, '0')).join(', ')}`, x + 6, y + swatch + 19, { width: chip - 12, height: 10, ellipsis: true, lineBreak: false });
+    doc.text(metres(entry.metres, 0), x + 6, y + swatch + 30, { width: chip - 12, height: 10, lineBreak: false });
+  });
+  doc.y = rowY + height + 18;
+}
+
 type Address = { addressLine1?: string | null; addressLine2?: string | null; city?: string | null; region?: string | null; postalCode?: string | null; country?: { name: string } | null } | null | undefined;
 const addressLines = (location: Address): string[] =>
   location ? [location.addressLine1 ?? '', location.addressLine2 ?? '', [location.postalCode, location.city, location.region].filter(Boolean).join(' '), location.country?.name ?? ''] : [];
@@ -291,7 +366,7 @@ interface PoRow {
   supplier: { legalName: string; tradingName: string | null; registrationId: string | null; taxId: string | null; country: { name: string } | null; locations_on_company: NonNullable<Address>[] };
   factory: { location: NonNullable<Address> & { name: string } } | null;
   incoterm: { code: string } | null;
-  purchaseOrderLines_on_purchaseOrder: { lineNo: number; quantity: string; uom: string; unitPrice: string; overTolerancePercent: number | null; underTolerancePercent: number | null; requestedExFactory: string | null; sku: { code: string; product: { code: string; name: string }; variant: { name: string; widthCm: number | null }; shade: { code: string; name: string } } }[];
+  purchaseOrderLines_on_purchaseOrder: { lineNo: number; quantity: string; uom: string; unitPrice: string; overTolerancePercent: number | null; underTolerancePercent: number | null; requestedExFactory: string | null; sku: { code: string; product: { code: string; name: string }; variant: { name: string; widthCm: number | null }; shade: { code: string; name: string; hex: string | null } } }[];
   paymentMilestones_on_purchaseOrder: { label: string; percent: number | null; amount: string | null; trigger: string; dueOn: string | null; paidOn: string | null }[];
 }
 
@@ -306,7 +381,7 @@ export async function renderPurchaseOrder(number: string): Promise<{ pdf: Buffer
        supplier { legalName tradingName registrationId taxId country { name } locations_on_company(limit: 1) { addressLine1 addressLine2 city region postalCode country { name } } }
        factory { location { name addressLine1 addressLine2 city region postalCode country { name } } }
        incoterm { code }
-       purchaseOrderLines_on_purchaseOrder(orderBy: { lineNo: ASC }) { lineNo quantity uom unitPrice overTolerancePercent underTolerancePercent requestedExFactory sku { code product { code name } variant { name widthCm } shade { code name } } }
+       purchaseOrderLines_on_purchaseOrder(orderBy: { lineNo: ASC }) { lineNo quantity uom unitPrice overTolerancePercent underTolerancePercent requestedExFactory sku { code product { code name } variant { name widthCm } shade { code name hex } } }
        paymentMilestones_on_purchaseOrder { label percent amount trigger dueOn paidOn } } }`,
     { number },
   );
@@ -368,6 +443,15 @@ export async function renderPurchaseOrder(number: string): Promise<{ pdf: Buffer
     };
   });
   table(doc, columns, rows, { total: { description: `Total, ${po.currency}`, quantity: `${thousands(totalQuantity, QUANTITY_DECIMALS, 0)} ${po.purchaseOrderLines_on_purchaseOrder[0]?.uom ?? 'm'}`, amount: thousands(total, MONEY_DECIMALS, 2) } });
+
+  const palette = new Map<string, { code: string; name: string; hex: string | null; lines: number[]; metres: bigint }>();
+  for (const line of po.purchaseOrderLines_on_purchaseOrder) {
+    const entry = palette.get(line.sku.shade.code) ?? { code: line.sku.shade.code, name: line.sku.shade.name, hex: line.sku.shade.hex, lines: [], metres: 0n };
+    entry.lines.push(line.lineNo);
+    entry.metres += BigInt(line.quantity);
+    palette.set(line.sku.shade.code, entry);
+  }
+  shadePalette(doc, [...palette.values()]);
 
   const payments = [...po.paymentMilestones_on_purchaseOrder].sort((a, b) => TRIGGER_ORDER.indexOf(a.trigger) - TRIGGER_ORDER.indexOf(b.trigger));
   if (payments.length > 0) {
