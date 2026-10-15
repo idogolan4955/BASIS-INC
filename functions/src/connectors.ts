@@ -93,7 +93,14 @@ export const saveConnector = onCall({ region: REGION }, async (request) => {
   return { key };
 });
 
-const secretPresent = (name: string) => Boolean(process.env[name]);
+// A secret may exist as the placeholder `unset`: the CLI insists on a value
+// at the first deploy, before the provider is chosen. That counts as absent.
+const PLACEHOLDER = 'unset';
+const secretValue = (name: string) => {
+  const value = process.env[name]?.trim() ?? '';
+  return value === PLACEHOLDER ? '' : value;
+};
+const secretPresent = (name: string) => Boolean(secretValue(name));
 
 export const connectorStatus = onCall({ region: REGION, secrets: [EMAIL_API_KEY] }, async (request) => {
   const caller = callerOf(request);
@@ -123,7 +130,7 @@ async function emailSettings(): Promise<EmailSettingsRow> {
 }
 
 async function deliver(settings: EmailSettingsRow, to: string, subject: string, text: string, attachment: { filename: string; content: Buffer }): Promise<string> {
-  const key = EMAIL_API_KEY.value();
+  const key = secretValue(EMAIL_API_KEY.name);
   if (!key) throw failure('invariant_violation', 'The email connector has no API key. Set EMAIL_API_KEY with `firebase functions:secrets:set EMAIL_API_KEY`.');
   if (!settings.provider || !settings.fromAddress) throw failure('invariant_violation', 'The email connector needs a provider and a from address in Settings.');
   const from = settings.fromName ? `${settings.fromName} <${settings.fromAddress}>` : settings.fromAddress;

@@ -50,19 +50,23 @@ and `ADD COLUMN`, never `DROP` without the owner's explicit approval.
 firebase functions:secrets:set EMAIL_API_KEY
 ```
 
-Two functions (`connectorStatus`, `sendDocumentEmail`) declare this secret
-and cannot deploy until it exists. Without an email provider yet, deploy
-every other function first (step 6, second form) and come back later.
+Two functions (`connectorStatus`, `sendDocumentEmail`) declare this secret,
+and the CLI asks for its value at the first functions deploy even when only
+other functions are being deployed. Without an email provider yet, answer
+the prompt with the word `unset`: the functions treat that placeholder as
+no key, the email connector reports the secret as missing, and the real
+value replaces it later with the command above.
 
 ## 6. Functions and Storage rules
 
-With the secret set:
+With the secret set, or the `unset` placeholder in place:
 
 ```bash
 firebase deploy --only functions,storage
 ```
 
-Without it, every function except the two email ones:
+The long form, every function except the two email ones, is only needed
+when the secret must not exist at all:
 
 ```bash
 firebase deploy --only storage,functions:api,functions:evaluateAlerts,functions:inviteUser,functions:setUserRole,functions:sweepEvents,functions:createPurchaseOrder,functions:issuePurchaseOrder,functions:confirmPurchaseOrder,functions:cancelPurchaseOrder,functions:createProductionRun,functions:updateMilestone,functions:recordLot,functions:packHandlingUnit,functions:setLotQuality,functions:fileGeneratedDocument,functions:createApiToken,functions:revokeApiToken,functions:saveConnector,functions:markInquiry,functions:createInspection,functions:recordInspection,functions:submitInspection,functions:signOffInspection,functions:createCorrectiveAction,functions:updateCorrectiveAction,functions:createShipment,functions:updateShipment,functions:assignHandlingUnits,functions:removeHandlingUnits,functions:bookShipment,functions:cancelShipment,functions:updateLeg,functions:recordShipmentCost,functions:recordCustomsEntry,functions:setFxRate,functions:allocateShipmentCosts,functions:createStockLocation,functions:receiveShipment,functions:recordStockMovement,functions:setReorderPolicy,functions:upsertCustomerProfile,functions:saveQuote,functions:transitionQuote,functions:createSalesOrder,functions:transitionSalesOrder,functions:allocateSalesOrder,functions:shipSalesOrder,functions:recordInvoice
