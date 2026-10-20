@@ -17,3 +17,10 @@ dialog.palette {
 dialog.palette::backdrop {
   background: rgb(43 37 34 / 0.42);
 }
+
+/* The stamp when a goal is achieved: the mark lands, then settles. */
+@keyframes stamp {
+  0% { transform: scale(1.6) rotate(-8deg); opacity: 0; }
+  60% { transform: scale(0.95) rotate(2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}

@@ -14,38 +14,38 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { getShipmentCosts, getAllocationRun, listLotCosts, listLotCostsFor, listFxRates, listStockLocations, listStockBalances, listStockMovements, listRecentMovements, listReceipts } from '@basis/dataconnect-platform';
+import { getMe, listUsers, listOpenAlerts, listMyTasks, listTimeline, listDocuments, listDocumentsFor, listCountries, listCurrencies, listUoms } from '@basis/dataconnect-platform';
 
 
-// Operation GetShipmentCosts:  For variables, look at type GetShipmentCostsVars in ../index.d.ts
-const { data } = await GetShipmentCosts(dataConnect, getShipmentCostsVars);
+// Operation GetMe: 
+const { data } = await GetMe(dataConnect);
 
-// Operation GetAllocationRun:  For variables, look at type GetAllocationRunVars in ../index.d.ts
-const { data } = await GetAllocationRun(dataConnect, getAllocationRunVars);
+// Operation ListUsers: 
+const { data } = await ListUsers(dataConnect);
 
-// Operation ListLotCosts: 
-const { data } = await ListLotCosts(dataConnect);
+// Operation ListOpenAlerts: 
+const { data } = await ListOpenAlerts(dataConnect);
 
-// Operation ListLotCostsFor:  For variables, look at type ListLotCostsForVars in ../index.d.ts
-const { data } = await ListLotCostsFor(dataConnect, listLotCostsForVars);
+// Operation ListMyTasks: 
+const { data } = await ListMyTasks(dataConnect);
 
-// Operation ListFxRates: 
-const { data } = await ListFxRates(dataConnect);
+// Operation ListTimeline:  For variables, look at type ListTimelineVars in ../index.d.ts
+const { data } = await ListTimeline(dataConnect, listTimelineVars);
 
-// Operation ListStockLocations: 
-const { data } = await ListStockLocations(dataConnect);
+// Operation ListDocuments: 
+const { data } = await ListDocuments(dataConnect);
 
-// Operation ListStockBalances: 
-const { data } = await ListStockBalances(dataConnect);
+// Operation ListDocumentsFor:  For variables, look at type ListDocumentsForVars in ../index.d.ts
+const { data } = await ListDocumentsFor(dataConnect, listDocumentsForVars);
 
-// Operation ListStockMovements:  For variables, look at type ListStockMovementsVars in ../index.d.ts
-const { data } = await ListStockMovements(dataConnect, listStockMovementsVars);
+// Operation ListCountries: 
+const { data } = await ListCountries(dataConnect);
 
-// Operation ListRecentMovements:  For variables, look at type ListRecentMovementsVars in ../index.d.ts
-const { data } = await ListRecentMovements(dataConnect, listRecentMovementsVars);
+// Operation ListCurrencies: 
+const { data } = await ListCurrencies(dataConnect);
 
-// Operation ListReceipts: 
-const { data } = await ListReceipts(dataConnect);
+// Operation ListUoms: 
+const { data } = await ListUoms(dataConnect);
 
 
 ```

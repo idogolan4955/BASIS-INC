@@ -10,7 +10,7 @@ import { isSample } from './source';
 const asDate = (value: string | null | undefined): LocalDate | null => (value && isLocalDate(value) ? value : null);
 
 async function live() {
-  const [{ dataConnect }, sdk] = await Promise.all([import('../lib/firebase'), import('@basis/shared/dataconnect/platform')]);
+  const [{ dataConnect }, sdk] = await Promise.all([import('../lib/firebase'), import('../lib/connector').then((m) => m.platform())]);
   return { dc: dataConnect, sdk };
 }
 const sample = async () => (await import('./sample-commercial')).sampleCommercial;

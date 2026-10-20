@@ -224,7 +224,7 @@ The system is drawn with **lines, not boxes with shadows**.
 | Strong rule | 1 px, `border.strong`. Table headers, label frames, section starts |
 | Selvedge | 3 px strip on the leading edge. State and identity |
 | Radius | `0` by default. `2 px` on panels, inputs and chips. No pills. Circles only for avatars, shade swatches and material windows |
-| Shadows | None on surfaces. One soft shadow token exists for floating layers only (menus, dialogs, palette) |
+| Shadows | None on surfaces. One soft shadow token exists for floating layers only (menus, dialogs, palette, and paper notes on the two boards: a note is physically a sheet pinned over the board, the only thing in the platform that floats on a page) |
 | Surfaces | Separated by tone (milk → bone → sand) and hairlines, not by elevation |
 | Texture | On the site, material photography and a very fine paper grain may be used on large surfaces. No gradients as decoration; a gradient appears only as a shade transition with meaning |
 | Translucency | Used only where it represents the material (tulle, mesh layering). No frosted-glass panels |
@@ -349,6 +349,10 @@ Motion is taken from how fabric behaves. Each principle has a defined technique 
 - Semantic structure, labelled controls, accessible names on swatches (shade name and code, status label).
 - Colour never the only carrier of meaning (see §3.3).
 - Reduced motion respected (see §9.3).
+
+### Paper notes (the boards)
+
+The bulletin board and the goals board draw **paper**: a sheet in one of the first six material tones (01 milk to 06 deep powder, the only tones paper comes in), a fixed tilt of up to three degrees and a pin or a strip of tape, both drawn from the record's id so the same note always looks the same. Paper carries the one shadow token and a 2 px corner; its text is display serif with a bold first line; body text stays on ink. The board itself is a dotted ground with a dashed hairline edge. Phones show notes as a stacked list, untilted. Nothing else in the platform tilts, and nothing else casts a shadow on a page.
 
 ## 13. What BASIS never looks like
 

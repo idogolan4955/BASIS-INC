@@ -11,6 +11,7 @@ import { allocateShipmentCosts, recordCustomsEntry, recordShipmentCost, setFxRat
 import { createStockLocation, receiveShipment, recordStockMovement, setReorderPolicy } from './inventory';
 import { allocateSalesOrder, createSalesOrder, recordInvoice, saveQuote, shipSalesOrder, transitionQuote, transitionSalesOrder, upsertCustomerProfile } from './commercial';
 import { sweepEvents } from './sweep';
+import { deleteGoal, reorderGoals, saveGoal } from './boards';
 import { inviteUser, setUserRole } from './users';
 
 // Exported names must be exactly the registry in @basis/shared; the type
@@ -66,7 +67,10 @@ const registry: Record<FunctionName, unknown> = {
   allocateSalesOrder,
   shipSalesOrder,
   recordInvoice,
+  saveGoal,
+  reorderGoals,
+  deleteGoal,
 };
 void registry;
 
-export { api, evaluateAlerts, inviteUser, setUserRole, sweepEvents, createPurchaseOrder, issuePurchaseOrder, confirmPurchaseOrder, cancelPurchaseOrder, createProductionRun, updateMilestone, recordLot, packHandlingUnit, setLotQuality, fileGeneratedDocument, sendDocumentEmail, createApiToken, revokeApiToken, saveConnector, connectorStatus, markInquiry, createInspection, recordInspection, submitInspection, signOffInspection, createCorrectiveAction, updateCorrectiveAction, createShipment, updateShipment, assignHandlingUnits, removeHandlingUnits, bookShipment, cancelShipment, updateLeg, recordShipmentCost, recordCustomsEntry, setFxRate, allocateShipmentCosts, createStockLocation, receiveShipment, recordStockMovement, setReorderPolicy, upsertCustomerProfile, saveQuote, transitionQuote, createSalesOrder, transitionSalesOrder, allocateSalesOrder, shipSalesOrder, recordInvoice };
+export { api, evaluateAlerts, inviteUser, setUserRole, sweepEvents, createPurchaseOrder, issuePurchaseOrder, confirmPurchaseOrder, cancelPurchaseOrder, createProductionRun, updateMilestone, recordLot, packHandlingUnit, setLotQuality, fileGeneratedDocument, sendDocumentEmail, createApiToken, revokeApiToken, saveConnector, connectorStatus, markInquiry, createInspection, recordInspection, submitInspection, signOffInspection, createCorrectiveAction, updateCorrectiveAction, createShipment, updateShipment, assignHandlingUnits, removeHandlingUnits, bookShipment, cancelShipment, updateLeg, recordShipmentCost, recordCustomsEntry, setFxRate, allocateShipmentCosts, createStockLocation, receiveShipment, recordStockMovement, setReorderPolicy, upsertCustomerProfile, saveQuote, transitionQuote, createSalesOrder, transitionSalesOrder, allocateSalesOrder, shipSalesOrder, recordInvoice, saveGoal, reorderGoals, deleteGoal };

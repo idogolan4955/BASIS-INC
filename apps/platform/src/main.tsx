@@ -34,6 +34,8 @@ import { Shades } from './pages/products/Shades';
 import { SkuLedger, SkuSheet } from './pages/products/Skus';
 import { Loading, NoRole, SignIn } from './pages/access/SignIn';
 import { Gateway } from './pages/gateway/Gateway';
+import { Board } from './pages/board/Board';
+import { Goals } from './pages/goals/Goals';
 import { SessionProvider, useSessionState } from './session';
 import { LocaleProvider } from './i18n';
 
@@ -123,6 +125,8 @@ const router = createBrowserRouter([
       { path: 'customers/:id/contacts', element: <CompanySheet tab="contacts" base="/customers" /> },
       { path: 'customers/:id/places', element: <CompanySheet tab="places" base="/customers" /> },
       { path: 'customers/:id/orders', element: <CompanySheet tab="orders" base="/customers" /> },
+      { path: 'board', element: <Board /> },
+      { path: 'goals', element: <Goals /> },
       { path: ':module/*', element: <ModulePending /> },
     ],
   },

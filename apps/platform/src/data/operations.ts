@@ -44,7 +44,7 @@ async function sampleRuns(): Promise<OperationsRun[]> {
 }
 
 async function liveRuns(): Promise<OperationsRun[]> {
-  const [{ dataConnect }, sdk] = await Promise.all([import('../lib/firebase'), import('@basis/shared/dataconnect/platform')]);
+  const [{ dataConnect }, sdk] = await Promise.all([import('../lib/firebase'), import('../lib/connector').then((m) => m.platform())]);
   const { data } = await sdk.operationsFacts(dataConnect);
   return data.productionRuns.map((run) => ({
     number: run.number,
@@ -74,7 +74,7 @@ const shipmentFacts = (shipment: ShipmentSummary): OperationsShipment => ({ numb
 /** Booked shipments, as the pipeline and the calendar read them. */
 export async function loadShipmentFacts(): Promise<OperationsShipment[]> {
   if (isSample) return (await (await import('./sample-logistics')).sampleLogistics.shipments()).filter((shipment) => shipment.state === 'booked').map(shipmentFacts);
-  const [{ dataConnect }, sdk, { summaryOf }] = await Promise.all([import('../lib/firebase'), import('@basis/shared/dataconnect/platform'), import('./logistics')]);
+  const [{ dataConnect }, sdk, { summaryOf }] = await Promise.all([import('../lib/firebase'), import('../lib/connector').then((m) => m.platform()), import('./logistics')]);
   const { data } = await sdk.listShipments(dataConnect);
   const today = todayIn(zone());
   return data.shipments.filter((shipment) => shipment.state === 'booked').map((row) => shipmentFacts(summaryOf(row as never, today)));
@@ -83,7 +83,7 @@ export async function loadShipmentFacts(): Promise<OperationsShipment[]> {
 /** Balances by lot and place, as the pipeline's stock cell reads them. */
 async function loadStockFacts(): Promise<{ onHand: string; physical: boolean }[]> {
   if (isSample) return (await (await import('./sample-inventory')).sampleInventory.balances()).map((balance) => ({ onHand: balance.onHand, physical: balance.locationKind === 'physical' }));
-  const [{ dataConnect }, sdk] = await Promise.all([import('../lib/firebase'), import('@basis/shared/dataconnect/platform')]);
+  const [{ dataConnect }, sdk] = await Promise.all([import('../lib/firebase'), import('../lib/connector').then((m) => m.platform())]);
   const { data } = await sdk.listStockBalances(dataConnect);
   return data.stockBalances.map((balance) => ({ onHand: balance.onHand, physical: balance.location.kind === 'physical' }));
 }

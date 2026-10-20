@@ -44,6 +44,11 @@ export interface AuditEvent_Key {
   __typename?: 'AuditEvent_Key';
 }
 
+export interface BoardNote_Key {
+  id: UUIDString;
+  __typename?: 'BoardNote_Key';
+}
+
 export interface Certification_Key {
   id: UUIDString;
   __typename?: 'Certification_Key';
@@ -142,6 +147,11 @@ export interface Factory_Key {
 export interface FxRate_Key {
   id: UUIDString;
   __typename?: 'FxRate_Key';
+}
+
+export interface Goal_Key {
+  id: UUIDString;
+  __typename?: 'Goal_Key';
 }
 
 export interface HandlingUnitContent_Key {

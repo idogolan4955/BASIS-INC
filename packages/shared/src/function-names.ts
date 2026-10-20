@@ -70,6 +70,10 @@ export const FUNCTION_NAMES = {
   allocateSalesOrder: 'allocateSalesOrder',
   shipSalesOrder: 'shipSalesOrder',
   recordInvoice: 'recordInvoice',
+  /** Callable, owner: a goal saved or changed, the board reordered, a goal removed. */
+  saveGoal: 'saveGoal',
+  reorderGoals: 'reorderGoals',
+  deleteGoal: 'deleteGoal',
   /** Callable, owner and operations: run the alert rules now. */
   evaluateAlerts: 'evaluateAlerts',
   /** Scheduled: consume domain events, evaluate alert rules. */

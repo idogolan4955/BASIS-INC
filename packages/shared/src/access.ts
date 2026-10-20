@@ -49,6 +49,8 @@ export const MODULE_KEYS = [
   'costing',
   'analytics',
   'settings',
+  'board',
+  'goals',
 ] as const;
 
 export type ModuleKey = (typeof MODULE_KEYS)[number];
@@ -80,6 +82,8 @@ export const MODULES: readonly ModuleDefinition[] = [
   { key: 'costing', number: '13', name: 'Costing', path: '/costing', summary: 'Landed cost, price lists, margins, FX', phase: 'P6' },
   { key: 'analytics', number: '14', name: 'Analytics', path: '/analytics', summary: 'Supply, logistics, commercial, inventory', phase: 'P9' },
   { key: 'settings', number: '15', name: 'Settings', path: '/settings', summary: 'Users, roles, reference data, templates', phase: 'Phase 1' },
+  { key: 'board', number: '16', name: 'Board', path: '/board', summary: 'The team\'s bulletin board: notes pinned anywhere', phase: 'P9' },
+  { key: 'goals', number: '17', name: 'Goals', path: '/goals', summary: 'Company goals by section, with a timeline', phase: 'P9' },
 ];
 
 export type AccessLevel = 'manage' | 'limited' | 'read' | 'none';
@@ -107,6 +111,9 @@ export const MODULE_ACCESS: Record<ModuleKey, Record<Role, AccessLevel>> = {
   costing:       { owner: M, operations: M, purchasing: L, qc: N, logistics: L, sales: N, marketing: N, finance: M, viewer: N },
   analytics:     { owner: M, operations: M, purchasing: L, qc: L, logistics: L, sales: L, marketing: L, finance: M, viewer: R },
   settings:      { owner: M, operations: L, purchasing: N, qc: N, logistics: N, sales: N, marketing: N, finance: N, viewer: N },
+  // The bulletin board is everyone's; a board that needs approval is dead. Goals are the owner's, read by operations and finance.
+  board:         { owner: M, operations: M, purchasing: M, qc: M, logistics: M, sales: M, marketing: M, finance: M, viewer: M },
+  goals:         { owner: M, operations: R, purchasing: N, qc: N, logistics: N, sales: N, marketing: N, finance: R, viewer: N },
 };
 
 export function moduleAccess(role: Role, module: ModuleKey): AccessLevel {

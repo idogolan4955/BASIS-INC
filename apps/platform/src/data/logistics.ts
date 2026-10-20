@@ -36,7 +36,7 @@ const asDate = (value: string | null | undefined): LocalDate | null => (value &&
 const zone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 async function live() {
-  const [{ dataConnect }, sdk] = await Promise.all([import('../lib/firebase'), import('@basis/shared/dataconnect/platform')]);
+  const [{ dataConnect }, sdk] = await Promise.all([import('../lib/firebase'), import('../lib/connector').then((m) => m.platform())]);
   return { dc: dataConnect, sdk };
 }
 

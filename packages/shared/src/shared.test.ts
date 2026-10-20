@@ -182,9 +182,9 @@ describe('business numbers', () => {
 
 describe('access', () => {
   it('defines every module for every role', () => {
-    expect(MODULES).toHaveLength(15);
+    expect(MODULES).toHaveLength(17);
     expect(MODULES.map((definition) => definition.number)).toEqual(
-      Array.from({ length: 15 }, (_, index) => String(index + 1).padStart(2, '0')),
+      Array.from({ length: 17 }, (_, index) => String(index + 1).padStart(2, '0')),
     );
     for (const definition of MODULES) {
       for (const role of ROLES) expect(MODULE_ACCESS[definition.key][role]).toBeDefined();
@@ -192,7 +192,7 @@ describe('access', () => {
   });
 
   it('gives the owner everything', () => {
-    expect(modulesFor('owner')).toHaveLength(15);
+    expect(modulesFor('owner')).toHaveLength(17);
     expect(canManageUsers('owner')).toBe(true);
   });
 

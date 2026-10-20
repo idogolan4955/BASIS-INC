@@ -1,0 +1,58 @@
+# The two boards. A bulletin note is anyone's paper on the shared board; a
+# goal is the owner's, kept in order within its section. Tilt and fastener are
+# drawn from the id, never stored.
+
+enum PaperTone {
+  milk
+  bone
+  linen
+  sand
+  powder
+  powder_deep
+}
+
+type BoardNote @table {
+  text: String!
+  color: PaperTone!
+  # Horizontal position as a fraction of the board width, 0 to 1; vertical in pixels.
+  x: Float!
+  y: Float!
+  z: Int!
+  author: User!
+  editedBy: User
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+enum GoalStatus {
+  open
+  in_progress
+  achieved
+  paused
+}
+
+enum GoalSection {
+  ops
+  finance
+}
+
+type Goal @table {
+  title: String! @col(dataType: "varchar(140)")
+  body: String
+  color: PaperTone!
+  status: GoalStatus!
+  section: GoalSection!
+  # 1..n within the section; re-indexed on every reorder.
+  order: Int!
+  due: Date
+  # Manual progress 0..100, used when there is no money target.
+  progress: Int
+  # Fixed-point money, ten-thousandths.
+  targetAmount: Int64
+  currentAmount: Int64
+  currency: String! @col(dataType: "varchar(3)")
+  completedAt: Timestamp
+  createdBy: User
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}

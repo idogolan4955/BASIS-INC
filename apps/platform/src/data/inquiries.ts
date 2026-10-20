@@ -38,7 +38,7 @@ export function useInquiries() {
     queryKey: ['inquiries'],
     queryFn: async (): Promise<InquiryView[]> => {
       if (isSample) return [...sampleInquiries];
-      const [{ dataConnect }, sdk] = await Promise.all([import('../lib/firebase'), import('@basis/shared/dataconnect/platform')]);
+      const [{ dataConnect }, sdk] = await Promise.all([import('../lib/firebase'), import('../lib/connector').then((m) => m.platform())]);
       const { data } = await sdk.listInquiries(dataConnect);
       return data.inquiries.map((row) => {
         const details = (row.details ?? {}) as { products?: string[]; shades?: string[]; volume?: string | null; address?: string | null };

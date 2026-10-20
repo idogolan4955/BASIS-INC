@@ -241,6 +241,8 @@ Everything below requires an authenticated session; each route additionally requ
 | Route | Purpose |
 |---|---|
 | `/settings` | Settings index: Connectors (email, WhatsApp, assistant and API tokens) |
+| `/board` | The team's bulletin board: notes pinned anywhere, moved, edited in place | Every role |
+| `/goals` | The goals board: two sections, order, statuses, timeline | Owner manages; operations and finance read |
 | `/settings/users` · `/settings/roles` | Users and roles |
 | `/settings/legal-entities` | BASIS legal entities |
 | `/settings/reference` · `/settings/reference/[dataset]` | Reference data (units, currencies, ports, HS codes, defect types, delay reasons, document types) |

@@ -19,7 +19,7 @@ const zone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 async function loadLiveGateway(): Promise<GatewayData> {
   const [{ dataConnect }, { listOpenAlerts }, tasks] = await Promise.all([
     import('../lib/firebase'),
-    import('@basis/shared/dataconnect/platform'),
+    import('../lib/connector').then((m) => m.platform()),
     loadOpenTasks(),
   ]);
   const [{ data }, runRows, lanes, stock, orderFacts] = await Promise.all([listOpenAlerts(dataConnect), loadLiveRuns(), loadLanes(), loadStockFigure(), loadOrderFacts()]);
@@ -101,7 +101,7 @@ async function loadOrderFacts(): Promise<{ figure: GatewayData['figures']['order
   const orders = import.meta.env.MODE === 'sample'
     ? await (await import('./sample-commercial')).sampleCommercial.orders()
     : await (async () => {
-        const [{ dataConnect }, sdk, { orderSummary }] = await Promise.all([import('../lib/firebase'), import('@basis/shared/dataconnect/platform'), import('./commercial')]);
+        const [{ dataConnect }, sdk, { orderSummary }] = await Promise.all([import('../lib/firebase'), import('../lib/connector').then((m) => m.platform()), import('./commercial')]);
         const { data } = await sdk.listSalesOrders(dataConnect);
         return data.salesOrders.map((row) => orderSummary(row as never));
       })();
@@ -122,7 +122,7 @@ async function loadStockFigure(): Promise<GatewayData['figures']['inventory']> {
   const balances = import.meta.env.MODE === 'sample'
     ? await (await import('./sample-inventory')).sampleInventory.balances()
     : await (async () => {
-        const [{ dataConnect }, sdk] = await Promise.all([import('../lib/firebase'), import('@basis/shared/dataconnect/platform')]);
+        const [{ dataConnect }, sdk] = await Promise.all([import('../lib/firebase'), import('../lib/connector').then((m) => m.platform())]);
         const { data } = await sdk.listStockBalances(dataConnect);
         return data.stockBalances.map((row) => ({ rolls: row.rolls, familyCode: row.sku.product.family.code, familyName: row.sku.product.family.name, locationKind: row.location.kind }));
       })();
@@ -143,7 +143,7 @@ async function loadLanes(): Promise<{ shipments: ShipmentLane[]; transit: Gatewa
   const today = todayIn(zone());
   const all = await (async () => {
     if (import.meta.env.MODE === 'sample') return (await import('./sample-logistics')).sampleLogistics.shipments();
-    const [{ dataConnect }, sdk, { summaryOf }] = await Promise.all([import('../lib/firebase'), import('@basis/shared/dataconnect/platform'), import('./logistics')]);
+    const [{ dataConnect }, sdk, { summaryOf }] = await Promise.all([import('../lib/firebase'), import('../lib/connector').then((m) => m.platform()), import('./logistics')]);
     const { data } = await sdk.listShipments(dataConnect);
     return data.shipments.map((row) => summaryOf(row as never, today));
   })();
@@ -158,7 +158,7 @@ async function loadLanes(): Promise<{ shipments: ShipmentLane[]; transit: Gatewa
 }
 
 async function loadLiveRuns() {
-  const [{ dataConnect }, { listProductionRuns }] = await Promise.all([import('../lib/firebase'), import('@basis/shared/dataconnect/platform')]);
+  const [{ dataConnect }, { listProductionRuns }] = await Promise.all([import('../lib/firebase'), import('../lib/connector').then((m) => m.platform())]);
   const { data } = await listProductionRuns(dataConnect);
   const { runProgress } = await import('@basis/shared');
   return data.productionRuns.map((run) => {

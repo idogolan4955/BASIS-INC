@@ -1,0 +1,68 @@
+# The boards. Bulletin notes are written by anyone with a role, straight from
+# the interface: a board that waits for approval is dead. Goals are read here
+# and written by the goal functions, which keep the order and the completion rule.
+
+query ListBoardNotes @auth(level: USER) {
+  boardNotes(orderBy: { z: ASC }, limit: 400) {
+    id
+    text
+    color
+    x
+    y
+    z
+    author {
+      uid
+      name
+    }
+    editedBy {
+      name
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+mutation InsertBoardNote($text: String!, $color: PaperTone!, $x: Float!, $y: Float!, $z: Int!) @auth(level: USER) {
+  boardNote_insert(data: { text: $text, color: $color, x: $x, y: $y, z: $z, authorUid_expr: "auth.uid" })
+}
+
+# Text and tone: the editor is remembered. Position and stacking: not an edit.
+mutation EditBoardNote($id: UUID!, $text: String!, $color: PaperTone!) @auth(level: USER) {
+  boardNote_update(id: $id, data: { text: $text, color: $color, editedByUid_expr: "auth.uid", updatedAt_expr: "request.time" })
+}
+
+mutation MoveBoardNote($id: UUID!, $x: Float!, $y: Float!, $z: Int!) @auth(level: USER) {
+  boardNote_update(id: $id, data: { x: $x, y: $y, z: $z })
+}
+
+# A person takes down their own note; the owner may take down any.
+mutation DeleteOwnBoardNote($id: UUID!) @auth(level: USER) {
+  boardNote_deleteMany(where: { id: { eq: $id }, authorUid: { eq_expr: "auth.uid" } })
+}
+
+mutation DeleteBoardNote($id: UUID!) @auth(expr: "auth.token.role == 'owner'") {
+  boardNote_delete(id: $id)
+}
+
+query ListGoals @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'finance'") {
+  goals(orderBy: [{ section: ASC }, { order: ASC }, { createdAt: ASC }], limit: 500) {
+    id
+    title
+    body
+    color
+    status
+    section
+    order
+    due
+    progress
+    targetAmount
+    currentAmount
+    currency
+    completedAt
+    createdAt
+    updatedAt
+    createdBy {
+      name
+    }
+  }
+}

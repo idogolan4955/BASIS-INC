@@ -289,6 +289,12 @@ Delivered in two steps so the website is never blocked:
 Exit: the full lifecycle lead → sample → quote → order → fulfilment → repeat is recorded for a real customer, with margin known from landed cost.
 Depends on: Phase 2 (lite); P7 (full).
 
+#### Team boards (2026-10-20)
+
+| Done | Remaining |
+|---|---|
+| Two team modules from the owner's spec: **16 Board**, a bulletin board where anyone with a role pins a note anywhere, drags it (mouse, long-press on touch, arrow keys), edits it in place, recolours it and takes it down (author or owner); **17 Goals**, the owner's goals as paper notes in two sections with status, due date, manual progress or a money target, hand order (drag within and across sections, Alt+arrows, move earlier/later), completion that stamps the date and lifts a money goal to its target, an achieved strip, and a timeline by year or quarter whose pins drag to a new date. Rules in `packages/shared/src/boards.ts` with tests (validation refuses, never clamps; progress and completion derived); schema `dataconnect/schema/boards.gql`; notes written through the connector (no approval queue), goals through `saveGoal`, `reorderGoals`, `deleteGoal` with audit; sample data; Hebrew | Notifications when a note mentions a person; goals linked to records |
+
 #### Phase 2 follow-up, the fabric swatch (2026-10-15)
 
 | Done | Remaining |

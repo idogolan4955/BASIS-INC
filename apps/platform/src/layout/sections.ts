@@ -11,10 +11,12 @@ import {
   Kanban,
   Megaphone,
   Package,
+  PushPin,
   Receipt,
   SealCheck,
   SlidersHorizontal,
   Swatches,
+  Target,
   type Icon,
 } from '@phosphor-icons/react';
 
@@ -36,12 +38,15 @@ export const MODULE_ICONS: Record<ModuleKey, Icon> = {
   costing: Calculator,
   analytics: ChartBar,
   settings: SlidersHorizontal,
+  board: PushPin,
+  goals: Target,
 };
 
 const GROUPS: readonly { readonly label: string; readonly keys: readonly ModuleKey[] }[] = [
   { label: 'Supply', keys: ['operations', 'products', 'suppliers', 'manufacturing', 'qc', 'inventory', 'logistics'] },
   { label: 'Commercial', keys: ['orders', 'customers', 'marketing', 'website'] },
   { label: 'Records', keys: ['documents', 'costing', 'analytics', 'settings'] },
+  { label: 'Team', keys: ['board', 'goals'] },
 ];
 
 export interface RailGroup {
