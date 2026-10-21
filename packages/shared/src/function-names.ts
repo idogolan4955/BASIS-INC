@@ -70,6 +70,10 @@ export const FUNCTION_NAMES = {
   allocateSalesOrder: 'allocateSalesOrder',
   shipSalesOrder: 'shipSalesOrder',
   recordInvoice: 'recordInvoice',
+  /** Callable, sales roles: price lists, opportunities and the interactions that move them. */
+  savePriceList: 'savePriceList',
+  saveOpportunity: 'saveOpportunity',
+  logInteraction: 'logInteraction',
   /** Callable, owner: a goal saved or changed, the board reordered, a goal removed. */
   saveGoal: 'saveGoal',
   reorderGoals: 'reorderGoals',

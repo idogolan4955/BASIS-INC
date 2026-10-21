@@ -16,7 +16,7 @@ const money = (stored: string, currency: string, digits = 2) => formatMoney(mone
 const metres = (stored: string) => formatQuantity(quantityFromStored(stored, 'm'));
 const CURRENCIES = ['USD', 'EUR', 'CNY', 'ILS', 'GBP', 'CHF'];
 
-export function CostingTabs({ active }: { active: 'landed' | 'fx' }) {
+export function CostingTabs({ active }: { active: 'landed' | 'fx' | 'prices' }) {
   const t = useT();
   const session = useRequiredSession();
   const tab = (key: typeof active, to: string, label: string) => (
@@ -28,6 +28,7 @@ export function CostingTabs({ active }: { active: 'landed' | 'fx' }) {
     <nav aria-label={t('Costing sections')} className="flex gap-6 border-b border-line bg-panel px-5 lg:px-8">
       {canViewCosts(session.role) && tab('landed', '/costing', t('Landed cost'))}
       {tab('fx', '/costing/fx', t('FX rates'))}
+      {['owner', 'operations', 'sales', 'finance'].includes(session.role) && tab('prices', '/costing/prices', t('Price lists'))}
     </nav>
   );
 }

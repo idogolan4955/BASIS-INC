@@ -22,6 +22,8 @@ import { Operations } from './pages/operations/Operations';
 import { Arrivals, Requirements, Shipments } from './pages/logistics/Logistics';
 import { ShipmentSheet } from './pages/logistics/ShipmentSheet';
 import { FxRates, LandedCost } from './pages/costing/Costing';
+import { PriceLists } from './pages/costing/PriceLists';
+import { Pipeline } from './pages/customers/Pipeline';
 import { Movements, Places, Receipts, Stock } from './pages/inventory/Inventory';
 import { Quotes, SalesOrders } from './pages/orders/Orders';
 import { QuoteSheet } from './pages/orders/QuoteSheet';
@@ -80,6 +82,7 @@ const router = createBrowserRouter([
       { path: 'documents', element: <Documents /> },
       { path: 'settings', element: <Settings /> },
       { path: 'customers/inquiries', element: <Inquiries /> },
+      { path: 'customers/pipeline', element: <Pipeline /> },
       { path: 'qc', element: <Inspections /> },
       { path: 'qc/inspections', element: <Inspections /> },
       { path: 'qc/inspections/:number', element: <InspectionSheet tab="checks" /> },
@@ -106,6 +109,7 @@ const router = createBrowserRouter([
       { path: 'orders/:number/timeline', element: <OrderSheet tab="timeline" /> },
       { path: 'costing', element: <LandedCost /> },
       { path: 'costing/fx', element: <FxRates /> },
+      { path: 'costing/prices', element: <PriceLists /> },
       { path: 'logistics/arrivals', element: <Arrivals /> },
       { path: 'logistics/requirements', element: <Requirements /> },
       { path: 'products', element: <ProductsIndex /> },
@@ -125,6 +129,7 @@ const router = createBrowserRouter([
       { path: 'customers/:id/contacts', element: <CompanySheet tab="contacts" base="/customers" /> },
       { path: 'customers/:id/places', element: <CompanySheet tab="places" base="/customers" /> },
       { path: 'customers/:id/orders', element: <CompanySheet tab="orders" base="/customers" /> },
+      { path: 'customers/:id/relationship', element: <CompanySheet tab="relationship" base="/customers" /> },
       { path: 'board', element: <Board /> },
       { path: 'goals', element: <Goals /> },
       { path: ':module/*', element: <ModulePending /> },

@@ -161,6 +161,8 @@ type SupplierPrice @table {
   quotationRef: String @col(dataType: "varchar(80)")
 }
 
+# Selling prices a quote starts from. A list is for one tier or for every
+# customer; one list per currency may be the default.
 type PriceList @table(key: "code") {
   code: String! @col(dataType: "varchar(16)")
   name: String! @col(dataType: "varchar(80)")
@@ -169,11 +171,22 @@ type PriceList @table(key: "code") {
   validFrom: Date
   validTo: Date
   isDefault: Boolean!
+  notes: String
+  updatedAt: Timestamp @default(expr: "request.time")
 }
 
+# A SKU's own price from a quantity break upwards.
 type PriceListItem @table {
   priceList: PriceList!
   sku: Sku!
+  minQuantity: Int64!
+  unitPrice: Int64!
+}
+
+# A product-wide price, for every SKU of the product without its own line.
+type PriceListProductItem @table {
+  priceList: PriceList!
+  product: Product!
   minQuantity: Int64!
   unitPrice: Int64!
 }

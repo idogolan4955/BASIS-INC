@@ -2,7 +2,7 @@ import { HttpsError, onRequest } from 'firebase-functions/v2/https';
 import { REGION, httpCallerOf, requireRole } from './lib';
 import { exportRows, renderExport } from './exports';
 import { receiveInquiry } from './intake';
-import { renderPackingList, renderPurchaseOrder, renderRollLabels, renderShipmentPackingList } from './pdf';
+import { renderPackingList, renderPurchaseOrder, renderRollLabels, renderQuote, renderShipmentPackingList } from './pdf';
 import { EXPORT_FORMATS, isAssistantCommand, isExportLedger, type ExportFormat } from '@basis/shared';
 import type { CallableFunction, CallableRequest } from 'firebase-functions/v2/https';
 import { graphql } from './lib';
@@ -13,11 +13,14 @@ import { graphql } from './lib';
 const COST_ROLES = ['owner', 'operations', 'purchasing', 'finance'] as const;
 const GOODS_ROLES = ['owner', 'operations', 'purchasing', 'qc', 'logistics'] as const;
 
-const PDF_ROUTES: Record<string, { roles: readonly (typeof COST_ROLES)[number][] | readonly (typeof GOODS_ROLES)[number][]; action: string; render: (number: string) => Promise<{ pdf: Buffer; filename: string }> }> = {
+const SALES_ROLES = ['owner', 'operations', 'sales', 'finance', 'viewer'] as const;
+
+const PDF_ROUTES: Record<string, { roles: readonly (typeof COST_ROLES)[number][] | readonly (typeof GOODS_ROLES)[number][] | readonly (typeof SALES_ROLES)[number][]; action: string; render: (number: string) => Promise<{ pdf: Buffer; filename: string }> }> = {
   'purchase-order': { roles: COST_ROLES, action: 'The purchase order document', render: renderPurchaseOrder },
   'packing-list': { roles: GOODS_ROLES, action: 'The packing list', render: renderPackingList },
   'roll-labels': { roles: GOODS_ROLES, action: 'Roll labels', render: renderRollLabels },
   'shipment-packing-list': { roles: GOODS_ROLES, action: 'The shipment packing list', render: renderShipmentPackingList },
+  quote: { roles: SALES_ROLES, action: 'The quotation document', render: renderQuote },
 };
 
 const STATUS: Record<string, number> = { 'invalid-argument': 400, 'not-found': 404, 'permission-denied': 403, aborted: 409, 'failed-precondition': 412, unavailable: 503 };

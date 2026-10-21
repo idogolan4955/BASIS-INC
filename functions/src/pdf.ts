@@ -482,6 +482,163 @@ export async function renderPurchaseOrder(number: string): Promise<{ pdf: Buffer
   return { pdf: await finish(), filename: `${po.number}-purchase-order-v${po.version}.pdf` };
 }
 
+// ---------------------------------------------------------------- quote
+
+interface QuoteDocRow {
+  number: string;
+  state: string;
+  currency: string;
+  namedPlace: string | null;
+  paymentTerms: string | null;
+  validUntil: string | null;
+  sentOn: string | null;
+  notes: string | null;
+  createdAt: string;
+  customer: { legalName: string; tradingName: string | null; country: { name: string } | null; locations_on_company: NonNullable<Address>[] };
+  contact: { name: string; email: string | null } | null;
+  incoterm: { code: string } | null;
+  quoteLines_on_quote: { lineNo: number; quantity: string; unitPrice: string; leadTimeDays: number | null; note: string | null; sku: { code: string; product: { name: string }; variant: { name: string; widthCm: number | null }; shade: { code: string; name: string; hex: string | null }; putUp: { name: string; rollLengthM: number } } }[];
+}
+
+/** The quote as the customer receives it: the offer, its lines, the shades drawn, the terms. No costs. */
+export async function renderQuote(number: string): Promise<{ pdf: Buffer; filename: string }> {
+  const { quotes } = await graphql<{ quotes: QuoteDocRow[] }>(
+    `query ($number: String!) { quotes(where: { number: { eq: $number } }, limit: 1) {
+       number state currency namedPlace paymentTerms validUntil sentOn notes createdAt
+       customer { legalName tradingName country { name } locations_on_company(limit: 1) { addressLine1 addressLine2 city region postalCode country { name } } }
+       contact { name email }
+       incoterm { code }
+       quoteLines_on_quote(orderBy: { lineNo: ASC }) { lineNo quantity unitPrice leadTimeDays note sku { code product { name } variant { name widthCm } shade { code name hex } putUp { name rollLengthM } } } } }`,
+    { number },
+  );
+  const quote = quotes[0];
+  if (!quote) throw failure('not_found', `No quote ${number}.`);
+  const { legalEntities } = await graphql<{ legalEntities: { name: string; taxId: string | null; country: { name: string } }[] }>(`query { legalEntities(where: { isDefault: { eq: true } }, limit: 1) { name taxId country { name } } }`);
+  const issuer = legalEntities[0]?.name ?? 'BASIS INC.';
+  const page = { kind: 'Quotation', number: quote.number, issuer };
+  const { doc, finish } = open(page);
+  const paginate = chrome(doc, page);
+  const customerName = quote.customer.tradingName || quote.customer.legalName;
+  const dated = quote.sentOn ?? quote.createdAt.slice(0, 10);
+
+  title(doc, `Quotation ${quote.number}`, `${quote.state === 'draft' ? 'Draft · ' : ''}${date(dated)}${quote.validUntil ? ` · Valid until ${date(quote.validUntil)}` : ''}`);
+
+  const half = (contentWidth(doc) - 24) / 2;
+  const top = doc.y + 6;
+  const customerLines = [customerName, quote.customer.tradingName && quote.customer.tradingName !== quote.customer.legalName ? quote.customer.legalName : '', ...addressLines(quote.customer.locations_on_company[0]), quote.contact ? `Attn. ${quote.contact.name}${quote.contact.email ? `, ${quote.contact.email}` : ''}` : ''];
+  const leftEnd = block(doc, 'Prepared for', customerLines, MARGIN.left, top, half);
+  let rightEnd = block(doc, 'From', [issuer, legalEntities[0]?.country.name ?? '', legalEntities[0]?.taxId ? `Tax ${legalEntities[0].taxId}` : ''], MARGIN.left + half + 24, top, half);
+  rightEnd = block(doc, 'Delivery terms', [[quote.incoterm?.code, quote.namedPlace].filter(Boolean).join(' ') || 'As agreed'], MARGIN.left + half + 24, rightEnd + 8, half);
+  doc.y = Math.max(leftEnd, rightEnd) + 4;
+
+  const totalQuantity = quote.quoteLines_on_quote.reduce((sum, line) => sum + BigInt(line.quantity), 0n);
+  facts(doc, [
+    { label: 'Currency', value: quote.currency },
+    { label: 'Payment terms', value: quote.paymentTerms || 'As agreed' },
+    { label: 'Lines', value: String(quote.quoteLines_on_quote.length) },
+    { label: 'Total quantity', value: metres(totalQuantity, 0) },
+  ], [0.8, 2.4, 0.7, 1.1]);
+
+  const width = contentWidth(doc);
+  const columns: Column[] = [
+    { key: 'no', label: 'No.', width: 26, font: 'mono' },
+    { key: 'sku', label: 'Item', width: 92, font: 'mono' },
+    { key: 'description', label: 'Description', width: width - 26 - 92 - 62 - 58 - 74 - 80 },
+    { key: 'quantity', label: 'Quantity', width: 62, align: 'right' },
+    { key: 'lead', label: 'Lead time', width: 58, align: 'right' },
+    { key: 'price', label: 'Price', width: 74, align: 'right' },
+    { key: 'amount', label: 'Amount', width: 80, align: 'right' },
+  ];
+  let total = 0n;
+  const rows = quote.quoteLines_on_quote.map((line) => {
+    const amount = (BigInt(line.unitPrice) * BigInt(line.quantity)) / 10n ** BigInt(QUANTITY_DECIMALS);
+    total += amount;
+    return {
+      no: String(line.lineNo).padStart(2, '0'),
+      sku: line.sku.code,
+      description: { main: `${line.sku.product.name}, ${line.sku.variant.name}`, sub: `${line.sku.shade.name} (${line.sku.shade.code}) · ${line.sku.putUp.rollLengthM} m rolls${line.note ? ` · ${line.note}` : ''}` },
+      quantity: metres(line.quantity, 0),
+      lead: line.leadTimeDays === null ? 'Ex stock' : `${line.leadTimeDays} days`,
+      price: `${formatFixed(BigInt(line.unitPrice), MONEY_DECIMALS, 2)} / m`,
+      amount: thousands(amount, MONEY_DECIMALS, 2),
+    };
+  });
+  table(doc, columns, rows, { total: { description: `Total, ${quote.currency}`, quantity: metres(totalQuantity, 0), amount: thousands(total, MONEY_DECIMALS, 2) } });
+
+  // The shades offered, drawn as the colour card the customer keeps.
+  const { shades } = await graphql<{ shades: { code: string; name: string; hex: string | null; sort: number; collection: { name: string; sort: number } | null }[] }>(`query { shades(where: { status: { eq: active } }, limit: 500) { code name hex sort collection { name sort } } }`);
+  const offered = new Set(quote.quoteLines_on_quote.map((line) => line.sku.shade.code));
+  shadeCard(doc, [...shades].sort((a, b) => (a.collection?.sort ?? 99) - (b.collection?.sort ?? 99) || a.sort - b.sort).map((shade) => ({ code: shade.code, name: shade.name, hex: shade.hex, collection: shade.collection?.name ?? 'Shades', marked: offered.has(shade.code) })), 'Shade System', 'on this quotation');
+
+  paragraph(doc, 'Notes', quote.notes ?? '');
+  paragraph(doc, 'Terms', `Prices are per metre, ${quote.incoterm?.code ?? 'as agreed'}${quote.namedPlace ? ` ${quote.namedPlace}` : ''}, in ${quote.currency}, and hold until ${quote.validUntil ? date(quote.validUntil) : 'withdrawn'}. Quantities are supplied in full rolls unless agreed otherwise. Shades are matched to the BASIS physical standards; screen colours are indicative. An order placed against this quotation is confirmed in writing by BASIS.`);
+  paginate();
+  return { pdf: await finish(), filename: `${quote.number}-quotation.pdf` };
+}
+
+/** Every shade of the Shade System as numbered chips, the ones on the document marked. */
+function shadeCard(doc: Doc, entries: readonly { code: string; name: string; hex: string | null; collection: string; marked: boolean }[], heading: string, markedWord: string): void {
+  if (entries.length === 0) return;
+  const { left } = MARGIN;
+  const width = contentWidth(doc);
+  const perRow = 8;
+  const gap = 6;
+  const chip = (width - gap * (perRow - 1)) / perRow;
+  const swatch = 30;
+  const height = swatch + 20;
+  const marked = entries.filter((entry) => entry.marked).length;
+  if (doc.y + 16 + 14 + height > bottomOf(doc)) {
+    doc.addPage();
+    doc.y = MARGIN.top;
+  }
+  label(doc, `${heading} · ${marked} of ${entries.length} ${markedWord}`, left, doc.y);
+  let rowY = doc.y + 16;
+  const collections = [...new Set(entries.map((entry) => entry.collection))];
+  for (const collection of collections) {
+    const own = entries.filter((entry) => entry.collection === collection);
+    if (rowY + 12 + height > bottomOf(doc)) {
+      doc.addPage();
+      rowY = MARGIN.top;
+    }
+    doc.font('sans').fontSize(7.5).fillColor(MUTED).text(collection, left, rowY, { lineBreak: false });
+    rowY += 12;
+    own.forEach((entry, index) => {
+      const column = index % perRow;
+      if (column === 0 && index > 0) {
+        rowY += height + gap;
+        if (rowY + height > bottomOf(doc)) {
+          doc.addPage();
+          rowY = MARGIN.top;
+        }
+      }
+      const x = left + column * (chip + gap);
+      const y = rowY;
+      doc.save();
+      if (entry.hex) doc.rect(x, y, chip, swatch).fillColor(entry.hex).fill();
+      else {
+        doc.rect(x, y, chip, swatch).fillColor(BONE).fill();
+        doc.moveTo(x, y + swatch).lineTo(x + chip, y).lineWidth(0.4).strokeColor(LINE).stroke();
+      }
+      doc.rect(x, y, chip, height).lineWidth(entry.marked ? 1.2 : 0.5).strokeColor(entry.marked ? INK : LINE).stroke();
+      const light = entry.hex ? isLight(entry.hex) : true;
+      doc.font('mono').fontSize(7);
+      const badgeWidth = doc.widthOfString(entry.code) + 8;
+      doc.roundedRect(x + 3, y + 3, badgeWidth, 11, 2).fillColor(light ? '#FBF8F3' : INK).fillOpacity(light ? 0.9 : 0.7).fill();
+      doc.fillOpacity(1).fillColor(light ? INK : '#FBF8F3').text(entry.code, x + 7, y + 5, { lineBreak: false });
+      if (entry.marked) {
+        const cx = x + chip - 9;
+        const cy = y + swatch - 9;
+        doc.circle(cx, cy, 5).fillColor(INK).fill();
+        doc.moveTo(cx - 2.4, cy).lineTo(cx - 0.6, cy + 1.8).lineTo(cx + 2.6, cy - 2).lineWidth(1).strokeColor('#FBF8F3').stroke();
+      }
+      doc.restore();
+      doc.font(entry.marked ? 'sansBold' : 'sans').fontSize(7.5).fillColor(entry.marked ? INK : MUTED).text(entry.name, x + 5, y + swatch + 5, { width: chip - 10, height: 10, ellipsis: true, lineBreak: false });
+    });
+    rowY += height + gap + 4;
+  }
+  doc.y = rowY + 12;
+}
+
 // ---------------------------------------------------------------- packing list
 
 interface RunRow {

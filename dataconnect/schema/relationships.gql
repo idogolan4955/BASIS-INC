@@ -1,0 +1,64 @@
+# The relationship side of selling: the opportunities a customer is in and
+# the interactions that move them. Price lists live with the catalog schema.
+# Money is Int64 ten-thousandths.
+
+enum OpportunityStage {
+  lead
+  qualified
+  sampling
+  quoting
+  negotiating
+  won
+  lost
+}
+
+enum OpportunitySource {
+  website
+  referral
+  fair
+  outreach
+  existing
+  other
+}
+
+type Opportunity @table {
+  customer: Company!
+  title: String! @col(dataType: "varchar(160)")
+  stage: OpportunityStage!
+  source: OpportunitySource
+  value: Int64
+  currency: String! @col(dataType: "varchar(3)")
+  expectedClose: Date
+  owner: User
+  quote: Quote
+  order: SalesOrder
+  lostReason: String @col(dataType: "varchar(200)")
+  notes: String
+  # The last interaction logged against it, or its creation.
+  lastActivityAt: Timestamp! @default(expr: "request.time")
+  closedAt: Timestamp
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+enum InteractionKind {
+  call
+  email
+  meeting
+  visit
+  sample
+  note
+}
+
+type Interaction @table {
+  customer: Company!
+  contact: Contact
+  opportunity: Opportunity
+  kind: InteractionKind!
+  occurredAt: Timestamp!
+  summary: String!
+  nextStep: String @col(dataType: "varchar(200)")
+  nextOn: Date
+  by: User
+  createdAt: Timestamp! @default(expr: "request.time")
+}

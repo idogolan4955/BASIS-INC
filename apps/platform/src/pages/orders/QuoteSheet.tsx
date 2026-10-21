@@ -5,6 +5,8 @@ import { Link, NavLink, useNavigate, useParams } from 'react-router';
 import { useQuote, useSaveQuote, useTransitionQuote } from '../../data/commercial';
 import { useRecordNote, useTimeline } from '../../data/timeline';
 import { useT } from '../../i18n';
+import { useDocument } from '../../lib/documents';
+import { isSample } from '../../data/source';
 import { useRequiredSession } from '../../session';
 import { NotFound } from '../NotFound';
 import { LinesEditor, parseLines } from './Orders';
@@ -89,6 +91,7 @@ export function QuoteSheet({ tab }: { tab: 'lines' | 'timeline' }) {
   const session = useRequiredSession();
   const { number = '' } = useParams();
   const quote = useQuote(number);
+  const documents = useDocument();
   const transition = useTransitionQuote();
   const timeline = useTimeline('quote', number);
   const note = useRecordNote('quote', number);
@@ -154,6 +157,7 @@ export function QuoteSheet({ tab }: { tab: 'lines' | 'timeline' }) {
         actions={
           manage && (
             <>
+              {!isSample && <Button onClick={() => void documents.open('quote', data.number)} busy={documents.busy === 'quote'} busyLabel={t('Rendering')}>{t('Quotation PDF')}</Button>}
               {data.state === 'draft' && <Button onClick={() => setEditing(true)}>{t('Edit lines')}</Button>}
               {data.state === 'draft' && (
                 <Button variant="primary" onClick={() => act('sent')} busy={transition.isPending && transition.variables?.to === 'sent'} busyLabel={t('Sending')}>

@@ -149,6 +149,7 @@ export const sampleCommercial = {
       orderNumber = `SO-26-${String(store.sequence.SO).padStart(4, '0')}`;
       store.orders.unshift({ id: `so-${orderNumber}`, number: orderNumber, state: 'confirmed', customerId: quote.customerId, customerName: quote.customerName, currency: quote.currency, requestedDelivery: (input.requestedDelivery ?? null) as LocalDate | null, confirmedOn: today(), createdAt: new Date().toISOString(), quoteNumber: quote.number, contactName: quote.contactName, incoterm: quote.incoterm, namedPlace: quote.namedPlace, paymentTerms: quote.paymentTerms, shipToName: '', shipToAddress: '', notes: quote.notes, lines: quote.lines.map((entry) => line(entry.lineNo, entry.skuCode, entry.quantity, entry.unitPrice)), invoices: [] });
     }
+    (await import('./sample-relationships')).sampleRelationships.followQuote(quote.number, input.to, orderNumber);
     return { number: quote.number, state: input.to, orderNumber };
   },
   async createOrder(input: OrderInput): Promise<{ number: string; total: string }> {

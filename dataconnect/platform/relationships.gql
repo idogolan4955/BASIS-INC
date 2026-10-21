@@ -1,0 +1,116 @@
+# Price lists, opportunities and interactions. Written by the relationship
+# functions; read by the commercial roles. Purchase costs are not here.
+
+query ListPriceLists @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'sales' || auth.token.role == 'finance'") {
+  priceLists(orderBy: [{ isDefault: DESC }, { name: ASC }], limit: 100) {
+    code
+    name
+    currency
+    tier
+    validFrom
+    validTo
+    isDefault
+    notes
+    updatedAt
+    priceListItems_on_priceList(limit: 1000) {
+      id
+      minQuantity
+      unitPrice
+      sku {
+        code
+      }
+    }
+    priceListProductItems_on_priceList(limit: 1000) {
+      id
+      minQuantity
+      unitPrice
+      product {
+        code
+      }
+    }
+  }
+}
+
+query ListOpportunities @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'sales' || auth.token.role == 'marketing' || auth.token.role == 'finance'") {
+  opportunities(orderBy: { createdAt: DESC }, limit: 1000) {
+    id
+    title
+    stage
+    source
+    value
+    currency
+    expectedClose
+    lostReason
+    notes
+    lastActivityAt
+    closedAt
+    createdAt
+    customer {
+      id
+      legalName
+      tradingName
+    }
+    owner {
+      uid
+      name
+    }
+    quote {
+      number
+    }
+    order {
+      number
+    }
+  }
+}
+
+query ListInteractions($customerId: UUID, $limit: Int) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'sales' || auth.token.role == 'marketing' || auth.token.role == 'finance'") {
+  interactions(where: { customerId: { eq: $customerId } }, orderBy: { occurredAt: DESC }, limit: $limit) {
+    id
+    kind
+    occurredAt
+    summary
+    nextStep
+    nextOn
+    customer {
+      id
+      legalName
+      tradingName
+    }
+    contact {
+      name
+    }
+    opportunity {
+      id
+      title
+    }
+    by {
+      name
+    }
+  }
+}
+
+query ListRecentInteractions($limit: Int) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'sales' || auth.token.role == 'marketing' || auth.token.role == 'finance'") {
+  interactions(orderBy: { occurredAt: DESC }, limit: $limit) {
+    id
+    kind
+    occurredAt
+    summary
+    nextStep
+    nextOn
+    customer {
+      id
+      legalName
+      tradingName
+    }
+    contact {
+      name
+    }
+    opportunity {
+      id
+      title
+    }
+    by {
+      name
+    }
+  }
+}

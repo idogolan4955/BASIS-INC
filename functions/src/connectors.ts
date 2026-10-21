@@ -4,7 +4,7 @@ import { defineSecret } from 'firebase-functions/params';
 import { onCall } from 'firebase-functions/v2/https';
 import { z } from 'zod';
 import { REGION, audit, callerOf, failure, graphql, requireRole, type Caller } from './lib';
-import { renderPackingList, renderPurchaseOrder, renderRollLabels, renderShipmentPackingList } from './pdf';
+import { renderPackingList, renderPurchaseOrder, renderRollLabels, renderQuote, renderShipmentPackingList } from './pdf';
 
 // Connectors: how the platform reaches the outside (email, WhatsApp, the
 // owner's assistant) and the tokens machines act with. Secrets are never
@@ -162,10 +162,11 @@ const RENDERERS = {
   'packing-list': { render: renderPackingList, entityType: 'production_run', roles: ['owner', 'operations', 'purchasing', 'qc', 'logistics'] as readonly Role[] },
   'roll-labels': { render: renderRollLabels, entityType: 'lot', roles: ['owner', 'operations', 'purchasing', 'qc', 'logistics'] as readonly Role[] },
   'shipment-packing-list': { render: renderShipmentPackingList, entityType: 'shipment', roles: ['owner', 'operations', 'purchasing', 'qc', 'logistics'] as readonly Role[] },
+  quote: { render: renderQuote, entityType: 'quote', roles: ['owner', 'operations', 'sales', 'finance'] as readonly Role[] },
 } as const;
 
 const sendInput = z.object({
-  kind: z.enum(['purchase-order', 'packing-list', 'roll-labels', 'shipment-packing-list']),
+  kind: z.enum(['purchase-order', 'packing-list', 'roll-labels', 'shipment-packing-list', 'quote']),
   number: z.string().regex(/^[A-Z]{2,4}-\d{2}-\d{4}$/),
   to: z.string().trim().email().max(255),
   subject: z.string().trim().min(1).max(200),

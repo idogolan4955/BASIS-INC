@@ -2,6 +2,7 @@ import { Button, Ledger, Panel, StatusChip, Td, Th, Tr } from '@basis/ui';
 import { useState } from 'react';
 import { INQUIRY_KIND_LABEL, useInquiries, useMarkInquiry, type InquiryView } from '../../data/inquiries';
 import { ModuleTitle } from '../products/ProductsIndex';
+import { CustomersTabs } from './Pipeline';
 import { useT } from '../../i18n';
 
 // Module 09, inquiries: what the website sent in, newest first, until it is
@@ -49,6 +50,7 @@ export function Inquiries() {
   return (
     <>
       <ModuleTitle number="09" title={t('Customers')}>{t('Inquiries from the website: sample requests, wholesale applications, messages.')}</ModuleTitle>
+      <CustomersTabs active="inquiries" />
       <div className="px-5 py-6 lg:px-8">
         <Panel title={t('Inquiries')} count={rows.filter((inquiry) => inquiry.state === 'new').length} flush>
           {inquiries.isPending ? (

@@ -3,6 +3,8 @@ import { onCall } from 'firebase-functions/v2/https';
 import { z } from 'zod';
 import { REGION, audit, callerOf, emit, failure, graphql, requireRole } from './lib';
 import { allocateNumber, timeline } from './manufacturing';
+import { fileGenerated } from './documents';
+import { followQuote } from './relationships';
 
 // Commercial commands: a customer's terms, quotes and what becomes of them,
 // sales orders, the stock held for them, and the outbound shipment that
@@ -180,6 +182,9 @@ export const transitionQuote = onCall({ region: REGION }, async (request) => {
     await timeline('sales_order', orderNumber, 'created', caller.uid, `Confirmed from ${quote.number}: ${money(total, quote.currency)} for ${customerName}`);
     await timeline('customer', quote.customer.id, 'order', caller.uid, `${orderNumber} confirmed from ${quote.number}: ${money(total, quote.currency)}`);
   }
+  // The quotation as sent is filed with it; its opportunity follows the quote.
+  if (input.to === 'sent') await fileGenerated('quote', quote.number, caller.uid);
+  await followQuote(quote.id, input.to, orderNumber);
   await audit(caller.uid, `quote.${input.to}`, 'quote', quote.number, { state: quote.state }, { state: input.to, order: orderNumber, reason: input.reason ?? null });
   await timeline('quote', quote.number, 'status_changed', caller.uid, `${input.to[0]!.toUpperCase()}${input.to.slice(1)}${orderNumber ? `; ${orderNumber} opened` : ''}${input.reason ? `: ${input.reason}` : ''}`);
   return { number: quote.number, state: input.to, orderNumber };

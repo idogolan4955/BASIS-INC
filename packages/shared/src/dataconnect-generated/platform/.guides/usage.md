@@ -14,38 +14,38 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { getMe, listUsers, listOpenAlerts, listMyTasks, listTimeline, listDocuments, listDocumentsFor, listCountries, listCurrencies, listUoms } from '@basis/dataconnect-platform';
+import { listShipments, getShipment, listShippableUnits, listLocations, listDocumentRequirements, listBoardNotes, insertBoardNote, editBoardNote, moveBoardNote, deleteOwnBoardNote } from '@basis/dataconnect-platform';
 
 
-// Operation GetMe: 
-const { data } = await GetMe(dataConnect);
+// Operation ListShipments: 
+const { data } = await ListShipments(dataConnect);
 
-// Operation ListUsers: 
-const { data } = await ListUsers(dataConnect);
+// Operation GetShipment:  For variables, look at type GetShipmentVars in ../index.d.ts
+const { data } = await GetShipment(dataConnect, getShipmentVars);
 
-// Operation ListOpenAlerts: 
-const { data } = await ListOpenAlerts(dataConnect);
+// Operation ListShippableUnits: 
+const { data } = await ListShippableUnits(dataConnect);
 
-// Operation ListMyTasks: 
-const { data } = await ListMyTasks(dataConnect);
+// Operation ListLocations: 
+const { data } = await ListLocations(dataConnect);
 
-// Operation ListTimeline:  For variables, look at type ListTimelineVars in ../index.d.ts
-const { data } = await ListTimeline(dataConnect, listTimelineVars);
+// Operation ListDocumentRequirements: 
+const { data } = await ListDocumentRequirements(dataConnect);
 
-// Operation ListDocuments: 
-const { data } = await ListDocuments(dataConnect);
+// Operation ListBoardNotes: 
+const { data } = await ListBoardNotes(dataConnect);
 
-// Operation ListDocumentsFor:  For variables, look at type ListDocumentsForVars in ../index.d.ts
-const { data } = await ListDocumentsFor(dataConnect, listDocumentsForVars);
+// Operation InsertBoardNote:  For variables, look at type InsertBoardNoteVars in ../index.d.ts
+const { data } = await InsertBoardNote(dataConnect, insertBoardNoteVars);
 
-// Operation ListCountries: 
-const { data } = await ListCountries(dataConnect);
+// Operation EditBoardNote:  For variables, look at type EditBoardNoteVars in ../index.d.ts
+const { data } = await EditBoardNote(dataConnect, editBoardNoteVars);
 
-// Operation ListCurrencies: 
-const { data } = await ListCurrencies(dataConnect);
+// Operation MoveBoardNote:  For variables, look at type MoveBoardNoteVars in ../index.d.ts
+const { data } = await MoveBoardNote(dataConnect, moveBoardNoteVars);
 
-// Operation ListUoms: 
-const { data } = await ListUoms(dataConnect);
+// Operation DeleteOwnBoardNote:  For variables, look at type DeleteOwnBoardNoteVars in ../index.d.ts
+const { data } = await DeleteOwnBoardNote(dataConnect, deleteOwnBoardNoteVars);
 
 
 ```

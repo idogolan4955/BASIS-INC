@@ -289,6 +289,16 @@ Delivered in two steps so the website is never blocked:
 Exit: the full lifecycle lead → sample → quote → order → fulfilment → repeat is recorded for a real customer, with margin known from landed cost.
 Depends on: Phase 2 (lite); P7 (full).
 
+#### Phase 8 progress, second slice of P8-full (2026-10-21)
+
+| Done | Remaining |
+|---|---|
+| Price lists (`PriceList` by code, SKU lines and product-wide lines with quantity breaks; one default per currency; a tier list before the general one): kept under 13 Costing › Price lists by the pricing roles; `priceFor` in `packages/shared/src/relationships.ts` fills a quote or order line's price from the customer's tier list, and the line says which list it came from until someone types over it | Margin per quote line against landed cost on the quote sheet |
+| The quotation as a document: `renderQuote` (the offer, its lines with lead times, the Shade System card with the quoted shades marked, terms; no costs), behind `/api/pdf/quote/<number>`, filed on send like the purchase order, sendable by email once the connector has a key; a Quotation PDF button on the quote sheet | |
+| Opportunities and the pipeline (09 Customers › Pipeline): stages lead to lost, source, value, expected close, owner, the quote it rides on; health read from the dates (quiet after 14 days, past the expected close) rather than typed; the board drags a card to a stage, losing asks why; the quote's transitions pull the opportunity forward (`followQuote`) and never back; win rate and value per stage | Opportunities fed from website inquiries; the Gateway's commercial figure from the pipeline |
+| Interactions on the customer's Relationship tab: calls, emails, meetings, visits, samples, notes with a contact, an opportunity and a next step that can become a task; next steps due surface on the tab; every log touches the customer timeline | Interactions from mail (the mail module) |
+| Sample mode for all of it; Hebrew throughout | |
+
 #### Team boards (2026-10-20)
 
 | Done | Remaining |

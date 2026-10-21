@@ -17,13 +17,17 @@ import {
   quantityFromStored,
   todayIn,
   type LocalDate,
+  formatFixed,
+  priceFor,
+  type PriceMatch,
 } from '@basis/shared';
 import { Button, Dialog, EmptyState, Ledger, Meter, Panel, SelectField, ShadeDot, StatusChip, Td, TextArea, TextField, Th, Tr, cn } from '@basis/ui';
 import { Plus, X } from '@phosphor-icons/react';
 import { useState, type FormEvent } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router';
 import { useSkus } from '../../data/catalog';
-import { useCreateSalesOrder, useQuotes, useSaveQuote, useSalesOrders } from '../../data/commercial';
+import { usePriceLists } from '../../data/relationships';
+import { useCreateSalesOrder, useQuotes, useSaveQuote, useSalesOrders, useCustomerOrders } from '../../data/commercial';
 import { useCompanies } from '../../data/parties';
 import { useT } from '../../i18n';
 import { useRequiredSession } from '../../session';
@@ -58,14 +62,43 @@ interface LineDraft {
   quantity: string;
   unitPrice: string;
   leadTimeDays: string;
+  /** The list the price came from, while nobody has typed over it. */
+  priced?: string;
 }
 
 /** The lines of a quote or an order: SKU, metres, price per metre. */
-export function LinesEditor({ lines, onChange, currency, withLead }: { lines: LineDraft[]; onChange: (lines: LineDraft[]) => void; currency: string; withLead?: boolean }) {
+export function LinesEditor({ lines, onChange, currency, withLead, customerId }: { lines: LineDraft[]; onChange: (lines: LineDraft[]) => void; currency: string; withLead?: boolean; customerId?: string }) {
   const t = useT();
   const skus = useSkus();
+  const priceLists = usePriceLists();
+  const customer = useCustomerOrders(customerId ?? '');
   const options = (skus.data ?? []).filter((sku) => sku.status !== 'discontinued');
-  const setLine = (index: number, key: keyof LineDraft, value: string) => onChange(lines.map((line, i) => (i === index ? { ...line, [key]: value } : line)));
+  // A line's price starts from the customer's price list and stays until someone types over it.
+  const suggested = (line: LineDraft): PriceMatch | null => {
+    const sku = options.find((candidate) => candidate.code === line.skuCode);
+    if (!sku || !priceLists.data) return null;
+    const quantity = (() => {
+      try {
+        return parseFixed(line.quantity || '0', QUANTITY_DECIMALS).toString();
+      } catch {
+        return '0';
+      }
+    })();
+    return priceFor(priceLists.data, { skuCode: sku.code, productCode: sku.productCode, tier: customer.data?.profile?.tier ?? null, currency, quantity, on: todayIn(Intl.DateTimeFormat().resolvedOptions().timeZone) });
+  };
+  const setLine = (index: number, key: keyof LineDraft, value: string) =>
+    onChange(
+      lines.map((line, i) => {
+        if (i !== index) return line;
+        const next = { ...line, [key]: value };
+        if (key === 'unitPrice') return { ...next, priced: undefined };
+        if ((key === 'skuCode' || key === 'quantity') && (line.unitPrice === '' || line.priced)) {
+          const match = suggested(next);
+          return match ? { ...next, unitPrice: formatFixed(BigInt(match.unitPrice), MONEY_DECIMALS, 2), priced: match.listName } : { ...next, unitPrice: line.priced ? '' : next.unitPrice, priced: undefined };
+        }
+        return next;
+      }),
+    );
   return (
     <fieldset className="border-t border-line pt-4 sm:col-span-3">
       <legend className="caps mb-3 text-ink-soft">{t('Lines')}</legend>
@@ -92,6 +125,7 @@ export function LinesEditor({ lines, onChange, currency, withLead }: { lines: Li
                 <p className="flex items-center gap-2 text-[0.8125rem] text-ink-muted sm:col-span-full">
                   <ShadeDot hex={sku.shadeHex} name={sku.shadeName} code={sku.shadeCode} size="sm" />
                   {sku.productName}, {sku.variantName}, {sku.shadeName}
+                  {line.priced && <span className="code ms-2">{t('price from')} {line.priced}</span>}
                 </p>
               )}
             </div>
@@ -179,7 +213,7 @@ export function NewQuoteDialog({ open, onClose, customerId: presetCustomer = '' 
         <TextField label={t('Named place')} value={form.namedPlace} onChange={set('namedPlace')} placeholder={t('Paris')} />
         <TextField label={t('Valid until')} type="date" value={form.validUntil} onChange={set('validUntil')} />
         <TextField label={t('Payment terms')} value={form.paymentTerms} onChange={set('paymentTerms')} className="sm:col-span-3" />
-        <LinesEditor lines={lines} onChange={setLines} currency={form.currency} withLead />
+        <LinesEditor lines={lines} onChange={setLines} currency={form.currency} withLead customerId={form.customerId} />
         <TextArea label={t('Notes')} value={form.notes} onChange={set('notes')} rows={2} className="sm:col-span-3" />
         {error && (
           <p role="alert" className="text-[0.8125rem] font-medium text-critical sm:col-span-3">
@@ -239,7 +273,7 @@ export function NewOrderDialog({ open, onClose, customerId: presetCustomer = '' 
         <TextField label={t('Payment terms')} value={form.paymentTerms} onChange={set('paymentTerms')} />
         <TextField label={t('Ship to')} value={form.shipToName} onChange={set('shipToName')} placeholder={t('Maison Avelline atelier')} className="sm:col-span-2" />
         <TextArea label={t('Delivery address')} value={form.shipToAddress} onChange={set('shipToAddress')} rows={2} className="sm:col-span-3" />
-        <LinesEditor lines={lines} onChange={setLines} currency={form.currency} />
+        <LinesEditor lines={lines} onChange={setLines} currency={form.currency} customerId={form.customerId} />
         <TextArea label={t('Notes')} value={form.notes} onChange={set('notes')} rows={2} className="sm:col-span-3" />
         {error && (
           <p role="alert" className="text-[0.8125rem] font-medium text-critical sm:col-span-3">

@@ -14,6 +14,7 @@ import { Link } from 'react-router';
 import { useCompanies, useCountries, useCreateCompany } from '../../data/parties';
 import { useRequiredSession } from '../../session';
 import { ModuleTitle } from '../products/ProductsIndex';
+import { CustomersTabs } from '../customers/Pipeline';
 import { useT } from '../../i18n';
 
 // One register of companies, seen through two doors: suppliers (and the
@@ -138,6 +139,7 @@ export function Companies({ door }: { door: Door }) {
       >
         {config.summary}
       </ModuleTitle>
+      {door === 'customers' && <CustomersTabs active="companies" />}
       <div className="px-5 py-6 lg:px-8">
         <Panel title={t('Companies')} count={rows.length} flush>
           <div className="border-b border-line px-5 py-4 sm:max-w-sm">

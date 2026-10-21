@@ -194,6 +194,11 @@ export interface Inspection_Key {
   __typename?: 'Inspection_Key';
 }
 
+export interface Interaction_Key {
+  id: UUIDString;
+  __typename?: 'Interaction_Key';
+}
+
 export interface InvoiceRef_Key {
   id: UUIDString;
   __typename?: 'InvoiceRef_Key';
@@ -237,6 +242,11 @@ export interface NumberSequence_Key {
   __typename?: 'NumberSequence_Key';
 }
 
+export interface Opportunity_Key {
+  id: UUIDString;
+  __typename?: 'Opportunity_Key';
+}
+
 export interface PaymentMilestone_Key {
   id: UUIDString;
   __typename?: 'PaymentMilestone_Key';
@@ -245,6 +255,11 @@ export interface PaymentMilestone_Key {
 export interface PriceListItem_Key {
   id: UUIDString;
   __typename?: 'PriceListItem_Key';
+}
+
+export interface PriceListProductItem_Key {
+  id: UUIDString;
+  __typename?: 'PriceListProductItem_Key';
 }
 
 export interface PriceList_Key {
