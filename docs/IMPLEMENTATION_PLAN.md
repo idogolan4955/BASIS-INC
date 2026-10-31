@@ -321,6 +321,10 @@ Depends on: Phase 2 (lite); P7 (full).
 | Module 08 Orders: sales orders (fulfilment from allocations and shipments, the shipment it left on), quotes, the new quote and new order dialogs with a lines editor; the quote sheet (lines, sent, accept into an order, declined, edit while draft); the order sheet (lines with the stock held per line, the hold-stock dialog with its preview, the ship dialog, invoices, margin over landed cost for the cost roles, timeline). The customer sheet's Orders tab with the terms and orders to date. The Gateway's order figure, weekly intake and recent orders read from sales orders. Hebrew throughout | Price lists and the quote's price defaults; the quote as a PDF |
 | Verified against the emulators: terms set on a customer; a quote saved, its lines replaced while draft, sent, an edit refused once sent, accepted into SO-26-0001; shipping refused before stock was held; stock held (one roll of fifty metres, the rest short); a second order on the same stock held nothing; the first shipped on SHP-26-0005 (outbound, booked) with the roll now with customers; an invoice recorded; cancelling the second released its hold. Sample mode: the order ledger, hold stock, ship and the balances that followed | |
 
+### P10 — Product development: the brand and consumer-products department (L)
+
+Designed in [PRODUCT_DEVELOPMENT_PLAN](PRODUCT_DEVELOPMENT_PLAN.md) on 2026-10-31: Brand Centre, categories and collections, the development dossier with files by role, the stage gate with approvals, sourcing comparison, estimate-versus-quotation costing, the handover into the catalog, and the department board. Built in three slices after the owner answers the plan's open questions.
+
 ### P9 — Marketing, analytics, integrations (L, ongoing)
 
 - Campaigns, segments, sample kits, outreach tracking.
