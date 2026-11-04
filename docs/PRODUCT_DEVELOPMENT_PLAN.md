@@ -4,6 +4,8 @@ How the new department (brand, apparel, fragrance and home scent, bags, shoes, a
 
 This document decides entities, screens, relationships and permissions. The build follows it in slices (§8). What is already in the system is reused, never duplicated.
 
+**State.** Slice 1 was built on 2026-11-04 with the proposed answers to §9 (the owner: "take the proposed"). Where the build differs from the text below: the dossier's parts, samples, sourcing and costing are written through ten functions named in `packages/shared/src/function-names.ts`; `PriceList`-style codes are not used for development products, which carry `DEV-26-0001` numbers; the sourcing comparison converts currencies only in slice 3 (today it ranks within the selected supplier's currency).
+
 ---
 
 ## 1. What the system already has, and what the department reuses

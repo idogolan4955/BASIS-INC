@@ -36,9 +36,9 @@ export function Th({
   );
 }
 
-export function Tr({ children, className }: { children: ReactNode; className?: string }) {
+export function Tr({ children, className, onClick }: { children: ReactNode; className?: string; onClick?: () => void }) {
   return (
-    <tr className={cn('border-b border-line transition-colors duration-150 last:border-b-0 hover:bg-bone', className)}>
+    <tr onClick={onClick} className={cn('border-b border-line transition-colors duration-150 last:border-b-0 hover:bg-bone', onClick && 'cursor-pointer', className)}>
       {children}
     </tr>
   );

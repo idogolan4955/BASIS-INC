@@ -11,6 +11,7 @@ import {
   Kanban,
   Megaphone,
   Package,
+  PencilRuler,
   PushPin,
   Receipt,
   SealCheck,
@@ -40,6 +41,7 @@ export const MODULE_ICONS: Record<ModuleKey, Icon> = {
   settings: SlidersHorizontal,
   board: PushPin,
   goals: Target,
+  development: PencilRuler,
 };
 
 const GROUPS: readonly { readonly label: string; readonly keys: readonly ModuleKey[] }[] = [
@@ -47,6 +49,7 @@ const GROUPS: readonly { readonly label: string; readonly keys: readonly ModuleK
   { label: 'Commercial', keys: ['orders', 'customers', 'marketing', 'website'] },
   { label: 'Records', keys: ['documents', 'costing', 'analytics', 'settings'] },
   { label: 'Team', keys: ['board', 'goals'] },
+  { label: 'Brand', keys: ['development'] },
 ];
 
 export interface RailGroup {

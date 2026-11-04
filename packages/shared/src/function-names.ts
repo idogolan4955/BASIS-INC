@@ -74,6 +74,17 @@ export const FUNCTION_NAMES = {
   savePriceList: 'savePriceList',
   saveOpportunity: 'saveOpportunity',
   logInteraction: 'logInteraction',
+  /** Callable, development roles: the department's records. Sourcing and costing for the cost roles; production approval for the owner. */
+  saveProductCategory: 'saveProductCategory',
+  saveCollection: 'saveCollection',
+  saveBrandAsset: 'saveBrandAsset',
+  saveDevelopmentProduct: 'saveDevelopmentProduct',
+  transitionDevelopment: 'transitionDevelopment',
+  saveDevelopmentPart: 'saveDevelopmentPart',
+  saveDevelopmentSample: 'saveDevelopmentSample',
+  saveDevelopmentSourcing: 'saveDevelopmentSourcing',
+  saveDevelopmentCosting: 'saveDevelopmentCosting',
+  recordDevelopmentDecision: 'recordDevelopmentDecision',
   /** Callable, owner: a goal saved or changed, the board reordered, a goal removed. */
   saveGoal: 'saveGoal',
   reorderGoals: 'reorderGoals',

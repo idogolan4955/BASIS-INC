@@ -23,6 +23,20 @@ service firebase.storage {
       allow write: if false;
     }
 
+    // Product development: the department uploads files on a dossier and in the
+    // Brand Centre; every staff role reads them. Quotations are cost documents.
+    function developmentWriter() {
+      return role() in ['owner', 'operations', 'marketing', 'purchasing', 'qc', 'finance'];
+    }
+    match /documents/development_product/{entityId}/{file} {
+      allow read: if staff();
+      allow write: if developmentWriter() && request.resource.size < 50 * 1024 * 1024;
+    }
+    match /documents/brand/{entityId}/{file} {
+      allow read: if staff();
+      allow write: if role() in ['owner', 'marketing'] && request.resource.size < 50 * 1024 * 1024;
+    }
+
     // Deny by default. Each module adds its own paths with explicit role checks.
     match /{allPaths=**} {
       allow read, write: if false;

@@ -4,6 +4,7 @@
 
 enum CompanyRoleKind {
   supplier
+  odm
   factory_operator
   customer
   freight_forwarder

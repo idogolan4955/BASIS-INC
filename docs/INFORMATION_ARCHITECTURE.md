@@ -193,6 +193,7 @@ Modules not expanded here follow the same pattern: ledgers at the top, sheets be
 | 15 Settings | ● | ◐ | – | – | – | – | – | – |
 | 16 Board | ● | ● | ● | ● | ● | ● | ● | ● |
 | 17 Goals | ● | ○ | – | – | – | – | – | ○ |
+| 18 Development | ● | ● | ◐ | ◐ | – | ○ | ● | ○ |
 
 ● manage · ◐ limited / own scope · ○ read · – hidden. Purchase costs, landed costs and supplier identity require `cost:view` regardless of module access.
 

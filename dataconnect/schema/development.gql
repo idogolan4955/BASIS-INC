@@ -1,0 +1,275 @@
+# Product development: the brand and consumer-products department. The Brand
+# Centre, categories with their specification schemas, collections, and the
+# development dossier with its parts, sample rounds, approvals, sourcing
+# candidates and costings. Files hang on the dossier through DocumentLink
+# with a role. Money is Int64 ten-thousandths; quantities Int64 thousandths.
+
+enum BrandAssetKind {
+  story
+  logo
+  typeface
+  colour
+  material
+  imagery
+  guideline
+  approved_design
+  inspiration
+}
+
+enum BrandAssetStatus {
+  draft
+  approved
+  retired
+}
+
+type BrandAsset @table {
+  kind: BrandAssetKind!
+  title: String! @col(dataType: "varchar(160)")
+  summary: String
+  document: Document
+  colourHex: String @col(dataType: "varchar(7)")
+  colourName: String @col(dataType: "varchar(80)")
+  paletteNumber: String @col(dataType: "varchar(4)")
+  tags: Any
+  collection: Collection
+  status: BrandAssetStatus!
+  sort: Int!
+  createdBy: User
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+enum CategoryStatus {
+  active
+  archived
+}
+
+# A product domain. Its specSchema says which fields a product carries, as
+# FabricFamily does for fabrics; a new domain is a row, not a release.
+type ProductCategory @table(key: "code") {
+  code: String! @col(dataType: "varchar(16)")
+  name: String! @col(dataType: "varchar(80)")
+  slug: String! @col(dataType: "varchar(80)")
+  description: String
+  parent: ProductCategory
+  specSchema: Any
+  sort: Int!
+  status: CategoryStatus!
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+enum CollectionStatus {
+  planning
+  in_development
+  launched
+  archived
+}
+
+type Collection @table(key: "code") {
+  code: String! @col(dataType: "varchar(16)")
+  name: String! @col(dataType: "varchar(120)")
+  season: String @col(dataType: "varchar(40)")
+  year: Int
+  theme: String
+  targetLaunch: Date
+  status: CollectionStatus!
+  moodDocument: Document
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+enum DevelopmentStage {
+  idea
+  concept
+  feasibility
+  sampling
+  revision
+  approved_for_production
+  commercial
+  on_hold
+  dropped
+}
+
+enum Priority {
+  low
+  normal
+  high
+}
+
+type DevelopmentProduct @table {
+  number: String! @col(dataType: "varchar(16)") @unique
+  category: ProductCategory!
+  collection: Collection
+  name: String! @col(dataType: "varchar(160)")
+  workingTitle: String @col(dataType: "varchar(160)")
+  description: String
+  intent: String
+  stage: DevelopmentStage!
+  owner: User
+  priority: Priority!
+  targetLaunch: Date
+  budgetAmount: Int64
+  budgetCurrency: String @col(dataType: "varchar(3)")
+  specs: Any
+  catalogProduct: Product
+  handedOverAt: Timestamp
+  lastActivityAt: Timestamp! @default(expr: "request.time")
+  createdBy: User
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+  archivedAt: Timestamp
+}
+
+enum PartStatus {
+  proposed
+  sampled
+  approved
+  dropped
+}
+
+type DevelopmentMaterial @table {
+  product: DevelopmentProduct!
+  role: String! @col(dataType: "varchar(40)")
+  name: String! @col(dataType: "varchar(160)")
+  specification: String
+  sku: Sku
+  supplier: Company
+  status: PartStatus!
+  notes: String
+}
+
+type DevelopmentVariant @table {
+  product: DevelopmentProduct!
+  code: String! @col(dataType: "varchar(16)")
+  name: String! @col(dataType: "varchar(120)")
+  shade: Shade
+  colourHex: String @col(dataType: "varchar(7)")
+  colourName: String @col(dataType: "varchar(80)")
+  sizeLabel: String @col(dataType: "varchar(40)")
+  dimensions: Any
+  status: PartStatus!
+  sort: Int!
+}
+
+type DevelopmentPackaging @table {
+  product: DevelopmentProduct!
+  component: String! @col(dataType: "varchar(60)")
+  specification: String
+  material: String @col(dataType: "varchar(120)")
+  dimensions: Any
+  supplier: Company
+  status: PartStatus!
+}
+
+enum SampleKind {
+  proto
+  fit
+  pre_production
+  shipment
+}
+
+enum SampleVerdict {
+  pending
+  approved
+  revise
+  rejected
+}
+
+type DevelopmentSample @table {
+  product: DevelopmentProduct!
+  round: Int!
+  kind: SampleKind!
+  supplier: Company
+  factory: Factory
+  requestedOn: Date
+  receivedOn: Date
+  verdict: SampleVerdict!
+  verdictBy: User
+  verdictOn: Date
+  findings: String
+  costAmount: Int64
+  costCurrency: String @col(dataType: "varchar(3)")
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+enum ApprovalDecision {
+  approved
+  returned
+  rejected
+}
+
+type DevelopmentApproval @table {
+  product: DevelopmentProduct!
+  gate: DevelopmentStage!
+  decision: ApprovalDecision!
+  decidedBy: User!
+  decidedAt: Timestamp! @default(expr: "request.time")
+  note: String
+}
+
+enum SourcingKind {
+  odm
+  oem
+  component
+  packaging
+}
+
+enum SourcingStatus {
+  candidate
+  quoted
+  sampled
+  selected
+  dropped
+}
+
+# One candidate supplier for one product. Costs and identity: cost roles only.
+type DevelopmentSourcing @table {
+  product: DevelopmentProduct!
+  supplier: Company!
+  factory: Factory
+  kind: SourcingKind!
+  status: SourcingStatus!
+  moq: Int64
+  leadTimeDays: Int
+  sampleLeadDays: Int
+  unitCost: Int64
+  currency: String! @col(dataType: "varchar(3)")
+  sampleCost: Int64
+  developmentCost: Int64
+  toolingCost: Int64
+  paymentTerms: String @col(dataType: "varchar(120)")
+  incoterm: String @col(dataType: "varchar(3)")
+  namedPlace: String @col(dataType: "varchar(120)")
+  quotationDocument: Document
+  quotedOn: Date
+  validUntil: Date
+  isSelected: Boolean!
+  notes: String
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+enum CostingBasis {
+  estimate
+  quotation
+  approved
+}
+
+# A costing per product per basis. Landed cost and margin are derived.
+type DevelopmentCosting @table {
+  product: DevelopmentProduct!
+  basis: CostingBasis!
+  currency: String! @col(dataType: "varchar(3)")
+  unitCost: Int64!
+  packagingCost: Int64!
+  freightCost: Int64!
+  dutyCost: Int64!
+  otherCost: Int64!
+  quantity: Int64
+  plannedPrice: Int64
+  wholesalePrice: Int64
+  sourcing: DevelopmentSourcing
+  notes: String
+  createdBy: User
+  createdAt: Timestamp! @default(expr: "request.time")
+}

@@ -1,0 +1,275 @@
+# Product development. Reads for the roles that open the module; sourcing and
+# costing only for the cost roles. Writes go through the development
+# functions, except uploading a file, which is a document and its link.
+
+query ListProductCategories @auth(level: USER) {
+  productCategories(orderBy: [{ sort: ASC }, { name: ASC }], limit: 200) {
+    code
+    name
+    slug
+    description
+    parent {
+      code
+    }
+    specSchema
+    sort
+    status
+  }
+}
+
+query ListCollections @auth(level: USER) {
+  collections(orderBy: [{ targetLaunch: DESC }, { name: ASC }], limit: 200) {
+    code
+    name
+    season
+    year
+    theme
+    targetLaunch
+    status
+    moodDocument {
+      id
+      title
+      storagePath
+      mimeType
+    }
+  }
+}
+
+query ListBrandAssets @auth(level: USER) {
+  brandAssets(orderBy: [{ kind: ASC }, { sort: ASC }], limit: 1000) {
+    id
+    kind
+    title
+    summary
+    colourHex
+    colourName
+    paletteNumber
+    tags
+    status
+    sort
+    updatedAt
+    collection {
+      code
+    }
+    document {
+      id
+      title
+      storagePath
+      mimeType
+    }
+  }
+}
+
+query ListDevelopmentProducts @auth(level: USER) {
+  developmentProducts(where: { archivedAt: { isNull: true } }, orderBy: { createdAt: DESC }, limit: 1000) {
+    id
+    number
+    name
+    workingTitle
+    stage
+    priority
+    targetLaunch
+    budgetAmount
+    budgetCurrency
+    lastActivityAt
+    createdAt
+    category {
+      code
+      name
+    }
+    collection {
+      code
+      name
+    }
+    owner {
+      uid
+      name
+    }
+    catalogProduct {
+      code
+    }
+    developmentSamples_on_product(orderBy: { round: DESC }, limit: 1) {
+      round
+      verdict
+      receivedOn
+    }
+  }
+}
+
+query GetDevelopmentProduct($number: String!) @auth(level: USER) {
+  developmentProducts(where: { number: { eq: $number } }, limit: 1) {
+    id
+    number
+    name
+    workingTitle
+    description
+    intent
+    stage
+    priority
+    targetLaunch
+    budgetAmount
+    budgetCurrency
+    specs
+    handedOverAt
+    lastActivityAt
+    createdAt
+    category {
+      code
+      name
+      specSchema
+    }
+    collection {
+      code
+      name
+    }
+    owner {
+      uid
+      name
+    }
+    catalogProduct {
+      code
+    }
+    developmentMaterials_on_product(limit: 200) {
+      id
+      role
+      name
+      specification
+      status
+      notes
+      sku {
+        code
+      }
+      supplier {
+        id
+        legalName
+        tradingName
+      }
+    }
+    developmentVariants_on_product(orderBy: { sort: ASC }, limit: 200) {
+      id
+      code
+      name
+      colourHex
+      colourName
+      sizeLabel
+      dimensions
+      status
+      sort
+      shade {
+        code
+        name
+      }
+    }
+    developmentPackagings_on_product(limit: 100) {
+      id
+      component
+      specification
+      material
+      dimensions
+      status
+      supplier {
+        id
+        legalName
+        tradingName
+      }
+    }
+    developmentSamples_on_product(orderBy: { round: ASC }, limit: 100) {
+      id
+      round
+      kind
+      requestedOn
+      receivedOn
+      verdict
+      verdictOn
+      findings
+      costAmount
+      costCurrency
+      supplier {
+        id
+        legalName
+        tradingName
+      }
+      verdictBy {
+        name
+      }
+    }
+    developmentApprovals_on_product(orderBy: { decidedAt: DESC }, limit: 100) {
+      id
+      gate
+      decision
+      decidedAt
+      note
+      decidedBy {
+        name
+      }
+    }
+  }
+}
+
+query ListDevelopmentSourcing($productId: UUID!) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'finance'") {
+  developmentSourcings(where: { productId: { eq: $productId } }, orderBy: { createdAt: ASC }, limit: 100) {
+    id
+    kind
+    status
+    moq
+    leadTimeDays
+    sampleLeadDays
+    unitCost
+    currency
+    sampleCost
+    developmentCost
+    toolingCost
+    paymentTerms
+    incoterm
+    namedPlace
+    quotedOn
+    validUntil
+    isSelected
+    notes
+    supplier {
+      id
+      legalName
+      tradingName
+    }
+    factory {
+      id
+      location {
+        name
+      }
+    }
+  }
+}
+
+query ListDevelopmentCosting($productId: UUID!) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'finance'") {
+  developmentCostings(where: { productId: { eq: $productId } }, orderBy: { createdAt: ASC }, limit: 100) {
+    id
+    basis
+    currency
+    unitCost
+    packagingCost
+    freightCost
+    dutyCost
+    otherCost
+    quantity
+    plannedPrice
+    wholesalePrice
+    notes
+    createdAt
+    sourcing {
+      id
+    }
+    createdBy {
+      name
+    }
+  }
+}
+
+# An uploaded file: the document record, then its link with a role. The bytes
+# go to Storage from the browser under documents/<entity>/<id>/.
+mutation InsertDocument($kind: DocumentKind!, $title: String!, $storagePath: String!, $mimeType: String!, $sizeBytes: Int!) @auth(level: USER) {
+  document_insert(data: { kind: $kind, title: $title, storagePath: $storagePath, mimeType: $mimeType, sizeBytes: $sizeBytes, uploadedByUid_expr: "auth.uid" })
+}
+
+mutation LinkDocument($documentId: UUID!, $entityType: String!, $entityId: String!, $role: String) @auth(level: USER) {
+  documentLink_insert(data: { documentId: $documentId, entityType: $entityType, entityId: $entityId, role: $role })
+}

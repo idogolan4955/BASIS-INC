@@ -4,6 +4,7 @@ import type { StatusTone } from './status';
 
 export const COMPANY_ROLE_KINDS = [
   'supplier',
+  'odm',
   'factory_operator',
   'customer',
   'freight_forwarder',
@@ -16,6 +17,7 @@ export type CompanyRoleKind = (typeof COMPANY_ROLE_KINDS)[number];
 
 export const COMPANY_ROLE_LABEL: Record<CompanyRoleKind, string> = {
   supplier: 'Supplier',
+  odm: 'ODM partner',
   factory_operator: 'Factory operator',
   customer: 'Customer',
   freight_forwarder: 'Freight forwarder',

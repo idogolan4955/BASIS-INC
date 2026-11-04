@@ -299,3 +299,14 @@ functions/src/
 ```
 
 Each module folder owns its screens, loading and error states, and module-specific components. Design-system components come from `@basis/ui`; business rules from `@basis/shared`; data through the generated connector SDK and callable functions.
+
+### Module 18 Development (2026-11-04)
+
+| Path | Screen | Access |
+|---|---|---|
+| `/development` | The department board: pipeline by stage, what needs attention, tasks due, launches, planned budget | Development module roles |
+| `/development/products` | Products in development | Development module roles |
+| `/development/products/:number[/files\|samples\|sourcing\|costing\|tasks\|decisions]` | The dossier | Sourcing and costing: cost roles |
+| `/development/brand` | The Brand Centre | Everyone reads; owner and marketing keep it |
+| `/development/collections` | Collections | Development module roles |
+| `/development/categories` | Categories and their specification schemas | Development module roles |

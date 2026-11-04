@@ -289,6 +289,12 @@ Delivered in two steps so the website is never blocked:
 Exit: the full lifecycle lead → sample → quote → order → fulfilment → repeat is recorded for a real customer, with margin known from landed cost.
 Depends on: Phase 2 (lite); P7 (full).
 
+#### P10 progress, first slice (2026-11-04)
+
+| Done | Remaining |
+|---|---|
+| Module 18 Development, built to [PRODUCT_DEVELOPMENT_PLAN](PRODUCT_DEVELOPMENT_PLAN.md) with the proposed answers to its questions (categories APP, FRG, HOM, BAG, SHO, ACC; first collection FW27; production approval by the owner; viability in USD; one DEV sequence; sizes recorded on the variant). Schema `dataconnect/schema/development.gql`: brand assets, categories with specification schemas, collections, the dossier with materials, variants, packaging, sample rounds, approvals, sourcing candidates and costings by basis; the company role `odm`. Rules in `packages/shared/src/development.ts` with tests: the gate's entry conditions counted from facts, health from the dates, landed cost and margin, budget spent, candidate comparison. Ten functions behind the gate, the parts, the samples (a verdict of revise moves the product to revision), sourcing (one selected), costing and decisions, each audited and on the timeline. Screens: the department board, the products ledger, the dossier with its seven tabs, the Brand Centre (the palette seeded from the 24 tones), collections and categories. Files upload to Storage under the dossier with a role (inspiration, proposal, sample, approved, tech pack, quotation) and file as documents; `storage.rules` opens the paths to the department. Sample mode and Hebrew | Slice 2: the handover into the catalog and the alerts. Slice 3: FX in the comparison, the company sheet's Development tab, exports, the tech-pack PDF. Slice 4: the brand site's signature-products page |
+
 #### Phase 8 progress, second slice of P8-full (2026-10-21)
 
 | Done | Remaining |

@@ -51,6 +51,7 @@ export const MODULE_KEYS = [
   'settings',
   'board',
   'goals',
+  'development',
 ] as const;
 
 export type ModuleKey = (typeof MODULE_KEYS)[number];
@@ -84,6 +85,7 @@ export const MODULES: readonly ModuleDefinition[] = [
   { key: 'settings', number: '15', name: 'Settings', path: '/settings', summary: 'Users, roles, reference data, templates', phase: 'Phase 1' },
   { key: 'board', number: '16', name: 'Board', path: '/board', summary: 'The team\'s bulletin board: notes pinned anywhere', phase: 'P9' },
   { key: 'goals', number: '17', name: 'Goals', path: '/goals', summary: 'Company goals by section, with a timeline', phase: 'P9' },
+  { key: 'development', number: '18', name: 'Development', path: '/development', summary: 'Brand Centre, collections, the development dossier, sourcing and costing', phase: 'P10' },
 ];
 
 export type AccessLevel = 'manage' | 'limited' | 'read' | 'none';
@@ -114,6 +116,8 @@ export const MODULE_ACCESS: Record<ModuleKey, Record<Role, AccessLevel>> = {
   // The bulletin board is everyone's; a board that needs approval is dead. Goals are the owner's, read by operations and finance.
   board:         { owner: M, operations: M, purchasing: M, qc: M, logistics: M, sales: M, marketing: M, finance: M, viewer: M },
   goals:         { owner: M, operations: R, purchasing: N, qc: N, logistics: N, sales: N, marketing: N, finance: R, viewer: N },
+  // Product development: the owner, operations and marketing keep the dossiers; purchasing the sourcing; finance the costing; qc the sample verdicts.
+  development:   { owner: M, operations: M, purchasing: L, qc: L, logistics: N, sales: R, marketing: M, finance: R, viewer: R },
 };
 
 export function moduleAccess(role: Role, module: ModuleKey): AccessLevel {

@@ -49,9 +49,19 @@ export interface BoardNote_Key {
   __typename?: 'BoardNote_Key';
 }
 
+export interface BrandAsset_Key {
+  id: UUIDString;
+  __typename?: 'BrandAsset_Key';
+}
+
 export interface Certification_Key {
   id: UUIDString;
   __typename?: 'Certification_Key';
+}
+
+export interface Collection_Key {
+  code: string;
+  __typename?: 'Collection_Key';
 }
 
 export interface CompanyRole_Key {
@@ -112,6 +122,46 @@ export interface CustomsEntry_Key {
 export interface Defect_Key {
   id: UUIDString;
   __typename?: 'Defect_Key';
+}
+
+export interface DevelopmentApproval_Key {
+  id: UUIDString;
+  __typename?: 'DevelopmentApproval_Key';
+}
+
+export interface DevelopmentCosting_Key {
+  id: UUIDString;
+  __typename?: 'DevelopmentCosting_Key';
+}
+
+export interface DevelopmentMaterial_Key {
+  id: UUIDString;
+  __typename?: 'DevelopmentMaterial_Key';
+}
+
+export interface DevelopmentPackaging_Key {
+  id: UUIDString;
+  __typename?: 'DevelopmentPackaging_Key';
+}
+
+export interface DevelopmentProduct_Key {
+  id: UUIDString;
+  __typename?: 'DevelopmentProduct_Key';
+}
+
+export interface DevelopmentSample_Key {
+  id: UUIDString;
+  __typename?: 'DevelopmentSample_Key';
+}
+
+export interface DevelopmentSourcing_Key {
+  id: UUIDString;
+  __typename?: 'DevelopmentSourcing_Key';
+}
+
+export interface DevelopmentVariant_Key {
+  id: UUIDString;
+  __typename?: 'DevelopmentVariant_Key';
 }
 
 export interface DocumentLink_Key {
@@ -275,6 +325,11 @@ export interface ProcessTemplateStep_Key {
 export interface ProcessTemplate_Key {
   id: UUIDString;
   __typename?: 'ProcessTemplate_Key';
+}
+
+export interface ProductCategory_Key {
+  code: string;
+  __typename?: 'ProductCategory_Key';
 }
 
 export interface ProductVariant_Key {

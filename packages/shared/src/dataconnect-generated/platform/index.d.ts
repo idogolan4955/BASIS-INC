@@ -32,8 +32,39 @@ export enum AllocationKind {
   final = "final",
 };
 
+export enum BrandAssetKind {
+  story = "story",
+  logo = "logo",
+  typeface = "typeface",
+  colour = "colour",
+  material = "material",
+  imagery = "imagery",
+  guideline = "guideline",
+  approved_design = "approved_design",
+  inspiration = "inspiration",
+};
+
+export enum BrandAssetStatus {
+  draft = "draft",
+  approved = "approved",
+  retired = "retired",
+};
+
+export enum CategoryStatus {
+  active = "active",
+  archived = "archived",
+};
+
+export enum CollectionStatus {
+  planning = "planning",
+  in_development = "in_development",
+  launched = "launched",
+  archived = "archived",
+};
+
 export enum CompanyRoleKind {
   supplier = "supplier",
+  odm = "odm",
   factory_operator = "factory_operator",
   customer = "customer",
   freight_forwarder = "freight_forwarder",
@@ -54,6 +85,12 @@ export enum ContactStatus {
   left = "left",
 };
 
+export enum CostingBasis {
+  estimate = "estimate",
+  quotation = "quotation",
+  approved = "approved",
+};
+
 export enum CustomerTier {
   standard = "standard",
   preferred = "preferred",
@@ -67,6 +104,18 @@ export enum CustomerType {
   manufacturer = "manufacturer",
   distributor = "distributor",
   wholesaler = "wholesaler",
+};
+
+export enum DevelopmentStage {
+  idea = "idea",
+  concept = "concept",
+  feasibility = "feasibility",
+  sampling = "sampling",
+  revision = "revision",
+  approved_for_production = "approved_for_production",
+  commercial = "commercial",
+  on_hold = "on_hold",
+  dropped = "dropped",
 };
 
 export enum Disposition {
@@ -216,6 +265,12 @@ export enum PrincipalType {
   customer = "customer",
 };
 
+export enum Priority {
+  low = "low",
+  normal = "normal",
+  high = "high",
+};
+
 export enum ProductStatus {
   draft = "draft",
   active = "active",
@@ -292,6 +347,21 @@ export enum SkuStatus {
   active = "active",
   phase_out = "phase_out",
   discontinued = "discontinued",
+};
+
+export enum SourcingKind {
+  odm = "odm",
+  oem = "oem",
+  component = "component",
+  packaging = "packaging",
+};
+
+export enum SourcingStatus {
+  candidate = "candidate",
+  quoted = "quoted",
+  sampled = "sampled",
+  selected = "selected",
+  dropped = "dropped",
 };
 
 export enum StockLocationKind {
@@ -392,9 +462,19 @@ export interface BoardNote_Key {
   __typename?: 'BoardNote_Key';
 }
 
+export interface BrandAsset_Key {
+  id: UUIDString;
+  __typename?: 'BrandAsset_Key';
+}
+
 export interface Certification_Key {
   id: UUIDString;
   __typename?: 'Certification_Key';
+}
+
+export interface Collection_Key {
+  code: string;
+  __typename?: 'Collection_Key';
 }
 
 export interface CompanyRole_Key {
@@ -492,6 +572,46 @@ export interface DeleteOwnBoardNoteData {
 
 export interface DeleteOwnBoardNoteVariables {
   id: UUIDString;
+}
+
+export interface DevelopmentApproval_Key {
+  id: UUIDString;
+  __typename?: 'DevelopmentApproval_Key';
+}
+
+export interface DevelopmentCosting_Key {
+  id: UUIDString;
+  __typename?: 'DevelopmentCosting_Key';
+}
+
+export interface DevelopmentMaterial_Key {
+  id: UUIDString;
+  __typename?: 'DevelopmentMaterial_Key';
+}
+
+export interface DevelopmentPackaging_Key {
+  id: UUIDString;
+  __typename?: 'DevelopmentPackaging_Key';
+}
+
+export interface DevelopmentProduct_Key {
+  id: UUIDString;
+  __typename?: 'DevelopmentProduct_Key';
+}
+
+export interface DevelopmentSample_Key {
+  id: UUIDString;
+  __typename?: 'DevelopmentSample_Key';
+}
+
+export interface DevelopmentSourcing_Key {
+  id: UUIDString;
+  __typename?: 'DevelopmentSourcing_Key';
+}
+
+export interface DevelopmentVariant_Key {
+  id: UUIDString;
+  __typename?: 'DevelopmentVariant_Key';
 }
 
 export interface DocumentLink_Key {
@@ -660,6 +780,120 @@ export interface GetCompanyData {
 
 export interface GetCompanyVariables {
   id: UUIDString;
+}
+
+export interface GetDevelopmentProductData {
+  developmentProducts: ({
+    id: UUIDString;
+    number: string;
+    name: string;
+    workingTitle?: string | null;
+    description?: string | null;
+    intent?: string | null;
+    stage: DevelopmentStage;
+    priority: Priority;
+    targetLaunch?: DateString | null;
+    budgetAmount?: Int64String | null;
+    budgetCurrency?: string | null;
+    specs?: unknown | null;
+    handedOverAt?: TimestampString | null;
+    lastActivityAt: TimestampString;
+    createdAt: TimestampString;
+    category: {
+      code: string;
+      name: string;
+      specSchema?: unknown | null;
+    } & ProductCategory_Key;
+    collection?: {
+      code: string;
+      name: string;
+    } & Collection_Key;
+    owner?: {
+      uid: string;
+      name: string;
+    } & User_Key;
+    catalogProduct?: {
+      code: string;
+    } & Product_Key;
+    developmentMaterials_on_product: ({
+      id: UUIDString;
+      role: string;
+      name: string;
+      specification?: string | null;
+      status: PartStatus;
+      notes?: string | null;
+      sku?: {
+        code: string;
+      } & Sku_Key;
+      supplier?: {
+        id: UUIDString;
+        legalName: string;
+        tradingName?: string | null;
+      } & Company_Key;
+    } & DevelopmentMaterial_Key)[];
+    developmentVariants_on_product: ({
+      id: UUIDString;
+      code: string;
+      name: string;
+      colourHex?: string | null;
+      colourName?: string | null;
+      sizeLabel?: string | null;
+      dimensions?: unknown | null;
+      status: PartStatus;
+      sort: number;
+      shade?: {
+        code: string;
+        name: string;
+      } & Shade_Key;
+    } & DevelopmentVariant_Key)[];
+    developmentPackagings_on_product: ({
+      id: UUIDString;
+      component: string;
+      specification?: string | null;
+      material?: string | null;
+      dimensions?: unknown | null;
+      status: PartStatus;
+      supplier?: {
+        id: UUIDString;
+        legalName: string;
+        tradingName?: string | null;
+      } & Company_Key;
+    } & DevelopmentPackaging_Key)[];
+    developmentSamples_on_product: ({
+      id: UUIDString;
+      round: number;
+      kind: SampleKind;
+      requestedOn?: DateString | null;
+      receivedOn?: DateString | null;
+      verdict: SampleVerdict;
+      verdictOn?: DateString | null;
+      findings?: string | null;
+      costAmount?: Int64String | null;
+      costCurrency?: string | null;
+      supplier?: {
+        id: UUIDString;
+        legalName: string;
+        tradingName?: string | null;
+      } & Company_Key;
+      verdictBy?: {
+        name: string;
+      };
+    } & DevelopmentSample_Key)[];
+    developmentApprovals_on_product: ({
+      id: UUIDString;
+      gate: DevelopmentStage;
+      decision: ApprovalDecision;
+      decidedAt: TimestampString;
+      note?: string | null;
+      decidedBy: {
+        name: string;
+      };
+    } & DevelopmentApproval_Key)[];
+  } & DevelopmentProduct_Key)[];
+}
+
+export interface GetDevelopmentProductVariables {
+  number: string;
 }
 
 export interface GetInspectionData {
@@ -1699,6 +1933,18 @@ export interface InsertContactVariables {
   notes?: string | null;
 }
 
+export interface InsertDocumentData {
+  document_insert: Document_Key;
+}
+
+export interface InsertDocumentVariables {
+  kind: DocumentKind;
+  title: string;
+  storagePath: string;
+  mimeType: string;
+  sizeBytes: number;
+}
+
 export interface InsertFactoryData {
   factory_insert: Factory_Key;
 }
@@ -1828,6 +2074,17 @@ export interface LegalEntity_Key {
   __typename?: 'LegalEntity_Key';
 }
 
+export interface LinkDocumentData {
+  documentLink_insert: DocumentLink_Key;
+}
+
+export interface LinkDocumentVariables {
+  documentId: UUIDString;
+  entityType: string;
+  entityId: string;
+  role?: string | null;
+}
+
 export interface ListApiTokensData {
   apiTokens: ({
     id: UUIDString;
@@ -1859,6 +2116,49 @@ export interface ListBoardNotesData {
     createdAt: TimestampString;
     updatedAt: TimestampString;
   } & BoardNote_Key)[];
+}
+
+export interface ListBrandAssetsData {
+  brandAssets: ({
+    id: UUIDString;
+    kind: BrandAssetKind;
+    title: string;
+    summary?: string | null;
+    colourHex?: string | null;
+    colourName?: string | null;
+    paletteNumber?: string | null;
+    tags?: unknown | null;
+    status: BrandAssetStatus;
+    sort: number;
+    updatedAt: TimestampString;
+    collection?: {
+      code: string;
+    } & Collection_Key;
+    document?: {
+      id: UUIDString;
+      title: string;
+      storagePath: string;
+      mimeType: string;
+    } & Document_Key;
+  } & BrandAsset_Key)[];
+}
+
+export interface ListCollectionsData {
+  collections: ({
+    code: string;
+    name: string;
+    season?: string | null;
+    year?: number | null;
+    theme?: string | null;
+    targetLaunch?: DateString | null;
+    status: CollectionStatus;
+    moodDocument?: {
+      id: UUIDString;
+      title: string;
+      storagePath: string;
+      mimeType: string;
+    } & Document_Key;
+  } & Collection_Key)[];
 }
 
 export interface ListCompaniesData {
@@ -1929,6 +2229,108 @@ export interface ListCurrenciesData {
     name: string;
     minorUnits: number;
   } & Currency_Key)[];
+}
+
+export interface ListDevelopmentCostingData {
+  developmentCostings: ({
+    id: UUIDString;
+    basis: CostingBasis;
+    currency: string;
+    unitCost: Int64String;
+    packagingCost: Int64String;
+    freightCost: Int64String;
+    dutyCost: Int64String;
+    otherCost: Int64String;
+    quantity?: Int64String | null;
+    plannedPrice?: Int64String | null;
+    wholesalePrice?: Int64String | null;
+    notes?: string | null;
+    createdAt: TimestampString;
+    sourcing?: {
+      id: UUIDString;
+    } & DevelopmentSourcing_Key;
+    createdBy?: {
+      name: string;
+    };
+  } & DevelopmentCosting_Key)[];
+}
+
+export interface ListDevelopmentCostingVariables {
+  productId: UUIDString;
+}
+
+export interface ListDevelopmentProductsData {
+  developmentProducts: ({
+    id: UUIDString;
+    number: string;
+    name: string;
+    workingTitle?: string | null;
+    stage: DevelopmentStage;
+    priority: Priority;
+    targetLaunch?: DateString | null;
+    budgetAmount?: Int64String | null;
+    budgetCurrency?: string | null;
+    lastActivityAt: TimestampString;
+    createdAt: TimestampString;
+    category: {
+      code: string;
+      name: string;
+    } & ProductCategory_Key;
+    collection?: {
+      code: string;
+      name: string;
+    } & Collection_Key;
+    owner?: {
+      uid: string;
+      name: string;
+    } & User_Key;
+    catalogProduct?: {
+      code: string;
+    } & Product_Key;
+    developmentSamples_on_product: ({
+      round: number;
+      verdict: SampleVerdict;
+      receivedOn?: DateString | null;
+    })[];
+  } & DevelopmentProduct_Key)[];
+}
+
+export interface ListDevelopmentSourcingData {
+  developmentSourcings: ({
+    id: UUIDString;
+    kind: SourcingKind;
+    status: SourcingStatus;
+    moq?: Int64String | null;
+    leadTimeDays?: number | null;
+    sampleLeadDays?: number | null;
+    unitCost?: Int64String | null;
+    currency: string;
+    sampleCost?: Int64String | null;
+    developmentCost?: Int64String | null;
+    toolingCost?: Int64String | null;
+    paymentTerms?: string | null;
+    incoterm?: string | null;
+    namedPlace?: string | null;
+    quotedOn?: DateString | null;
+    validUntil?: DateString | null;
+    isSelected: boolean;
+    notes?: string | null;
+    supplier: {
+      id: UUIDString;
+      legalName: string;
+      tradingName?: string | null;
+    } & Company_Key;
+    factory?: {
+      id: UUIDString;
+      location: {
+        name: string;
+      };
+    } & Factory_Key;
+  } & DevelopmentSourcing_Key)[];
+}
+
+export interface ListDevelopmentSourcingVariables {
+  productId: UUIDString;
 }
 
 export interface ListDocumentRequirementsData {
@@ -2519,6 +2921,21 @@ export interface ListProcessTemplatesData {
       gate: MilestoneGate;
     } & ProcessTemplateStep_Key)[];
   } & ProcessTemplate_Key)[];
+}
+
+export interface ListProductCategoriesData {
+  productCategories: ({
+    code: string;
+    name: string;
+    slug: string;
+    description?: string | null;
+    parent?: {
+      code: string;
+    } & ProductCategory_Key;
+    specSchema?: unknown | null;
+    sort: number;
+    status: CategoryStatus;
+  } & ProductCategory_Key)[];
 }
 
 export interface ListProductionRunsData {
@@ -3380,6 +3797,11 @@ export interface ProcessTemplate_Key {
   __typename?: 'ProcessTemplate_Key';
 }
 
+export interface ProductCategory_Key {
+  code: string;
+  __typename?: 'ProductCategory_Key';
+}
+
 export interface ProductVariant_Key {
   id: UUIDString;
   __typename?: 'ProductVariant_Key';
@@ -3832,330 +4254,6 @@ export interface User_Key {
   __typename?: 'User_Key';
 }
 
-interface ListShipmentsRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListShipmentsData, undefined>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListShipmentsData, undefined>;
-  operationName: string;
-}
-export const listShipmentsRef: ListShipmentsRef;
-
-export function listShipments(options?: ExecuteQueryOptions): QueryPromise<ListShipmentsData, undefined>;
-export function listShipments(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListShipmentsData, undefined>;
-
-interface GetShipmentRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: GetShipmentVariables): QueryRef<GetShipmentData, GetShipmentVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: GetShipmentVariables): QueryRef<GetShipmentData, GetShipmentVariables>;
-  operationName: string;
-}
-export const getShipmentRef: GetShipmentRef;
-
-export function getShipment(vars: GetShipmentVariables, options?: ExecuteQueryOptions): QueryPromise<GetShipmentData, GetShipmentVariables>;
-export function getShipment(dc: DataConnect, vars: GetShipmentVariables, options?: ExecuteQueryOptions): QueryPromise<GetShipmentData, GetShipmentVariables>;
-
-interface ListShippableUnitsRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListShippableUnitsData, undefined>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListShippableUnitsData, undefined>;
-  operationName: string;
-}
-export const listShippableUnitsRef: ListShippableUnitsRef;
-
-export function listShippableUnits(options?: ExecuteQueryOptions): QueryPromise<ListShippableUnitsData, undefined>;
-export function listShippableUnits(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListShippableUnitsData, undefined>;
-
-interface ListLocationsRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListLocationsData, undefined>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListLocationsData, undefined>;
-  operationName: string;
-}
-export const listLocationsRef: ListLocationsRef;
-
-export function listLocations(options?: ExecuteQueryOptions): QueryPromise<ListLocationsData, undefined>;
-export function listLocations(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListLocationsData, undefined>;
-
-interface ListDocumentRequirementsRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListDocumentRequirementsData, undefined>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListDocumentRequirementsData, undefined>;
-  operationName: string;
-}
-export const listDocumentRequirementsRef: ListDocumentRequirementsRef;
-
-export function listDocumentRequirements(options?: ExecuteQueryOptions): QueryPromise<ListDocumentRequirementsData, undefined>;
-export function listDocumentRequirements(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListDocumentRequirementsData, undefined>;
-
-interface ListBoardNotesRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListBoardNotesData, undefined>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListBoardNotesData, undefined>;
-  operationName: string;
-}
-export const listBoardNotesRef: ListBoardNotesRef;
-
-export function listBoardNotes(options?: ExecuteQueryOptions): QueryPromise<ListBoardNotesData, undefined>;
-export function listBoardNotes(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListBoardNotesData, undefined>;
-
-interface InsertBoardNoteRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: InsertBoardNoteVariables): MutationRef<InsertBoardNoteData, InsertBoardNoteVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: InsertBoardNoteVariables): MutationRef<InsertBoardNoteData, InsertBoardNoteVariables>;
-  operationName: string;
-}
-export const insertBoardNoteRef: InsertBoardNoteRef;
-
-export function insertBoardNote(vars: InsertBoardNoteVariables): MutationPromise<InsertBoardNoteData, InsertBoardNoteVariables>;
-export function insertBoardNote(dc: DataConnect, vars: InsertBoardNoteVariables): MutationPromise<InsertBoardNoteData, InsertBoardNoteVariables>;
-
-interface EditBoardNoteRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: EditBoardNoteVariables): MutationRef<EditBoardNoteData, EditBoardNoteVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: EditBoardNoteVariables): MutationRef<EditBoardNoteData, EditBoardNoteVariables>;
-  operationName: string;
-}
-export const editBoardNoteRef: EditBoardNoteRef;
-
-export function editBoardNote(vars: EditBoardNoteVariables): MutationPromise<EditBoardNoteData, EditBoardNoteVariables>;
-export function editBoardNote(dc: DataConnect, vars: EditBoardNoteVariables): MutationPromise<EditBoardNoteData, EditBoardNoteVariables>;
-
-interface MoveBoardNoteRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: MoveBoardNoteVariables): MutationRef<MoveBoardNoteData, MoveBoardNoteVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: MoveBoardNoteVariables): MutationRef<MoveBoardNoteData, MoveBoardNoteVariables>;
-  operationName: string;
-}
-export const moveBoardNoteRef: MoveBoardNoteRef;
-
-export function moveBoardNote(vars: MoveBoardNoteVariables): MutationPromise<MoveBoardNoteData, MoveBoardNoteVariables>;
-export function moveBoardNote(dc: DataConnect, vars: MoveBoardNoteVariables): MutationPromise<MoveBoardNoteData, MoveBoardNoteVariables>;
-
-interface DeleteOwnBoardNoteRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: DeleteOwnBoardNoteVariables): MutationRef<DeleteOwnBoardNoteData, DeleteOwnBoardNoteVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: DeleteOwnBoardNoteVariables): MutationRef<DeleteOwnBoardNoteData, DeleteOwnBoardNoteVariables>;
-  operationName: string;
-}
-export const deleteOwnBoardNoteRef: DeleteOwnBoardNoteRef;
-
-export function deleteOwnBoardNote(vars: DeleteOwnBoardNoteVariables): MutationPromise<DeleteOwnBoardNoteData, DeleteOwnBoardNoteVariables>;
-export function deleteOwnBoardNote(dc: DataConnect, vars: DeleteOwnBoardNoteVariables): MutationPromise<DeleteOwnBoardNoteData, DeleteOwnBoardNoteVariables>;
-
-interface DeleteBoardNoteRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: DeleteBoardNoteVariables): MutationRef<DeleteBoardNoteData, DeleteBoardNoteVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: DeleteBoardNoteVariables): MutationRef<DeleteBoardNoteData, DeleteBoardNoteVariables>;
-  operationName: string;
-}
-export const deleteBoardNoteRef: DeleteBoardNoteRef;
-
-export function deleteBoardNote(vars: DeleteBoardNoteVariables): MutationPromise<DeleteBoardNoteData, DeleteBoardNoteVariables>;
-export function deleteBoardNote(dc: DataConnect, vars: DeleteBoardNoteVariables): MutationPromise<DeleteBoardNoteData, DeleteBoardNoteVariables>;
-
-interface ListGoalsRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListGoalsData, undefined>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListGoalsData, undefined>;
-  operationName: string;
-}
-export const listGoalsRef: ListGoalsRef;
-
-export function listGoals(options?: ExecuteQueryOptions): QueryPromise<ListGoalsData, undefined>;
-export function listGoals(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListGoalsData, undefined>;
-
-interface ListStockLocationsRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListStockLocationsData, undefined>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListStockLocationsData, undefined>;
-  operationName: string;
-}
-export const listStockLocationsRef: ListStockLocationsRef;
-
-export function listStockLocations(options?: ExecuteQueryOptions): QueryPromise<ListStockLocationsData, undefined>;
-export function listStockLocations(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListStockLocationsData, undefined>;
-
-interface ListStockBalancesRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListStockBalancesData, undefined>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListStockBalancesData, undefined>;
-  operationName: string;
-}
-export const listStockBalancesRef: ListStockBalancesRef;
-
-export function listStockBalances(options?: ExecuteQueryOptions): QueryPromise<ListStockBalancesData, undefined>;
-export function listStockBalances(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListStockBalancesData, undefined>;
-
-interface ListStockMovementsRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: ListStockMovementsVariables): QueryRef<ListStockMovementsData, ListStockMovementsVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: ListStockMovementsVariables): QueryRef<ListStockMovementsData, ListStockMovementsVariables>;
-  operationName: string;
-}
-export const listStockMovementsRef: ListStockMovementsRef;
-
-export function listStockMovements(vars: ListStockMovementsVariables, options?: ExecuteQueryOptions): QueryPromise<ListStockMovementsData, ListStockMovementsVariables>;
-export function listStockMovements(dc: DataConnect, vars: ListStockMovementsVariables, options?: ExecuteQueryOptions): QueryPromise<ListStockMovementsData, ListStockMovementsVariables>;
-
-interface ListRecentMovementsRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: ListRecentMovementsVariables): QueryRef<ListRecentMovementsData, ListRecentMovementsVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: ListRecentMovementsVariables): QueryRef<ListRecentMovementsData, ListRecentMovementsVariables>;
-  operationName: string;
-}
-export const listRecentMovementsRef: ListRecentMovementsRef;
-
-export function listRecentMovements(vars: ListRecentMovementsVariables, options?: ExecuteQueryOptions): QueryPromise<ListRecentMovementsData, ListRecentMovementsVariables>;
-export function listRecentMovements(dc: DataConnect, vars: ListRecentMovementsVariables, options?: ExecuteQueryOptions): QueryPromise<ListRecentMovementsData, ListRecentMovementsVariables>;
-
-interface ListReceiptsRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListReceiptsData, undefined>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListReceiptsData, undefined>;
-  operationName: string;
-}
-export const listReceiptsRef: ListReceiptsRef;
-
-export function listReceipts(options?: ExecuteQueryOptions): QueryPromise<ListReceiptsData, undefined>;
-export function listReceipts(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListReceiptsData, undefined>;
-
-interface ListReorderPoliciesRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListReorderPoliciesData, undefined>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListReorderPoliciesData, undefined>;
-  operationName: string;
-}
-export const listReorderPoliciesRef: ListReorderPoliciesRef;
-
-export function listReorderPolicies(options?: ExecuteQueryOptions): QueryPromise<ListReorderPoliciesData, undefined>;
-export function listReorderPolicies(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListReorderPoliciesData, undefined>;
-
-interface ListRollPositionsRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: ListRollPositionsVariables): QueryRef<ListRollPositionsData, ListRollPositionsVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: ListRollPositionsVariables): QueryRef<ListRollPositionsData, ListRollPositionsVariables>;
-  operationName: string;
-}
-export const listRollPositionsRef: ListRollPositionsRef;
-
-export function listRollPositions(vars: ListRollPositionsVariables, options?: ExecuteQueryOptions): QueryPromise<ListRollPositionsData, ListRollPositionsVariables>;
-export function listRollPositions(dc: DataConnect, vars: ListRollPositionsVariables, options?: ExecuteQueryOptions): QueryPromise<ListRollPositionsData, ListRollPositionsVariables>;
-
-interface ListPurchaseOrdersRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListPurchaseOrdersData, undefined>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListPurchaseOrdersData, undefined>;
-  operationName: string;
-}
-export const listPurchaseOrdersRef: ListPurchaseOrdersRef;
-
-export function listPurchaseOrders(options?: ExecuteQueryOptions): QueryPromise<ListPurchaseOrdersData, undefined>;
-export function listPurchaseOrders(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListPurchaseOrdersData, undefined>;
-
-interface GetPurchaseOrderRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: GetPurchaseOrderVariables): QueryRef<GetPurchaseOrderData, GetPurchaseOrderVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: GetPurchaseOrderVariables): QueryRef<GetPurchaseOrderData, GetPurchaseOrderVariables>;
-  operationName: string;
-}
-export const getPurchaseOrderRef: GetPurchaseOrderRef;
-
-export function getPurchaseOrder(vars: GetPurchaseOrderVariables, options?: ExecuteQueryOptions): QueryPromise<GetPurchaseOrderData, GetPurchaseOrderVariables>;
-export function getPurchaseOrder(dc: DataConnect, vars: GetPurchaseOrderVariables, options?: ExecuteQueryOptions): QueryPromise<GetPurchaseOrderData, GetPurchaseOrderVariables>;
-
-interface GetPurchaseOrderCostsRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: GetPurchaseOrderCostsVariables): QueryRef<GetPurchaseOrderCostsData, GetPurchaseOrderCostsVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: GetPurchaseOrderCostsVariables): QueryRef<GetPurchaseOrderCostsData, GetPurchaseOrderCostsVariables>;
-  operationName: string;
-}
-export const getPurchaseOrderCostsRef: GetPurchaseOrderCostsRef;
-
-export function getPurchaseOrderCosts(vars: GetPurchaseOrderCostsVariables, options?: ExecuteQueryOptions): QueryPromise<GetPurchaseOrderCostsData, GetPurchaseOrderCostsVariables>;
-export function getPurchaseOrderCosts(dc: DataConnect, vars: GetPurchaseOrderCostsVariables, options?: ExecuteQueryOptions): QueryPromise<GetPurchaseOrderCostsData, GetPurchaseOrderCostsVariables>;
-
-interface ListProductionRunsRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListProductionRunsData, undefined>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListProductionRunsData, undefined>;
-  operationName: string;
-}
-export const listProductionRunsRef: ListProductionRunsRef;
-
-export function listProductionRuns(options?: ExecuteQueryOptions): QueryPromise<ListProductionRunsData, undefined>;
-export function listProductionRuns(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListProductionRunsData, undefined>;
-
-interface GetProductionRunRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: GetProductionRunVariables): QueryRef<GetProductionRunData, GetProductionRunVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: GetProductionRunVariables): QueryRef<GetProductionRunData, GetProductionRunVariables>;
-  operationName: string;
-}
-export const getProductionRunRef: GetProductionRunRef;
-
-export function getProductionRun(vars: GetProductionRunVariables, options?: ExecuteQueryOptions): QueryPromise<GetProductionRunData, GetProductionRunVariables>;
-export function getProductionRun(dc: DataConnect, vars: GetProductionRunVariables, options?: ExecuteQueryOptions): QueryPromise<GetProductionRunData, GetProductionRunVariables>;
-
-interface GetLotRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: GetLotVariables): QueryRef<GetLotData, GetLotVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: GetLotVariables): QueryRef<GetLotData, GetLotVariables>;
-  operationName: string;
-}
-export const getLotRef: GetLotRef;
-
-export function getLot(vars: GetLotVariables, options?: ExecuteQueryOptions): QueryPromise<GetLotData, GetLotVariables>;
-export function getLot(dc: DataConnect, vars: GetLotVariables, options?: ExecuteQueryOptions): QueryPromise<GetLotData, GetLotVariables>;
-
-interface ListProcessTemplatesRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListProcessTemplatesData, undefined>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListProcessTemplatesData, undefined>;
-  operationName: string;
-}
-export const listProcessTemplatesRef: ListProcessTemplatesRef;
-
-export function listProcessTemplates(options?: ExecuteQueryOptions): QueryPromise<ListProcessTemplatesData, undefined>;
-export function listProcessTemplates(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListProcessTemplatesData, undefined>;
-
-interface OperationsFactsRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<OperationsFactsData, undefined>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<OperationsFactsData, undefined>;
-  operationName: string;
-}
-export const operationsFactsRef: OperationsFactsRef;
-
-export function operationsFacts(options?: ExecuteQueryOptions): QueryPromise<OperationsFactsData, undefined>;
-export function operationsFacts(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<OperationsFactsData, undefined>;
-
 interface AcknowledgeAlertRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: AcknowledgeAlertVariables): MutationRef<AcknowledgeAlertData, AcknowledgeAlertVariables>;
@@ -4407,66 +4505,6 @@ export const upsertSupplierProfileRef: UpsertSupplierProfileRef;
 
 export function upsertSupplierProfile(vars: UpsertSupplierProfileVariables): MutationPromise<UpsertSupplierProfileData, UpsertSupplierProfileVariables>;
 export function upsertSupplierProfile(dc: DataConnect, vars: UpsertSupplierProfileVariables): MutationPromise<UpsertSupplierProfileData, UpsertSupplierProfileVariables>;
-
-interface ListInspectionsRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListInspectionsData, undefined>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListInspectionsData, undefined>;
-  operationName: string;
-}
-export const listInspectionsRef: ListInspectionsRef;
-
-export function listInspections(options?: ExecuteQueryOptions): QueryPromise<ListInspectionsData, undefined>;
-export function listInspections(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListInspectionsData, undefined>;
-
-interface ListInspectionsForRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: ListInspectionsForVariables): QueryRef<ListInspectionsForData, ListInspectionsForVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: ListInspectionsForVariables): QueryRef<ListInspectionsForData, ListInspectionsForVariables>;
-  operationName: string;
-}
-export const listInspectionsForRef: ListInspectionsForRef;
-
-export function listInspectionsFor(vars: ListInspectionsForVariables, options?: ExecuteQueryOptions): QueryPromise<ListInspectionsForData, ListInspectionsForVariables>;
-export function listInspectionsFor(dc: DataConnect, vars: ListInspectionsForVariables, options?: ExecuteQueryOptions): QueryPromise<ListInspectionsForData, ListInspectionsForVariables>;
-
-interface GetInspectionRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: GetInspectionVariables): QueryRef<GetInspectionData, GetInspectionVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: GetInspectionVariables): QueryRef<GetInspectionData, GetInspectionVariables>;
-  operationName: string;
-}
-export const getInspectionRef: GetInspectionRef;
-
-export function getInspection(vars: GetInspectionVariables, options?: ExecuteQueryOptions): QueryPromise<GetInspectionData, GetInspectionVariables>;
-export function getInspection(dc: DataConnect, vars: GetInspectionVariables, options?: ExecuteQueryOptions): QueryPromise<GetInspectionData, GetInspectionVariables>;
-
-interface ListInspectionTemplatesRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListInspectionTemplatesData, undefined>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListInspectionTemplatesData, undefined>;
-  operationName: string;
-}
-export const listInspectionTemplatesRef: ListInspectionTemplatesRef;
-
-export function listInspectionTemplates(options?: ExecuteQueryOptions): QueryPromise<ListInspectionTemplatesData, undefined>;
-export function listInspectionTemplates(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListInspectionTemplatesData, undefined>;
-
-interface ListCorrectiveActionsRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListCorrectiveActionsData, undefined>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListCorrectiveActionsData, undefined>;
-  operationName: string;
-}
-export const listCorrectiveActionsRef: ListCorrectiveActionsRef;
-
-export function listCorrectiveActions(options?: ExecuteQueryOptions): QueryPromise<ListCorrectiveActionsData, undefined>;
-export function listCorrectiveActions(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListCorrectiveActionsData, undefined>;
 
 interface GetMeRef {
   /* Allow users to create refs without passing in DataConnect */
@@ -4732,6 +4770,438 @@ export const listRecentInteractionsRef: ListRecentInteractionsRef;
 export function listRecentInteractions(vars?: ListRecentInteractionsVariables, options?: ExecuteQueryOptions): QueryPromise<ListRecentInteractionsData, ListRecentInteractionsVariables>;
 export function listRecentInteractions(dc: DataConnect, vars?: ListRecentInteractionsVariables, options?: ExecuteQueryOptions): QueryPromise<ListRecentInteractionsData, ListRecentInteractionsVariables>;
 
+interface ListQuotesRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListQuotesData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListQuotesData, undefined>;
+  operationName: string;
+}
+export const listQuotesRef: ListQuotesRef;
+
+export function listQuotes(options?: ExecuteQueryOptions): QueryPromise<ListQuotesData, undefined>;
+export function listQuotes(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListQuotesData, undefined>;
+
+interface GetQuoteRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetQuoteVariables): QueryRef<GetQuoteData, GetQuoteVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetQuoteVariables): QueryRef<GetQuoteData, GetQuoteVariables>;
+  operationName: string;
+}
+export const getQuoteRef: GetQuoteRef;
+
+export function getQuote(vars: GetQuoteVariables, options?: ExecuteQueryOptions): QueryPromise<GetQuoteData, GetQuoteVariables>;
+export function getQuote(dc: DataConnect, vars: GetQuoteVariables, options?: ExecuteQueryOptions): QueryPromise<GetQuoteData, GetQuoteVariables>;
+
+interface ListSalesOrdersRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListSalesOrdersData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListSalesOrdersData, undefined>;
+  operationName: string;
+}
+export const listSalesOrdersRef: ListSalesOrdersRef;
+
+export function listSalesOrders(options?: ExecuteQueryOptions): QueryPromise<ListSalesOrdersData, undefined>;
+export function listSalesOrders(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListSalesOrdersData, undefined>;
+
+interface GetSalesOrderRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetSalesOrderVariables): QueryRef<GetSalesOrderData, GetSalesOrderVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetSalesOrderVariables): QueryRef<GetSalesOrderData, GetSalesOrderVariables>;
+  operationName: string;
+}
+export const getSalesOrderRef: GetSalesOrderRef;
+
+export function getSalesOrder(vars: GetSalesOrderVariables, options?: ExecuteQueryOptions): QueryPromise<GetSalesOrderData, GetSalesOrderVariables>;
+export function getSalesOrder(dc: DataConnect, vars: GetSalesOrderVariables, options?: ExecuteQueryOptions): QueryPromise<GetSalesOrderData, GetSalesOrderVariables>;
+
+interface StockForSkuRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: StockForSkuVariables): QueryRef<StockForSkuData, StockForSkuVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: StockForSkuVariables): QueryRef<StockForSkuData, StockForSkuVariables>;
+  operationName: string;
+}
+export const stockForSkuRef: StockForSkuRef;
+
+export function stockForSku(vars: StockForSkuVariables, options?: ExecuteQueryOptions): QueryPromise<StockForSkuData, StockForSkuVariables>;
+export function stockForSku(dc: DataConnect, vars: StockForSkuVariables, options?: ExecuteQueryOptions): QueryPromise<StockForSkuData, StockForSkuVariables>;
+
+interface ListSalesOrdersForRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListSalesOrdersForVariables): QueryRef<ListSalesOrdersForData, ListSalesOrdersForVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListSalesOrdersForVariables): QueryRef<ListSalesOrdersForData, ListSalesOrdersForVariables>;
+  operationName: string;
+}
+export const listSalesOrdersForRef: ListSalesOrdersForRef;
+
+export function listSalesOrdersFor(vars: ListSalesOrdersForVariables, options?: ExecuteQueryOptions): QueryPromise<ListSalesOrdersForData, ListSalesOrdersForVariables>;
+export function listSalesOrdersFor(dc: DataConnect, vars: ListSalesOrdersForVariables, options?: ExecuteQueryOptions): QueryPromise<ListSalesOrdersForData, ListSalesOrdersForVariables>;
+
+interface GetShipmentCostsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetShipmentCostsVariables): QueryRef<GetShipmentCostsData, GetShipmentCostsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetShipmentCostsVariables): QueryRef<GetShipmentCostsData, GetShipmentCostsVariables>;
+  operationName: string;
+}
+export const getShipmentCostsRef: GetShipmentCostsRef;
+
+export function getShipmentCosts(vars: GetShipmentCostsVariables, options?: ExecuteQueryOptions): QueryPromise<GetShipmentCostsData, GetShipmentCostsVariables>;
+export function getShipmentCosts(dc: DataConnect, vars: GetShipmentCostsVariables, options?: ExecuteQueryOptions): QueryPromise<GetShipmentCostsData, GetShipmentCostsVariables>;
+
+interface GetAllocationRunRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetAllocationRunVariables): QueryRef<GetAllocationRunData, GetAllocationRunVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetAllocationRunVariables): QueryRef<GetAllocationRunData, GetAllocationRunVariables>;
+  operationName: string;
+}
+export const getAllocationRunRef: GetAllocationRunRef;
+
+export function getAllocationRun(vars: GetAllocationRunVariables, options?: ExecuteQueryOptions): QueryPromise<GetAllocationRunData, GetAllocationRunVariables>;
+export function getAllocationRun(dc: DataConnect, vars: GetAllocationRunVariables, options?: ExecuteQueryOptions): QueryPromise<GetAllocationRunData, GetAllocationRunVariables>;
+
+interface ListLotCostsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListLotCostsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListLotCostsData, undefined>;
+  operationName: string;
+}
+export const listLotCostsRef: ListLotCostsRef;
+
+export function listLotCosts(options?: ExecuteQueryOptions): QueryPromise<ListLotCostsData, undefined>;
+export function listLotCosts(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListLotCostsData, undefined>;
+
+interface ListLotCostsForRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListLotCostsForVariables): QueryRef<ListLotCostsForData, ListLotCostsForVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListLotCostsForVariables): QueryRef<ListLotCostsForData, ListLotCostsForVariables>;
+  operationName: string;
+}
+export const listLotCostsForRef: ListLotCostsForRef;
+
+export function listLotCostsFor(vars: ListLotCostsForVariables, options?: ExecuteQueryOptions): QueryPromise<ListLotCostsForData, ListLotCostsForVariables>;
+export function listLotCostsFor(dc: DataConnect, vars: ListLotCostsForVariables, options?: ExecuteQueryOptions): QueryPromise<ListLotCostsForData, ListLotCostsForVariables>;
+
+interface ListFxRatesRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListFxRatesData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListFxRatesData, undefined>;
+  operationName: string;
+}
+export const listFxRatesRef: ListFxRatesRef;
+
+export function listFxRates(options?: ExecuteQueryOptions): QueryPromise<ListFxRatesData, undefined>;
+export function listFxRates(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListFxRatesData, undefined>;
+
+interface ListShipmentsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListShipmentsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListShipmentsData, undefined>;
+  operationName: string;
+}
+export const listShipmentsRef: ListShipmentsRef;
+
+export function listShipments(options?: ExecuteQueryOptions): QueryPromise<ListShipmentsData, undefined>;
+export function listShipments(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListShipmentsData, undefined>;
+
+interface GetShipmentRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetShipmentVariables): QueryRef<GetShipmentData, GetShipmentVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetShipmentVariables): QueryRef<GetShipmentData, GetShipmentVariables>;
+  operationName: string;
+}
+export const getShipmentRef: GetShipmentRef;
+
+export function getShipment(vars: GetShipmentVariables, options?: ExecuteQueryOptions): QueryPromise<GetShipmentData, GetShipmentVariables>;
+export function getShipment(dc: DataConnect, vars: GetShipmentVariables, options?: ExecuteQueryOptions): QueryPromise<GetShipmentData, GetShipmentVariables>;
+
+interface ListShippableUnitsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListShippableUnitsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListShippableUnitsData, undefined>;
+  operationName: string;
+}
+export const listShippableUnitsRef: ListShippableUnitsRef;
+
+export function listShippableUnits(options?: ExecuteQueryOptions): QueryPromise<ListShippableUnitsData, undefined>;
+export function listShippableUnits(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListShippableUnitsData, undefined>;
+
+interface ListLocationsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListLocationsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListLocationsData, undefined>;
+  operationName: string;
+}
+export const listLocationsRef: ListLocationsRef;
+
+export function listLocations(options?: ExecuteQueryOptions): QueryPromise<ListLocationsData, undefined>;
+export function listLocations(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListLocationsData, undefined>;
+
+interface ListDocumentRequirementsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListDocumentRequirementsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListDocumentRequirementsData, undefined>;
+  operationName: string;
+}
+export const listDocumentRequirementsRef: ListDocumentRequirementsRef;
+
+export function listDocumentRequirements(options?: ExecuteQueryOptions): QueryPromise<ListDocumentRequirementsData, undefined>;
+export function listDocumentRequirements(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListDocumentRequirementsData, undefined>;
+
+interface ListPurchaseOrdersRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListPurchaseOrdersData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListPurchaseOrdersData, undefined>;
+  operationName: string;
+}
+export const listPurchaseOrdersRef: ListPurchaseOrdersRef;
+
+export function listPurchaseOrders(options?: ExecuteQueryOptions): QueryPromise<ListPurchaseOrdersData, undefined>;
+export function listPurchaseOrders(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListPurchaseOrdersData, undefined>;
+
+interface GetPurchaseOrderRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetPurchaseOrderVariables): QueryRef<GetPurchaseOrderData, GetPurchaseOrderVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetPurchaseOrderVariables): QueryRef<GetPurchaseOrderData, GetPurchaseOrderVariables>;
+  operationName: string;
+}
+export const getPurchaseOrderRef: GetPurchaseOrderRef;
+
+export function getPurchaseOrder(vars: GetPurchaseOrderVariables, options?: ExecuteQueryOptions): QueryPromise<GetPurchaseOrderData, GetPurchaseOrderVariables>;
+export function getPurchaseOrder(dc: DataConnect, vars: GetPurchaseOrderVariables, options?: ExecuteQueryOptions): QueryPromise<GetPurchaseOrderData, GetPurchaseOrderVariables>;
+
+interface GetPurchaseOrderCostsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetPurchaseOrderCostsVariables): QueryRef<GetPurchaseOrderCostsData, GetPurchaseOrderCostsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetPurchaseOrderCostsVariables): QueryRef<GetPurchaseOrderCostsData, GetPurchaseOrderCostsVariables>;
+  operationName: string;
+}
+export const getPurchaseOrderCostsRef: GetPurchaseOrderCostsRef;
+
+export function getPurchaseOrderCosts(vars: GetPurchaseOrderCostsVariables, options?: ExecuteQueryOptions): QueryPromise<GetPurchaseOrderCostsData, GetPurchaseOrderCostsVariables>;
+export function getPurchaseOrderCosts(dc: DataConnect, vars: GetPurchaseOrderCostsVariables, options?: ExecuteQueryOptions): QueryPromise<GetPurchaseOrderCostsData, GetPurchaseOrderCostsVariables>;
+
+interface ListProductionRunsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListProductionRunsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListProductionRunsData, undefined>;
+  operationName: string;
+}
+export const listProductionRunsRef: ListProductionRunsRef;
+
+export function listProductionRuns(options?: ExecuteQueryOptions): QueryPromise<ListProductionRunsData, undefined>;
+export function listProductionRuns(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListProductionRunsData, undefined>;
+
+interface GetProductionRunRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetProductionRunVariables): QueryRef<GetProductionRunData, GetProductionRunVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetProductionRunVariables): QueryRef<GetProductionRunData, GetProductionRunVariables>;
+  operationName: string;
+}
+export const getProductionRunRef: GetProductionRunRef;
+
+export function getProductionRun(vars: GetProductionRunVariables, options?: ExecuteQueryOptions): QueryPromise<GetProductionRunData, GetProductionRunVariables>;
+export function getProductionRun(dc: DataConnect, vars: GetProductionRunVariables, options?: ExecuteQueryOptions): QueryPromise<GetProductionRunData, GetProductionRunVariables>;
+
+interface GetLotRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetLotVariables): QueryRef<GetLotData, GetLotVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetLotVariables): QueryRef<GetLotData, GetLotVariables>;
+  operationName: string;
+}
+export const getLotRef: GetLotRef;
+
+export function getLot(vars: GetLotVariables, options?: ExecuteQueryOptions): QueryPromise<GetLotData, GetLotVariables>;
+export function getLot(dc: DataConnect, vars: GetLotVariables, options?: ExecuteQueryOptions): QueryPromise<GetLotData, GetLotVariables>;
+
+interface ListProcessTemplatesRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListProcessTemplatesData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListProcessTemplatesData, undefined>;
+  operationName: string;
+}
+export const listProcessTemplatesRef: ListProcessTemplatesRef;
+
+export function listProcessTemplates(options?: ExecuteQueryOptions): QueryPromise<ListProcessTemplatesData, undefined>;
+export function listProcessTemplates(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListProcessTemplatesData, undefined>;
+
+interface OperationsFactsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<OperationsFactsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<OperationsFactsData, undefined>;
+  operationName: string;
+}
+export const operationsFactsRef: OperationsFactsRef;
+
+export function operationsFacts(options?: ExecuteQueryOptions): QueryPromise<OperationsFactsData, undefined>;
+export function operationsFacts(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<OperationsFactsData, undefined>;
+
+interface ListInspectionsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListInspectionsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListInspectionsData, undefined>;
+  operationName: string;
+}
+export const listInspectionsRef: ListInspectionsRef;
+
+export function listInspections(options?: ExecuteQueryOptions): QueryPromise<ListInspectionsData, undefined>;
+export function listInspections(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListInspectionsData, undefined>;
+
+interface ListInspectionsForRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListInspectionsForVariables): QueryRef<ListInspectionsForData, ListInspectionsForVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListInspectionsForVariables): QueryRef<ListInspectionsForData, ListInspectionsForVariables>;
+  operationName: string;
+}
+export const listInspectionsForRef: ListInspectionsForRef;
+
+export function listInspectionsFor(vars: ListInspectionsForVariables, options?: ExecuteQueryOptions): QueryPromise<ListInspectionsForData, ListInspectionsForVariables>;
+export function listInspectionsFor(dc: DataConnect, vars: ListInspectionsForVariables, options?: ExecuteQueryOptions): QueryPromise<ListInspectionsForData, ListInspectionsForVariables>;
+
+interface GetInspectionRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetInspectionVariables): QueryRef<GetInspectionData, GetInspectionVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetInspectionVariables): QueryRef<GetInspectionData, GetInspectionVariables>;
+  operationName: string;
+}
+export const getInspectionRef: GetInspectionRef;
+
+export function getInspection(vars: GetInspectionVariables, options?: ExecuteQueryOptions): QueryPromise<GetInspectionData, GetInspectionVariables>;
+export function getInspection(dc: DataConnect, vars: GetInspectionVariables, options?: ExecuteQueryOptions): QueryPromise<GetInspectionData, GetInspectionVariables>;
+
+interface ListInspectionTemplatesRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListInspectionTemplatesData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListInspectionTemplatesData, undefined>;
+  operationName: string;
+}
+export const listInspectionTemplatesRef: ListInspectionTemplatesRef;
+
+export function listInspectionTemplates(options?: ExecuteQueryOptions): QueryPromise<ListInspectionTemplatesData, undefined>;
+export function listInspectionTemplates(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListInspectionTemplatesData, undefined>;
+
+interface ListCorrectiveActionsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListCorrectiveActionsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListCorrectiveActionsData, undefined>;
+  operationName: string;
+}
+export const listCorrectiveActionsRef: ListCorrectiveActionsRef;
+
+export function listCorrectiveActions(options?: ExecuteQueryOptions): QueryPromise<ListCorrectiveActionsData, undefined>;
+export function listCorrectiveActions(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListCorrectiveActionsData, undefined>;
+
+interface ListBoardNotesRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListBoardNotesData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListBoardNotesData, undefined>;
+  operationName: string;
+}
+export const listBoardNotesRef: ListBoardNotesRef;
+
+export function listBoardNotes(options?: ExecuteQueryOptions): QueryPromise<ListBoardNotesData, undefined>;
+export function listBoardNotes(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListBoardNotesData, undefined>;
+
+interface InsertBoardNoteRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: InsertBoardNoteVariables): MutationRef<InsertBoardNoteData, InsertBoardNoteVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: InsertBoardNoteVariables): MutationRef<InsertBoardNoteData, InsertBoardNoteVariables>;
+  operationName: string;
+}
+export const insertBoardNoteRef: InsertBoardNoteRef;
+
+export function insertBoardNote(vars: InsertBoardNoteVariables): MutationPromise<InsertBoardNoteData, InsertBoardNoteVariables>;
+export function insertBoardNote(dc: DataConnect, vars: InsertBoardNoteVariables): MutationPromise<InsertBoardNoteData, InsertBoardNoteVariables>;
+
+interface EditBoardNoteRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: EditBoardNoteVariables): MutationRef<EditBoardNoteData, EditBoardNoteVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: EditBoardNoteVariables): MutationRef<EditBoardNoteData, EditBoardNoteVariables>;
+  operationName: string;
+}
+export const editBoardNoteRef: EditBoardNoteRef;
+
+export function editBoardNote(vars: EditBoardNoteVariables): MutationPromise<EditBoardNoteData, EditBoardNoteVariables>;
+export function editBoardNote(dc: DataConnect, vars: EditBoardNoteVariables): MutationPromise<EditBoardNoteData, EditBoardNoteVariables>;
+
+interface MoveBoardNoteRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: MoveBoardNoteVariables): MutationRef<MoveBoardNoteData, MoveBoardNoteVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: MoveBoardNoteVariables): MutationRef<MoveBoardNoteData, MoveBoardNoteVariables>;
+  operationName: string;
+}
+export const moveBoardNoteRef: MoveBoardNoteRef;
+
+export function moveBoardNote(vars: MoveBoardNoteVariables): MutationPromise<MoveBoardNoteData, MoveBoardNoteVariables>;
+export function moveBoardNote(dc: DataConnect, vars: MoveBoardNoteVariables): MutationPromise<MoveBoardNoteData, MoveBoardNoteVariables>;
+
+interface DeleteOwnBoardNoteRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: DeleteOwnBoardNoteVariables): MutationRef<DeleteOwnBoardNoteData, DeleteOwnBoardNoteVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: DeleteOwnBoardNoteVariables): MutationRef<DeleteOwnBoardNoteData, DeleteOwnBoardNoteVariables>;
+  operationName: string;
+}
+export const deleteOwnBoardNoteRef: DeleteOwnBoardNoteRef;
+
+export function deleteOwnBoardNote(vars: DeleteOwnBoardNoteVariables): MutationPromise<DeleteOwnBoardNoteData, DeleteOwnBoardNoteVariables>;
+export function deleteOwnBoardNote(dc: DataConnect, vars: DeleteOwnBoardNoteVariables): MutationPromise<DeleteOwnBoardNoteData, DeleteOwnBoardNoteVariables>;
+
+interface DeleteBoardNoteRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: DeleteBoardNoteVariables): MutationRef<DeleteBoardNoteData, DeleteBoardNoteVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: DeleteBoardNoteVariables): MutationRef<DeleteBoardNoteData, DeleteBoardNoteVariables>;
+  operationName: string;
+}
+export const deleteBoardNoteRef: DeleteBoardNoteRef;
+
+export function deleteBoardNote(vars: DeleteBoardNoteVariables): MutationPromise<DeleteBoardNoteData, DeleteBoardNoteVariables>;
+export function deleteBoardNote(dc: DataConnect, vars: DeleteBoardNoteVariables): MutationPromise<DeleteBoardNoteData, DeleteBoardNoteVariables>;
+
+interface ListGoalsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListGoalsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListGoalsData, undefined>;
+  operationName: string;
+}
+export const listGoalsRef: ListGoalsRef;
+
+export function listGoals(options?: ExecuteQueryOptions): QueryPromise<ListGoalsData, undefined>;
+export function listGoals(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListGoalsData, undefined>;
+
 interface ListFamiliesRef {
   /* Allow users to create refs without passing in DataConnect */
   (): QueryRef<ListFamiliesData, undefined>;
@@ -4996,135 +5466,195 @@ export const insertShadeStandardRef: InsertShadeStandardRef;
 export function insertShadeStandard(vars: InsertShadeStandardVariables): MutationPromise<InsertShadeStandardData, InsertShadeStandardVariables>;
 export function insertShadeStandard(dc: DataConnect, vars: InsertShadeStandardVariables): MutationPromise<InsertShadeStandardData, InsertShadeStandardVariables>;
 
-interface ListQuotesRef {
+interface ListProductCategoriesRef {
   /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListQuotesData, undefined>;
+  (): QueryRef<ListProductCategoriesData, undefined>;
   /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListQuotesData, undefined>;
+  (dc: DataConnect): QueryRef<ListProductCategoriesData, undefined>;
   operationName: string;
 }
-export const listQuotesRef: ListQuotesRef;
+export const listProductCategoriesRef: ListProductCategoriesRef;
 
-export function listQuotes(options?: ExecuteQueryOptions): QueryPromise<ListQuotesData, undefined>;
-export function listQuotes(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListQuotesData, undefined>;
+export function listProductCategories(options?: ExecuteQueryOptions): QueryPromise<ListProductCategoriesData, undefined>;
+export function listProductCategories(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListProductCategoriesData, undefined>;
 
-interface GetQuoteRef {
+interface ListCollectionsRef {
   /* Allow users to create refs without passing in DataConnect */
-  (vars: GetQuoteVariables): QueryRef<GetQuoteData, GetQuoteVariables>;
+  (): QueryRef<ListCollectionsData, undefined>;
   /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: GetQuoteVariables): QueryRef<GetQuoteData, GetQuoteVariables>;
+  (dc: DataConnect): QueryRef<ListCollectionsData, undefined>;
   operationName: string;
 }
-export const getQuoteRef: GetQuoteRef;
+export const listCollectionsRef: ListCollectionsRef;
 
-export function getQuote(vars: GetQuoteVariables, options?: ExecuteQueryOptions): QueryPromise<GetQuoteData, GetQuoteVariables>;
-export function getQuote(dc: DataConnect, vars: GetQuoteVariables, options?: ExecuteQueryOptions): QueryPromise<GetQuoteData, GetQuoteVariables>;
+export function listCollections(options?: ExecuteQueryOptions): QueryPromise<ListCollectionsData, undefined>;
+export function listCollections(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListCollectionsData, undefined>;
 
-interface ListSalesOrdersRef {
+interface ListBrandAssetsRef {
   /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListSalesOrdersData, undefined>;
+  (): QueryRef<ListBrandAssetsData, undefined>;
   /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListSalesOrdersData, undefined>;
+  (dc: DataConnect): QueryRef<ListBrandAssetsData, undefined>;
   operationName: string;
 }
-export const listSalesOrdersRef: ListSalesOrdersRef;
+export const listBrandAssetsRef: ListBrandAssetsRef;
 
-export function listSalesOrders(options?: ExecuteQueryOptions): QueryPromise<ListSalesOrdersData, undefined>;
-export function listSalesOrders(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListSalesOrdersData, undefined>;
+export function listBrandAssets(options?: ExecuteQueryOptions): QueryPromise<ListBrandAssetsData, undefined>;
+export function listBrandAssets(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListBrandAssetsData, undefined>;
 
-interface GetSalesOrderRef {
+interface ListDevelopmentProductsRef {
   /* Allow users to create refs without passing in DataConnect */
-  (vars: GetSalesOrderVariables): QueryRef<GetSalesOrderData, GetSalesOrderVariables>;
+  (): QueryRef<ListDevelopmentProductsData, undefined>;
   /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: GetSalesOrderVariables): QueryRef<GetSalesOrderData, GetSalesOrderVariables>;
+  (dc: DataConnect): QueryRef<ListDevelopmentProductsData, undefined>;
   operationName: string;
 }
-export const getSalesOrderRef: GetSalesOrderRef;
+export const listDevelopmentProductsRef: ListDevelopmentProductsRef;
 
-export function getSalesOrder(vars: GetSalesOrderVariables, options?: ExecuteQueryOptions): QueryPromise<GetSalesOrderData, GetSalesOrderVariables>;
-export function getSalesOrder(dc: DataConnect, vars: GetSalesOrderVariables, options?: ExecuteQueryOptions): QueryPromise<GetSalesOrderData, GetSalesOrderVariables>;
+export function listDevelopmentProducts(options?: ExecuteQueryOptions): QueryPromise<ListDevelopmentProductsData, undefined>;
+export function listDevelopmentProducts(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListDevelopmentProductsData, undefined>;
 
-interface StockForSkuRef {
+interface GetDevelopmentProductRef {
   /* Allow users to create refs without passing in DataConnect */
-  (vars: StockForSkuVariables): QueryRef<StockForSkuData, StockForSkuVariables>;
+  (vars: GetDevelopmentProductVariables): QueryRef<GetDevelopmentProductData, GetDevelopmentProductVariables>;
   /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: StockForSkuVariables): QueryRef<StockForSkuData, StockForSkuVariables>;
+  (dc: DataConnect, vars: GetDevelopmentProductVariables): QueryRef<GetDevelopmentProductData, GetDevelopmentProductVariables>;
   operationName: string;
 }
-export const stockForSkuRef: StockForSkuRef;
+export const getDevelopmentProductRef: GetDevelopmentProductRef;
 
-export function stockForSku(vars: StockForSkuVariables, options?: ExecuteQueryOptions): QueryPromise<StockForSkuData, StockForSkuVariables>;
-export function stockForSku(dc: DataConnect, vars: StockForSkuVariables, options?: ExecuteQueryOptions): QueryPromise<StockForSkuData, StockForSkuVariables>;
+export function getDevelopmentProduct(vars: GetDevelopmentProductVariables, options?: ExecuteQueryOptions): QueryPromise<GetDevelopmentProductData, GetDevelopmentProductVariables>;
+export function getDevelopmentProduct(dc: DataConnect, vars: GetDevelopmentProductVariables, options?: ExecuteQueryOptions): QueryPromise<GetDevelopmentProductData, GetDevelopmentProductVariables>;
 
-interface ListSalesOrdersForRef {
+interface ListDevelopmentSourcingRef {
   /* Allow users to create refs without passing in DataConnect */
-  (vars: ListSalesOrdersForVariables): QueryRef<ListSalesOrdersForData, ListSalesOrdersForVariables>;
+  (vars: ListDevelopmentSourcingVariables): QueryRef<ListDevelopmentSourcingData, ListDevelopmentSourcingVariables>;
   /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: ListSalesOrdersForVariables): QueryRef<ListSalesOrdersForData, ListSalesOrdersForVariables>;
+  (dc: DataConnect, vars: ListDevelopmentSourcingVariables): QueryRef<ListDevelopmentSourcingData, ListDevelopmentSourcingVariables>;
   operationName: string;
 }
-export const listSalesOrdersForRef: ListSalesOrdersForRef;
+export const listDevelopmentSourcingRef: ListDevelopmentSourcingRef;
 
-export function listSalesOrdersFor(vars: ListSalesOrdersForVariables, options?: ExecuteQueryOptions): QueryPromise<ListSalesOrdersForData, ListSalesOrdersForVariables>;
-export function listSalesOrdersFor(dc: DataConnect, vars: ListSalesOrdersForVariables, options?: ExecuteQueryOptions): QueryPromise<ListSalesOrdersForData, ListSalesOrdersForVariables>;
+export function listDevelopmentSourcing(vars: ListDevelopmentSourcingVariables, options?: ExecuteQueryOptions): QueryPromise<ListDevelopmentSourcingData, ListDevelopmentSourcingVariables>;
+export function listDevelopmentSourcing(dc: DataConnect, vars: ListDevelopmentSourcingVariables, options?: ExecuteQueryOptions): QueryPromise<ListDevelopmentSourcingData, ListDevelopmentSourcingVariables>;
 
-interface GetShipmentCostsRef {
+interface ListDevelopmentCostingRef {
   /* Allow users to create refs without passing in DataConnect */
-  (vars: GetShipmentCostsVariables): QueryRef<GetShipmentCostsData, GetShipmentCostsVariables>;
+  (vars: ListDevelopmentCostingVariables): QueryRef<ListDevelopmentCostingData, ListDevelopmentCostingVariables>;
   /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: GetShipmentCostsVariables): QueryRef<GetShipmentCostsData, GetShipmentCostsVariables>;
+  (dc: DataConnect, vars: ListDevelopmentCostingVariables): QueryRef<ListDevelopmentCostingData, ListDevelopmentCostingVariables>;
   operationName: string;
 }
-export const getShipmentCostsRef: GetShipmentCostsRef;
+export const listDevelopmentCostingRef: ListDevelopmentCostingRef;
 
-export function getShipmentCosts(vars: GetShipmentCostsVariables, options?: ExecuteQueryOptions): QueryPromise<GetShipmentCostsData, GetShipmentCostsVariables>;
-export function getShipmentCosts(dc: DataConnect, vars: GetShipmentCostsVariables, options?: ExecuteQueryOptions): QueryPromise<GetShipmentCostsData, GetShipmentCostsVariables>;
+export function listDevelopmentCosting(vars: ListDevelopmentCostingVariables, options?: ExecuteQueryOptions): QueryPromise<ListDevelopmentCostingData, ListDevelopmentCostingVariables>;
+export function listDevelopmentCosting(dc: DataConnect, vars: ListDevelopmentCostingVariables, options?: ExecuteQueryOptions): QueryPromise<ListDevelopmentCostingData, ListDevelopmentCostingVariables>;
 
-interface GetAllocationRunRef {
+interface InsertDocumentRef {
   /* Allow users to create refs without passing in DataConnect */
-  (vars: GetAllocationRunVariables): QueryRef<GetAllocationRunData, GetAllocationRunVariables>;
+  (vars: InsertDocumentVariables): MutationRef<InsertDocumentData, InsertDocumentVariables>;
   /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: GetAllocationRunVariables): QueryRef<GetAllocationRunData, GetAllocationRunVariables>;
+  (dc: DataConnect, vars: InsertDocumentVariables): MutationRef<InsertDocumentData, InsertDocumentVariables>;
   operationName: string;
 }
-export const getAllocationRunRef: GetAllocationRunRef;
+export const insertDocumentRef: InsertDocumentRef;
 
-export function getAllocationRun(vars: GetAllocationRunVariables, options?: ExecuteQueryOptions): QueryPromise<GetAllocationRunData, GetAllocationRunVariables>;
-export function getAllocationRun(dc: DataConnect, vars: GetAllocationRunVariables, options?: ExecuteQueryOptions): QueryPromise<GetAllocationRunData, GetAllocationRunVariables>;
+export function insertDocument(vars: InsertDocumentVariables): MutationPromise<InsertDocumentData, InsertDocumentVariables>;
+export function insertDocument(dc: DataConnect, vars: InsertDocumentVariables): MutationPromise<InsertDocumentData, InsertDocumentVariables>;
 
-interface ListLotCostsRef {
+interface LinkDocumentRef {
   /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListLotCostsData, undefined>;
+  (vars: LinkDocumentVariables): MutationRef<LinkDocumentData, LinkDocumentVariables>;
   /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListLotCostsData, undefined>;
+  (dc: DataConnect, vars: LinkDocumentVariables): MutationRef<LinkDocumentData, LinkDocumentVariables>;
   operationName: string;
 }
-export const listLotCostsRef: ListLotCostsRef;
+export const linkDocumentRef: LinkDocumentRef;
 
-export function listLotCosts(options?: ExecuteQueryOptions): QueryPromise<ListLotCostsData, undefined>;
-export function listLotCosts(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListLotCostsData, undefined>;
+export function linkDocument(vars: LinkDocumentVariables): MutationPromise<LinkDocumentData, LinkDocumentVariables>;
+export function linkDocument(dc: DataConnect, vars: LinkDocumentVariables): MutationPromise<LinkDocumentData, LinkDocumentVariables>;
 
-interface ListLotCostsForRef {
+interface ListStockLocationsRef {
   /* Allow users to create refs without passing in DataConnect */
-  (vars: ListLotCostsForVariables): QueryRef<ListLotCostsForData, ListLotCostsForVariables>;
+  (): QueryRef<ListStockLocationsData, undefined>;
   /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: ListLotCostsForVariables): QueryRef<ListLotCostsForData, ListLotCostsForVariables>;
+  (dc: DataConnect): QueryRef<ListStockLocationsData, undefined>;
   operationName: string;
 }
-export const listLotCostsForRef: ListLotCostsForRef;
+export const listStockLocationsRef: ListStockLocationsRef;
 
-export function listLotCostsFor(vars: ListLotCostsForVariables, options?: ExecuteQueryOptions): QueryPromise<ListLotCostsForData, ListLotCostsForVariables>;
-export function listLotCostsFor(dc: DataConnect, vars: ListLotCostsForVariables, options?: ExecuteQueryOptions): QueryPromise<ListLotCostsForData, ListLotCostsForVariables>;
+export function listStockLocations(options?: ExecuteQueryOptions): QueryPromise<ListStockLocationsData, undefined>;
+export function listStockLocations(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListStockLocationsData, undefined>;
 
-interface ListFxRatesRef {
+interface ListStockBalancesRef {
   /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<ListFxRatesData, undefined>;
+  (): QueryRef<ListStockBalancesData, undefined>;
   /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<ListFxRatesData, undefined>;
+  (dc: DataConnect): QueryRef<ListStockBalancesData, undefined>;
   operationName: string;
 }
-export const listFxRatesRef: ListFxRatesRef;
+export const listStockBalancesRef: ListStockBalancesRef;
 
-export function listFxRates(options?: ExecuteQueryOptions): QueryPromise<ListFxRatesData, undefined>;
-export function listFxRates(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListFxRatesData, undefined>;
+export function listStockBalances(options?: ExecuteQueryOptions): QueryPromise<ListStockBalancesData, undefined>;
+export function listStockBalances(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListStockBalancesData, undefined>;
+
+interface ListStockMovementsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListStockMovementsVariables): QueryRef<ListStockMovementsData, ListStockMovementsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListStockMovementsVariables): QueryRef<ListStockMovementsData, ListStockMovementsVariables>;
+  operationName: string;
+}
+export const listStockMovementsRef: ListStockMovementsRef;
+
+export function listStockMovements(vars: ListStockMovementsVariables, options?: ExecuteQueryOptions): QueryPromise<ListStockMovementsData, ListStockMovementsVariables>;
+export function listStockMovements(dc: DataConnect, vars: ListStockMovementsVariables, options?: ExecuteQueryOptions): QueryPromise<ListStockMovementsData, ListStockMovementsVariables>;
+
+interface ListRecentMovementsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListRecentMovementsVariables): QueryRef<ListRecentMovementsData, ListRecentMovementsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListRecentMovementsVariables): QueryRef<ListRecentMovementsData, ListRecentMovementsVariables>;
+  operationName: string;
+}
+export const listRecentMovementsRef: ListRecentMovementsRef;
+
+export function listRecentMovements(vars: ListRecentMovementsVariables, options?: ExecuteQueryOptions): QueryPromise<ListRecentMovementsData, ListRecentMovementsVariables>;
+export function listRecentMovements(dc: DataConnect, vars: ListRecentMovementsVariables, options?: ExecuteQueryOptions): QueryPromise<ListRecentMovementsData, ListRecentMovementsVariables>;
+
+interface ListReceiptsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListReceiptsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListReceiptsData, undefined>;
+  operationName: string;
+}
+export const listReceiptsRef: ListReceiptsRef;
+
+export function listReceipts(options?: ExecuteQueryOptions): QueryPromise<ListReceiptsData, undefined>;
+export function listReceipts(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListReceiptsData, undefined>;
+
+interface ListReorderPoliciesRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListReorderPoliciesData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListReorderPoliciesData, undefined>;
+  operationName: string;
+}
+export const listReorderPoliciesRef: ListReorderPoliciesRef;
+
+export function listReorderPolicies(options?: ExecuteQueryOptions): QueryPromise<ListReorderPoliciesData, undefined>;
+export function listReorderPolicies(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListReorderPoliciesData, undefined>;
+
+interface ListRollPositionsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListRollPositionsVariables): QueryRef<ListRollPositionsData, ListRollPositionsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListRollPositionsVariables): QueryRef<ListRollPositionsData, ListRollPositionsVariables>;
+  operationName: string;
+}
+export const listRollPositionsRef: ListRollPositionsRef;
+
+export function listRollPositions(vars: ListRollPositionsVariables, options?: ExecuteQueryOptions): QueryPromise<ListRollPositionsData, ListRollPositionsVariables>;
+export function listRollPositions(dc: DataConnect, vars: ListRollPositionsVariables, options?: ExecuteQueryOptions): QueryPromise<ListRollPositionsData, ListRollPositionsVariables>;
 

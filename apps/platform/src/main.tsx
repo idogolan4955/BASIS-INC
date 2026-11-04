@@ -38,6 +38,9 @@ import { Loading, NoRole, SignIn } from './pages/access/SignIn';
 import { Gateway } from './pages/gateway/Gateway';
 import { Board } from './pages/board/Board';
 import { Goals } from './pages/goals/Goals';
+import { DevelopmentBoard, DevelopmentProducts } from './pages/development/Development';
+import { Dossier } from './pages/development/Dossier';
+import { BrandCentre, Categories, Collections } from './pages/development/Brand';
 import { SessionProvider, useSessionState } from './session';
 import { LocaleProvider } from './i18n';
 
@@ -132,6 +135,18 @@ const router = createBrowserRouter([
       { path: 'customers/:id/relationship', element: <CompanySheet tab="relationship" base="/customers" /> },
       { path: 'board', element: <Board /> },
       { path: 'goals', element: <Goals /> },
+      { path: 'development', element: <DevelopmentBoard /> },
+      { path: 'development/products', element: <DevelopmentProducts /> },
+      { path: 'development/products/:number', element: <Dossier tab="overview" /> },
+      { path: 'development/products/:number/files', element: <Dossier tab="files" /> },
+      { path: 'development/products/:number/samples', element: <Dossier tab="samples" /> },
+      { path: 'development/products/:number/sourcing', element: <Dossier tab="sourcing" /> },
+      { path: 'development/products/:number/costing', element: <Dossier tab="costing" /> },
+      { path: 'development/products/:number/tasks', element: <Dossier tab="tasks" /> },
+      { path: 'development/products/:number/decisions', element: <Dossier tab="decisions" /> },
+      { path: 'development/brand', element: <BrandCentre /> },
+      { path: 'development/collections', element: <Collections /> },
+      { path: 'development/categories', element: <Categories /> },
       { path: ':module/*', element: <ModulePending /> },
     ],
   },
