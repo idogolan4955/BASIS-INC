@@ -1,7 +1,7 @@
 import { ROLES, ROLE_LABELS, isRole } from '@basis/shared';
 import { Wordmark, cn } from '@basis/ui';
 import { HouseSimple, type Icon } from '@phosphor-icons/react';
-import { NavLink } from 'react-router';
+import { Link, NavLink } from 'react-router';
 import { useRequiredSession } from '../session';
 import { MODULE_ICONS, railGroupsFor } from './sections';
 import { LOCALES, useLocale } from '../i18n';
@@ -39,7 +39,9 @@ export function Rail({ className }: { className?: string }) {
   return (
     <aside className={cn('on-rail flex h-dvh flex-col bg-rail text-rail-ink', className)}>
       <div className="flex h-16 shrink-0 items-center border-b border-rail-line px-5">
-        <Wordmark className="text-[0.9375rem]" />
+        <Link to="/hub" aria-label={t('The front door')} className="rounded-xs outline-none focus-visible:ring-2 focus-visible:ring-rail-ink/40">
+          <Wordmark className="text-[0.9375rem]" />
+        </Link>
       </div>
 
       <nav aria-label={t('Modules')} className="flex-1 overflow-y-auto py-3 [scrollbar-color:var(--color-rail-line)_transparent] [scrollbar-width:thin]">

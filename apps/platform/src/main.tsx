@@ -36,6 +36,7 @@ import { Shades } from './pages/products/Shades';
 import { SkuLedger, SkuSheet } from './pages/products/Skus';
 import { Loading, NoRole, SignIn } from './pages/access/SignIn';
 import { Gateway } from './pages/gateway/Gateway';
+import { Hub } from './pages/hub/Hub';
 import { Board } from './pages/board/Board';
 import { Goals } from './pages/goals/Goals';
 import { DevelopmentBoard, DevelopmentProducts } from './pages/development/Development';
@@ -58,6 +59,7 @@ const router = createBrowserRouter([
     element: <Root />,
     children: [
       { index: true, element: <Gateway /> },
+      { path: 'hub', element: <Hub /> },
       { path: 'operations', element: <Operations /> },
       { path: 'operations/tasks', element: <Tasks /> },
       { path: 'manufacturing', element: <PurchaseOrders /> },

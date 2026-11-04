@@ -310,3 +310,9 @@ Each module folder owns its screens, loading and error states, and module-specif
 | `/development/brand` | The Brand Centre | Everyone reads; owner and marketing keep it |
 | `/development/collections` | Collections | Development module roles |
 | `/development/categories` | Categories and their specification schemas | Development module roles |
+
+### The front door (2026-11-04)
+
+| Path | Screen | Access |
+|---|---|---|
+| `/hub` | The front door: Management, Development, Brand site, Team, Records as doors; the rail's wordmark opens it; the installed app starts here | Every role |

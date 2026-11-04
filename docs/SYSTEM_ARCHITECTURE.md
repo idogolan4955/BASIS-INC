@@ -318,3 +318,7 @@ WebGL, video and long scroll sequences are lazy, capability-gated and have stati
 | O5 | Reachability from mainland China: Google services are generally blocked there, which affects factory-side users (inspectors, suppliers) | Verify with a real factory-side user before the QC phase. Fallback: factory-side flows served entirely through the site's own origin (`/api/**` → functions), with no direct Google endpoints in the browser | Factory-side QC rollout |
 | O6 | Relationship between BASIS and the Fabrica system | Fully independent: separate project, database and repository | Nothing now |
 | O7 | Accounting system to integrate with | Deferred | Orders phase |
+
+## The platform as an app
+
+The platform is installable: `apps/platform/public/manifest.webmanifest` (name, icons from `public/icons/`, `start_url: /hub`, standalone display). On a Mac: Safari › File › Add to Dock, or Chrome › Install app. `tools/mac-app/make.sh` also builds a small `~/Applications/BASIS INC.app` (an AppleScript applet with the BASIS icon) that opens the front door in the default browser; the icon set is regenerated from `tools/mac-app/icon-1024.png`, the B in Archivo with the nude swatch, on a transparent ground.
