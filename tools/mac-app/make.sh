@@ -26,6 +26,9 @@ rm -rf "$APP"
 printf 'open location "%s"\n' "$URL" > "$HERE/open.applescript"
 osacompile -o "$APP" "$HERE/open.applescript"
 cp "$HERE/BASIS.icns" "$APP/Contents/Resources/applet.icns"
+# the applet ships an asset catalogue whose AppIcon would win over applet.icns
+rm -f "$APP/Contents/Resources/Assets.car"
+/usr/libexec/PlistBuddy -c "Delete :CFBundleIconName" "$APP/Contents/Info.plist" >/dev/null 2>&1 || true
 /usr/libexec/PlistBuddy -c "Set :CFBundleName BASIS INC." "$APP/Contents/Info.plist" >/dev/null 2>&1 || true
 /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string BASIS INC." "$APP/Contents/Info.plist" >/dev/null 2>&1 || true
 /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.basis-inc.frontdoor" "$APP/Contents/Info.plist" >/dev/null 2>&1 || true
