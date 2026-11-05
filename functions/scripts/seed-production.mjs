@@ -40,14 +40,17 @@ const seed = seeder(
 );
 
 const uid = await seed.seedOwner(getAuth(), { email, name, recreate: false });
-await seed.seedTemplates();
-await seed.seedInspectionTemplates();
+// Reference data and the catalog first: the process templates point at the
+// fabric families, so a fresh database needs the families before them.
 await seed.seedReference();
 const skuCount = await seed.seedCatalog({ withSkus: flag("with-skus") });
+await seed.seedTemplates();
+await seed.seedInspectionTemplates();
 await seed.seedLogistics();
+const line = await seed.seedDevelopment(uid);
 const c = seed.counts;
 console.log(
-  `Seeded production: owner ${email} (${uid}), ${c.countries} countries, ${c.currencies} currencies, ${c.uoms} units, ${c.incoterms} Incoterms, number sequences, ${c.products} products, ${skuCount} SKUs, ${c.templates} process templates, ${c.inspectionTemplates} inspection templates, ${c.places} places, ${c.documentRequirements} document requirements.`,
+  `Seeded production: owner ${email} (${uid}), ${c.countries} countries, ${c.currencies} currencies, ${c.uoms} units, ${c.incoterms} Incoterms, number sequences, ${c.products} products, ${skuCount} SKUs, ${c.templates} process templates, ${c.inspectionTemplates} inspection templates, ${c.places} places, ${c.documentRequirements} document requirements, development line: ${line.products} dossiers, ${line.categories} categories and ${line.collections} collections added.`,
 );
 console.log(
   `Next: open the platform, enter ${email}, choose "Reset password", and set the password from the email.`,

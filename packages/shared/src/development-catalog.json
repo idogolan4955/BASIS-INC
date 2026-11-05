@@ -1,0 +1,531 @@
+{
+  "$comment": "The brand's consumer line as the owner's concept boards of 2026-11-05 define it. Seeded into module 18 as dossiers at the idea stage and shown by sample mode; never typed into a screen. Only what the boards say is here: composition, sizes, prices, suppliers and launch dates stay empty until the owner gives them. The two hex values are read from the colour chips on the phone-case board.",
+  "categories": [
+    {
+      "code": "APP",
+      "name": "Apparel",
+      "description": "Garments under the brand.",
+      "parent": null,
+      "sort": 1,
+      "specSchema": [
+        { "key": "composition", "label": "Composition", "kind": "text" },
+        { "key": "weightGsm", "label": "Weight", "kind": "number", "unit": "gsm" },
+        { "key": "sizeRange", "label": "Size range", "kind": "text" },
+        { "key": "care", "label": "Care", "kind": "text" }
+      ]
+    },
+    {
+      "code": "FRG",
+      "name": "Fragrance",
+      "description": "Eau de parfum and extraits.",
+      "parent": null,
+      "sort": 2,
+      "specSchema": [
+        { "key": "concentration", "label": "Concentration", "kind": "select", "options": ["EDT", "EDP", "Extrait"] },
+        { "key": "volumeMl", "label": "Volume", "kind": "number", "unit": "ml" },
+        { "key": "notes", "label": "Olfactive notes", "kind": "text" }
+      ]
+    },
+    {
+      "code": "HOM",
+      "name": "Home scent",
+      "description": "Diffusers, candles, linen water.",
+      "parent": null,
+      "sort": 3,
+      "specSchema": [
+        { "key": "format", "label": "Format", "kind": "select", "options": ["Candle", "Diffuser", "Linen water"] },
+        { "key": "volumeMl", "label": "Volume", "kind": "number", "unit": "ml" },
+        { "key": "burnHours", "label": "Burn time", "kind": "number", "unit": "h" },
+        { "key": "wax", "label": "Wax", "kind": "text" }
+      ]
+    },
+    {
+      "code": "BAG",
+      "name": "Bags",
+      "description": "",
+      "parent": null,
+      "sort": 4,
+      "specSchema": [
+        { "key": "material", "label": "Material", "kind": "text" },
+        { "key": "dimensions", "label": "Dimensions", "kind": "text" },
+        { "key": "hardware", "label": "Hardware", "kind": "text" }
+      ]
+    },
+    {
+      "code": "SHO",
+      "name": "Shoes",
+      "description": "",
+      "parent": null,
+      "sort": 5,
+      "specSchema": [
+        { "key": "upper", "label": "Upper", "kind": "text" },
+        { "key": "sole", "label": "Sole", "kind": "text" },
+        { "key": "heelMm", "label": "Heel", "kind": "number", "unit": "mm" }
+      ]
+    },
+    {
+      "code": "ACC",
+      "name": "Accessories",
+      "description": "",
+      "parent": null,
+      "sort": 6,
+      "specSchema": [{ "key": "material", "label": "Material", "kind": "text" }]
+    },
+    {
+      "code": "CASE",
+      "name": "Phone cases",
+      "description": "Cases for phones, by device.",
+      "parent": "ACC",
+      "sort": 7,
+      "specSchema": [
+        { "key": "devices", "label": "Devices", "kind": "text" },
+        { "key": "construction", "label": "Construction", "kind": "text" },
+        { "key": "finish", "label": "Finish", "kind": "text" },
+        { "key": "thickness", "label": "Thickness", "kind": "text", "unit": "mm" },
+        { "key": "magsafe", "label": "MagSafe", "kind": "select", "options": ["Yes", "No"] }
+      ]
+    }
+  ],
+  "collections": [
+    { "code": "FW27", "name": "Autumn Winter 2027", "season": "FW", "year": 2027, "theme": "", "targetLaunch": null, "status": "planning" },
+    { "code": "BRIDAL-CORE", "name": "Bridal Core", "season": "", "year": null, "theme": "", "targetLaunch": null, "status": "planning" },
+    { "code": "TEES", "name": "The T-Shirt Collection", "season": "", "year": null, "theme": "Better basics for a brighter tomorrow. Four tees: Essential, Baby, Sculpt and Relaxed. The Everyday Edit pairs the Essential and the Relaxed.", "targetLaunch": null, "status": "planning" },
+    { "code": "SLEEP", "name": "Sleepwear / Babydoll Collection", "season": "", "year": null, "theme": "Everyday essentials for a more beautiful you. Soft, feminine, modern, essential. Pajama sets: effortless comfort. Babydolls: romantic and modern. Robes and lounge: layered luxury. Seventeen styles in a palette of Ivory, Stone, Blush, Mauve, Sage and Black.", "targetLaunch": null, "status": "planning" },
+    { "code": "DROP-01", "name": "Drop 01", "season": "", "year": null, "theme": "The iPhone 18 Case Collection. Same essence. Different device. Less complexity. More margin. Inspired by the materials behind fashion.", "targetLaunch": null, "status": "planning" }
+  ],
+  "products": [
+    {
+      "id": "a62d8a94-de9c-4a13-97a9-f5065c92ea59",
+      "name": "Essential Tee",
+      "workingTitle": "",
+      "category": "APP",
+      "collection": "TEES",
+      "priority": "normal",
+      "description": "The regular-fit crew-neck tee of the T-Shirt Collection, with a small BASIS INC mark on the chest. Shown on the collection board in off-white. Part of the Everyday Edit with the Relaxed Tee.",
+      "intent": "Better basics for a brighter tomorrow.",
+      "specs": {},
+      "materials": [],
+      "variants": [],
+      "packaging": []
+    },
+    {
+      "id": "a49dce66-721d-4d33-a702-a61813429e32",
+      "name": "Baby Tee",
+      "workingTitle": "",
+      "category": "APP",
+      "collection": "TEES",
+      "priority": "normal",
+      "description": "A cropped, close-fitting crew-neck tee with short sleeves and a small BASIS INC mark on the chest. Shown on the collection board in black.",
+      "intent": "Better basics for a brighter tomorrow.",
+      "specs": {},
+      "materials": [],
+      "variants": [],
+      "packaging": []
+    },
+    {
+      "id": "88dbec3f-0265-44b8-ae78-e3cf235d2a8c",
+      "name": "Sculpt Tee",
+      "workingTitle": "",
+      "category": "APP",
+      "collection": "TEES",
+      "priority": "normal",
+      "description": "A close-fitting crew-neck tee cut to follow the body, without a visible mark. Shown on the collection board in taupe.",
+      "intent": "Better basics for a brighter tomorrow.",
+      "specs": {},
+      "materials": [],
+      "variants": [],
+      "packaging": []
+    },
+    {
+      "id": "24f60836-6b21-4395-bf1c-c4b90c4462ec",
+      "name": "Relaxed Tee",
+      "workingTitle": "",
+      "category": "APP",
+      "collection": "TEES",
+      "priority": "normal",
+      "description": "An oversized crew-neck tee with a dropped shoulder and a small BASIS INC mark on the chest. Shown on the collection board in heather grey. Part of the Everyday Edit with the Essential Tee.",
+      "intent": "Better basics for a brighter tomorrow.",
+      "specs": {},
+      "materials": [],
+      "variants": [],
+      "packaging": []
+    },
+    {
+      "id": "e463d891-be36-4239-b240-be3d92a4c220",
+      "name": "Model 1",
+      "workingTitle": "Everyday Luxury bag",
+      "category": "BAG",
+      "collection": null,
+      "priority": "normal",
+      "description": "A soft-structured shoulder bag in draped mesh: one curved handle on ring hardware, a sculpted base and a discreet BASIS mark. 32 × 20 × 12 cm. Five colours, and the same silhouette told in five materials: illusion mesh, satin drape, suede touch, pebbled leather and gloss finish.",
+      "intent": "Everyday luxury. Soft structure, signature draped mesh, iconic silhouette, lightweight, everyday elegance.",
+      "specs": { "material": "Illusion stretch mesh, draped", "dimensions": "32 × 20 × 12 cm", "hardware": "Ring hardware" },
+      "materials": [
+        { "role": "shell 01", "name": "Illusion mesh", "specification": "Light, flexible, luxurious. Airy structure.", "notes": "The board names Illusion Stretch Mesh, our own fabric (ILM). The SKU is chosen per colourway." },
+        { "role": "shell 02", "name": "Satin drape", "specification": "Radiant, smooth, elegant. Fluid elegance.", "notes": "" },
+        { "role": "shell 03", "name": "Suede touch", "specification": "Soft, refined, timeless. Velvet soft.", "notes": "" },
+        { "role": "shell 04", "name": "Pebbled leather", "specification": "Durable, sophisticated, versatile. Natural grain.", "notes": "" },
+        { "role": "shell 05", "name": "Gloss finish", "specification": "Bold, modern, statement. High shine.", "notes": "" },
+        { "role": "hardware", "name": "Premium ring hardware", "specification": "Rings joining the handle to the body. Subtle branding.", "notes": "" },
+        { "role": "strap", "name": "Ergonomic strap", "specification": "Comfort and style.", "notes": "" },
+        { "role": "base", "name": "Sculpted base", "specification": "Stability and refinement.", "notes": "" },
+        { "role": "interior", "name": "Thoughtful interior", "specification": "Zip pocket and slip pocket. Beauty meets function.", "notes": "" },
+        { "role": "branding", "name": "Signature branding", "specification": "Tonal BASIS mark on the body. Discreet and elevated.", "notes": "" }
+      ],
+      "variants": [
+        { "code": "IVORY", "name": "Ivory", "colourHex": null, "colourName": "Ivory", "sizeLabel": "32 × 20 × 12 cm", "dimensions": { "w": "32", "h": "20", "d": "12", "unit": "cm" } },
+        { "code": "SAND", "name": "Sand", "colourHex": null, "colourName": "Sand", "sizeLabel": "32 × 20 × 12 cm", "dimensions": { "w": "32", "h": "20", "d": "12", "unit": "cm" } },
+        { "code": "BLUSH", "name": "Blush", "colourHex": null, "colourName": "Blush", "sizeLabel": "32 × 20 × 12 cm", "dimensions": { "w": "32", "h": "20", "d": "12", "unit": "cm" } },
+        { "code": "TAUPE", "name": "Taupe", "colourHex": null, "colourName": "Taupe", "sizeLabel": "32 × 20 × 12 cm", "dimensions": { "w": "32", "h": "20", "d": "12", "unit": "cm" } },
+        { "code": "BLACK", "name": "Black", "colourHex": null, "colourName": "Black", "sizeLabel": "32 × 20 × 12 cm", "dimensions": { "w": "32", "h": "20", "d": "12", "unit": "cm" } }
+      ],
+      "packaging": []
+    },
+    {
+      "id": "63dc9d46-f7ea-4da4-9866-7a4aa7de3388",
+      "name": "iPhone 18 Case",
+      "workingTitle": "iPhone 18 Case Collection",
+      "category": "CASE",
+      "collection": "DROP-01",
+      "priority": "normal",
+      "description": "A slim case for iPhone 18 Pro and iPhone 18 Pro Max with a matte micro-woven textile finish inspired by BASIS textiles. TPU and PC construction, about 1.6 to 2.0 mm, full camera-plate coverage, tactile buttons and a hidden MagSafe magnet ring. Two colours: Warm Bone and Soft Black.",
+      "intent": "Same essence. Different device. Less complexity. More margin. Inspired by the materials behind fashion. A high-margin product, ideal for the drop model.",
+      "specs": { "devices": "iPhone 18 Pro, iPhone 18 Pro Max", "construction": "TPU + PC", "finish": "Matte micro-woven textile", "thickness": "1.6–2.0", "magsafe": "Yes" },
+      "materials": [
+        { "role": "body", "name": "TPU + PC construction", "specification": "Durable and flexible. Lightweight, about 1.6 to 2.0 mm. Slim profile, seamless construction.", "notes": "" },
+        { "role": "finish", "name": "Matte micro-woven textile finish", "specification": "Inspired by BASIS textiles. Clean, durable, easy to produce.", "notes": "" },
+        { "role": "camera plate", "name": "Camera plate protection", "specification": "Full coverage for the iPhone 18 Pro series. Precision fit around the wide camera plateau. Matte, scratch-resistant finish.", "notes": "" },
+        { "role": "magnet", "name": "Hidden MagSafe magnet ring", "specification": "No visible graphics. Clean interior construction.", "notes": "" },
+        { "role": "buttons", "name": "Tactile buttons", "specification": "Accurate cutouts, full access to all ports.", "notes": "" }
+      ],
+      "variants": [
+        { "code": "18P-WB", "name": "iPhone 18 Pro, Warm Bone", "colourHex": "#AD9D8D", "colourName": "Warm Bone", "sizeLabel": "iPhone 18 Pro", "dimensions": {} },
+        { "code": "18PM-WB", "name": "iPhone 18 Pro Max, Warm Bone", "colourHex": "#AD9D8D", "colourName": "Warm Bone", "sizeLabel": "iPhone 18 Pro Max", "dimensions": {} },
+        { "code": "18P-SB", "name": "iPhone 18 Pro, Soft Black", "colourHex": "#1E1F1C", "colourName": "Soft Black", "sizeLabel": "iPhone 18 Pro", "dimensions": {} },
+        { "code": "18PM-SB", "name": "iPhone 18 Pro Max, Soft Black", "colourHex": "#1E1F1C", "colourName": "Soft Black", "sizeLabel": "iPhone 18 Pro Max", "dimensions": {} }
+      ],
+      "packaging": []
+    },
+    {
+      "id": "54f0b381-62ef-4a1c-9f97-7433d3060b91",
+      "name": "Home Fragrance Reed Diffuser",
+      "workingTitle": "",
+      "category": "HOM",
+      "collection": null,
+      "priority": "normal",
+      "description": "A 200 ml reed diffuser in a rounded tinted vessel with a cap in the same tone, boxed. Four scents, each with its colour: Sand (white tea, linen), Blush (peony, almond), Taupe (amber, cedarwood) and Onyx (black tea, oud).",
+      "intent": "",
+      "specs": { "format": "Diffuser", "volumeMl": "200" },
+      "materials": [
+        { "role": "vessel", "name": "Rounded tinted vessel, 200 ml", "specification": "The tint follows the scent's colour. BASIS INC, Home Fragrance and the volume printed on the front.", "notes": "" },
+        { "role": "cap", "name": "Rounded cap in the scent's colour", "specification": "", "notes": "" },
+        { "role": "reeds", "name": "Reed sticks", "specification": "", "notes": "" }
+      ],
+      "variants": [
+        { "code": "SAND", "name": "Sand: white tea, linen", "colourHex": null, "colourName": "Sand", "sizeLabel": "200 ml", "dimensions": { "notes": "White tea, linen" } },
+        { "code": "BLUSH", "name": "Blush: peony, almond", "colourHex": null, "colourName": "Blush", "sizeLabel": "200 ml", "dimensions": { "notes": "Peony, almond" } },
+        { "code": "TAUPE", "name": "Taupe: amber, cedarwood", "colourHex": null, "colourName": "Taupe", "sizeLabel": "200 ml", "dimensions": { "notes": "Amber, cedarwood" } },
+        { "code": "ONYX", "name": "Onyx: black tea, oud", "colourHex": null, "colourName": "Onyx", "sizeLabel": "200 ml", "dimensions": { "notes": "Black tea, oud" } }
+      ],
+      "packaging": [{ "component": "box", "specification": "Printed carton carrying BASIS INC, Home Fragrance, the scent and 200 ml.", "material": "", "dimensions": {} }]
+    },
+    {
+      "id": "3a533b68-0989-4b5c-aae9-275afdc53fec",
+      "name": "Flow Form 01",
+      "workingTitle": "Everyday Moves Forward",
+      "category": "SHO",
+      "collection": null,
+      "priority": "normal",
+      "description": "A women's sneaker with a sculpted wave sole and layered mesh and suede-look panels, the BASIS INC mark on the heel and the tongue. Three tonal colourways, Sand, Moon and Rose, and a One Tone edition in a single shade. Cushioned comfort, lightweight structure, premium materials, all-day versatility.",
+      "intent": "Everyday moves forward. Women's footwear designed for real life: softer, lighter, bolder, yours. A new balance in your day.",
+      "specs": {},
+      "materials": [],
+      "variants": [
+        { "code": "SAND", "name": "Sand", "colourHex": null, "colourName": "Sand", "sizeLabel": "", "dimensions": {} },
+        { "code": "MOON", "name": "Moon", "colourHex": null, "colourName": "Moon", "sizeLabel": "", "dimensions": {} },
+        { "code": "ROSE", "name": "Rose", "colourHex": null, "colourName": "Rose", "sizeLabel": "", "dimensions": {} },
+        { "code": "ONE", "name": "One Tone", "colourHex": null, "colourName": "One Tone", "sizeLabel": "", "dimensions": {} }
+      ],
+      "packaging": [
+        { "component": "box", "specification": "Shoe box.", "material": "", "dimensions": {} },
+        { "component": "tissue", "specification": "Tissue wrap printed BASIS INC.", "material": "", "dimensions": {} },
+        { "component": "insert", "specification": "Card: Same energy, different days.", "material": "", "dimensions": {} }
+      ]
+    },
+    {
+      "id": "cf1985b2-00ef-4a27-ae53-6142253c57d2",
+      "name": "Second Skin",
+      "workingTitle": "Eau de Parfum, 100 ml",
+      "category": "FRG",
+      "collection": null,
+      "priority": "normal",
+      "description": "An eau de parfum, 100 ml, in a clear rounded-square bottle with a heavy base and a textured cap, in a textured box embossed with a wave. Shown in a sand tone. One of three scents with Illusion Mesh and N58.",
+      "intent": "",
+      "specs": { "concentration": "EDP", "volumeMl": "100" },
+      "materials": [
+        { "role": "bottle", "name": "Clear rounded-square bottle, 100 ml", "specification": "Heavy base. BASIS INC, the scent's name, Eau de Parfum and the volume printed on the front.", "notes": "" },
+        { "role": "cap", "name": "Textured cap", "specification": "Sand tone, matching the box.", "notes": "" }
+      ],
+      "variants": [{ "code": "100", "name": "100 ml", "colourHex": null, "colourName": "", "sizeLabel": "100 ml", "dimensions": {} }],
+      "packaging": [{ "component": "box", "specification": "Textured carton embossed with a wave, in the scent's tone, carrying BASIS INC, the scent's name, Eau de Parfum and 100 ml.", "material": "", "dimensions": {} }]
+    },
+    {
+      "id": "f57358df-402d-456b-8b6f-f3a3743f469d",
+      "name": "Illusion Mesh",
+      "workingTitle": "Eau de Parfum, 100 ml",
+      "category": "FRG",
+      "collection": null,
+      "priority": "normal",
+      "description": "An eau de parfum, 100 ml, in a clear rounded-square bottle with a heavy base and a textured cap, in a textured box embossed with a wave. Shown in a blush tone. It carries the name of our fabric Illusion Stretch Mesh. One of three scents with Second Skin and N58.",
+      "intent": "",
+      "specs": { "concentration": "EDP", "volumeMl": "100" },
+      "materials": [
+        { "role": "bottle", "name": "Clear rounded-square bottle, 100 ml", "specification": "Heavy base. BASIS INC, the scent's name, Eau de Parfum and the volume printed on the front.", "notes": "" },
+        { "role": "cap", "name": "Textured cap", "specification": "Blush tone, matching the box.", "notes": "" }
+      ],
+      "variants": [{ "code": "100", "name": "100 ml", "colourHex": null, "colourName": "", "sizeLabel": "100 ml", "dimensions": {} }],
+      "packaging": [{ "component": "box", "specification": "Textured carton embossed with a wave, in the scent's tone, carrying BASIS INC, the scent's name, Eau de Parfum and 100 ml.", "material": "", "dimensions": {} }]
+    },
+    {
+      "id": "4a4a4531-d907-4ed4-ae62-e98ede7b574d",
+      "name": "N58",
+      "workingTitle": "Eau de Parfum, 100 ml",
+      "category": "FRG",
+      "collection": null,
+      "priority": "normal",
+      "description": "An eau de parfum, 100 ml, in a clear rounded-square bottle with a heavy base and a textured cap, in a textured box embossed with a wave. Shown in a taupe tone. It carries the name of our fabric N58 Semi-Stretch Mesh. One of three scents with Second Skin and Illusion Mesh.",
+      "intent": "",
+      "specs": { "concentration": "EDP", "volumeMl": "100" },
+      "materials": [
+        { "role": "bottle", "name": "Clear rounded-square bottle, 100 ml", "specification": "Heavy base. BASIS INC, the scent's name, Eau de Parfum and the volume printed on the front.", "notes": "" },
+        { "role": "cap", "name": "Textured cap", "specification": "Taupe tone, matching the box.", "notes": "" }
+      ],
+      "variants": [{ "code": "100", "name": "100 ml", "colourHex": null, "colourName": "", "sizeLabel": "100 ml", "dimensions": {} }],
+      "packaging": [{ "component": "box", "specification": "Textured carton embossed with a wave, in the scent's tone, carrying BASIS INC, the scent's name, Eau de Parfum and 100 ml.", "material": "", "dimensions": {} }]
+    },
+    {
+      "id": "42947323-0fe6-4328-ad61-ccdc650f3a2f",
+      "name": "Classic Pajama Set",
+      "workingTitle": "Sleepwear styles 01 and 02",
+      "category": "APP",
+      "collection": "SLEEP",
+      "priority": "normal",
+      "description": "A long-sleeve button-front shirt with a notched collar and a chest pocket, and long trousers, edged in contrast piping. Shown in Ivory and in Black.",
+      "intent": "Everyday essentials for a more beautiful you. Ultra soft fabric, lightweight comfort, breathable materials, designed for daily wear.",
+      "specs": {},
+      "materials": [],
+      "variants": [{ "code": "IVORY", "name": "Ivory", "colourHex": null, "colourName": "Ivory", "sizeLabel": "", "dimensions": {} }, { "code": "BLACK", "name": "Black", "colourHex": null, "colourName": "Black", "sizeLabel": "", "dimensions": {} }],
+      "packaging": []
+    },
+    {
+      "id": "073ba9cb-63a8-418c-afe1-709987ed0b01",
+      "name": "Satin Pajama Set",
+      "workingTitle": "Sleepwear style 03",
+      "category": "APP",
+      "collection": "SLEEP",
+      "priority": "normal",
+      "description": "A satin camisole with lace at the neckline and shorts with a lace hem. Shown in Blush.",
+      "intent": "Everyday essentials for a more beautiful you. Ultra soft fabric, lightweight comfort, breathable materials, designed for daily wear.",
+      "specs": {},
+      "materials": [],
+      "variants": [{ "code": "BLUSH", "name": "Blush", "colourHex": null, "colourName": "Blush", "sizeLabel": "", "dimensions": {} }],
+      "packaging": []
+    },
+    {
+      "id": "14bb7228-135d-415d-9546-56f46ccce4a8",
+      "name": "Ribbed Pajama Set",
+      "workingTitle": "Sleepwear style 04",
+      "category": "APP",
+      "collection": "SLEEP",
+      "priority": "normal",
+      "description": "A ribbed tank and long ribbed trousers. Shown in Stone.",
+      "intent": "Everyday essentials for a more beautiful you. Ultra soft fabric, lightweight comfort, breathable materials, designed for daily wear.",
+      "specs": {},
+      "materials": [],
+      "variants": [{ "code": "STONE", "name": "Stone", "colourHex": null, "colourName": "Stone", "sizeLabel": "", "dimensions": {} }],
+      "packaging": []
+    },
+    {
+      "id": "a8bd8030-0239-42f1-b187-d4a582839d70",
+      "name": "Lace Babydoll",
+      "workingTitle": "Sleepwear style 05",
+      "category": "APP",
+      "collection": "SLEEP",
+      "priority": "normal",
+      "description": "A babydoll with lace cups, thin straps and a lace hem, from the Babydolls and Chemises group. Shown in Blush.",
+      "intent": "Everyday essentials for a more beautiful you. Ultra soft fabric, lightweight comfort, breathable materials, designed for daily wear.",
+      "specs": {},
+      "materials": [],
+      "variants": [{ "code": "BLUSH", "name": "Blush", "colourHex": null, "colourName": "Blush", "sizeLabel": "", "dimensions": {} }],
+      "packaging": []
+    },
+    {
+      "id": "6702cfd3-4a4c-48e8-846f-85505dca791f",
+      "name": "Sheer Babydoll",
+      "workingTitle": "Sleepwear style 06",
+      "category": "APP",
+      "collection": "SLEEP",
+      "priority": "normal",
+      "description": "A sheer babydoll with lace cups and a tie at the bust, from the Babydolls and Chemises group. Shown in Black.",
+      "intent": "Everyday essentials for a more beautiful you. Ultra soft fabric, lightweight comfort, breathable materials, designed for daily wear.",
+      "specs": {},
+      "materials": [],
+      "variants": [{ "code": "BLACK", "name": "Black", "colourHex": null, "colourName": "Black", "sizeLabel": "", "dimensions": {} }],
+      "packaging": []
+    },
+    {
+      "id": "6997f25d-7fe5-4df0-8eb6-acbed936059e",
+      "name": "Silk Touch Babydoll",
+      "workingTitle": "Sleepwear style 07",
+      "category": "APP",
+      "collection": "SLEEP",
+      "priority": "normal",
+      "description": "A silk-touch babydoll with a lace-edged neckline and a small bow, from the Babydolls and Chemises group. Shown in Ivory.",
+      "intent": "Everyday essentials for a more beautiful you. Ultra soft fabric, lightweight comfort, breathable materials, designed for daily wear.",
+      "specs": {},
+      "materials": [],
+      "variants": [{ "code": "IVORY", "name": "Ivory", "colourHex": null, "colourName": "Ivory", "sizeLabel": "", "dimensions": {} }],
+      "packaging": []
+    },
+    {
+      "id": "81f3ae1a-e256-44b8-806b-6e22f25f00e0",
+      "name": "Mesh Babydoll",
+      "workingTitle": "Sleepwear style 08",
+      "category": "APP",
+      "collection": "SLEEP",
+      "priority": "normal",
+      "description": "A mesh babydoll with lace cups and a tie at the bust, from the Babydolls and Chemises group. Shown in Mauve.",
+      "intent": "Everyday essentials for a more beautiful you. Ultra soft fabric, lightweight comfort, breathable materials, designed for daily wear.",
+      "specs": {},
+      "materials": [],
+      "variants": [{ "code": "MAUVE", "name": "Mauve", "colourHex": null, "colourName": "Mauve", "sizeLabel": "", "dimensions": {} }],
+      "packaging": []
+    },
+    {
+      "id": "11e56541-93d1-4e64-a2da-45c97e064c5e",
+      "name": "Short Robe",
+      "workingTitle": "Sleepwear style 09",
+      "category": "APP",
+      "collection": "SLEEP",
+      "priority": "normal",
+      "description": "A short belted robe with wide sleeves. Shown in Ivory.",
+      "intent": "Everyday essentials for a more beautiful you. Ultra soft fabric, lightweight comfort, breathable materials, designed for daily wear.",
+      "specs": {},
+      "materials": [],
+      "variants": [{ "code": "IVORY", "name": "Ivory", "colourHex": null, "colourName": "Ivory", "sizeLabel": "", "dimensions": {} }],
+      "packaging": []
+    },
+    {
+      "id": "7e507ed4-0990-4be6-b412-b1328fd66ab6",
+      "name": "Long Robe",
+      "workingTitle": "Sleepwear style 10",
+      "category": "APP",
+      "collection": "SLEEP",
+      "priority": "normal",
+      "description": "A longer belted robe with full sleeves. Shown in Black.",
+      "intent": "Everyday essentials for a more beautiful you. Ultra soft fabric, lightweight comfort, breathable materials, designed for daily wear.",
+      "specs": {},
+      "materials": [],
+      "variants": [{ "code": "BLACK", "name": "Black", "colourHex": null, "colourName": "Black", "sizeLabel": "", "dimensions": {} }],
+      "packaging": []
+    },
+    {
+      "id": "f6e4cca1-d44e-4c94-872d-95db199c5bd5",
+      "name": "Lace Kimono",
+      "workingTitle": "Sleepwear style 11",
+      "category": "APP",
+      "collection": "SLEEP",
+      "priority": "normal",
+      "description": "A belted kimono with lace at the cuffs and the hem. Shown in Blush.",
+      "intent": "Everyday essentials for a more beautiful you. Ultra soft fabric, lightweight comfort, breathable materials, designed for daily wear.",
+      "specs": {},
+      "materials": [],
+      "variants": [{ "code": "BLUSH", "name": "Blush", "colourHex": null, "colourName": "Blush", "sizeLabel": "", "dimensions": {} }],
+      "packaging": []
+    },
+    {
+      "id": "36358eb0-885c-4ca5-baf6-ccc2118e069e",
+      "name": "Satin Robe",
+      "workingTitle": "Sleepwear style 12",
+      "category": "APP",
+      "collection": "SLEEP",
+      "priority": "normal",
+      "description": "A belted satin robe with a shawl collar and piped edges. Shown in Stone.",
+      "intent": "Everyday essentials for a more beautiful you. Ultra soft fabric, lightweight comfort, breathable materials, designed for daily wear.",
+      "specs": {},
+      "materials": [],
+      "variants": [{ "code": "STONE", "name": "Stone", "colourHex": null, "colourName": "Stone", "sizeLabel": "", "dimensions": {} }],
+      "packaging": []
+    },
+    {
+      "id": "8e4d874e-dece-4dd0-a754-dfe8fa000d30",
+      "name": "Cami Set",
+      "workingTitle": "Sleepwear style 13",
+      "category": "APP",
+      "collection": "SLEEP",
+      "priority": "normal",
+      "description": "A camisole and shorts. Shown in Ivory.",
+      "intent": "Everyday essentials for a more beautiful you. Ultra soft fabric, lightweight comfort, breathable materials, designed for daily wear.",
+      "specs": {},
+      "materials": [],
+      "variants": [{ "code": "IVORY", "name": "Ivory", "colourHex": null, "colourName": "Ivory", "sizeLabel": "", "dimensions": {} }],
+      "packaging": []
+    },
+    {
+      "id": "75535b04-24ff-4889-b23b-5be49eacf97d",
+      "name": "Tank Set",
+      "workingTitle": "Sleepwear style 14",
+      "category": "APP",
+      "collection": "SLEEP",
+      "priority": "normal",
+      "description": "A tank top and shorts. Shown in Black.",
+      "intent": "Everyday essentials for a more beautiful you. Ultra soft fabric, lightweight comfort, breathable materials, designed for daily wear.",
+      "specs": {},
+      "materials": [],
+      "variants": [{ "code": "BLACK", "name": "Black", "colourHex": null, "colourName": "Black", "sizeLabel": "", "dimensions": {} }],
+      "packaging": []
+    },
+    {
+      "id": "fc9038ad-aa3c-4016-a5e5-14eb14b5a3ed",
+      "name": "Long Sleeve",
+      "workingTitle": "Sleepwear style 15",
+      "category": "APP",
+      "collection": "SLEEP",
+      "priority": "normal",
+      "description": "A long-sleeve top and long trousers. Shown in Stone.",
+      "intent": "Everyday essentials for a more beautiful you. Ultra soft fabric, lightweight comfort, breathable materials, designed for daily wear.",
+      "specs": {},
+      "materials": [],
+      "variants": [{ "code": "STONE", "name": "Stone", "colourHex": null, "colourName": "Stone", "sizeLabel": "", "dimensions": {} }],
+      "packaging": []
+    },
+    {
+      "id": "ceaf64fd-fc2e-4524-a393-b2e0cf638887",
+      "name": "Soft Shorts",
+      "workingTitle": "Sleepwear style 16",
+      "category": "APP",
+      "collection": "SLEEP",
+      "priority": "normal",
+      "description": "Drawstring shorts with a lace hem. Shown in Blush.",
+      "intent": "Everyday essentials for a more beautiful you. Ultra soft fabric, lightweight comfort, breathable materials, designed for daily wear.",
+      "specs": {},
+      "materials": [],
+      "variants": [{ "code": "BLUSH", "name": "Blush", "colourHex": null, "colourName": "Blush", "sizeLabel": "", "dimensions": {} }],
+      "packaging": []
+    },
+    {
+      "id": "c3de50de-59e5-4289-a4aa-daa34792c764",
+      "name": "Cami Top",
+      "workingTitle": "Sleepwear style 17",
+      "category": "APP",
+      "collection": "SLEEP",
+      "priority": "normal",
+      "description": "A V-neck camisole top. Shown in Mauve.",
+      "intent": "Everyday essentials for a more beautiful you. Ultra soft fabric, lightweight comfort, breathable materials, designed for daily wear.",
+      "specs": {},
+      "materials": [],
+      "variants": [{ "code": "MAUVE", "name": "Mauve", "colourHex": null, "colourName": "Mauve", "sizeLabel": "", "dimensions": {} }],
+      "packaging": []
+    }
+  ]
+}

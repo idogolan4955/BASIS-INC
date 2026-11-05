@@ -26,3 +26,4 @@ export * from './inventory';
 export * from './commercial';
 export * from './relationships';
 export * from './development';
+export * from './development-catalog';

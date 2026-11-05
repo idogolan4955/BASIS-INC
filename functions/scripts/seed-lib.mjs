@@ -3,6 +3,7 @@
 // running it again adds what is missing and changes nothing that exists.
 
 import catalog from "../../packages/shared/src/launch-catalog.json" with { type: "json" };
+import development from "../../packages/shared/src/development-catalog.json" with { type: "json" };
 
 /** Binds the seed steps to a Data Connect executor. */
 export function seeder(dc) {
@@ -710,6 +711,179 @@ export function seeder(dc) {
     }
   }
 
+  // The brand's consumer line from the owner's concept boards (module 18).
+  // Categories and collections are added when missing; an existing category
+  // only gains the specification fields it lacks. A dossier is opened once,
+  // at the idea stage, under the next DEV number: its stage moves through
+  // the gate in the platform, never here. Nothing the team changed is
+  // overwritten by a second run.
+  const slugOf = (name) =>
+    name
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+  async function nextDevelopmentNumber() {
+    const year = new Date().getFullYear();
+    const { numberSequence } = await gql(
+      `query ($year: Int!) { numberSequence(key: { prefix: "DEV", year: $year }) { nextValue } }`,
+      { year },
+    );
+    const sequence = numberSequence?.nextValue ?? 1;
+    await gql(
+      `mutation ($year: Int!, $next: Int!) { numberSequence_upsert(data: { prefix: "DEV", year: $year, nextValue: $next }) }`,
+      { year, next: sequence + 1 },
+    );
+    return `DEV-${String(year).slice(-2)}-${String(sequence).padStart(4, "0")}`;
+  }
+
+  async function seedDevelopment(ownerUid) {
+    const added = { categories: 0, collections: 0, products: 0 };
+    for (const category of development.categories) {
+      const { productCategory } = await gql(
+        `query ($code: String!) { productCategory(key: { code: $code }) { specSchema } }`,
+        { code: category.code },
+      );
+      if (!productCategory) {
+        await gql(
+          `mutation ($code: String!, $name: String!, $slug: String!, $description: String, $parentCode: String, $specSchema: Any, $sort: Int!) {
+        productCategory_insert(data: { code: $code, name: $name, slug: $slug, description: $description, parentCode: $parentCode, specSchema: $specSchema, sort: $sort, status: active }) }`,
+          {
+            code: category.code,
+            name: category.name,
+            slug: slugOf(category.name),
+            description: category.description || null,
+            parentCode: category.parent,
+            specSchema: category.specSchema,
+            sort: category.sort,
+          },
+        );
+        added.categories += 1;
+        continue;
+      }
+      const current = Array.isArray(productCategory.specSchema)
+        ? productCategory.specSchema
+        : [];
+      const missing = category.specSchema.filter(
+        (field) => !current.some((existing) => existing.key === field.key),
+      );
+      if (missing.length > 0)
+        await gql(
+          `mutation ($code: String!, $specSchema: Any) { productCategory_update(key: { code: $code }, data: { specSchema: $specSchema }) }`,
+          { code: category.code, specSchema: [...current, ...missing] },
+        );
+    }
+    for (const collection of development.collections) {
+      const existing = await gql(
+        `query ($code: String!) { collection(key: { code: $code }) { code } }`,
+        { code: collection.code },
+      );
+      if (existing.collection) continue;
+      await gql(
+        `mutation ($code: String!, $name: String!, $season: String, $year: Int, $theme: String, $targetLaunch: Date, $status: CollectionStatus!) {
+      collection_insert(data: { code: $code, name: $name, season: $season, year: $year, theme: $theme, targetLaunch: $targetLaunch, status: $status }) }`,
+        {
+          code: collection.code,
+          name: collection.name,
+          season: collection.season || null,
+          year: collection.year,
+          theme: collection.theme || null,
+          targetLaunch: collection.targetLaunch,
+          status: collection.status,
+        },
+      );
+      added.collections += 1;
+    }
+    for (const product of development.products) {
+      // Known by its seed id, or by its name when it was typed into the
+      // platform before the seed ran.
+      const known = await gql(
+        `query ($id: UUID!, $name: String!, $category: String!) {
+      developmentProduct(id: $id) { id }
+      developmentProducts(where: { name: { eq: $name }, categoryCode: { eq: $category } }, limit: 1) { id }
+    }`,
+        { id: product.id, name: product.name, category: product.category },
+      );
+      if (known.developmentProduct || known.developmentProducts[0]) continue;
+      const number = await nextDevelopmentNumber();
+      await gql(
+        `mutation ($id: UUID!, $number: String!, $categoryCode: String!, $collectionCode: String, $name: String!, $workingTitle: String, $description: String, $intent: String, $priority: Priority!, $specs: Any, $uid: String!) {
+      developmentProduct_insert(data: { id: $id, number: $number, categoryCode: $categoryCode, collectionCode: $collectionCode, name: $name, workingTitle: $workingTitle, description: $description, intent: $intent, stage: idea, priority: $priority, ownerUid: $uid, budgetCurrency: "USD", specs: $specs, createdByUid: $uid }) }`,
+        {
+          id: product.id,
+          number,
+          categoryCode: product.category,
+          collectionCode: product.collection,
+          name: product.name,
+          workingTitle: product.workingTitle || null,
+          description: product.description || null,
+          intent: product.intent || null,
+          priority: product.priority,
+          specs: product.specs,
+          uid: ownerUid,
+        },
+      );
+      for (const material of product.materials) {
+        await gql(
+          `mutation ($productId: UUID!, $role: String!, $name: String!, $specification: String, $notes: String) {
+        developmentMaterial_insert(data: { productId: $productId, role: $role, name: $name, specification: $specification, status: proposed, notes: $notes }) }`,
+          {
+            productId: product.id,
+            role: material.role,
+            name: material.name,
+            specification: material.specification || null,
+            notes: material.notes || null,
+          },
+        );
+      }
+      let sort = 1;
+      for (const variant of product.variants) {
+        await gql(
+          `mutation ($productId: UUID!, $code: String!, $name: String!, $colourHex: String, $colourName: String, $sizeLabel: String, $dimensions: Any, $sort: Int!) {
+        developmentVariant_insert(data: { productId: $productId, code: $code, name: $name, colourHex: $colourHex, colourName: $colourName, sizeLabel: $sizeLabel, dimensions: $dimensions, status: proposed, sort: $sort }) }`,
+          {
+            productId: product.id,
+            code: variant.code,
+            name: variant.name,
+            colourHex: variant.colourHex,
+            colourName: variant.colourName || null,
+            sizeLabel: variant.sizeLabel || null,
+            dimensions: variant.dimensions,
+            sort,
+          },
+        );
+        sort += 1;
+      }
+      for (const component of product.packaging) {
+        await gql(
+          `mutation ($productId: UUID!, $component: String!, $specification: String, $material: String, $dimensions: Any) {
+        developmentPackaging_insert(data: { productId: $productId, component: $component, specification: $specification, material: $material, dimensions: $dimensions, status: proposed }) }`,
+          {
+            productId: product.id,
+            component: component.component,
+            specification: component.specification || null,
+            material: component.material || null,
+            dimensions: component.dimensions,
+          },
+        );
+      }
+      await gql(
+        `mutation ($entityId: String!, $uid: String!, $payload: Any) {
+      timelineEvent_insert(data: { entityType: "development_product", entityId: $entityId, kind: "created", actorUid: $uid, payload: $payload }) }`,
+        {
+          entityId: number,
+          uid: ownerUid,
+          payload: {
+            summary: `Opened as an idea from the owner's concept boards: ${product.name}`,
+          },
+        },
+      );
+      added.products += 1;
+    }
+    return added;
+  }
+
   return {
     gql,
     seedOwner,
@@ -718,6 +892,7 @@ export function seeder(dc) {
     seedTemplates,
     seedInspectionTemplates,
     seedLogistics,
+    seedDevelopment,
     counts: {
       countries: COUNTRIES.length,
       currencies: CURRENCIES.length,

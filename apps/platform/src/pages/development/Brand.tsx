@@ -318,7 +318,7 @@ export function Collections() {
                           <Link to={`/development/products/${product.number}`} className="font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink">
                             {product.name}
                           </Link>
-                          <span className="ms-3 text-[0.8125rem] text-ink-muted">{product.categoryName}</span>
+                          <span className="ms-3 text-[0.8125rem] text-ink-muted">{t(product.categoryName)}</span>
                         </span>
                         <StatusChip tone={DEVELOPMENT_STAGE_TONE[product.stage]}>{t(DEVELOPMENT_STAGE_LABEL[product.stage])}</StatusChip>
                       </li>
@@ -459,10 +459,10 @@ export function Categories() {
                   <Tr key={category.code}>
                     <Td className="code">{category.code}</Td>
                     <Td>
-                      <span className={cn('font-medium', category.parentCode && 'ps-4')}>{category.name}</span>
+                      <span className={cn('font-medium', category.parentCode && 'ps-4')}>{t(category.name)}</span>
                       {category.description && <span className="ms-3 text-ink-muted">{category.description}</span>}
                     </Td>
-                    <Td className="text-[0.8125rem] text-ink-soft">{category.specSchema.map((field) => field.label).join(' · ') || '—'}</Td>
+                    <Td className="text-[0.8125rem] text-ink-soft">{category.specSchema.map((field) => t(field.label)).join(' · ') || '—'}</Td>
                     <Td numeric>{count(category.code)}</Td>
                     <Td>
                       <StatusChip tone={category.status === 'active' ? 'positive' : 'neutral'}>{t(category.status === 'active' ? 'Active' : 'Archived')}</StatusChip>

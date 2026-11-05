@@ -281,14 +281,14 @@ function Overview({ product, manage }: { product: DevelopmentProductDetail; mana
           </>
         )}
       </Panel>
-      <Panel title={`${product.categoryName} ${t('specification')}`} className="xl:col-span-5" flush>
+      <Panel title={`${t(product.categoryName)} ${t('specification')}`} className="xl:col-span-5" flush>
         {specRows.length === 0 ? (
           <p className="px-5 py-6 text-ink-muted">{t('This category has no specification fields yet.')}</p>
         ) : (
           <dl>
             {specRows.map(({ field, value }) => (
               <div key={field.key} className="flex items-baseline justify-between gap-4 border-b border-line px-5 py-3 last:border-b-0">
-                <dt className="text-[0.8125rem] text-ink-muted">{field.label}</dt>
+                <dt className="text-[0.8125rem] text-ink-muted">{t(field.label)}</dt>
                 <dd className="text-end text-sm">
                   {value || <span className="text-ink-muted">{t('Not set')}</span>}
                   {value && field.unit && <span className="code ms-1 text-ink-muted">{field.unit}</span>}
@@ -1032,7 +1032,7 @@ export function Dossier({ tab }: { tab: Tab }) {
       <LabelHeader
         code={data.number}
         title={data.name}
-        subtitle={[data.workingTitle, data.categoryName, data.collectionName].filter(Boolean).join(' · ')}
+        subtitle={[data.workingTitle, t(data.categoryName), data.collectionName].filter(Boolean).join(' · ')}
         status={
           <>
             <StatusChip tone={DEVELOPMENT_STAGE_TONE[data.stage]}>{t(DEVELOPMENT_STAGE_LABEL[data.stage])}</StatusChip>

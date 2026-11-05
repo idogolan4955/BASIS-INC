@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { budgetSpent, compareSourcing, costingMargin, developmentHealth, gateCheck, developmentLandedCost, nextStages, slugOf, stageCounts, type GateFacts } from './development';
+import { DEVELOPMENT_CATALOG } from './development-catalog';
 import { localDate } from './local-date';
 
 const facts = (over: Partial<GateFacts> = {}): GateFacts => ({ hasDescription: true, fileRoles: ['inspiration'], sourcingCount: 1, selectedSourcing: true, sampleRequested: true, latestSampleVerdict: 'approved', costingBases: ['quotation'], ...over });
@@ -65,5 +66,43 @@ describe('money', () => {
   it('counts the open stages and makes slugs', () => {
     expect(stageCounts([{ stage: 'idea' }, { stage: 'idea' }, { stage: 'sampling' }, { stage: 'dropped' }]).filter((entry) => entry.count > 0)).toEqual([{ stage: 'idea', count: 2 }, { stage: 'sampling', count: 1 }]);
     expect(slugOf('  Silk Robe — Night ')).toBe('silk-robe-night');
+  });
+});
+
+describe('the development catalogue', () => {
+  const { categories, collections, products } = DEVELOPMENT_CATALOG;
+  const within = (value: string, max: number) => value.length <= max;
+  it('refers only to categories and collections it defines', () => {
+    const categoryCodes = new Set(categories.map((category) => category.code));
+    const collectionCodes = new Set(collections.map((collection) => collection.code));
+    expect(categoryCodes.size).toBe(categories.length);
+    expect(collectionCodes.size).toBe(collections.length);
+    for (const category of categories) {
+      expect(category.code).toMatch(/^[A-Z0-9]{2,16}$/);
+      if (category.parent) expect(categoryCodes.has(category.parent)).toBe(true);
+      expect(new Set(category.specSchema.map((field) => field.key)).size).toBe(category.specSchema.length);
+    }
+    for (const collection of collections) expect(collection.code).toMatch(/^[A-Z0-9-]{2,16}$/);
+    for (const product of products) {
+      expect(categoryCodes.has(product.category)).toBe(true);
+      if (product.collection) expect(collectionCodes.has(product.collection)).toBe(true);
+      const keys = new Set(categories.find((category) => category.code === product.category)!.specSchema.map((field) => field.key));
+      for (const key of Object.keys(product.specs)) expect(keys.has(key)).toBe(true);
+    }
+  });
+  it('fits the columns it is seeded into', () => {
+    expect(new Set(products.map((product) => product.id)).size).toBe(products.length);
+    expect(new Set(products.map((product) => `${product.category}/${product.name}`)).size).toBe(products.length);
+    for (const product of products) {
+      expect(product.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+      expect(product.name.length > 0 && within(product.name, 160) && within(product.workingTitle, 160)).toBe(true);
+      expect(new Set(product.variants.map((variant) => variant.code)).size).toBe(product.variants.length);
+      for (const material of product.materials) expect(material.role.length > 0 && within(material.role, 40) && material.name.length > 0 && within(material.name, 160)).toBe(true);
+      for (const variant of product.variants) {
+        expect(variant.code.length > 0 && within(variant.code, 16) && variant.name.length > 0 && within(variant.name, 120) && within(variant.colourName, 80) && within(variant.sizeLabel, 40)).toBe(true);
+        if (variant.colourHex !== null) expect(variant.colourHex).toMatch(/^#[0-9A-F]{6}$/);
+      }
+      for (const component of product.packaging) expect(component.component.length > 0 && within(component.component, 60) && within(component.material, 120)).toBe(true);
+    }
   });
 });

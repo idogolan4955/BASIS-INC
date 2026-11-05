@@ -6,6 +6,20 @@ This document decides entities, screens, relationships and permissions. The buil
 
 **State.** Slice 1 was built on 2026-11-04 with the proposed answers to §9 (the owner: "take the proposed"). Where the build differs from the text below: the dossier's parts, samples, sourcing and costing are written through ten functions named in `packages/shared/src/function-names.ts`; `PriceList`-style codes are not used for development products, which carry `DEV-26-0001` numbers; the sourcing comparison converts currencies only in slice 3 (today it ranks within the selected supplier's currency).
 
+**The line.** On 2026-11-05 the owner gave the consumer line as concept boards, and it is recorded as data in `packages/shared/src/development-catalog.json` (typed in `development-catalog.ts`), read by the seed and by sample mode alike:
+
+| Dossier | Category | Collection | From the boards |
+|---|---|---|---|
+| Essential Tee, Baby Tee, Sculpt Tee, Relaxed Tee | `APP` | `TEES` The T-Shirt Collection | Fit and chest mark; one colour shown each, not named |
+| Model 1 (bag) | `BAG` | none | 32 × 20 × 12 cm; Ivory, Sand, Blush, Taupe, Black; five shell materials (illusion mesh, satin drape, suede touch, pebbled leather, gloss finish); hardware, strap, base, interior, branding |
+| iPhone 18 Case | `CASE` Phone cases, under `ACC` | `DROP-01` Drop 01 | iPhone 18 Pro and Pro Max in Warm Bone and Soft Black; TPU + PC, matte micro-woven textile finish, MagSafe, 1.6–2.0 mm |
+| Home Fragrance Reed Diffuser | `HOM` | none | 200 ml; Sand, Blush, Taupe, Onyx with their notes; vessel, cap, reeds, box |
+| Flow Form 01 (women's sneaker) | `SHO` | none | Sand, Moon, Rose and a One Tone edition; box, tissue, card |
+| Second Skin, Illusion Mesh, N58 (eau de parfum) | `FRG` | none | 100 ml; bottle, textured cap, embossed box |
+| Sleepwear: Classic, Satin and Ribbed Pajama Sets; Lace, Sheer, Silk Touch and Mesh Babydolls; Short Robe, Long Robe, Lace Kimono, Satin Robe; Cami Set, Tank Set, Long Sleeve, Soft Shorts, Cami Top | `APP` | `SLEEP` Sleepwear / Babydoll Collection | The board's seventeen numbered styles as sixteen dossiers (01 and 02 are the Classic set in Ivory and in Black), each with the colour it is shown in; palette Ivory, Stone, Blush, Mauve, Sage, Black |
+
+Only what the boards say is recorded: composition, sizes, olfactive notes, prices, suppliers, budgets and launch dates are empty, and there is no sourcing or costing row. `seedDevelopment` in `functions/scripts/seed-lib.mjs` adds the seven categories (the six of §9 plus `CASE`) and the collections (`FW27`, `BRIDAL-CORE`, `TEES`, `SLEEP`, `DROP-01`) when they are missing, gives an existing category only the specification fields it lacks (`HOM` gained `volumeMl`), and opens each dossier once, at `idea`, under the next `DEV` number with its materials, variants, packaging and a `created` timeline event. A dossier is recognised by its stable id in the catalogue, or by its name within its category, so a second run changes nothing the team has edited. The stage is never seeded past `idea`: the concept gate asks for a proposal file and records who passed it, so the owner uploads the board and passes the gate in the platform. Sample mode shows the same twenty-seven dossiers with the boards listed as proposal files. Category names and specification labels are translated through `t()` on the screens.
+
 ---
 
 ## 1. What the system already has, and what the department reuses

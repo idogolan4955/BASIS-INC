@@ -1,78 +1,85 @@
-import { BRAND_PALETTE, addDays, developmentHealth, gateCheck, localDate, nextStages, slugOf, todayIn, type BrandAssetView, type CollectionView, type DevelopmentCostingView, type DevelopmentProductDetail, type DevelopmentProductSummary, type DevelopmentSourcingView, type DevelopmentStage, type LocalDate, type ProductCategoryView } from '@basis/shared';
+import { BRAND_PALETTE, DEVELOPMENT_CATALOG, addDays, developmentHealth, gateCheck, localDate, nextStages, slugOf, todayIn, type BrandAssetView, type CollectionView, type DevelopmentCostingView, type DevelopmentProductDetail, type DevelopmentProductSummary, type DevelopmentSourcingView, type DevelopmentStage, type LocalDate, type ProductCategoryView } from '@basis/shared';
 import type { FiledDocument } from './documents';
 import type { BrandAssetInput, CategoryInput, CollectionInput, CostingInput, PartInput, ProductInput, SampleInput, SourcingInput, TransitionInput } from './development';
 
-// SAMPLE DATA for `--mode sample`: six categories, one collection, the brand
-// palette as colour assets, and four products at different stages of the
-// gate. The gate and the health run on the same rules as the functions.
+// SAMPLE DATA for `--mode sample`: the owner's consumer line exactly as the
+// seed opens it (the same catalogue, the same order, so the same numbers),
+// the brand palette as colour assets, and the concept boards as proposal
+// files. Every dossier starts at the idea stage with no samples, sourcing or
+// costing: none exist yet. The gate and the health run on the same rules as
+// the functions.
 
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };
 const now = () => new Date().toISOString();
 const ago = (days: number) => `${addDays(todayIn('Asia/Jerusalem'), -days)}T10:00:00Z`;
-const dayAgo = (days: number) => addDays(todayIn('Asia/Jerusalem'), -days);
-const dayAhead = (days: number) => addDays(todayIn('Asia/Jerusalem'), days);
 
-const SUPPLIERS: Record<string, string> = { 'co-jinyu': 'Jinyu Knitting', 'co-lanrui': 'Lanrui Textile', 'co-ferrante': 'Ferrante Pelletteria', 'co-aromes': 'Arômes de Grasse' };
+const SUPPLIERS: Record<string, string> = { 'co-jinyu': 'Jinyu Knitting', 'co-lanrui': 'Lanrui Textile' };
 
 type DetailRecord = Mutable<Omit<DevelopmentProductDetail, 'health' | 'latestSample' | 'categoryName' | 'collectionName' | 'specSchema'>> & { materials: Mutable<DevelopmentProductDetail['materials'][number]>[]; variants: Mutable<DevelopmentProductDetail['variants'][number]>[]; packaging: Mutable<DevelopmentProductDetail['packaging'][number]>[]; samples: Mutable<DevelopmentProductDetail['samples'][number]>[]; approvals: Mutable<DevelopmentProductDetail['approvals'][number]>[] };
 
+function product(over: Partial<DetailRecord> & { id: string; number: string; name: string; categoryCode: string; stage: DevelopmentStage }): DetailRecord {
+  return { workingTitle: '', collectionCode: null, priority: 'normal', ownerUid: 'sample-owner', ownerName: 'Owner', targetLaunch: null, budgetAmount: null, budgetCurrency: 'USD', catalogProductCode: null, lastActivityAt: ago(0), createdAt: ago(0), description: '', intent: '', specs: {}, handedOverAt: null, materials: [], variants: [], packaging: [], samples: [], approvals: [], ...over };
+}
+
+const numberOf = (index: number) => `DEV-26-${String(index + 1).padStart(4, '0')}`;
+
 const store = {
-  categories: [
-    { code: 'APP', name: 'Apparel', slug: 'apparel', description: 'Garments under the brand: robes, slips, knitwear.', parentCode: null, sort: 1, status: 'active', specSchema: [{ key: 'composition', label: 'Composition', kind: 'text' }, { key: 'weightGsm', label: 'Weight', kind: 'number', unit: 'gsm' }, { key: 'sizeRange', label: 'Size range', kind: 'text' }, { key: 'care', label: 'Care', kind: 'text' }] },
-    { code: 'FRG', name: 'Fragrance', slug: 'fragrance', description: 'Eau de parfum and extraits.', parentCode: null, sort: 2, status: 'active', specSchema: [{ key: 'concentration', label: 'Concentration', kind: 'select', options: ['EDT', 'EDP', 'Extrait'] }, { key: 'volumeMl', label: 'Volume', kind: 'number', unit: 'ml' }, { key: 'notes', label: 'Olfactive notes', kind: 'text' }] },
-    { code: 'HOM', name: 'Home scent', slug: 'home-scent', description: 'Candles, diffusers, linen water.', parentCode: null, sort: 3, status: 'active', specSchema: [{ key: 'format', label: 'Format', kind: 'select', options: ['Candle', 'Diffuser', 'Linen water'] }, { key: 'burnHours', label: 'Burn time', kind: 'number', unit: 'h' }, { key: 'wax', label: 'Wax', kind: 'text' }] },
-    { code: 'BAG', name: 'Bags', slug: 'bags', description: '', parentCode: null, sort: 4, status: 'active', specSchema: [{ key: 'material', label: 'Material', kind: 'text' }, { key: 'dimensions', label: 'Dimensions', kind: 'text' }, { key: 'hardware', label: 'Hardware', kind: 'text' }] },
-    { code: 'SHO', name: 'Shoes', slug: 'shoes', description: '', parentCode: null, sort: 5, status: 'active', specSchema: [{ key: 'upper', label: 'Upper', kind: 'text' }, { key: 'sole', label: 'Sole', kind: 'text' }, { key: 'heelMm', label: 'Heel', kind: 'number', unit: 'mm' }] },
-    { code: 'ACC', name: 'Accessories', slug: 'accessories', description: 'Veils, gloves, hair pieces, belts.', parentCode: null, sort: 6, status: 'active', specSchema: [{ key: 'material', label: 'Material', kind: 'text' }] },
-  ] as Mutable<ProductCategoryView>[],
-  collections: [
-    { code: 'FW27', name: 'Autumn Winter 2027', season: 'FW', year: 2027, theme: 'The first objects: a robe, a scent, a bag. Foundation materials made visible.', targetLaunch: localDate('2027-09-01'), status: 'in_development' },
-    { code: 'BRIDAL-CORE', name: 'Bridal Core', season: '', year: null, theme: 'The accessories a gown needs: veil, gloves, slip.', targetLaunch: null, status: 'planning' },
-  ] as Mutable<CollectionView>[],
+  categories: DEVELOPMENT_CATALOG.categories.map((category) => ({ code: category.code, name: category.name, slug: slugOf(category.name), description: category.description, parentCode: category.parent, sort: category.sort, status: 'active', specSchema: [...category.specSchema] })) as Mutable<ProductCategoryView>[],
+  collections: DEVELOPMENT_CATALOG.collections.map((collection) => ({ ...collection, targetLaunch: collection.targetLaunch ? localDate(collection.targetLaunch) : null })) as Mutable<CollectionView>[],
   assets: [
-    { id: 'ba-story', kind: 'story', title: 'The materials that shape the dress', summary: 'BASIS makes the foundation layers of bridal construction: the mesh that shapes, the lining that lets the silk fall, the tulle that carries volume. The objects extend the same idea to what the bride wears before and after the dress: a robe, a scent, a bag. Quiet luxury, industrial precision, skin tones first.', colourHex: null, colourName: '', paletteNumber: '', tags: ['brand'], collectionCode: null, status: 'approved', sort: 1, document: null, updatedAt: ago(40) },
+    { id: 'ba-story', kind: 'story', title: 'The materials that shape the dress', summary: 'BASIS makes the foundation layers of bridal construction: the mesh that shapes, the lining that lets the silk fall, the tulle that carries volume. The objects carry the same idea into the everyday: better basics, everyday luxury, inspired by the materials behind fashion. Quiet luxury, industrial precision, skin tones first.', colourHex: null, colourName: '', paletteNumber: '', tags: ['brand'], collectionCode: null, status: 'approved', sort: 1, document: null, updatedAt: ago(40) },
     ...BRAND_PALETTE.filter((tone) => tone.group === 'material').map((tone, index) => ({ id: `ba-colour-${tone.number}`, kind: 'colour' as const, title: tone.name, summary: tone.use, colourHex: tone.hex, colourName: tone.name, paletteNumber: tone.number, tags: ['palette'], collectionCode: null, status: 'approved' as const, sort: index + 1, document: null, updatedAt: ago(40) })),
     { id: 'ba-type', kind: 'typeface', title: 'EB Garamond and Source Sans 3', summary: 'Display in a high-contrast serif with tracked small capitals; body in a humanist sans; codes in Martian Mono.', colourHex: null, colourName: '', paletteNumber: '', tags: ['brand'], collectionCode: null, status: 'approved', sort: 1, document: null, updatedAt: ago(40) },
     { id: 'ba-guide', kind: 'guideline', title: 'Packaging: matte wrap, shade-matched', summary: 'Every object ships in a shade-matched matte wrap with an end-cap label carrying the code, as the rolls do.', colourHex: null, colourName: '', paletteNumber: '', tags: ['packaging'], collectionCode: 'FW27', status: 'approved', sort: 1, document: null, updatedAt: ago(12) },
-    { id: 'ba-insp-1', kind: 'inspiration', title: 'Robe references, Milan showroom', summary: 'Three silhouettes photographed at the fair; the belted one is the direction.', colourHex: null, colourName: '', paletteNumber: '', tags: ['robe', 'fw27'], collectionCode: 'FW27', status: 'draft', sort: 1, document: null, updatedAt: ago(6) },
   ] as Mutable<BrandAssetView>[],
-  products: [] as DetailRecord[],
+  products: DEVELOPMENT_CATALOG.products.map((entry, index) =>
+    product({
+      id: entry.id,
+      number: numberOf(index),
+      name: entry.name,
+      workingTitle: entry.workingTitle,
+      categoryCode: entry.category,
+      collectionCode: entry.collection,
+      stage: 'idea',
+      priority: entry.priority,
+      description: entry.description,
+      intent: entry.intent,
+      specs: { ...entry.specs },
+      materials: entry.materials.map((material, at) => ({ id: `${entry.id}-m${at + 1}`, role: material.role, name: material.name, specification: material.specification, skuCode: null, supplierId: null, supplierName: '', status: 'proposed' as const, notes: material.notes })),
+      variants: entry.variants.map((variant, at) => ({ id: `${entry.id}-v${at + 1}`, code: variant.code, name: variant.name, shadeCode: null, shadeName: '', colourHex: variant.colourHex, colourName: variant.colourName, sizeLabel: variant.sizeLabel, dimensions: { ...variant.dimensions }, status: 'proposed' as const, sort: at + 1 })),
+      packaging: entry.packaging.map((component, at) => ({ id: `${entry.id}-p${at + 1}`, component: component.component, specification: component.specification, material: component.material, dimensions: { ...component.dimensions }, supplierId: null, supplierName: '', status: 'proposed' as const })),
+    }),
+  ) as DetailRecord[],
   sourcing: new Map<string, Mutable<DevelopmentSourcingView>[]>(),
   costing: new Map<string, Mutable<DevelopmentCostingView>[]>(),
   files: new Map<string, FiledDocument[]>(),
-  sequence: { DEV: 4, part: 20, sample: 5, sourcing: 6, costing: 4, asset: 30, doc: 10 },
+  sequence: { DEV: DEVELOPMENT_CATALOG.products.length, part: 0, sample: 0, sourcing: 0, costing: 0, asset: 30, doc: 0 },
 };
 
-function product(over: Partial<DetailRecord> & { id: string; number: string; name: string; categoryCode: string; stage: DevelopmentStage }): DetailRecord {
-  return { workingTitle: '', collectionCode: 'FW27', priority: 'normal', ownerUid: 'sample-owner', ownerName: 'Owner', targetLaunch: localDate('2027-09-01'), budgetAmount: null, budgetCurrency: 'USD', catalogProductCode: null, lastActivityAt: ago(1), createdAt: ago(30), description: '', intent: '', specs: {}, handedOverAt: null, materials: [], variants: [], packaging: [], samples: [], approvals: [], ...over };
-}
-
-store.products = [
-  product({ id: 'dev-1', number: 'DEV-26-0001', name: 'Silk robe', workingTitle: 'The dressing robe', categoryCode: 'APP', stage: 'sampling', priority: 'high', budgetAmount: '120000000', description: 'A long belted robe in sand-washed silk charmeuse, lined with Shanel Lining in Milk, for the morning of the wedding. Deep kimono sleeve, hidden pocket, belt in the same silk.', intent: 'The first object: what the bride wears while the dress waits. It carries the brand\'s lining visibly.', specs: { composition: '100% silk charmeuse, 19 momme; lining Shanel Lining', weightGsm: '82', sizeRange: 'XS–XL', care: 'Dry clean' }, lastActivityAt: ago(2), createdAt: ago(60),
-    materials: [{ id: 'm-1', role: 'shell', name: 'Silk charmeuse 19 mm, sand-washed', specification: 'Ivory, 114 cm', skuCode: null, supplierId: 'co-lanrui', supplierName: 'Lanrui Textile', status: 'sampled', notes: '' }, { id: 'm-2', role: 'lining', name: 'Shanel Lining, Milk', specification: '', skuCode: 'SHL-160-MLK', supplierId: null, supplierName: '', status: 'approved', notes: 'Our own.' }, { id: 'm-3', role: 'trim', name: 'Covered buttons, 18 mm', specification: 'Self fabric', skuCode: null, supplierId: null, supplierName: '', status: 'proposed', notes: '' }],
-    variants: [{ id: 'v-1', code: 'MLK', name: 'Milk', shadeCode: 'MLK', shadeName: 'Milk', colourHex: null, colourName: '', sizeLabel: 'XS–XL', dimensions: { sizes: 'XS, S, M, L, XL' }, status: 'sampled', sort: 1 }, { id: 'v-2', code: 'SK02', name: 'Skin 02', shadeCode: 'SK02', shadeName: 'Skin 02', colourHex: null, colourName: '', sizeLabel: 'XS–XL', dimensions: { sizes: 'XS, S, M, L, XL' }, status: 'proposed', sort: 2 }],
-    packaging: [{ id: 'p-1', component: 'box', specification: 'Rigid box, matte wrap in the shade, end label', material: 'Greyboard 2 mm, uncoated wrap', dimensions: { w: '32', d: '24', h: '8', unit: 'cm' }, supplierId: null, supplierName: '', status: 'proposed' }],
-    samples: [{ id: 's-1', round: 1, kind: 'proto', supplierId: 'co-lanrui', supplierName: 'Lanrui Textile', requestedOn: dayAgo(40), receivedOn: dayAgo(26), verdict: 'revise', verdictByName: 'Owner', verdictOn: dayAgo(24), findings: 'Sleeve too narrow at the elbow; belt loops 4 cm too high; lining shade reads yellow against the silk, switch to Milk.', costAmount: '1800000', costCurrency: 'USD' }, { id: 's-2', round: 2, kind: 'fit', supplierId: 'co-lanrui', supplierName: 'Lanrui Textile', requestedOn: dayAgo(20), receivedOn: dayAgo(3), verdict: 'pending', verdictByName: '', verdictOn: null, findings: '', costAmount: '1500000', costCurrency: 'USD' }],
-    approvals: [{ id: 'a-1', gate: 'concept', decision: 'approved', decidedByName: 'Owner', decidedAt: ago(52), note: '' }, { id: 'a-2', gate: 'feasibility', decision: 'approved', decidedByName: 'Owner', decidedAt: ago(45), note: 'Two mills quoted.' }, { id: 'a-3', gate: 'sampling', decision: 'approved', decidedByName: 'Owner', decidedAt: ago(41), note: '' }] }),
-  product({ id: 'dev-2', number: 'DEV-26-0002', name: 'Eau de parfum No. 1', workingTitle: 'Powder and linen', categoryCode: 'FRG', stage: 'feasibility', description: 'A powdery iris and linen accord, 50 ml, in a heavy glass bottle with a sand-coloured cap.', intent: 'The scent of the showroom.', specs: { concentration: 'EDP', volumeMl: '50', notes: 'Iris, orris butter, white musk, linen accord' }, lastActivityAt: ago(5), createdAt: ago(35), approvals: [{ id: 'a-4', gate: 'concept', decision: 'approved', decidedByName: 'Owner', decidedAt: ago(30), note: '' }, { id: 'a-5', gate: 'feasibility', decision: 'approved', decidedByName: 'Owner', decidedAt: ago(20), note: 'Grasse house quoted.' }], variants: [{ id: 'v-3', code: '50', name: '50 ml', shadeCode: null, shadeName: '', colourHex: '#F0DFD5', colourName: 'Powder glass', sizeLabel: '50 ml', dimensions: {}, status: 'proposed', sort: 1 }] }),
-  product({ id: 'dev-3', number: 'DEV-26-0003', name: 'Structured tote', categoryCode: 'BAG', stage: 'concept', description: 'A tote in nude vegetable-tanned leather with a Powermesh inner pocket, for the dress bag and the day after.', lastActivityAt: ago(25), createdAt: ago(28), approvals: [{ id: 'a-6', gate: 'concept', decision: 'approved', decidedByName: 'Owner', decidedAt: ago(26), note: '' }] }),
-  product({ id: 'dev-4', number: 'DEV-26-0004', name: 'Cathedral veil', categoryCode: 'ACC', collectionCode: 'BRIDAL-CORE', stage: 'idea', targetLaunch: null, lastActivityAt: ago(3), createdAt: ago(3), description: '' }),
+// The owner's concept boards of 2026-11-05, filed as proposals on the
+// dossiers they show. Sample mode lists them; it holds no image.
+const BOARDS: readonly { title: string; file: string; sizeBytes: number; products: readonly string[] }[] = [
+  { title: 'The T-Shirt Collection board', file: 't-shirt-collection.webp', sizeBytes: 121898, products: ['Essential Tee', 'Baby Tee', 'Sculpt Tee', 'Relaxed Tee'] },
+  { title: 'Baby Tee and Sculpt Tee board', file: 't-shirt-collection-baby-sculpt.webp', sizeBytes: 83458, products: ['Baby Tee', 'Sculpt Tee'] },
+  { title: 'The Everyday Edit board', file: 'everyday-edit.webp', sizeBytes: 93784, products: ['Essential Tee', 'Relaxed Tee'] },
+  { title: 'Model 1 board', file: 'model-1.webp', sizeBytes: 270892, products: ['Model 1'] },
+  { title: 'Model 1 material stories board', file: 'model-1-materials.webp', sizeBytes: 309528, products: ['Model 1'] },
+  { title: 'iPhone 18 Case Collection, Drop 01 board', file: 'iphone-18-case-drop-01.webp', sizeBytes: 288290, products: ['iPhone 18 Case'] },
+  { title: 'Home Fragrance board', file: 'home-fragrance.webp', sizeBytes: 170482, products: ['Home Fragrance Reed Diffuser'] },
+  { title: 'Flow Form board', file: 'flow-form.webp', sizeBytes: 289388, products: ['Flow Form 01'] },
+  { title: 'Flow Form 01 One Tone board', file: 'flow-form-01-one-tone.webp', sizeBytes: 184834, products: ['Flow Form 01'] },
+  // The fragrance and sleepwear boards arrived in the conversation, not as files: their sizes are nominal.
+  { title: 'Second Skin Eau de Parfum board', file: 'second-skin.webp', sizeBytes: 150000, products: ['Second Skin'] },
+  { title: 'Eau de Parfum trio board', file: 'eau-de-parfum-trio.webp', sizeBytes: 150000, products: ['Second Skin', 'Illusion Mesh', 'N58'] },
+  { title: 'Sleepwear / Babydoll Collection board', file: 'sleepwear-babydoll-collection.webp', sizeBytes: 150000, products: ['Classic Pajama Set', 'Satin Pajama Set', 'Ribbed Pajama Set', 'Lace Babydoll', 'Sheer Babydoll', 'Silk Touch Babydoll', 'Mesh Babydoll', 'Short Robe', 'Long Robe', 'Lace Kimono', 'Satin Robe', 'Cami Set', 'Tank Set', 'Long Sleeve', 'Soft Shorts', 'Cami Top'] },
 ];
-store.sourcing.set('dev-1', [
-  { id: 'src-1', supplierId: 'co-lanrui', supplierName: 'Lanrui Textile', factoryId: null, factoryName: 'Shaoxing', kind: 'odm', status: 'selected', moq: '300000', leadTimeDays: 60, sampleLeadDays: 14, unitCost: '420000', currency: 'USD', sampleCost: '1800000', developmentCost: '6000000', toolingCost: null, paymentTerms: '30% deposit, 70% before shipment', incoterm: 'FOB', namedPlace: 'Ningbo', quotedOn: dayAgo(44), validUntil: dayAhead(40), isSelected: true, notes: 'Cut and sew in-house; silk from their mill.' },
-  { id: 'src-2', supplierId: 'co-jinyu', supplierName: 'Jinyu Knitting', factoryId: null, factoryName: 'Haining', kind: 'odm', status: 'quoted', moq: '500000', leadTimeDays: 75, sampleLeadDays: 21, unitCost: '385000', currency: 'USD', sampleCost: '2200000', developmentCost: '9000000', toolingCost: null, paymentTerms: '50% deposit', incoterm: 'FOB', namedPlace: 'Shanghai', quotedOn: dayAgo(43), validUntil: dayAhead(10), isSelected: false, notes: 'Cheaper per unit, higher MOQ and development.' },
-]);
-store.sourcing.set('dev-2', [{ id: 'src-3', supplierId: 'co-aromes', supplierName: 'Arômes de Grasse', factoryId: null, factoryName: '', kind: 'odm', status: 'quoted', moq: '1000000', leadTimeDays: 120, sampleLeadDays: 30, unitCost: '1150000', currency: 'EUR', sampleCost: '4500000', developmentCost: '18000000', toolingCost: '12000000', paymentTerms: '50% on order', incoterm: 'EXW', namedPlace: 'Grasse', quotedOn: dayAgo(22), validUntil: dayAhead(60), isSelected: false, notes: 'Includes the bottle mould.' }]);
-store.costing.set('dev-1', [
-  { id: 'c-1', basis: 'estimate', currency: 'USD', unitCost: '400000', packagingCost: '60000', freightCost: '25000', dutyCost: '48000', otherCost: '0', quantity: '300000', plannedPrice: '2900000', wholesalePrice: '1450000', sourcingId: null, notes: 'Before quotes.', createdByName: 'Owner', createdAt: ago(50) },
-  { id: 'c-2', basis: 'quotation', currency: 'USD', unitCost: '420000', packagingCost: '55000', freightCost: '22000', dutyCost: '50400', otherCost: '10000', quantity: '300000', plannedPrice: '2900000', wholesalePrice: '1450000', sourcingId: 'src-1', notes: 'Lanrui quote; packaging from the box maker.', createdByName: 'Finance', createdAt: ago(42) },
-]);
-store.files.set('DEV-26-0001', [
-  { id: 'f-1', kind: 'photo', title: 'Belted silhouette, Milan', number: '', issuedOn: null, expiresOn: null, storagePath: 'sample://inspiration/robe-1.jpg', mimeType: 'image/jpeg', sizeBytes: 420000, createdAt: ago(58), uploadedBy: 'Owner', links: [{ entityType: 'development_product', entityId: 'DEV-26-0001', role: 'inspiration' }] },
-  { id: 'f-2', kind: 'photo', title: 'Robe sketch v2', number: '', issuedOn: null, expiresOn: null, storagePath: 'sample://proposal/robe-sketch-2.pdf', mimeType: 'application/pdf', sizeBytes: 1200000, createdAt: ago(50), uploadedBy: 'Marketing', links: [{ entityType: 'development_product', entityId: 'DEV-26-0001', role: 'proposal' }] },
-  { id: 'f-3', kind: 'photo', title: 'Round 1 on the form', number: '', issuedOn: null, expiresOn: null, storagePath: 'sample://sample/round-1.jpg', mimeType: 'image/jpeg', sizeBytes: 800000, createdAt: ago(26), uploadedBy: 'Owner', links: [{ entityType: 'development_product', entityId: 'DEV-26-0001', role: 'sample' }] },
-  { id: 'f-4', kind: 'quotation', title: 'Lanrui quotation', number: 'LR-2026-118', issuedOn: dayAgo(44), expiresOn: dayAhead(40), storagePath: 'sample://quotation/lanrui.pdf', mimeType: 'application/pdf', sizeBytes: 300000, createdAt: ago(44), uploadedBy: 'Purchasing', links: [{ entityType: 'development_product', entityId: 'DEV-26-0001', role: 'quotation' }] },
-]);
+BOARDS.forEach((board, index) => {
+  for (const name of board.products) {
+    const record = store.products.find((candidate) => candidate.name === name);
+    if (!record) continue;
+    store.files.set(record.number, [...(store.files.get(record.number) ?? []), { id: `f-${index + 1}-${record.number}`, kind: 'photo', title: board.title, number: '', issuedOn: null, expiresOn: null, storagePath: `sample://proposal/${board.file}`, mimeType: 'image/webp', sizeBytes: board.sizeBytes, createdAt: ago(0), uploadedBy: 'Owner', links: [{ entityType: 'development_product', entityId: record.number, role: 'proposal' }] }]);
+  }
+});
 
 const categoryName = (code: string) => store.categories.find((category) => category.code === code)?.name ?? code;
 const collectionName = (code: string | null) => (code ? (store.collections.find((collection) => collection.code === code)?.name ?? code) : '');
@@ -122,7 +129,7 @@ export const sampleDevelopment = {
   },
   async upload(input: { entityType: string; entityId: string; role: string; file: File; title?: string }): Promise<FiledDocument> {
     store.sequence.doc += 1;
-    const document: FiledDocument = { id: `f-${store.sequence.doc}`, kind: input.file.type.startsWith('image/') ? 'photo' : 'other', title: input.title?.trim() || input.file.name, number: '', issuedOn: null, expiresOn: null, storagePath: `sample://${input.role}/${input.file.name}`, mimeType: input.file.type, sizeBytes: input.file.size, createdAt: now(), uploadedBy: 'Owner', links: [{ entityType: input.entityType, entityId: input.entityId, role: input.role }] };
+    const document: FiledDocument = { id: `f-up-${store.sequence.doc}`, kind: input.file.type.startsWith('image/') ? 'photo' : 'other', title: input.title?.trim() || input.file.name, number: '', issuedOn: null, expiresOn: null, storagePath: `sample://${input.role}/${input.file.name}`, mimeType: input.file.type, sizeBytes: input.file.size, createdAt: now(), uploadedBy: 'Owner', links: [{ entityType: input.entityType, entityId: input.entityId, role: input.role }] };
     store.files.set(input.entityId, [...(store.files.get(input.entityId) ?? []), document]);
     const record = store.products.find((candidate) => candidate.number === input.entityId);
     if (record) touch(record);

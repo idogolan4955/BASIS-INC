@@ -103,13 +103,13 @@ export function ProductDialog({ product, open, onClose }: { product: Development
   return (
     <Dialog open={open} onClose={onClose} title={product ? t('Edit product') : t('New development product')} description={t('A product starts as an idea. Only the name and the category are needed now; everything else arrives when it is known.')} className="w-[min(44rem,calc(100vw-2rem))]">
       <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-        <TextField label={t('Name')} required maxLength={160} value={form.name} onChange={set('name')} placeholder={t('Silk robe')} />
+        <TextField label={t('Name')} required maxLength={160} value={form.name} onChange={set('name')} placeholder="Essential Tee" />
         <TextField label={t('Working title')} maxLength={160} value={form.workingTitle} onChange={set('workingTitle')} />
         <SelectField label={t('Category')} required value={form.categoryCode} onChange={(event) => setForm((current) => ({ ...current, categoryCode: event.target.value, specs: {} }))}>
           <option value="">{t('Choose the category')}</option>
           {categories.data?.filter((category) => category.status === 'active').map((category) => (
             <option key={category.code} value={category.code}>
-              {category.name}
+              {t(category.name)}
             </option>
           ))}
         </SelectField>
@@ -145,7 +145,7 @@ export function ProductDialog({ product, open, onClose }: { product: Development
             <div className="grid gap-3 sm:grid-cols-2">
               {schema.map((field) =>
                 field.kind === 'select' ? (
-                  <SelectField key={field.key} label={field.label} value={form.specs[field.key] ?? ''} onChange={(event) => setForm((current) => ({ ...current, specs: { ...current.specs, [field.key]: event.target.value } }))}>
+                  <SelectField key={field.key} label={t(field.label)} value={form.specs[field.key] ?? ''} onChange={(event) => setForm((current) => ({ ...current, specs: { ...current.specs, [field.key]: event.target.value } }))}>
                     <option value="">{t('Not set')}</option>
                     {(field.options ?? []).map((option) => (
                       <option key={option} value={option}>
@@ -154,7 +154,7 @@ export function ProductDialog({ product, open, onClose }: { product: Development
                     ))}
                   </SelectField>
                 ) : (
-                  <TextField key={field.key} label={field.label} unit={field.unit} type={field.kind === 'number' ? 'number' : 'text'} value={form.specs[field.key] ?? ''} onChange={(event) => setForm((current) => ({ ...current, specs: { ...current.specs, [field.key]: event.target.value } }))} />
+                  <TextField key={field.key} label={t(field.label)} unit={field.unit} type={field.kind === 'number' ? 'number' : 'text'} value={form.specs[field.key] ?? ''} onChange={(event) => setForm((current) => ({ ...current, specs: { ...current.specs, [field.key]: event.target.value } }))} />
                 ),
               )}
             </div>
@@ -225,7 +225,7 @@ export function DevelopmentBoard() {
           <FigureTile label={t('In development')} value={String(open.length)} note={`${all.filter((product) => product.stage === 'commercial').length} ${t('commercial')}`} />
           <FigureTile label={t('Awaiting verdict')} value={String(awaiting.length)} note={t('sample rounds received, not judged')} />
           <FigureTile label={t('Late or quiet')} value={String(late.length)} note={t('past target launch, or 21 days without a word')} />
-          <FigureTile label={t('Planned budget')} value={`${money(budget.toString(), 'USD')} USD`} note={t('open products, USD budgets')} />
+          <FigureTile label={t('Planned budget')} value={money(budget.toString(), 'USD')} note={t('open products, USD budgets')} />
         </section>
 
         <Panel title={t('Pipeline')}>
@@ -398,7 +398,7 @@ export function DevelopmentProducts() {
                       <span className="font-medium">{product.name}</span>
                       {product.workingTitle && <span className="ms-3 text-ink-muted">{product.workingTitle}</span>}
                     </Td>
-                    <Td className="text-ink-soft">{product.categoryName}</Td>
+                    <Td className="text-ink-soft">{t(product.categoryName)}</Td>
                     <Td className="text-ink-soft">{product.collectionName || '—'}</Td>
                     <Td>
                       <StatusChip tone={DEVELOPMENT_STAGE_TONE[product.stage]}>{t(DEVELOPMENT_STAGE_LABEL[product.stage])}</StatusChip>
