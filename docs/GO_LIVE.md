@@ -15,9 +15,9 @@ live build replaced the demo on `basis-inc-hq.web.app`. `EMAIL_API_KEY` holds
 the `unset` placeholder and all 66 functions are deployed with the Storage
 rules, so the platform reads and writes. Outgoing email waits for a provider
 account (Resend or Postmark), a verified sending domain and the real key;
-`basisinc25@gmail.com` is recorded as the email connector's reply-to. The
-artifact cleanup policy for function images was not set: run
-`firebase functions:artifacts:setpolicy` once so old images do not pile up.
+`basisinc25@gmail.com` is recorded as the email connector's reply-to. Function
+images older than a day are cleaned up by the Artifact Registry policy in
+`europe-west1` (`firebase functions:artifacts:setpolicy --location europe-west1`).
 Steps marked **owner** change account settings or
 are refused to an agent; the rest can be run by anyone with access to the
 project.
