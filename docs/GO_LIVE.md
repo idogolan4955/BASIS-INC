@@ -1,13 +1,20 @@
 # Going live — the first production deploy of the backend
 
-The platform at `basis-inc-hq.web.app` has so far been deployed from the
+The platform at `basis-inc-hq.web.app` was deployed until 2026-11-07 from the
 sample build (`pnpm build:demo`): the whole interface on in-memory sample
 records, no backend. This document is the exact sequence that turns it into
 the live system. Each step is idempotent; a step that has already happened
 can be run again without harm.
 
-State on 2026-10-14: F1 is done (billing account linked, APIs enabled).
-Steps 2 onwards are open. Steps marked **owner** change account settings or
+State on 2026-11-07: steps 1, 2, 4, 7 and 8 are done. Authentication has
+Email/Password on; `basis-inc-hq.web.app` still has to be added to its
+authorized domains, and the "email link" switch turned off (password only).
+The database was migrated and Data Connect deployed; the production seed ran
+(owner account, reference data, the launch catalog without SKUs, the
+consumer line of module 18); the live build replaced the demo on
+`basis-inc-hq.web.app`. Steps 3 (Storage), 5 (secrets) and 6 (functions) are
+open, so the platform reads but cannot yet write: every save goes through a
+function. Steps marked **owner** change account settings or
 are refused to an agent; the rest can be run by anyone with access to the
 project.
 
@@ -18,7 +25,7 @@ Cloud Functions, Cloud Run, Cloud Build, Artifact Registry, Eventarc, Pub/Sub,
 Cloud Scheduler, Secret Manager and Storage are enabled. The Data Connect
 Cloud SQL instance (`basis-db`, `europe-west1`) is the one recurring cost.
 
-## 2. Firebase Authentication (owner)
+## 2. Firebase Authentication (owner, done 2026-11-07 but for the authorized domain)
 
 In the Firebase console, Authentication › Get started, then Sign-in method ›
 Email/Password › enable (password sign-in only; no email link). Under
@@ -33,7 +40,7 @@ rules. The default bucket must be `basis-inc.firebasestorage.app`, the name
 the platform and the functions use. The rules file in the repository
 (`storage.rules`) is deployed in step 6.
 
-## 4. Data Connect and the database
+## 4. Data Connect and the database (done 2026-11-07)
 
 ```bash
 firebase deploy --only dataconnect
@@ -75,7 +82,7 @@ firebase deploy --only storage,functions:api,functions:evaluateAlerts,functions:
 Functions run on Node 22 (`firebase.json`, `functions/package.json`). The
 `api` function sits behind the Hosting rewrite `/api/**` on both sites.
 
-## 7. Reference data and the owner's account
+## 7. Reference data and the owner's account (done 2026-11-07)
 
 Needs Application Default Credentials for the project once:
 
@@ -97,13 +104,15 @@ process and inspection templates, places and document requirements. No
 password is set: on the sign-in page enter the email, choose "Reset
 password", and set it from the email Firebase sends.
 
-## 8. The live platform build on Hosting
+## 8. The live platform build on Hosting (done 2026-11-07)
 
 ```bash
 pnpm --filter @basis/platform build && firebase deploy --only hosting:platform
 ```
 
 `build` (not `build:demo`) talks to Auth and Data Connect in production. The
+Vite config sets `strictExecutionOrder`: without it the chunk graph's cycles
+made the first live build load blank. The
 web API key is already restricted to the BASIS origins. From this point the
 sample build is only for `pnpm --filter @basis/platform dev:sample`.
 
