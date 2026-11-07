@@ -254,6 +254,7 @@ Rules write to `Alert` with a dedupe key, severity and state (`open`, `acknowled
 | Carrier / container tracking | Tracking events for shipment legs | Logistics, later |
 | Accounting system | Export invoices, costs, payments | After orders |
 | Messaging (email, WhatsApp) | Customer and supplier interaction history. Today: documents emailed through the email connector (Resend or Postmark) and logged as `Message`; WhatsApp through the share sheet | Growth |
+| Inbound mail (Gmail API) and the mail classifier (Claude) | The company mailbox read in, sorted, and turned into proposed actions on records; designed in [MAIL_PLAN](MAIL_PLAN.md) | P11 |
 | Personal AI assistant (MCP) | `apps/assistant`: an MCP server acting through `/api/**` with an API token issued in Settings; the same functions and role checks as the screens | Phase 4 |
 | Document generation | Purchase orders, packing lists, roll labels, technical sheets as PDF | Manufacturing / Logistics |
 

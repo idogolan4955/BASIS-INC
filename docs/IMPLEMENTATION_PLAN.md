@@ -331,6 +331,10 @@ Depends on: Phase 2 (lite); P7 (full).
 
 Designed in [PRODUCT_DEVELOPMENT_PLAN](PRODUCT_DEVELOPMENT_PLAN.md) on 2026-10-31: Brand Centre, categories and collections, the development dossier with files by role, the stage gate with approvals, sourcing comparison, estimate-versus-quotation costing, the handover into the catalog, and the department board. Built in three slices after the owner answers the plan's open questions.
 
+### P11 — Mail: the email department (L)
+
+Designed in [MAIL_PLAN](MAIL_PLAN.md) on 2026-11-07: the company mailbox `basisinc25@gmail.com` read through the Gmail API (read-only, Gmail → Pub/Sub → function), every message stored with its thread and attachments, sorted first by facts (sender, references, thread, the owner's rules) and then by a Claude classifier, with proposed actions (task, inquiry, interaction, filed document, sourcing quote, milestone or leg update) accepted or dismissed with one click and executed by the existing functions as the person who clicked. Audiences keep supplier identity and prices with the cost roles. Built in three slices after the owner answers the plan's open questions; depends on the Functions deploy ([GO_LIVE](GO_LIVE.md) steps 5–6).
+
 ### P9 — Marketing, analytics, integrations (L, ongoing)
 
 - Campaigns, segments, sample kits, outreach tracking.

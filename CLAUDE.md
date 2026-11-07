@@ -2,7 +2,7 @@
 
 BASIS INC. is a premium international bridal-fabric brand and the operating platform behind it: products, suppliers, manufacturing, QC, inventory, logistics from China, B2B customers, marketing and the public brand site. The owner is Ido.
 
-**Read `docs/` before changing anything.** Start with `docs/PRODUCT_BLUEPRINT.md` and `docs/SYSTEM_ARCHITECTURE.md`; `docs/IMPLEMENTATION_PLAN.md` says what is built in which order. `docs/PRODUCT_DEVELOPMENT_PLAN.md` is the design of the brand and consumer-products department (module 18) and binds its build. Do not ask what the system is — the answer is there.
+**Read `docs/` before changing anything.** Start with `docs/PRODUCT_BLUEPRINT.md` and `docs/SYSTEM_ARCHITECTURE.md`; `docs/IMPLEMENTATION_PLAN.md` says what is built in which order. `docs/PRODUCT_DEVELOPMENT_PLAN.md` is the design of the brand and consumer-products department (module 18) and binds its build. `docs/MAIL_PLAN.md` is the design of the email department (module 19, mail read in and sorted into actions); nothing beyond it is built until the owner approves it. Do not ask what the system is — the answer is there.
 
 What must be remembered even without opening the docs:
 
