@@ -7,8 +7,8 @@ the live system. Each step is idempotent; a step that has already happened
 can be run again without harm.
 
 State on 2026-11-07: steps 1, 2, 4, 7 and 8 are done. Authentication has
-Email/Password on; `basis-inc-hq.web.app` still has to be added to its
-authorized domains, and the "email link" switch turned off (password only).
+Email/Password on and `basis-inc-hq.web.app` among its authorized domains;
+the "email link" switch still has to be turned off (password only).
 The database was migrated and Data Connect deployed; the production seed ran
 (owner account, reference data, the launch catalog without SKUs, the
 consumer line of module 18); the live build replaced the demo on
@@ -25,7 +25,7 @@ Cloud Functions, Cloud Run, Cloud Build, Artifact Registry, Eventarc, Pub/Sub,
 Cloud Scheduler, Secret Manager and Storage are enabled. The Data Connect
 Cloud SQL instance (`basis-db`, `europe-west1`) is the one recurring cost.
 
-## 2. Firebase Authentication (owner, done 2026-11-07 but for the authorized domain)
+## 2. Firebase Authentication (owner, done 2026-11-07)
 
 In the Firebase console, Authentication › Get started, then Sign-in method ›
 Email/Password › enable (password sign-in only; no email link). Under
