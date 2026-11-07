@@ -17,7 +17,8 @@
     "test": "pnpm -r test",
     "seed:emulator": "node functions/scripts/seed-emulator.mjs",
     "lint": "eslint .",
-    "seed:production": "node functions/scripts/seed-production.mjs --production"
+    "seed:production": "node functions/scripts/seed-production.mjs --production",
+    "mail:connect": "node functions/scripts/mail-connect.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

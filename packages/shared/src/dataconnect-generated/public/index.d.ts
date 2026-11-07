@@ -281,6 +281,46 @@ export interface Lot_Key {
   __typename?: 'Lot_Key';
 }
 
+export interface MailAction_Key {
+  id: UUIDString;
+  __typename?: 'MailAction_Key';
+}
+
+export interface MailAttachment_Key {
+  id: UUIDString;
+  __typename?: 'MailAttachment_Key';
+}
+
+export interface MailClassification_Key {
+  id: UUIDString;
+  __typename?: 'MailClassification_Key';
+}
+
+export interface MailLink_Key {
+  id: UUIDString;
+  __typename?: 'MailLink_Key';
+}
+
+export interface MailMailbox_Key {
+  id: UUIDString;
+  __typename?: 'MailMailbox_Key';
+}
+
+export interface MailMessage_Key {
+  id: UUIDString;
+  __typename?: 'MailMessage_Key';
+}
+
+export interface MailRule_Key {
+  id: UUIDString;
+  __typename?: 'MailRule_Key';
+}
+
+export interface MailThread_Key {
+  id: UUIDString;
+  __typename?: 'MailThread_Key';
+}
+
 export interface Message_Key {
   id: UUIDString;
   __typename?: 'Message_Key';

@@ -27,3 +27,4 @@ export * from './commercial';
 export * from './relationships';
 export * from './development';
 export * from './development-catalog';
+export * from './mail';

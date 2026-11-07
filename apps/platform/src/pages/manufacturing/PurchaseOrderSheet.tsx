@@ -6,6 +6,7 @@ import {
   PO_STATE_TONE,
   RUN_STATE_LABEL,
   canManageModule,
+  canOpenModule,
   canViewCosts,
   formatLocalDate,
   formatMoney,
@@ -22,6 +23,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, NavLink, useNavigate, useParams } from 'react-router';
 import { useCancelPurchaseOrder, useConfirmPurchaseOrder, useCreateProductionRun, useIssuePurchaseOrder, usePurchaseOrder, usePurchaseOrderCosts } from '../../data/manufacturing';
 import { DocumentsPanel } from '../../components/DocumentsPanel';
+import { MailPanel } from '../../components/MailPanel';
 import { EmailDialog } from '../../components/EmailDialog';
 import { isSample } from '../../data/source';
 import { useRecordNote, useTimeline } from '../../data/timeline';
@@ -271,7 +273,7 @@ function PoTimeline({ number }: { number: string }) {
   );
 }
 
-export function PurchaseOrderSheet({ tab }: { tab: 'overview' | 'production' | 'payments' | 'documents' | 'timeline' }) {
+export function PurchaseOrderSheet({ tab }: { tab: 'overview' | 'production' | 'payments' | 'documents' | 'timeline' | 'mail' }) {
   const t = useT();
   const session = useRequiredSession();
   const { number = '' } = useParams();
@@ -358,6 +360,7 @@ export function PurchaseOrderSheet({ tab }: { tab: 'overview' | 'production' | '
         )}
         <NavLink to={`${base}/documents`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Documents')}</NavLink>
         <NavLink to={`${base}/timeline`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Timeline')}</NavLink>
+        {canOpenModule(session.role, 'mail') && <NavLink to={`${base}/mail`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Mail')}</NavLink>}
       </SheetTabs>
       <div className="flex flex-col gap-4 px-5 py-6 lg:px-8">
         {tab === 'overview' && (
@@ -391,6 +394,7 @@ export function PurchaseOrderSheet({ tab }: { tab: 'overview' | 'production' | '
           />
         )}
         {tab === 'timeline' && <PoTimeline number={data.number} />}
+        {tab === 'mail' && <MailPanel entityType="purchase_order" entityId={data.number} />}
       </div>
       {manage && (
         <>

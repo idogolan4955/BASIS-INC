@@ -311,6 +311,16 @@ Each module folder owns its screens, loading and error states, and module-specif
 | `/development/collections` | Collections | Development module roles |
 | `/development/categories` | Categories and their specification schemas | Development module roles |
 
+### Module 19 Mail (2026-11-07)
+
+| Path | Screen | Access |
+|---|---|---|
+| `/mail` | The inbox as a ledger: needs a decision, sorted, done, ignored; filters by department and category; import of a saved `.eml` | Mail module roles, each reading only the audiences in `MAIL_AUDIENCE_READERS` |
+| `/mail/:id` | One message: body, attachments, records it is about, sorting history, thread, and what a person does from it | The message's audience |
+| `/mail/rules` | The owner's sorting rules | Owner |
+| `…/:number/mail`, `/suppliers/:id/mail`, `/customers/:id/mail` | The Mail tab on purchase orders, shipments, development dossiers and companies | The threads' audiences |
+| `/settings` › Mail | The mailbox connection, its secrets by name, sync state | Owner (operations reads) |
+
 ### The front door (2026-11-04)
 
 | Path | Screen | Access |

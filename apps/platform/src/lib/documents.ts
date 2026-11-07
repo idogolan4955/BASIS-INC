@@ -46,6 +46,9 @@ export async function fetchExport(ledger: ExportLedger, format: ExportFormat, sc
 export async function fetchFiled(storagePath: string, filename: string): Promise<{ blob: Blob; filename: string }> {
   const generated = storagePath.match(/^generated:\/\/pdf\/([a-z-]+)\/(.+)$/);
   if (generated) return fetchDocument(generated[1] as DocumentKind, generated[2]!);
+  // Filed from a mail attachment before Storage held it: read through the mail function, with its audience check.
+  const mailAttachment = storagePath.match(/^mail:\/\/attachment\/(.+)$/);
+  if (mailAttachment) return (await import('../data/mail')).fetchMailAttachment(mailAttachment[1]!);
   const [{ app }, { getStorage, ref, getBlob }] = await Promise.all([import('./firebase'), import('firebase/storage')]);
   const blob = await getBlob(ref(getStorage(app), storagePath));
   return { blob, filename };

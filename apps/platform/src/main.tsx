@@ -42,6 +42,8 @@ import { Goals } from './pages/goals/Goals';
 import { DevelopmentBoard, DevelopmentProducts } from './pages/development/Development';
 import { Dossier } from './pages/development/Dossier';
 import { BrandCentre, Categories, Collections } from './pages/development/Brand';
+import { Inbox, MailRules } from './pages/mail/Mail';
+import { MessageSheet } from './pages/mail/MessageSheet';
 import { SessionProvider, useSessionState } from './session';
 import { LocaleProvider } from './i18n';
 
@@ -69,6 +71,7 @@ const router = createBrowserRouter([
       { path: 'manufacturing/purchase-orders/:number/payments', element: <PurchaseOrderSheet tab="payments" /> },
       { path: 'manufacturing/purchase-orders/:number/documents', element: <PurchaseOrderSheet tab="documents" /> },
       { path: 'manufacturing/purchase-orders/:number/timeline', element: <PurchaseOrderSheet tab="timeline" /> },
+      { path: 'manufacturing/purchase-orders/:number/mail', element: <PurchaseOrderSheet tab="mail" /> },
       { path: 'manufacturing/runs', element: <ProductionRuns /> },
       { path: 'manufacturing/runs/:number', element: <RunSheet tab="milestones" /> },
       { path: 'manufacturing/runs/:number/lots', element: <RunSheet tab="lots" /> },
@@ -86,6 +89,10 @@ const router = createBrowserRouter([
       { path: 'inventory/lots/:number/timeline', element: <LotSheet tab="timeline" /> },
       { path: 'documents', element: <Documents /> },
       { path: 'settings', element: <Settings /> },
+      { path: 'settings/connectors/:id', element: <Settings /> },
+      { path: 'mail', element: <Inbox /> },
+      { path: 'mail/rules', element: <MailRules /> },
+      { path: 'mail/:id', element: <MessageSheet /> },
       { path: 'customers/inquiries', element: <Inquiries /> },
       { path: 'customers/pipeline', element: <Pipeline /> },
       { path: 'qc', element: <Inspections /> },
@@ -105,6 +112,7 @@ const router = createBrowserRouter([
       { path: 'logistics/shipments/:number/documents', element: <ShipmentSheet tab="documents" /> },
       { path: 'logistics/shipments/:number/costs', element: <ShipmentSheet tab="costs" /> },
       { path: 'logistics/shipments/:number/timeline', element: <ShipmentSheet tab="timeline" /> },
+      { path: 'logistics/shipments/:number/mail', element: <ShipmentSheet tab="mail" /> },
       { path: 'orders', element: <SalesOrders /> },
       { path: 'orders/quotes', element: <Quotes /> },
       { path: 'orders/quotes/:number', element: <QuoteSheet tab="lines" /> },
@@ -129,12 +137,14 @@ const router = createBrowserRouter([
       { path: 'suppliers/:id', element: <CompanySheet tab="overview" base="/suppliers" /> },
       { path: 'suppliers/:id/contacts', element: <CompanySheet tab="contacts" base="/suppliers" /> },
       { path: 'suppliers/:id/places', element: <CompanySheet tab="places" base="/suppliers" /> },
+      { path: 'suppliers/:id/mail', element: <CompanySheet tab="mail" base="/suppliers" /> },
       { path: 'customers', element: <Companies door="customers" /> },
       { path: 'customers/:id', element: <CompanySheet tab="overview" base="/customers" /> },
       { path: 'customers/:id/contacts', element: <CompanySheet tab="contacts" base="/customers" /> },
       { path: 'customers/:id/places', element: <CompanySheet tab="places" base="/customers" /> },
       { path: 'customers/:id/orders', element: <CompanySheet tab="orders" base="/customers" /> },
       { path: 'customers/:id/relationship', element: <CompanySheet tab="relationship" base="/customers" /> },
+      { path: 'customers/:id/mail', element: <CompanySheet tab="mail" base="/customers" /> },
       { path: 'board', element: <Board /> },
       { path: 'goals', element: <Goals /> },
       { path: 'development', element: <DevelopmentBoard /> },
@@ -146,6 +156,7 @@ const router = createBrowserRouter([
       { path: 'development/products/:number/costing', element: <Dossier tab="costing" /> },
       { path: 'development/products/:number/tasks', element: <Dossier tab="tasks" /> },
       { path: 'development/products/:number/decisions', element: <Dossier tab="decisions" /> },
+      { path: 'development/products/:number/mail', element: <Dossier tab="mail" /> },
       { path: 'development/brand', element: <BrandCentre /> },
       { path: 'development/collections', element: <Collections /> },
       { path: 'development/categories', element: <Categories /> },

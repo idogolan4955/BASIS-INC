@@ -52,6 +52,7 @@ export const MODULE_KEYS = [
   'board',
   'goals',
   'development',
+  'mail',
 ] as const;
 
 export type ModuleKey = (typeof MODULE_KEYS)[number];
@@ -86,6 +87,7 @@ export const MODULES: readonly ModuleDefinition[] = [
   { key: 'board', number: '16', name: 'Board', path: '/board', summary: 'The team\'s bulletin board: notes pinned anywhere', phase: 'P9' },
   { key: 'goals', number: '17', name: 'Goals', path: '/goals', summary: 'Company goals by section, with a timeline', phase: 'P9' },
   { key: 'development', number: '18', name: 'Development', path: '/development', summary: 'Brand Centre, collections, the development dossier, sourcing and costing', phase: 'P10' },
+  { key: 'mail', number: '19', name: 'Mail', path: '/mail', summary: 'The company mailbox, sorted into the records and work it concerns', phase: 'P11' },
 ];
 
 export type AccessLevel = 'manage' | 'limited' | 'read' | 'none';
@@ -118,6 +120,8 @@ export const MODULE_ACCESS: Record<ModuleKey, Record<Role, AccessLevel>> = {
   goals:         { owner: M, operations: R, purchasing: N, qc: N, logistics: N, sales: N, marketing: N, finance: R, viewer: N },
   // Product development: the owner, operations and marketing keep the dossiers; purchasing the sourcing; finance the costing; qc the sample verdicts.
   development:   { owner: M, operations: M, purchasing: L, qc: L, logistics: N, sales: R, marketing: M, finance: R, viewer: R },
+  // Mail: each role reads only the audiences in MAIL_AUDIENCE_READERS (mail.ts); qc reads general mail and finance reads without sorting.
+  mail:          { owner: M, operations: M, purchasing: M, qc: R, logistics: M, sales: M, marketing: M, finance: R, viewer: N },
 };
 
 export function moduleAccess(role: Role, module: ModuleKey): AccessLevel {

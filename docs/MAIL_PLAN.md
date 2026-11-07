@@ -4,7 +4,17 @@ How the company mailbox becomes part of the platform: mail is read in, sorted, a
 
 This document decides how mail gets in, the entities, the sorting rules and where the language model sits, the screens, the permissions and the order of the build (§9). It ends with the questions for the owner (§10). Nothing is built beyond it until the owner approves it. What is already in the system is reused, never duplicated.
 
-**State.** Design, 2026-11-07. Not built.
+**State.** The owner approved the plan with the proposed answers on 2026-11-07 ("Approve, start slice 1"). Taken as decided: the Gmail API, read-only (1); `claude-opus-5-5` at low effort for slice 2 (2); bring in the last 30 days at connection, with 0 and 90 offered on the Connect button (3, which had no proposal); only exact-reference links and thread inheritance run without a click (4); unsorted mail is the owner's (5); the mailbox is business-only and bank, tax and legal senders are kept from the model by rules (6); sending from the mailbox (7) waits for slice 3; everything is kept (8, purging deferred); summaries in both languages (9); module 19 in the Team group (10).
+
+**Slice 1 is built** (2026-11-07), and differs from the text below in these points:
+
+- Sorting by facts runs inside the intake, not through the outbox: it is cheap and never blocks storing (a failure stores the message for the owner). The outbox event `mail.received` is written for slice 2's classifier.
+- A category `supplier_correspondence` joins §5.2 for supplier mail the facts cannot narrow further (the classifier will split it into quotation, production and invoice).
+- Messages can also be **imported** as `.eml` files (owner and operations), into a mailbox of provider `import`. It is the same intake path, used for mail kept in another inbox and for the emulator checks.
+- The raw message and attachments are kept in Storage when Storage is on; until then an attachment is read again from Gmail on demand (`getMailAttachment`), and an imported attachment cannot be opened (the screen says so).
+- In slice 1 a person chooses the actions (link, task, inquiry, interaction, file, company, done, ignore, reopen) through one function, `actOnMail`; each is recorded as an accepted `MailAction`. Proposals and one-click accept arrive with the classifier in slice 2.
+- Functions: `connectMailbox`, `disconnectMailbox`, `syncMailboxNow`, `mailStatus`, `onGmailNotification` (Pub/Sub topic `gmail-mail`), `syncMail` (every 10 minutes: catch-up and watch renewal), `importMailMessage`, `actOnMail`, `sortMailMessage`, `saveMailRule`, `getMailAttachment`. Those that talk to Gmail declare the secrets `GMAIL_CLIENT_SECRET` and `GMAIL_REFRESH_TOKEN`.
+- Alert rules built: `mail.sync_stalled` and `mail.customer_unanswered`.
 
 ---
 
@@ -56,7 +66,7 @@ Three ways were weighed. `basisinc25@gmail.com` is a consumer Gmail address (not
 2. **Terminal:**
    ```bash
    firebase functions:secrets:set GMAIL_CLIENT_SECRET
-   pnpm mail:connect
+   pnpm mail:connect --client-id <id>.apps.googleusercontent.com
    firebase functions:secrets:set ANTHROPIC_API_KEY
    ```
    `pnpm mail:connect` (built in slice 1) opens Google's consent in the browser, signed in as `basisinc25@gmail.com`, receives the authorisation on `localhost`, and writes the refresh token straight into the secret `GMAIL_REFRESH_TOKEN` through `firebase functions:secrets:set --data-file -`. The token is never printed, never in chat, never in the repository. The Anthropic key comes from console.anthropic.com, with a monthly spend limit set there.

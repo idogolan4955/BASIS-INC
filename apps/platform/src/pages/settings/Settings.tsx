@@ -1,4 +1,5 @@
-import { CONNECTOR_SECRETS, EMAIL_PROVIDERS, EMAIL_PROVIDER_LABEL, ROLES, ROLE_LABELS, type AssistantSettings, type EmailSettings, type Role, type WhatsappSettings } from '@basis/shared';
+import { CONNECTOR_SECRETS, EMAIL_PROVIDERS, EMAIL_PROVIDER_LABEL, ROLES, ROLE_LABELS, type AssistantSettings, type EmailSettings, type MailConnectorSettings, type Role, type WhatsappSettings } from '@basis/shared';
+import { MailConnector } from '../../components/MailConnector';
 import { Button, Dialog, Ledger, Panel, SelectField, StatusChip, Td, TextField, Th, Tr, cn } from '@basis/ui';
 import { useState, type FormEvent } from 'react';
 import { NavLink } from 'react-router';
@@ -247,10 +248,10 @@ export function Settings() {
   const connectors = useConnectors();
   const canEdit = session.role === 'owner';
   const data = connectors.data;
-  const find = <T,>(key: 'email' | 'whatsapp' | 'assistant') => (data?.connectors.find((connector) => connector.key === key)?.settings ?? null) as T | null;
+  const find = <T,>(key: 'email' | 'whatsapp' | 'assistant' | 'mail') => (data?.connectors.find((connector) => connector.key === key)?.settings ?? null) as T | null;
   return (
     <>
-      <ModuleTitle number="15" title={t('Settings')}>{t('Connectors: email, WhatsApp, and the assistant that acts on your behalf.')}</ModuleTitle>
+      <ModuleTitle number="15" title={t('Settings')}>{t('Connectors: email, WhatsApp, the company mailbox, and the assistant that acts on your behalf.')}</ModuleTitle>
       <SettingsTabs active="connectors" />
       <div className="flex flex-col gap-4 px-5 py-6 lg:px-8">
         {connectors.isPending ? (
@@ -261,6 +262,7 @@ export function Settings() {
           <>
             <EmailConnector key={JSON.stringify(find('email'))} settings={find<EmailSettings>('email')} secrets={data?.connectors.find((connector) => connector.key === 'email')?.secrets ?? CONNECTOR_SECRETS.email.map((name) => ({ name, present: false }))} emulator={data?.emulator ?? false} canEdit={canEdit} />
             <WhatsappConnector key={JSON.stringify(find('whatsapp'))} settings={find<WhatsappSettings>('whatsapp')} canEdit={canEdit} />
+            <MailConnector key={JSON.stringify(find('mail'))} settings={find<MailConnectorSettings>('mail')} canEdit={canEdit} />
             <AssistantConnector settings={find<AssistantSettings>('assistant')} canEdit={canEdit} />
           </>
         )}

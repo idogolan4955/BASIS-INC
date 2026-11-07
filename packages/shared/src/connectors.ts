@@ -1,8 +1,9 @@
 import type { Role } from './access';
+import type { MailConnectorSettings } from './mail';
 
 // How the platform reaches the outside, and who may act through it.
 
-export const CONNECTOR_KEYS = ['email', 'whatsapp', 'assistant'] as const;
+export const CONNECTOR_KEYS = ['email', 'whatsapp', 'assistant', 'mail'] as const;
 export type ConnectorKey = (typeof CONNECTOR_KEYS)[number];
 
 export const EMAIL_PROVIDERS = ['resend', 'postmark'] as const;
@@ -31,11 +32,14 @@ export const CONNECTOR_SECRETS: Record<ConnectorKey, readonly string[]> = {
   email: ['EMAIL_API_KEY'],
   whatsapp: [],
   assistant: [],
+  // The mailbox secrets (GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN) are reported
+  // by `mailStatus`, the only functions that hold them; see MAIL_CONNECTOR_SECRETS.
+  mail: [],
 };
 
 export interface ConnectorView {
   readonly key: ConnectorKey;
-  readonly settings: EmailSettings | WhatsappSettings | AssistantSettings | null;
+  readonly settings: EmailSettings | WhatsappSettings | AssistantSettings | MailConnectorSettings | null;
   readonly updatedAt: string | null;
   /** Which of the connector's secrets are present where the functions run. */
   readonly secrets: readonly { readonly name: string; readonly present: boolean }[];

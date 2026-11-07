@@ -50,8 +50,10 @@ import {
   type SampleVerdict,
   type SourcingKind,
   type SourcingStatus,
+  canOpenModule,
 } from '@basis/shared';
 import { Button, Dialog, EmptyState, LabelHeader, Ledger, Panel, SelectField, ShadeDot, SheetTabs, StatusChip, Swatch, Td, TextArea, TextField, Th, Timeline, Tr, Track, cn, sheetTabClass, type TrackStep } from '@basis/ui';
+import { MailPanel } from '../../components/MailPanel';
 import { Plus, UploadSimple } from '@phosphor-icons/react';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link, NavLink, useParams } from 'react-router';
@@ -72,7 +74,7 @@ import { ProductDialog, useManageDevelopment } from './Development';
 // a role; sourcing and costing open for the cost roles; the gate records
 // who passed it.
 
-type Tab = 'overview' | 'files' | 'samples' | 'sourcing' | 'costing' | 'tasks' | 'decisions';
+type Tab = 'overview' | 'files' | 'samples' | 'sourcing' | 'costing' | 'tasks' | 'decisions' | 'mail';
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'ILS', 'CNY'];
 const money = (stored: string, currency: string, digits = 2) => formatMoney(moneyFromStored(stored, currency), digits);
 const amountOrNull = (text: string): string | null | 'invalid' => {
@@ -1081,6 +1083,7 @@ export function Dossier({ tab }: { tab: Tab }) {
         {costs && <NavLink to={`${base}/costing`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Costing')}</NavLink>}
         <NavLink to={`${base}/tasks`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Tasks')}</NavLink>
         <NavLink to={`${base}/decisions`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Decisions')}</NavLink>
+        {canOpenModule(session.role, 'mail') && <NavLink to={`${base}/mail`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Mail')}</NavLink>}
       </SheetTabs>
       <div className="px-5 py-6 lg:px-8">
         {tab === 'overview' && <Overview product={data} manage={manage} />}
@@ -1090,6 +1093,7 @@ export function Dossier({ tab }: { tab: Tab }) {
         {tab === 'costing' && (costs ? <Costing product={data} manage={manage || session.role === 'finance'} /> : <EmptyState title={t('Not available to this role')} />)}
         {tab === 'tasks' && <Tasks product={data} manage={manage} />}
         {tab === 'decisions' && <Decisions product={data} manage={manage} />}
+        {tab === 'mail' && <MailPanel entityType="development_product" entityId={data.number} />}
       </div>
       {manage && (
         <>

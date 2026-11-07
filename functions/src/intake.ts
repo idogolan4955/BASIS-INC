@@ -42,6 +42,36 @@ function allowed(ip: string): boolean {
 
 const list = (value: string | string[] | undefined) => (value === undefined ? [] : Array.isArray(value) ? value : [value]).map((entry) => entry.trim()).filter(Boolean).slice(0, 20);
 
+export interface InquiryFields {
+  readonly kind: 'sample_request' | 'wholesale' | 'contact';
+  readonly name: string;
+  readonly company: string | null;
+  readonly email: string;
+  readonly phone: string | null;
+  readonly country: string | null;
+  readonly customerType: string | null;
+  readonly topic: string | null;
+  readonly message: string | null;
+  readonly details: unknown;
+  readonly context: unknown;
+}
+
+/** One inquiry with the next INQ number, from the site or from a message in module 19; raised on the Gateway. */
+export async function createInquiryRecord(fields: InquiryFields, source: 'site' | 'email', mailMessageId: string | null): Promise<string> {
+  const year = new Date().getFullYear();
+  const { numberSequence } = await graphql<{ numberSequence: { nextValue: number } | null }>(`query ($year: Int!) { numberSequence(key: { prefix: "INQ", year: $year }) { nextValue } }`, { year });
+  const sequence = numberSequence?.nextValue ?? 1;
+  await graphql(`mutation ($year: Int!, $next: Int!) { numberSequence_upsert(data: { prefix: "INQ", year: $year, nextValue: $next }) }`, { year, next: sequence + 1 });
+  const reference = formatBusinessNumber({ prefix: 'INQ', year, sequence });
+  await graphql(
+    `mutation ($reference: String!, $kind: String!, $name: String!, $company: String, $email: String!, $phone: String, $country: String, $customerType: String, $topic: String, $message: String, $details: Any, $context: Any, $source: String!, $mailMessageId: UUID) {
+      inquiry_insert(data: { reference: $reference, kind: $kind, name: $name, company: $company, email: $email, phone: $phone, country: $country, customerType: $customerType, topic: $topic, message: $message, details: $details, context: $context, state: "new", source: $source, mailMessageId: $mailMessageId }) }`,
+    { ...fields, reference, source, mailMessageId },
+  );
+  await emit('inquiry.received', 'inquiry', reference, { kind: fields.kind, country: fields.country, source });
+  return reference;
+}
+
 export async function receiveInquiry(request: Request, response: Response): Promise<void> {
   const ip = (request.get('x-forwarded-for') ?? request.ip ?? '').split(',')[0]!.trim() || 'unknown';
   if (!allowed(ip)) {
@@ -59,18 +89,11 @@ export async function receiveInquiry(request: Request, response: Response): Prom
     response.json({ reference: formatBusinessNumber({ prefix: 'INQ', year: new Date().getFullYear(), sequence: 0 }) });
     return;
   }
-  const year = new Date().getFullYear();
-  const { numberSequence } = await graphql<{ numberSequence: { nextValue: number } | null }>(`query ($year: Int!) { numberSequence(key: { prefix: "INQ", year: $year }) { nextValue } }`, { year });
-  const sequence = numberSequence?.nextValue ?? 1;
-  await graphql(`mutation ($year: Int!, $next: Int!) { numberSequence_upsert(data: { prefix: "INQ", year: $year, nextValue: $next }) }`, { year, next: sequence + 1 });
-  const reference = formatBusinessNumber({ prefix: 'INQ', year, sequence });
-  const details = { products: list(input.products), shades: list(input.shades), volume: input.volume ?? null, address: input.address ?? null, url: input.url ?? null };
-  await graphql(
-    `mutation ($reference: String!, $kind: String!, $name: String!, $company: String, $email: String!, $phone: String, $country: String, $customerType: String, $topic: String, $message: String, $details: Any, $context: Any) {
-      inquiry_insert(data: { reference: $reference, kind: $kind, name: $name, company: $company, email: $email, phone: $phone, country: $country, customerType: $customerType, topic: $topic, message: $message, details: $details, context: $context, state: "new" }) }`,
-    { reference, kind: input.kind, name: input.name, company: input.company ?? null, email: input.email, phone: input.phone ?? null, country: input.country ?? null, customerType: input.customerType ?? null, topic: input.topic ?? null, message: input.message ?? null, details, context: { ...(input.context ?? {}), ip } },
+  const reference = await createInquiryRecord(
+    { kind: input.kind, name: input.name, company: input.company ?? null, email: input.email, phone: input.phone ?? null, country: input.country ?? null, customerType: input.customerType ?? null, topic: input.topic ?? null, message: input.message ?? null, details: { products: list(input.products), shades: list(input.shades), volume: input.volume ?? null, address: input.address ?? null, url: input.url ?? null }, context: { ...(input.context ?? {}), ip } },
+    'site',
+    null,
   );
-  await emit('inquiry.received', 'inquiry', reference, { kind: input.kind, country: input.country ?? null });
   response.status(201).json({ reference });
 }
 

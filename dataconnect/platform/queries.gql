@@ -250,6 +250,7 @@ query ListInquiries @auth(expr: "auth.token.role == 'owner' || auth.token.role =
     message
     details
     context
+    source
     state
     handledAt
     createdAt

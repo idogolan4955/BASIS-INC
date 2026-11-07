@@ -14,38 +14,38 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { acknowledgeAlert, createTask, completeTask, addNote, updateMyPreferences, recordEvent, resolveAlert, reopenTask, listCompanies, getCompany } from '@basis/dataconnect-platform';
+import { listInspections, listInspectionsFor, getInspection, listInspectionTemplates, listCorrectiveActions, listBoardNotes, insertBoardNote, editBoardNote, moveBoardNote, deleteOwnBoardNote } from '@basis/dataconnect-platform';
 
 
-// Operation AcknowledgeAlert:  For variables, look at type AcknowledgeAlertVars in ../index.d.ts
-const { data } = await AcknowledgeAlert(dataConnect, acknowledgeAlertVars);
+// Operation ListInspections: 
+const { data } = await ListInspections(dataConnect);
 
-// Operation CreateTask:  For variables, look at type CreateTaskVars in ../index.d.ts
-const { data } = await CreateTask(dataConnect, createTaskVars);
+// Operation ListInspectionsFor:  For variables, look at type ListInspectionsForVars in ../index.d.ts
+const { data } = await ListInspectionsFor(dataConnect, listInspectionsForVars);
 
-// Operation CompleteTask:  For variables, look at type CompleteTaskVars in ../index.d.ts
-const { data } = await CompleteTask(dataConnect, completeTaskVars);
+// Operation GetInspection:  For variables, look at type GetInspectionVars in ../index.d.ts
+const { data } = await GetInspection(dataConnect, getInspectionVars);
 
-// Operation AddNote:  For variables, look at type AddNoteVars in ../index.d.ts
-const { data } = await AddNote(dataConnect, addNoteVars);
+// Operation ListInspectionTemplates: 
+const { data } = await ListInspectionTemplates(dataConnect);
 
-// Operation UpdateMyPreferences:  For variables, look at type UpdateMyPreferencesVars in ../index.d.ts
-const { data } = await UpdateMyPreferences(dataConnect, updateMyPreferencesVars);
+// Operation ListCorrectiveActions: 
+const { data } = await ListCorrectiveActions(dataConnect);
 
-// Operation RecordEvent:  For variables, look at type RecordEventVars in ../index.d.ts
-const { data } = await RecordEvent(dataConnect, recordEventVars);
+// Operation ListBoardNotes: 
+const { data } = await ListBoardNotes(dataConnect);
 
-// Operation ResolveAlert:  For variables, look at type ResolveAlertVars in ../index.d.ts
-const { data } = await ResolveAlert(dataConnect, resolveAlertVars);
+// Operation InsertBoardNote:  For variables, look at type InsertBoardNoteVars in ../index.d.ts
+const { data } = await InsertBoardNote(dataConnect, insertBoardNoteVars);
 
-// Operation ReopenTask:  For variables, look at type ReopenTaskVars in ../index.d.ts
-const { data } = await ReopenTask(dataConnect, reopenTaskVars);
+// Operation EditBoardNote:  For variables, look at type EditBoardNoteVars in ../index.d.ts
+const { data } = await EditBoardNote(dataConnect, editBoardNoteVars);
 
-// Operation ListCompanies: 
-const { data } = await ListCompanies(dataConnect);
+// Operation MoveBoardNote:  For variables, look at type MoveBoardNoteVars in ../index.d.ts
+const { data } = await MoveBoardNote(dataConnect, moveBoardNoteVars);
 
-// Operation GetCompany:  For variables, look at type GetCompanyVars in ../index.d.ts
-const { data } = await GetCompany(dataConnect, getCompanyVars);
+// Operation DeleteOwnBoardNote:  For variables, look at type DeleteOwnBoardNoteVars in ../index.d.ts
+const { data } = await DeleteOwnBoardNote(dataConnect, deleteOwnBoardNoteVars);
 
 
 ```

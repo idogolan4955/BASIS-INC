@@ -4,9 +4,12 @@ import {
   COMPANY_STATUS_TONE,
   LOCATION_TYPE_LABEL,
   canManageModule,
+  canOpenModule,
+  mailCompanyEntity,
   type CompanyDetail,
 } from '@basis/shared';
 import { Button, CheckField, Dialog, LabelHeader, Ledger, Panel, SheetTabs, StatusChip, Td, TextField, Th, Timeline, Tr, sheetTabClass } from '@basis/ui';
+import { MailPanel } from '../../components/MailPanel';
 import { Plus } from '@phosphor-icons/react';
 import { useState, type FormEvent } from 'react';
 import { NavLink, useParams } from 'react-router';
@@ -233,7 +236,7 @@ function Places({ company }: { company: CompanyDetail }) {
   );
 }
 
-export function CompanySheet({ tab, base }: { tab: 'overview' | 'contacts' | 'places' | 'orders' | 'relationship'; base: '/suppliers' | '/customers' }) {
+export function CompanySheet({ tab, base }: { tab: 'overview' | 'contacts' | 'places' | 'orders' | 'relationship' | 'mail'; base: '/suppliers' | '/customers' }) {
   const t = useT();
   const session = useRequiredSession();
   const { id = '' } = useParams();
@@ -274,6 +277,7 @@ export function CompanySheet({ tab, base }: { tab: 'overview' | 'contacts' | 'pl
         <NavLink to={`${path}/places`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Factories and locations')}</NavLink>
         {base === '/customers' && <NavLink to={`${path}/orders`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Orders')}</NavLink>}
         {base === '/customers' && <NavLink to={`${path}/relationship`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Relationship')}</NavLink>}
+        {canOpenModule(session.role, 'mail') && <NavLink to={`${path}/mail`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Mail')}</NavLink>}
       </SheetTabs>
       <div className="px-5 py-6 lg:px-8">
         {tab === 'overview' && <Overview company={data} />}
@@ -281,6 +285,7 @@ export function CompanySheet({ tab, base }: { tab: 'overview' | 'contacts' | 'pl
         {tab === 'places' && <Places company={data} />}
         {tab === 'orders' && <CustomerOrders company={data} manage={manage} />}
         {tab === 'relationship' && <CustomerRelationship company={data} manage={manage} />}
+        {tab === 'mail' && <MailPanel entityType={mailCompanyEntity(data.roles)} entityId={data.id} />}
       </div>
       {manage && <EditCompanyDialog key={`${data.id}-${editing}`} company={data} open={editing} onClose={() => setEditing(false)} />}
     </>

@@ -89,6 +89,25 @@ export const FUNCTION_NAMES = {
   saveGoal: 'saveGoal',
   reorderGoals: 'reorderGoals',
   deleteGoal: 'deleteGoal',
+  /** Module 19, Mail: the mailbox connection and its sync (owner), the status of its secrets. */
+  connectMailbox: 'connectMailbox',
+  disconnectMailbox: 'disconnectMailbox',
+  syncMailboxNow: 'syncMailboxNow',
+  mailStatus: 'mailStatus',
+  /** Pub/Sub on topic gmail-mail: Gmail's change notifications. */
+  onGmailNotification: 'onGmailNotification',
+  /** Scheduled: the catch-up sync and the watch renewal. */
+  syncMail: 'syncMail',
+  /** Callable: a saved .eml stored and sorted like synced mail. */
+  importMailMessage: 'importMailMessage',
+  /** Callable: what a person does from a message (link, task, inquiry, interaction, file, company, done). */
+  actOnMail: 'actOnMail',
+  /** Callable, owner and operations: a message's category and audience set by a person. */
+  sortMailMessage: 'sortMailMessage',
+  /** Callable, owner: the sorting rules. */
+  saveMailRule: 'saveMailRule',
+  /** Callable: an attachment's bytes after the audience check. */
+  getMailAttachment: 'getMailAttachment',
   /** Callable, owner and operations: run the alert rules now. */
   evaluateAlerts: 'evaluateAlerts',
   /** Scheduled: consume domain events, evaluate alert rules. */

@@ -1,0 +1,208 @@
+# Module 19, Mail: the company mailbox read in, sorted from facts, and turned
+# into work on the records it concerns. Designed in docs/MAIL_PLAN.md.
+# Every message carries an audience; the connector's operations filter on it,
+# so supplier identity and prices in mail stay with the cost roles. Writes go
+# through the mail functions only.
+
+enum MailAudience {
+  general
+  commercial
+  supply
+  logistics
+  owner
+}
+
+enum MailDirection {
+  inbound
+  outbound
+}
+
+enum MailState {
+  received
+  sorted
+  needs_review
+  done
+  ignored
+}
+
+enum MailMailboxState {
+  connected
+  paused
+  disconnected
+}
+
+enum MailClassificationMethod {
+  rules
+  model
+  person
+}
+
+enum MailActionState {
+  proposed
+  accepted
+  dismissed
+  failed
+  superseded
+}
+
+enum MailLinkBasis {
+  reference
+  thread
+  sender
+  model
+  person
+}
+
+# One today (basisinc25@gmail.com); the model allows a second address later.
+# `provider` is gmail for the synced mailbox and import for messages a person
+# brought in as .eml files.
+type MailMailbox @table {
+  address: String! @col(dataType: "varchar(255)") @unique
+  provider: String! @col(dataType: "varchar(16)")
+  # Gmail's history cursor: the sync reads what changed after it.
+  historyId: String @col(dataType: "varchar(40)")
+  watchExpiresAt: Timestamp
+  lastSyncAt: Timestamp
+  lastError: String
+  state: MailMailboxState!
+  connectedBy: User
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type MailThread @table {
+  mailbox: MailMailbox!
+  # "<mailbox id>:<provider thread id>": a thread is stored once.
+  providerKey: String! @col(dataType: "varchar(120)") @unique
+  subject: String @col(dataType: "varchar(300)")
+  firstAt: Timestamp!
+  lastAt: Timestamp!
+  # Whether someone answered is read from these two, never set by hand.
+  lastInboundAt: Timestamp
+  lastOutboundAt: Timestamp
+  # The most restrictive audience of its messages.
+  audience: MailAudience!
+  category: String @col(dataType: "varchar(40)")
+  messageCount: Int!
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type MailMessage @table {
+  mailbox: MailMailbox!
+  thread: MailThread!
+  # "<mailbox id>:<provider message id>": storing a message twice is impossible.
+  providerKey: String! @col(dataType: "varchar(120)") @unique
+  providerMessageId: String! @col(dataType: "varchar(40)")
+  internetMessageId: String @col(dataType: "varchar(300)")
+  inReplyTo: String @col(dataType: "varchar(300)")
+  direction: MailDirection!
+  fromAddress: String! @col(dataType: "varchar(255)")
+  fromName: String @col(dataType: "varchar(200)")
+  # [{ name, address }]
+  to: Any
+  cc: Any
+  replyTo: String @col(dataType: "varchar(255)")
+  subject: String @col(dataType: "varchar(300)")
+  sentAt: Timestamp!
+  receivedAt: Timestamp! @default(expr: "request.time")
+  snippet: String @col(dataType: "varchar(300)")
+  # The full plain text; the interface trims quoted history for display.
+  bodyText: String
+  hasHtml: Boolean!
+  # The headers the sorting reads: List-Id, List-Unsubscribe, Precedence, Auto-Submitted.
+  headers: Any
+  # Set when the raw message is kept in Storage; otherwise it is read again from Gmail.
+  rawPath: String @col(dataType: "varchar(400)")
+  contact: Contact
+  company: Company
+  audience: MailAudience!
+  state: MailState!
+  category: String @col(dataType: "varchar(40)")
+  ownerRole: Role
+  # bulk, auto_reply, has_prices, has_bank_details, phishing_suspect
+  flags: Any
+  attachmentCount: Int!
+  handledBy: User
+  handledAt: Timestamp
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type MailAttachment @table {
+  message: MailMessage!
+  # Position among the message's attachments, as the parser reads them.
+  position: Int!
+  filename: String! @col(dataType: "varchar(255)")
+  mimeType: String! @col(dataType: "varchar(120)")
+  sizeBytes: Int!
+  checksum: String @col(dataType: "varchar(80)")
+  storagePath: String @col(dataType: "varchar(400)")
+  # Set once the attachment is filed on a record; it is never filed twice.
+  document: Document
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# What a thread (and, when known, the message) is about.
+type MailLink @table {
+  thread: MailThread!
+  message: MailMessage
+  entityType: String! @col(dataType: "varchar(40)")
+  entityId: String! @col(dataType: "varchar(80)")
+  basis: MailLinkBasis!
+  createdBy: User
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# Append-only: a re-sort is a new row and the latest one counts.
+type MailClassification @table {
+  message: MailMessage!
+  method: MailClassificationMethod!
+  category: String! @col(dataType: "varchar(40)")
+  audience: MailAudience!
+  ownerRole: Role
+  urgency: String @col(dataType: "varchar(8)")
+  confidence: Int
+  language: String @col(dataType: "varchar(16)")
+  summary: String @col(dataType: "varchar(400)")
+  summaryHe: String @col(dataType: "varchar(400)")
+  # How the facts decided it: rule, thread, noise, sender, reference, none.
+  basis: String @col(dataType: "varchar(16)")
+  model: String @col(dataType: "varchar(40)")
+  usage: Any
+  createdBy: User
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# A piece of work from a message: proposed by the classifier (slice 2), or
+# chosen by a person and recorded as accepted with what it created.
+type MailAction @table {
+  message: MailMessage!
+  classification: MailClassification
+  kind: String! @col(dataType: "varchar(40)")
+  targetType: String @col(dataType: "varchar(40)")
+  targetId: String @col(dataType: "varchar(80)")
+  payload: Any
+  audience: MailAudience!
+  state: MailActionState!
+  resultType: String @col(dataType: "varchar(40)")
+  resultId: String @col(dataType: "varchar(80)")
+  decidedBy: User
+  decidedAt: Timestamp
+  dismissReason: String @col(dataType: "varchar(200)")
+  error: String
+  version: Int!
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# The owner's own sorting rules, checked before anything else.
+type MailRule @table {
+  # { fromAddress, fromDomain, subjectContains, listId }
+  match: Any!
+  category: String @col(dataType: "varchar(40)")
+  audience: MailAudience
+  ownerRole: Role
+  skipModel: Boolean!
+  ignore: Boolean!
+  sort: Int!
+  createdBy: User
+  createdAt: Timestamp! @default(expr: "request.time")
+  archivedAt: Timestamp
+}

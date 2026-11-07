@@ -300,4 +300,7 @@ type Inquiry @table {
   handledByUid: String @col(dataType: "varchar(128)")
   handledAt: Timestamp
   createdAt: Timestamp! @default(expr: "request.time")
+  # site (the public intake) or email (opened from a message in module 19).
+  source: String @col(dataType: "varchar(16)")
+  mailMessageId: UUID
 }

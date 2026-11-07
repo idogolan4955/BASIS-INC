@@ -8,6 +8,7 @@ import {
   Factory,
   Files,
   Handshake,
+  EnvelopeSimple,
   Kanban,
   Megaphone,
   Package,
@@ -42,13 +43,14 @@ export const MODULE_ICONS: Record<ModuleKey, Icon> = {
   board: PushPin,
   goals: Target,
   development: PencilRuler,
+  mail: EnvelopeSimple,
 };
 
 const GROUPS: readonly { readonly label: string; readonly keys: readonly ModuleKey[] }[] = [
   { label: 'Supply', keys: ['operations', 'products', 'suppliers', 'manufacturing', 'qc', 'inventory', 'logistics'] },
   { label: 'Commercial', keys: ['orders', 'customers', 'marketing', 'website'] },
   { label: 'Records', keys: ['documents', 'costing', 'analytics', 'settings'] },
-  { label: 'Team', keys: ['board', 'goals'] },
+  { label: 'Team', keys: ['board', 'goals', 'mail'] },
   { label: 'Brand', keys: ['development'] },
 ];
 

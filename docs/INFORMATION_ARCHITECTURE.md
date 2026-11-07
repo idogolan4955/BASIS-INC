@@ -64,6 +64,7 @@ Gateway behaviour:
 | 13 | **Costing** | Cost and price | Landed cost (allocation runs) · Lot costs · Price lists · Margins · FX rates |
 | 14 | **Analytics** | Analysis | Supply (lead times, on-time, QC) · Logistics (transit times, cost per metre) · Commercial (conversion, repeat, customer value) · Inventory (ageing, turns) |
 | 15 | **Settings** | Configuration | Users & roles · Legal entities · Reference data · Number sequences · Templates · Alert rules · Audit log |
+| 19 | **Mail** | The company mailbox, sorted into the records and work it concerns ([MAIL_PLAN](MAIL_PLAN.md)) | Inbox (needs a decision, sorted, done, ignored) · Message · Rules · the Mail tab on record sheets |
 
 Layer mapping: Gateway = the launchpad. **Operations** layer = modules 01–06. **Logistics** layer = 07, with 13. **Growth** layer = 08–10. **Brand / Web** management = 11. Shared = 12, 14, 15.
 
@@ -194,8 +195,9 @@ Modules not expanded here follow the same pattern: ledgers at the top, sheets be
 | 16 Board | ● | ● | ● | ● | ● | ● | ● | ● |
 | 17 Goals | ● | ○ | – | – | – | – | – | ○ |
 | 18 Development | ● | ● | ◐ | ◐ | – | ○ | ● | ○ |
+| 19 Mail | ● | ● | ● | ○ | ● | ● | ● | ○ |
 
-● manage · ◐ limited / own scope · ○ read · – hidden. Purchase costs, landed costs and supplier identity require `cost:view` regardless of module access.
+● manage · ◐ limited / own scope · ○ read · – hidden. Purchase costs, landed costs and supplier identity require `cost:view` regardless of module access. In 19 Mail each role reads only the audiences its role may (`MAIL_AUDIENCE_READERS`, [MAIL_PLAN](MAIL_PLAN.md) §6): supplier mail stays with the cost roles, forwarder mail with logistics and the cost roles, customer mail with the commercial roles, and unsorted mail with the owner.
 
 ### A8. Vocabulary
 

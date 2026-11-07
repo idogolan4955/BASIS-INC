@@ -1,4 +1,4 @@
-import { documentsCheck, expectedEta, expectedEtd, legStatus, lowStock, shipmentDates, type DocumentRequirementRule, type LegFacts, type LocalDate } from '@basis/shared';
+import { awaitingReply, workingHoursBetween, documentsCheck, expectedEta, expectedEtd, legStatus, lowStock, shipmentDates, type DocumentRequirementRule, type LegFacts, type LocalDate } from '@basis/shared';
 import { onCall } from 'firebase-functions/v2/https';
 import { REGION, callerOf, graphql, requireRole } from './lib';
 
@@ -483,6 +483,58 @@ export const RULES: Rule[] = [
         ownerRole: 'sales' as Role,
         dedupeKey: `customers.inquiry_new:${inquiry.reference}`,
       }));
+    },
+  },
+  // Module 19, Mail. Titles stay neutral: the Gateway is read by every role,
+  // and supplier mail must not name its sender there.
+  {
+    key: 'mail.sync_stalled',
+    async evaluate(now) {
+      const { mailMailboxes } = await graphql<{ mailMailboxes: { id: string; address: string; lastSyncAt: string | null; watchExpiresAt: string | null; lastError: string | null }[] }>(
+        `query { mailMailboxes(where: { provider: { eq: "gmail" }, state: { eq: connected } }, limit: 10) { id address lastSyncAt watchExpiresAt lastError } }`,
+      );
+      return mailMailboxes.flatMap((mailbox) => {
+        const quiet = !mailbox.lastSyncAt || now.getTime() - Date.parse(mailbox.lastSyncAt) > 3_600_000;
+        const lapsing = !mailbox.watchExpiresAt || Date.parse(mailbox.watchExpiresAt) - now.getTime() < 86_400_000;
+        if (!quiet && !lapsing && !mailbox.lastError) return [];
+        return [
+          {
+            entityType: 'mail_mailbox',
+            entityId: mailbox.id,
+            title: `The mailbox ${mailbox.address} is not syncing`,
+            detail: mailbox.lastError ?? (quiet ? 'No sync for over an hour.' : 'Gmail stops sending changes within a day unless the watch is renewed.'),
+            severity: quiet ? 'critical' : 'caution',
+            ownerRole: 'owner',
+            dedupeKey: `mail.sync_stalled:${mailbox.id}`,
+          } satisfies Finding,
+        ];
+      });
+    },
+  },
+  {
+    key: 'mail.customer_unanswered',
+    async evaluate(now) {
+      const { mailThreads } = await graphql<{ mailThreads: { id: string; subject: string | null; lastInboundAt: string | null; lastOutboundAt: string | null; mailMessages_on_thread: { id: string; state: string; company: { legalName: string; tradingName: string | null } | null }[] }[] }>(
+        `query ($since: Timestamp!) { mailThreads(where: { category: { in: ["customer_correspondence", "customer_inquiry"] }, lastInboundAt: { ge: $since } }, limit: 500) {
+          id subject lastInboundAt lastOutboundAt mailMessages_on_thread(where: { direction: { eq: inbound } }, orderBy: { sentAt: DESC }, limit: 1) { id state company { legalName tradingName } } } }`,
+        { since: new Date(now.getTime() - 30 * 86_400_000).toISOString() },
+      );
+      return mailThreads
+        .filter((thread) => awaitingReply(thread, now) && thread.mailMessages_on_thread[0] && thread.mailMessages_on_thread[0].state !== 'done' && thread.mailMessages_on_thread[0].state !== 'ignored')
+        .map((thread) => {
+          const latest = thread.mailMessages_on_thread[0]!;
+          const who = latest.company ? latest.company.tradingName || latest.company.legalName : 'A customer';
+          const hours = Math.floor(workingHoursBetween(new Date(thread.lastInboundAt!), now));
+          return {
+            entityType: 'mail_message',
+            entityId: latest.id,
+            title: `${who} is waiting for a reply`,
+            detail: `${thread.subject ?? '(no subject)'}: no answer from the mailbox for ${hours} working hours.`,
+            severity: hours > 72 ? 'critical' : 'caution',
+            ownerRole: 'sales',
+            dedupeKey: `mail.customer_unanswered:${thread.id}:${thread.lastInboundAt}`,
+          } satisfies Finding;
+        });
     },
   },
 ];

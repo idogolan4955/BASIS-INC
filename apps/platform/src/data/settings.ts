@@ -12,6 +12,7 @@ const sampleConnectors: ConnectorView[] = [
   { key: 'email', settings: { provider: 'resend', fromName: 'BASIS INC.', fromAddress: 'orders@basis-inc.example', replyTo: '' }, updatedAt: '2026-09-20T09:00:00Z', secrets: [{ name: 'EMAIL_API_KEY', present: true }] },
   { key: 'whatsapp', settings: { businessNumber: '' }, updatedAt: null, secrets: [] },
   { key: 'assistant', settings: { defaultRole: 'owner' }, updatedAt: '2026-09-20T09:00:00Z', secrets: [] },
+  { key: 'mail', settings: { clientId: '', address: 'basisinc25@gmail.com' }, updatedAt: null, secrets: [] },
 ];
 
 async function live() {

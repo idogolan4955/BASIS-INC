@@ -19,3 +19,6 @@ graphify-out/
 
 # Playwright MCP session output
 .playwright-mcp/
+
+# Local values for Functions secrets in the emulator; never committed.
+functions/.secret.local

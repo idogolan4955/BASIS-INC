@@ -25,8 +25,10 @@ import {
   type ReferenceType,
   type ShipmentDetail,
   canViewLogisticsCosts,
+  canOpenModule,
 } from '@basis/shared';
 import { Button, CheckField, Dialog, LabelHeader, Ledger, Panel, SelectField, ShadeDot, SheetTabs, StatusChip, Td, TextArea, TextField, Th, Timeline, Tr, Track, cn, sheetTabClass, type TrackStep } from '@basis/ui';
+import { MailPanel } from '../../components/MailPanel';
 import { useState, type FormEvent } from 'react';
 import { Link, NavLink, useParams } from 'react-router';
 import { DocumentsPanel } from '../../components/DocumentsPanel';
@@ -524,7 +526,7 @@ function ShipmentTimeline({ number }: { number: string }) {
   );
 }
 
-export function ShipmentSheet({ tab }: { tab: 'route' | 'contents' | 'documents' | 'costs' | 'timeline' }) {
+export function ShipmentSheet({ tab }: { tab: 'route' | 'contents' | 'documents' | 'costs' | 'timeline' | 'mail' }) {
   const t = useT();
   const session = useRequiredSession();
   const { number = '' } = useParams();
@@ -635,6 +637,7 @@ export function ShipmentSheet({ tab }: { tab: 'route' | 'contents' | 'documents'
         <NavLink to={`${base}/documents`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Documents')}</NavLink>
         {costs && <NavLink to={`${base}/costs`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Costs')}</NavLink>}
         <NavLink to={`${base}/timeline`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Timeline')}</NavLink>
+        {canOpenModule(session.role, 'mail') && <NavLink to={`${base}/mail`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Mail')}</NavLink>}
       </SheetTabs>
       <div className="flex flex-col gap-4 px-5 py-6 lg:px-8">
         {tab === 'route' && <RoutePanel shipment={data} manage={manage} today={today} />}
@@ -654,6 +657,7 @@ export function ShipmentSheet({ tab }: { tab: 'route' | 'contents' | 'documents'
         )}
         {tab === 'costs' && costs && <CostsPanel shipment={data} />}
         {tab === 'timeline' && <ShipmentTimeline number={data.number} />}
+        {tab === 'mail' && <MailPanel entityType="shipment" entityId={data.number} />}
       </div>
       {manage && <DetailsDialog key={editing ? 'details-open' : 'details-closed'} shipment={data} open={editing} onClose={() => setEditing(false)} />}
       {manage && <ReceiveDialog key={receiving ? 'receive-open' : 'receive-closed'} shipment={data} open={receiving} onClose={() => setReceiving(false)} />}

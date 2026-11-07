@@ -31,6 +31,8 @@ export const ENTITY_MODULE: Record<string, ModuleKey> = {
   document: 'documents',
   cost_allocation: 'costing',
   user: 'settings',
+  development_product: 'development',
+  mail_message: 'mail',
 };
 
 const ENTITY_PATH: Record<string, string> = {
@@ -60,6 +62,8 @@ const ENTITY_PATH: Record<string, string> = {
   document: '/documents',
   cost_allocation: '/costing/landed',
   user: '/settings/users',
+  development_product: '/development/products',
+  mail_message: '/mail',
 };
 
 export function moduleForEntity(entityType: string): ModuleKey {

@@ -1,0 +1,830 @@
+# Module 19, Mail. One set of reads per audience: Data Connect checks @auth
+# per operation, so the audience filter lives in the query and a role can only
+# call the reads for the audiences it may see (MAIL_AUDIENCE_READERS in
+# packages/shared/src/mail.ts). The five blocks differ only in the audience and
+# its roles; keep them identical otherwise. Writes go through the mail functions.
+
+# ---------------------------------------------------------------- general
+
+query ListMailGeneral @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'sales' || auth.token.role == 'marketing' || auth.token.role == 'finance'") {
+  mailMessages(where: { audience: { eq: general } }, orderBy: { sentAt: DESC }, limit: 500) {
+    id
+    direction
+    fromAddress
+    fromName
+    subject
+    snippet
+    sentAt
+    state
+    category
+    ownerRole
+    audience
+    attachmentCount
+    company {
+      id
+      legalName
+      tradingName
+    }
+    contact {
+      id
+      name
+    }
+    thread {
+      id
+      messageCount
+      mailLinks_on_thread(limit: 20) {
+        entityType
+        entityId
+      }
+    }
+    mailActions_on_message(where: { state: { eq: proposed } }, limit: 20) {
+      id
+    }
+  }
+}
+
+query GetMailGeneral($id: UUID!) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'sales' || auth.token.role == 'marketing' || auth.token.role == 'finance'") {
+  mailMessages(where: { id: { eq: $id }, audience: { eq: general } }, limit: 1) {
+    id
+    direction
+    fromAddress
+    fromName
+    to
+    cc
+    replyTo
+    subject
+    sentAt
+    receivedAt
+    bodyText
+    hasHtml
+    state
+    category
+    ownerRole
+    audience
+    flags
+    handledAt
+    mailbox {
+      address
+      provider
+    }
+    company {
+      id
+      legalName
+      tradingName
+      companyRoles_on_company {
+        kind
+      }
+    }
+    contact {
+      id
+      name
+      email
+    }
+    mailAttachments_on_message(orderBy: { position: ASC }, limit: 50) {
+      id
+      position
+      filename
+      mimeType
+      sizeBytes
+      document {
+        id
+        title
+      }
+    }
+    mailClassifications_on_message(orderBy: { createdAt: DESC }, limit: 10) {
+      id
+      method
+      category
+      audience
+      ownerRole
+      basis
+      summary
+      summaryHe
+      confidence
+      createdAt
+    }
+    mailActions_on_message(orderBy: { createdAt: DESC }, limit: 50) {
+      id
+      kind
+      targetType
+      targetId
+      payload
+      state
+      resultType
+      resultId
+      decidedAt
+      dismissReason
+      error
+      version
+    }
+    thread {
+      id
+      subject
+      messageCount
+      lastInboundAt
+      lastOutboundAt
+      mailLinks_on_thread(limit: 50) {
+        id
+        entityType
+        entityId
+        basis
+        createdAt
+      }
+      mailMessages_on_thread(where: { audience: { eq: general } }, orderBy: { sentAt: ASC }, limit: 100) {
+        id
+        direction
+        fromAddress
+        fromName
+        snippet
+        sentAt
+      }
+    }
+  }
+}
+
+query ListMailForGeneral($entityType: String!, $entityId: String!) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'sales' || auth.token.role == 'marketing' || auth.token.role == 'finance'") {
+  mailLinks(where: { entityType: { eq: $entityType }, entityId: { eq: $entityId }, thread: { audience: { eq: general } } }, limit: 200) {
+    id
+    basis
+    thread {
+      id
+      subject
+      lastAt
+      messageCount
+      mailMessages_on_thread(orderBy: { sentAt: DESC }, limit: 1) {
+        id
+        direction
+        fromAddress
+        fromName
+        snippet
+        sentAt
+      }
+    }
+  }
+}
+
+# ---------------------------------------------------------------- commercial
+
+query ListMailCommercial @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'sales' || auth.token.role == 'marketing' || auth.token.role == 'finance'") {
+  mailMessages(where: { audience: { eq: commercial } }, orderBy: { sentAt: DESC }, limit: 500) {
+    id
+    direction
+    fromAddress
+    fromName
+    subject
+    snippet
+    sentAt
+    state
+    category
+    ownerRole
+    audience
+    attachmentCount
+    company {
+      id
+      legalName
+      tradingName
+    }
+    contact {
+      id
+      name
+    }
+    thread {
+      id
+      messageCount
+      mailLinks_on_thread(limit: 20) {
+        entityType
+        entityId
+      }
+    }
+    mailActions_on_message(where: { state: { eq: proposed } }, limit: 20) {
+      id
+    }
+  }
+}
+
+query GetMailCommercial($id: UUID!) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'sales' || auth.token.role == 'marketing' || auth.token.role == 'finance'") {
+  mailMessages(where: { id: { eq: $id }, audience: { eq: commercial } }, limit: 1) {
+    id
+    direction
+    fromAddress
+    fromName
+    to
+    cc
+    replyTo
+    subject
+    sentAt
+    receivedAt
+    bodyText
+    hasHtml
+    state
+    category
+    ownerRole
+    audience
+    flags
+    handledAt
+    mailbox {
+      address
+      provider
+    }
+    company {
+      id
+      legalName
+      tradingName
+      companyRoles_on_company {
+        kind
+      }
+    }
+    contact {
+      id
+      name
+      email
+    }
+    mailAttachments_on_message(orderBy: { position: ASC }, limit: 50) {
+      id
+      position
+      filename
+      mimeType
+      sizeBytes
+      document {
+        id
+        title
+      }
+    }
+    mailClassifications_on_message(orderBy: { createdAt: DESC }, limit: 10) {
+      id
+      method
+      category
+      audience
+      ownerRole
+      basis
+      summary
+      summaryHe
+      confidence
+      createdAt
+    }
+    mailActions_on_message(orderBy: { createdAt: DESC }, limit: 50) {
+      id
+      kind
+      targetType
+      targetId
+      payload
+      state
+      resultType
+      resultId
+      decidedAt
+      dismissReason
+      error
+      version
+    }
+    thread {
+      id
+      subject
+      messageCount
+      lastInboundAt
+      lastOutboundAt
+      mailLinks_on_thread(limit: 50) {
+        id
+        entityType
+        entityId
+        basis
+        createdAt
+      }
+      mailMessages_on_thread(where: { audience: { eq: commercial } }, orderBy: { sentAt: ASC }, limit: 100) {
+        id
+        direction
+        fromAddress
+        fromName
+        snippet
+        sentAt
+      }
+    }
+  }
+}
+
+query ListMailForCommercial($entityType: String!, $entityId: String!) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'sales' || auth.token.role == 'marketing' || auth.token.role == 'finance'") {
+  mailLinks(where: { entityType: { eq: $entityType }, entityId: { eq: $entityId }, thread: { audience: { eq: commercial } } }, limit: 200) {
+    id
+    basis
+    thread {
+      id
+      subject
+      lastAt
+      messageCount
+      mailMessages_on_thread(orderBy: { sentAt: DESC }, limit: 1) {
+        id
+        direction
+        fromAddress
+        fromName
+        snippet
+        sentAt
+      }
+    }
+  }
+}
+
+# ---------------------------------------------------------------- supply
+
+query ListMailSupply @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'finance'") {
+  mailMessages(where: { audience: { eq: supply } }, orderBy: { sentAt: DESC }, limit: 500) {
+    id
+    direction
+    fromAddress
+    fromName
+    subject
+    snippet
+    sentAt
+    state
+    category
+    ownerRole
+    audience
+    attachmentCount
+    company {
+      id
+      legalName
+      tradingName
+    }
+    contact {
+      id
+      name
+    }
+    thread {
+      id
+      messageCount
+      mailLinks_on_thread(limit: 20) {
+        entityType
+        entityId
+      }
+    }
+    mailActions_on_message(where: { state: { eq: proposed } }, limit: 20) {
+      id
+    }
+  }
+}
+
+query GetMailSupply($id: UUID!) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'finance'") {
+  mailMessages(where: { id: { eq: $id }, audience: { eq: supply } }, limit: 1) {
+    id
+    direction
+    fromAddress
+    fromName
+    to
+    cc
+    replyTo
+    subject
+    sentAt
+    receivedAt
+    bodyText
+    hasHtml
+    state
+    category
+    ownerRole
+    audience
+    flags
+    handledAt
+    mailbox {
+      address
+      provider
+    }
+    company {
+      id
+      legalName
+      tradingName
+      companyRoles_on_company {
+        kind
+      }
+    }
+    contact {
+      id
+      name
+      email
+    }
+    mailAttachments_on_message(orderBy: { position: ASC }, limit: 50) {
+      id
+      position
+      filename
+      mimeType
+      sizeBytes
+      document {
+        id
+        title
+      }
+    }
+    mailClassifications_on_message(orderBy: { createdAt: DESC }, limit: 10) {
+      id
+      method
+      category
+      audience
+      ownerRole
+      basis
+      summary
+      summaryHe
+      confidence
+      createdAt
+    }
+    mailActions_on_message(orderBy: { createdAt: DESC }, limit: 50) {
+      id
+      kind
+      targetType
+      targetId
+      payload
+      state
+      resultType
+      resultId
+      decidedAt
+      dismissReason
+      error
+      version
+    }
+    thread {
+      id
+      subject
+      messageCount
+      lastInboundAt
+      lastOutboundAt
+      mailLinks_on_thread(limit: 50) {
+        id
+        entityType
+        entityId
+        basis
+        createdAt
+      }
+      mailMessages_on_thread(where: { audience: { eq: supply } }, orderBy: { sentAt: ASC }, limit: 100) {
+        id
+        direction
+        fromAddress
+        fromName
+        snippet
+        sentAt
+      }
+    }
+  }
+}
+
+query ListMailForSupply($entityType: String!, $entityId: String!) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'finance'") {
+  mailLinks(where: { entityType: { eq: $entityType }, entityId: { eq: $entityId }, thread: { audience: { eq: supply } } }, limit: 200) {
+    id
+    basis
+    thread {
+      id
+      subject
+      lastAt
+      messageCount
+      mailMessages_on_thread(orderBy: { sentAt: DESC }, limit: 1) {
+        id
+        direction
+        fromAddress
+        fromName
+        snippet
+        sentAt
+      }
+    }
+  }
+}
+
+# ---------------------------------------------------------------- logistics
+
+query ListMailLogistics @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'logistics' || auth.token.role == 'purchasing' || auth.token.role == 'finance'") {
+  mailMessages(where: { audience: { eq: logistics } }, orderBy: { sentAt: DESC }, limit: 500) {
+    id
+    direction
+    fromAddress
+    fromName
+    subject
+    snippet
+    sentAt
+    state
+    category
+    ownerRole
+    audience
+    attachmentCount
+    company {
+      id
+      legalName
+      tradingName
+    }
+    contact {
+      id
+      name
+    }
+    thread {
+      id
+      messageCount
+      mailLinks_on_thread(limit: 20) {
+        entityType
+        entityId
+      }
+    }
+    mailActions_on_message(where: { state: { eq: proposed } }, limit: 20) {
+      id
+    }
+  }
+}
+
+query GetMailLogistics($id: UUID!) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'logistics' || auth.token.role == 'purchasing' || auth.token.role == 'finance'") {
+  mailMessages(where: { id: { eq: $id }, audience: { eq: logistics } }, limit: 1) {
+    id
+    direction
+    fromAddress
+    fromName
+    to
+    cc
+    replyTo
+    subject
+    sentAt
+    receivedAt
+    bodyText
+    hasHtml
+    state
+    category
+    ownerRole
+    audience
+    flags
+    handledAt
+    mailbox {
+      address
+      provider
+    }
+    company {
+      id
+      legalName
+      tradingName
+      companyRoles_on_company {
+        kind
+      }
+    }
+    contact {
+      id
+      name
+      email
+    }
+    mailAttachments_on_message(orderBy: { position: ASC }, limit: 50) {
+      id
+      position
+      filename
+      mimeType
+      sizeBytes
+      document {
+        id
+        title
+      }
+    }
+    mailClassifications_on_message(orderBy: { createdAt: DESC }, limit: 10) {
+      id
+      method
+      category
+      audience
+      ownerRole
+      basis
+      summary
+      summaryHe
+      confidence
+      createdAt
+    }
+    mailActions_on_message(orderBy: { createdAt: DESC }, limit: 50) {
+      id
+      kind
+      targetType
+      targetId
+      payload
+      state
+      resultType
+      resultId
+      decidedAt
+      dismissReason
+      error
+      version
+    }
+    thread {
+      id
+      subject
+      messageCount
+      lastInboundAt
+      lastOutboundAt
+      mailLinks_on_thread(limit: 50) {
+        id
+        entityType
+        entityId
+        basis
+        createdAt
+      }
+      mailMessages_on_thread(where: { audience: { eq: logistics } }, orderBy: { sentAt: ASC }, limit: 100) {
+        id
+        direction
+        fromAddress
+        fromName
+        snippet
+        sentAt
+      }
+    }
+  }
+}
+
+query ListMailForLogistics($entityType: String!, $entityId: String!) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'logistics' || auth.token.role == 'purchasing' || auth.token.role == 'finance'") {
+  mailLinks(where: { entityType: { eq: $entityType }, entityId: { eq: $entityId }, thread: { audience: { eq: logistics } } }, limit: 200) {
+    id
+    basis
+    thread {
+      id
+      subject
+      lastAt
+      messageCount
+      mailMessages_on_thread(orderBy: { sentAt: DESC }, limit: 1) {
+        id
+        direction
+        fromAddress
+        fromName
+        snippet
+        sentAt
+      }
+    }
+  }
+}
+
+# ---------------------------------------------------------------- owner
+
+query ListMailOwner @auth(expr: "auth.token.role == 'owner'") {
+  mailMessages(where: { audience: { eq: owner } }, orderBy: { sentAt: DESC }, limit: 500) {
+    id
+    direction
+    fromAddress
+    fromName
+    subject
+    snippet
+    sentAt
+    state
+    category
+    ownerRole
+    audience
+    attachmentCount
+    company {
+      id
+      legalName
+      tradingName
+    }
+    contact {
+      id
+      name
+    }
+    thread {
+      id
+      messageCount
+      mailLinks_on_thread(limit: 20) {
+        entityType
+        entityId
+      }
+    }
+    mailActions_on_message(where: { state: { eq: proposed } }, limit: 20) {
+      id
+    }
+  }
+}
+
+query GetMailOwner($id: UUID!) @auth(expr: "auth.token.role == 'owner'") {
+  mailMessages(where: { id: { eq: $id }, audience: { eq: owner } }, limit: 1) {
+    id
+    direction
+    fromAddress
+    fromName
+    to
+    cc
+    replyTo
+    subject
+    sentAt
+    receivedAt
+    bodyText
+    hasHtml
+    state
+    category
+    ownerRole
+    audience
+    flags
+    handledAt
+    mailbox {
+      address
+      provider
+    }
+    company {
+      id
+      legalName
+      tradingName
+      companyRoles_on_company {
+        kind
+      }
+    }
+    contact {
+      id
+      name
+      email
+    }
+    mailAttachments_on_message(orderBy: { position: ASC }, limit: 50) {
+      id
+      position
+      filename
+      mimeType
+      sizeBytes
+      document {
+        id
+        title
+      }
+    }
+    mailClassifications_on_message(orderBy: { createdAt: DESC }, limit: 10) {
+      id
+      method
+      category
+      audience
+      ownerRole
+      basis
+      summary
+      summaryHe
+      confidence
+      createdAt
+    }
+    mailActions_on_message(orderBy: { createdAt: DESC }, limit: 50) {
+      id
+      kind
+      targetType
+      targetId
+      payload
+      state
+      resultType
+      resultId
+      decidedAt
+      dismissReason
+      error
+      version
+    }
+    thread {
+      id
+      subject
+      messageCount
+      lastInboundAt
+      lastOutboundAt
+      mailLinks_on_thread(limit: 50) {
+        id
+        entityType
+        entityId
+        basis
+        createdAt
+      }
+      mailMessages_on_thread(where: { audience: { eq: owner } }, orderBy: { sentAt: ASC }, limit: 100) {
+        id
+        direction
+        fromAddress
+        fromName
+        snippet
+        sentAt
+      }
+    }
+  }
+}
+
+query ListMailForOwner($entityType: String!, $entityId: String!) @auth(expr: "auth.token.role == 'owner'") {
+  mailLinks(where: { entityType: { eq: $entityType }, entityId: { eq: $entityId }, thread: { audience: { eq: owner } } }, limit: 200) {
+    id
+    basis
+    thread {
+      id
+      subject
+      lastAt
+      messageCount
+      mailMessages_on_thread(orderBy: { sentAt: DESC }, limit: 1) {
+        id
+        direction
+        fromAddress
+        fromName
+        snippet
+        sentAt
+      }
+    }
+  }
+}
+
+# ---------------------------------------------------------------- the owner's
+
+query ListMailRules @auth(expr: "auth.token.role == 'owner'") {
+  mailRules(where: { archivedAt: { isNull: true } }, orderBy: { sort: ASC }, limit: 500) {
+    id
+    match
+    category
+    audience
+    ownerRole
+    skipModel
+    ignore
+    sort
+    createdAt
+  }
+}
+
+query ListMailMailboxes @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations'") {
+  mailMailboxes(limit: 10) {
+    id
+    address
+    provider
+    state
+    historyId
+    watchExpiresAt
+    lastSyncAt
+    lastError
+    createdAt
+  }
+}
