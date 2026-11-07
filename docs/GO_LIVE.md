@@ -6,15 +6,19 @@ records, no backend. This document is the exact sequence that turns it into
 the live system. Each step is idempotent; a step that has already happened
 can be run again without harm.
 
-State on 2026-11-07: steps 1, 2, 4, 7 and 8 are done. Authentication has
-Email/Password on and `basis-inc-hq.web.app` among its authorized domains;
-the "email link" switch still has to be turned off (password only).
-The database was migrated and Data Connect deployed; the production seed ran
-(owner account, reference data, the launch catalog without SKUs, the
-consumer line of module 18); the live build replaced the demo on
-`basis-inc-hq.web.app`. Steps 3 (Storage), 5 (secrets) and 6 (functions) are
-open, so the platform reads but cannot yet write: every save goes through a
-function. Steps marked **owner** change account settings or
+State on 2026-11-07: every step is done. Authentication has Email/Password on
+and `basis-inc-hq.web.app` among its authorized domains (the "email link"
+switch is still to be turned off: password only). The database was migrated
+and Data Connect deployed; the production seed ran (owner account, reference
+data, the launch catalog without SKUs, the consumer line of module 18); the
+live build replaced the demo on `basis-inc-hq.web.app`. `EMAIL_API_KEY` holds
+the `unset` placeholder and all 66 functions are deployed with the Storage
+rules, so the platform reads and writes. Outgoing email waits for a provider
+account (Resend or Postmark), a verified sending domain and the real key;
+`basisinc25@gmail.com` is recorded as the email connector's reply-to. The
+artifact cleanup policy for function images was not set: run
+`firebase functions:artifacts:setpolicy` once so old images do not pile up.
+Steps marked **owner** change account settings or
 are refused to an agent; the rest can be run by anyone with access to the
 project.
 
@@ -33,7 +37,7 @@ Settings › Authorized domains add `basis-inc-hq.web.app`. The platform's
 "Reset password" is Firebase's own email, so no mail provider is needed for
 sign-in.
 
-## 3. Storage (owner)
+## 3. Storage (owner, done)
 
 Firebase console › Storage › Get started, location `europe-west1`, production
 rules. The default bucket must be `basis-inc.firebasestorage.app`, the name
@@ -51,7 +55,7 @@ and applies the schema as `CREATE` statements. On later runs read the SQL
 that `firebase dataconnect:sql:diff` prints before deploying: only `CREATE`
 and `ADD COLUMN`, never `DROP` without the owner's explicit approval.
 
-## 5. Secrets (owner, only for outgoing email)
+## 5. Secrets (owner, only for outgoing email; placeholder set 2026-11-07)
 
 ```bash
 firebase functions:secrets:set EMAIL_API_KEY
@@ -64,7 +68,7 @@ the prompt with the word `unset`: the functions treat that placeholder as
 no key, the email connector reports the secret as missing, and the real
 value replaces it later with the command above.
 
-## 6. Functions and Storage rules
+## 6. Functions and Storage rules (done 2026-11-07)
 
 With the secret set, or the `unset` placeholder in place:
 
