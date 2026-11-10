@@ -1,0 +1,1546 @@
+{
+ "operations": [
+  {
+   "kind": "mutation",
+   "name": "ArchiveAssistantThread",
+   "module": "assistant",
+   "variables": "$id: UUID!",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "GetAssistantThread",
+   "module": "assistant",
+   "variables": "$id: UUID!",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListAssistantThreads",
+   "module": "assistant",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListPendingAssistantActions",
+   "module": "assistant",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "mutation",
+   "name": "DeleteBoardNote",
+   "module": "boards",
+   "variables": "$id: UUID!",
+   "auth": "owner"
+  },
+  {
+   "kind": "mutation",
+   "name": "DeleteOwnBoardNote",
+   "module": "boards",
+   "variables": "$id: UUID!",
+   "auth": "any signed-in role",
+   "note": "A person takes down their own note; the owner may take down any."
+  },
+  {
+   "kind": "mutation",
+   "name": "EditBoardNote",
+   "module": "boards",
+   "variables": "$id: UUID!, $text: String!, $color: PaperTone!",
+   "auth": "any signed-in role",
+   "note": "Text and tone: the editor is remembered. Position and stacking: not an edit."
+  },
+  {
+   "kind": "mutation",
+   "name": "InsertBoardNote",
+   "module": "boards",
+   "variables": "$text: String!, $color: PaperTone!, $x: Float!, $y: Float!, $z: Int!",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListBoardNotes",
+   "module": "boards",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListGoals",
+   "module": "boards",
+   "variables": "",
+   "auth": "owner, operations, finance"
+  },
+  {
+   "kind": "mutation",
+   "name": "MoveBoardNote",
+   "module": "boards",
+   "variables": "$id: UUID!, $x: Float!, $y: Float!, $z: Int!",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "GetProduct",
+   "module": "catalog",
+   "variables": "$code: String!",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "GetSku",
+   "module": "catalog",
+   "variables": "$code: String!",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "GetSkuSourcing",
+   "module": "catalog",
+   "variables": "$code: String!",
+   "auth": "owner, operations, purchasing, finance",
+   "note": "Cost-bearing: supplier identity and purchase prices."
+  },
+  {
+   "kind": "mutation",
+   "name": "InsertShadeStandard",
+   "module": "catalog",
+   "variables": "$shadeCode: String!, $productCode: String!, $factoryId: UUID, $reference: String, $approvedOn: Date, $toleranceDeltaE: Float, $physicalLocation: String",
+   "auth": "owner, operations, purchasing, qc"
+  },
+  {
+   "kind": "mutation",
+   "name": "InsertSupplierItem",
+   "module": "catalog",
+   "variables": "$skuCode: String!, $supplierId: UUID!, $factoryId: UUID, $supplierSku: String, $moq: Int64, $leadTimeDays: Int, $isPreferred: Boolean!, $notes: String",
+   "auth": "owner, operations, purchasing"
+  },
+  {
+   "kind": "mutation",
+   "name": "InsertSupplierPrice",
+   "module": "catalog",
+   "variables": "$supplierItemId: UUID!, $minQuantity: Int64!, $unitPrice: Int64!, $currency: String!, $validFrom: Date, $validTo: Date, $quotationRef: String",
+   "auth": "owner, operations, purchasing"
+  },
+  {
+   "kind": "mutation",
+   "name": "InsertVariant",
+   "module": "catalog",
+   "variables": "$productCode: String! $fullCode: String! $code: String! $name: String! $widthCm: Int $usableWidthCm: Int $gsm: Int $stretchWarpPercent: Int $stretchWeftPercent: Int $finish: String $specs: Any $status: ProductStatus! $sort: Int!",
+   "auth": "owner, operations, purchasing"
+  },
+  {
+   "kind": "query",
+   "name": "ListFamilies",
+   "module": "catalog",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListProducts",
+   "module": "catalog",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListPutUps",
+   "module": "catalog",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListShades",
+   "module": "catalog",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListShadeStandards",
+   "module": "catalog",
+   "variables": "$productCode: String!",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListSkus",
+   "module": "catalog",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "mutation",
+   "name": "SetSkuPublic",
+   "module": "catalog",
+   "variables": "$code: String!, $isPublic: Boolean!",
+   "auth": "owner, operations, purchasing, marketing"
+  },
+  {
+   "kind": "mutation",
+   "name": "SetSkuStatus",
+   "module": "catalog",
+   "variables": "$code: String!, $status: SkuStatus!",
+   "auth": "owner, operations, purchasing"
+  },
+  {
+   "kind": "mutation",
+   "name": "UpdateProductDetails",
+   "module": "catalog",
+   "variables": "$code: String! $name: String! $slug: String! $tagline: String $description: String $composition: Any $construction: String $care: String $specs: Any $status: ProductStatus! $isPublic: Boolean!",
+   "auth": "owner, operations, purchasing"
+  },
+  {
+   "kind": "mutation",
+   "name": "UpdateVariant",
+   "module": "catalog",
+   "variables": "$id: UUID! $name: String! $widthCm: Int $usableWidthCm: Int $gsm: Int $stretchWarpPercent: Int $stretchWeftPercent: Int $finish: String $specs: Any $status: ProductStatus! $sort: Int!",
+   "auth": "owner, operations, purchasing"
+  },
+  {
+   "kind": "mutation",
+   "name": "UpsertFamily",
+   "module": "catalog",
+   "variables": "$code: String!, $name: String!, $slug: String!, $description: String, $specSchema: Any, $hsCode: String, $sort: Int!",
+   "auth": "owner, operations, purchasing"
+  },
+  {
+   "kind": "mutation",
+   "name": "UpsertProduct",
+   "module": "catalog",
+   "variables": "$code: String! $familyCode: String! $index: Int! $name: String! $slug: String! $tagline: String $description: String $composition: Any $construction: String $care: String $specs: Any $status: ProductStatus! $isPublic: Boolean!",
+   "auth": "owner, operations, purchasing"
+  },
+  {
+   "kind": "mutation",
+   "name": "UpsertPutUp",
+   "module": "catalog",
+   "variables": "$code: String!, $name: String!, $rollLengthM: Int!, $widthCm: Int!, $core: String, $wrap: String, $rollsPerCarton: Int",
+   "auth": "owner, operations, purchasing"
+  },
+  {
+   "kind": "mutation",
+   "name": "UpsertShade",
+   "module": "catalog",
+   "variables": "$code: String!, $collectionCode: String, $name: String!, $slug: String!, $hex: String, $labL: Float, $labA: Float, $labB: Float, $sort: Int!, $status: ShadeStatus!",
+   "auth": "owner, operations, purchasing"
+  },
+  {
+   "kind": "mutation",
+   "name": "UpsertSku",
+   "module": "catalog",
+   "variables": "$code: String! $productCode: String! $variantId: UUID! $shadeCode: String! $putUpCode: String! $salesUom: String! $salesMoq: Int64 $status: SkuStatus! $isPublic: Boolean! $rollTracking: Boolean!",
+   "auth": "owner, operations, purchasing"
+  },
+  {
+   "kind": "query",
+   "name": "GetQuote",
+   "module": "commercial",
+   "variables": "$number: String!",
+   "auth": "owner, operations, sales, finance, viewer"
+  },
+  {
+   "kind": "query",
+   "name": "GetSalesOrder",
+   "module": "commercial",
+   "variables": "$number: String!",
+   "auth": "owner, operations, logistics, sales, finance, viewer"
+  },
+  {
+   "kind": "query",
+   "name": "ListQuotes",
+   "module": "commercial",
+   "variables": "",
+   "auth": "owner, operations, sales, finance, viewer"
+  },
+  {
+   "kind": "query",
+   "name": "ListSalesOrders",
+   "module": "commercial",
+   "variables": "",
+   "auth": "owner, operations, logistics, sales, finance, viewer"
+  },
+  {
+   "kind": "query",
+   "name": "ListSalesOrdersFor",
+   "module": "commercial",
+   "variables": "$customerId: UUID!",
+   "auth": "owner, operations, logistics, sales, finance, viewer"
+  },
+  {
+   "kind": "query",
+   "name": "StockForSku",
+   "module": "commercial",
+   "variables": "$skuCode: String!",
+   "auth": "owner, operations, logistics, sales",
+   "note": "What can be allocated for a SKU: balances in the warehouses with their rolls, and what other orders already hold."
+  },
+  {
+   "kind": "query",
+   "name": "GetAllocationRun",
+   "module": "costing",
+   "variables": "$id: UUID!",
+   "auth": "owner, operations, purchasing, finance",
+   "note": "Cost-bearing: the lines of a run with what landed on each lot."
+  },
+  {
+   "kind": "query",
+   "name": "GetShipmentCosts",
+   "module": "costing",
+   "variables": "$number: String!",
+   "auth": "owner, operations, logistics, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListFxRates",
+   "module": "costing",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListLotCosts",
+   "module": "costing",
+   "variables": "",
+   "auth": "owner, operations, purchasing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListLotCostsFor",
+   "module": "costing",
+   "variables": "$lotNumber: String!",
+   "auth": "owner, operations, purchasing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "GetDevelopmentProduct",
+   "module": "development",
+   "variables": "$number: String!",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "mutation",
+   "name": "InsertDocument",
+   "module": "development",
+   "variables": "$kind: DocumentKind!, $title: String!, $storagePath: String!, $mimeType: String!, $sizeBytes: Int!",
+   "auth": "any signed-in role",
+   "note": "An uploaded file: the document record, then its link with a role. The bytes go to Storage from the browser under documents/<entity>/<id>/."
+  },
+  {
+   "kind": "mutation",
+   "name": "LinkDocument",
+   "module": "development",
+   "variables": "$documentId: UUID!, $entityType: String!, $entityId: String!, $role: String",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListBrandAssets",
+   "module": "development",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListCollections",
+   "module": "development",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListDevelopmentCosting",
+   "module": "development",
+   "variables": "$productId: UUID!",
+   "auth": "owner, operations, purchasing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListDevelopmentProducts",
+   "module": "development",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListDevelopmentSourcing",
+   "module": "development",
+   "variables": "$productId: UUID!",
+   "auth": "owner, operations, purchasing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListProductCategories",
+   "module": "development",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListReceipts",
+   "module": "inventory",
+   "variables": "",
+   "auth": "owner, operations, purchasing, qc, logistics, finance, viewer"
+  },
+  {
+   "kind": "query",
+   "name": "ListRecentMovements",
+   "module": "inventory",
+   "variables": "$limit: Int!",
+   "auth": "owner, operations, purchasing, qc, logistics, sales, finance, viewer"
+  },
+  {
+   "kind": "query",
+   "name": "ListReorderPolicies",
+   "module": "inventory",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListRollPositions",
+   "module": "inventory",
+   "variables": "$lotNumber: String!",
+   "auth": "any signed-in role",
+   "note": "Roll positions for a lot: where each roll is and what is left on it."
+  },
+  {
+   "kind": "query",
+   "name": "ListStockBalances",
+   "module": "inventory",
+   "variables": "",
+   "auth": "owner, operations, purchasing, qc, logistics, sales, finance, viewer"
+  },
+  {
+   "kind": "query",
+   "name": "ListStockLocations",
+   "module": "inventory",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListStockMovements",
+   "module": "inventory",
+   "variables": "$lotNumber: String, $limit: Int!",
+   "auth": "owner, operations, purchasing, qc, logistics, sales, finance, viewer"
+  },
+  {
+   "kind": "query",
+   "name": "GetShipment",
+   "module": "logistics",
+   "variables": "$number: String!",
+   "auth": "owner, operations, purchasing, logistics, sales, finance, viewer"
+  },
+  {
+   "kind": "query",
+   "name": "ListDocumentRequirements",
+   "module": "logistics",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListLocations",
+   "module": "logistics",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListShipments",
+   "module": "logistics",
+   "variables": "",
+   "auth": "owner, operations, purchasing, logistics, sales, finance, viewer"
+  },
+  {
+   "kind": "query",
+   "name": "ListShippableUnits",
+   "module": "logistics",
+   "variables": "",
+   "auth": "owner, operations, purchasing, logistics",
+   "note": "Packages that can go on a shipment: packed, not yet assigned. The lot's quality state decides in the browser and again in the function."
+  },
+  {
+   "kind": "query",
+   "name": "GetMailCommercial",
+   "module": "mail",
+   "variables": "$id: UUID!",
+   "auth": "owner, operations, sales, marketing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "GetMailGeneral",
+   "module": "mail",
+   "variables": "$id: UUID!",
+   "auth": "owner, operations, purchasing, qc, logistics, sales, marketing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "GetMailLogistics",
+   "module": "mail",
+   "variables": "$id: UUID!",
+   "auth": "owner, operations, logistics, purchasing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "GetMailOwner",
+   "module": "mail",
+   "variables": "$id: UUID!",
+   "auth": "owner"
+  },
+  {
+   "kind": "query",
+   "name": "GetMailSupply",
+   "module": "mail",
+   "variables": "$id: UUID!",
+   "auth": "owner, operations, purchasing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListMailCommercial",
+   "module": "mail",
+   "variables": "",
+   "auth": "owner, operations, sales, marketing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListMailForCommercial",
+   "module": "mail",
+   "variables": "$entityType: String!, $entityId: String!",
+   "auth": "owner, operations, sales, marketing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListMailForGeneral",
+   "module": "mail",
+   "variables": "$entityType: String!, $entityId: String!",
+   "auth": "owner, operations, purchasing, qc, logistics, sales, marketing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListMailForLogistics",
+   "module": "mail",
+   "variables": "$entityType: String!, $entityId: String!",
+   "auth": "owner, operations, logistics, purchasing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListMailForOwner",
+   "module": "mail",
+   "variables": "$entityType: String!, $entityId: String!",
+   "auth": "owner"
+  },
+  {
+   "kind": "query",
+   "name": "ListMailForSupply",
+   "module": "mail",
+   "variables": "$entityType: String!, $entityId: String!",
+   "auth": "owner, operations, purchasing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListMailGeneral",
+   "module": "mail",
+   "variables": "",
+   "auth": "owner, operations, purchasing, qc, logistics, sales, marketing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListMailLogistics",
+   "module": "mail",
+   "variables": "",
+   "auth": "owner, operations, logistics, purchasing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListMailMailboxes",
+   "module": "mail",
+   "variables": "",
+   "auth": "owner, operations"
+  },
+  {
+   "kind": "query",
+   "name": "ListMailOwner",
+   "module": "mail",
+   "variables": "",
+   "auth": "owner"
+  },
+  {
+   "kind": "query",
+   "name": "ListMailProposalsCommercial",
+   "module": "mail",
+   "variables": "",
+   "auth": "owner, operations, sales, marketing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListMailProposalsGeneral",
+   "module": "mail",
+   "variables": "",
+   "auth": "owner, operations, purchasing, qc, logistics, sales, marketing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListMailProposalsLogistics",
+   "module": "mail",
+   "variables": "",
+   "auth": "owner, operations, logistics, purchasing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListMailProposalsOwner",
+   "module": "mail",
+   "variables": "",
+   "auth": "owner"
+  },
+  {
+   "kind": "query",
+   "name": "ListMailProposalsSupply",
+   "module": "mail",
+   "variables": "",
+   "auth": "owner, operations, purchasing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListMailRules",
+   "module": "mail",
+   "variables": "",
+   "auth": "owner"
+  },
+  {
+   "kind": "query",
+   "name": "ListMailSupply",
+   "module": "mail",
+   "variables": "",
+   "auth": "owner, operations, purchasing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "GetLot",
+   "module": "manufacturing",
+   "variables": "$number: String!",
+   "auth": "owner, operations, purchasing, qc, logistics, finance"
+  },
+  {
+   "kind": "query",
+   "name": "GetProductionRun",
+   "module": "manufacturing",
+   "variables": "$number: String!",
+   "auth": "owner, operations, purchasing, qc, logistics, finance"
+  },
+  {
+   "kind": "query",
+   "name": "GetPurchaseOrder",
+   "module": "manufacturing",
+   "variables": "$number: String!",
+   "auth": "owner, operations, purchasing, qc, logistics, finance"
+  },
+  {
+   "kind": "query",
+   "name": "GetPurchaseOrderCosts",
+   "module": "manufacturing",
+   "variables": "$number: String!",
+   "auth": "owner, operations, purchasing, finance",
+   "note": "Cost-bearing: unit prices and the payment schedule."
+  },
+  {
+   "kind": "query",
+   "name": "ListProcessTemplates",
+   "module": "manufacturing",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListProductionRuns",
+   "module": "manufacturing",
+   "variables": "",
+   "auth": "owner, operations, purchasing, qc, logistics, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListPurchaseOrders",
+   "module": "manufacturing",
+   "variables": "",
+   "auth": "owner, operations, purchasing, qc, logistics, finance"
+  },
+  {
+   "kind": "query",
+   "name": "OperationsFacts",
+   "module": "manufacturing",
+   "variables": "",
+   "auth": "owner, operations, purchasing, qc, logistics, finance, sales",
+   "note": "What Operations reads: open runs with the facts the pipeline and the calendar are derived from. No prices."
+  },
+  {
+   "kind": "mutation",
+   "name": "AcknowledgeAlert",
+   "module": "mutations",
+   "variables": "$id: UUID!",
+   "auth": "owner, operations, purchasing, qc, logistics, sales, marketing, finance"
+  },
+  {
+   "kind": "mutation",
+   "name": "AddNote",
+   "module": "mutations",
+   "variables": "$entityType: String!, $entityId: String!, $note: String!",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "mutation",
+   "name": "CompleteTask",
+   "module": "mutations",
+   "variables": "$id: UUID!",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "mutation",
+   "name": "CreateTask",
+   "module": "mutations",
+   "variables": "$title: String!, $details: String, $assigneeUid: String, $dueOn: Date, $entityType: String, $entityId: String",
+   "auth": "owner, operations, purchasing, qc, logistics, sales, marketing, finance"
+  },
+  {
+   "kind": "mutation",
+   "name": "RecordEvent",
+   "module": "mutations",
+   "variables": "$entityType: String!, $entityId: String!, $kind: String!, $note: String, $payload: Any",
+   "auth": "any signed-in role",
+   "note": "Any record's timeline: a typed event with an optional payload, written by the person acting. Transitions, notes and attachments all go through here."
+  },
+  {
+   "kind": "mutation",
+   "name": "ReopenTask",
+   "module": "mutations",
+   "variables": "$id: UUID!",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "mutation",
+   "name": "ResolveAlert",
+   "module": "mutations",
+   "variables": "$id: UUID!",
+   "auth": "owner, operations, purchasing, qc, logistics, sales, marketing, finance",
+   "note": "A person decides an alert needs no further action; the rule may raise it again if the fact persists after the dedupe key changes."
+  },
+  {
+   "kind": "mutation",
+   "name": "UpdateMyPreferences",
+   "module": "mutations",
+   "variables": "$locale: String, $timeZone: String",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "mutation",
+   "name": "AddCompanyRole",
+   "module": "parties",
+   "variables": "$companyId: UUID!, $kind: CompanyRoleKind!, $since: Date",
+   "auth": "owner, operations, purchasing, sales"
+  },
+  {
+   "kind": "mutation",
+   "name": "ArchiveCompany",
+   "module": "parties",
+   "variables": "$id: UUID!",
+   "auth": "owner, operations"
+  },
+  {
+   "kind": "query",
+   "name": "GetCompany",
+   "module": "parties",
+   "variables": "$id: UUID!",
+   "auth": "owner, operations, purchasing, qc, logistics, sales, marketing, finance"
+  },
+  {
+   "kind": "mutation",
+   "name": "InsertCompany",
+   "module": "parties",
+   "variables": "$legalName: String!, $tradingName: String, $countryCode: String, $website: String, $status: CompanyStatus!, $notes: String",
+   "auth": "owner, operations, purchasing, sales"
+  },
+  {
+   "kind": "mutation",
+   "name": "InsertContact",
+   "module": "parties",
+   "variables": "$companyId: UUID!, $name: String!, $title: String, $email: String, $phone: String, $messaging: String, $language: String, $isPrimary: Boolean!, $notes: String",
+   "auth": "owner, operations, purchasing, sales, logistics"
+  },
+  {
+   "kind": "mutation",
+   "name": "InsertFactory",
+   "module": "parties",
+   "variables": "$locationId: UUID!, $operatorId: UUID!, $capabilities: Any, $auditStatus: String, $notes: String",
+   "auth": "owner, operations, purchasing"
+  },
+  {
+   "kind": "mutation",
+   "name": "InsertLocation",
+   "module": "parties",
+   "variables": "$companyId: UUID, $type: LocationType!, $name: String!, $addressLine1: String, $addressLine2: String, $city: String, $region: String, $postalCode: String, $countryCode: String, $timeZone: String, $locationCode: String, $notes: String",
+   "auth": "owner, operations, purchasing, logistics, sales"
+  },
+  {
+   "kind": "query",
+   "name": "ListCompanies",
+   "module": "parties",
+   "variables": "",
+   "auth": "owner, operations, purchasing, qc, logistics, sales, marketing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListFactories",
+   "module": "parties",
+   "variables": "",
+   "auth": "owner, operations, purchasing, qc, logistics, finance"
+  },
+  {
+   "kind": "mutation",
+   "name": "RemoveCompanyRole",
+   "module": "parties",
+   "variables": "$id: UUID!",
+   "auth": "owner, operations"
+  },
+  {
+   "kind": "mutation",
+   "name": "UpdateCompany",
+   "module": "parties",
+   "variables": "$id: UUID!, $legalName: String!, $tradingName: String, $countryCode: String, $website: String, $status: CompanyStatus!, $notes: String",
+   "auth": "owner, operations, purchasing, sales"
+  },
+  {
+   "kind": "mutation",
+   "name": "UpdateContact",
+   "module": "parties",
+   "variables": "$id: UUID!, $name: String!, $title: String, $email: String, $phone: String, $messaging: String, $language: String, $isPrimary: Boolean!, $status: ContactStatus!, $notes: String",
+   "auth": "owner, operations, purchasing, sales, logistics"
+  },
+  {
+   "kind": "mutation",
+   "name": "UpsertSupplierProfile",
+   "module": "parties",
+   "variables": "$id: UUID, $companyId: UUID!, $paymentTerms: String, $defaultIncotermCode: String, $namedPlace: String, $standardLeadTimeDays: Int, $onboardingStatus: String",
+   "auth": "owner, operations, purchasing"
+  },
+  {
+   "kind": "query",
+   "name": "GetInspection",
+   "module": "quality",
+   "variables": "$number: String!",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListCorrectiveActions",
+   "module": "quality",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListInspections",
+   "module": "quality",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListInspectionsFor",
+   "module": "quality",
+   "variables": "$entityType: String!, $entityId: String!",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListInspectionTemplates",
+   "module": "quality",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "GetMe",
+   "module": "queries",
+   "variables": "",
+   "auth": "any signed-in role",
+   "note": "The signed-in person's own record."
+  },
+  {
+   "kind": "query",
+   "name": "ListApiTokens",
+   "module": "queries",
+   "variables": "",
+   "auth": "owner"
+  },
+  {
+   "kind": "query",
+   "name": "ListConnectors",
+   "module": "queries",
+   "variables": "",
+   "auth": "owner, operations"
+  },
+  {
+   "kind": "query",
+   "name": "ListCountries",
+   "module": "queries",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListCurrencies",
+   "module": "queries",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListDocuments",
+   "module": "queries",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListDocumentsFor",
+   "module": "queries",
+   "variables": "$entityType: String!, $entityId: String!",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListIncoterms",
+   "module": "queries",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListInquiries",
+   "module": "queries",
+   "variables": "",
+   "auth": "owner, operations, sales, marketing"
+  },
+  {
+   "kind": "query",
+   "name": "ListLegalEntities",
+   "module": "queries",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListMessagesFor",
+   "module": "queries",
+   "variables": "$entityType: String!, $entityId: String!",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListMyTasks",
+   "module": "queries",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListOpenAlerts",
+   "module": "queries",
+   "variables": "",
+   "auth": "owner, operations, purchasing, qc, logistics, sales, marketing, finance, viewer"
+  },
+  {
+   "kind": "query",
+   "name": "ListOpenTasks",
+   "module": "queries",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListStaff",
+   "module": "queries",
+   "variables": "",
+   "auth": "any signed-in role",
+   "note": "Staff directory for assigning work: no emails, no roles beyond the label."
+  },
+  {
+   "kind": "query",
+   "name": "ListTimeline",
+   "module": "queries",
+   "variables": "$entityType: String!, $entityId: String!",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListUoms",
+   "module": "queries",
+   "variables": "",
+   "auth": "any signed-in role"
+  },
+  {
+   "kind": "query",
+   "name": "ListUsers",
+   "module": "queries",
+   "variables": "",
+   "auth": "owner"
+  },
+  {
+   "kind": "query",
+   "name": "ListInteractions",
+   "module": "relationships",
+   "variables": "$customerId: UUID, $limit: Int",
+   "auth": "owner, operations, sales, marketing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListOpportunities",
+   "module": "relationships",
+   "variables": "",
+   "auth": "owner, operations, sales, marketing, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListPriceLists",
+   "module": "relationships",
+   "variables": "",
+   "auth": "owner, operations, sales, finance"
+  },
+  {
+   "kind": "query",
+   "name": "ListRecentInteractions",
+   "module": "relationships",
+   "variables": "$limit: Int",
+   "auth": "owner, operations, sales, marketing, finance"
+  }
+ ],
+ "commands": [
+  {
+   "name": "evaluateAlerts",
+   "module": "alerts",
+   "action": "Running the checks",
+   "roles": "owner, operations",
+   "input": ""
+  },
+  {
+   "name": "deleteGoal",
+   "module": "boards",
+   "action": "Keeping the goals board",
+   "roles": "owner",
+   "input": "input: z.object({ id: z.string().min(1) })"
+  },
+  {
+   "name": "reorderGoals",
+   "module": "boards",
+   "action": "Keeping the goals board",
+   "roles": "owner",
+   "input": "const reorderInput = z.object({ ids: z.array(z.string()).min(1).max(500), section: z.enum(GOAL_SECTIONS).optional() });\ninput: reorderInput"
+  },
+  {
+   "name": "saveGoal",
+   "module": "boards",
+   "action": "Keeping the goals board",
+   "roles": "owner",
+   "input": "const date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst stored = z.string().regex(/^\\d+$/, 'Fixed-point amount expected');\nconst goalInput = z.object({\n  id: z.string().optional(),\n  title: z.string().min(1).max(140),\n  body: z.string().max(4000).default(''),\n  color: z.enum(PAPER_TONES).default('bone'),\n  status: z.enum(GOAL_STATUSES).default('open'),\n  section: z.enum(GOAL_SECTIONS).default('ops'),\n  due: date.nullable().default(null),\n  progress: z.number().int().min(0).max(100).nullable().default(null),\n  targetAmount: stored.nullable().default(null),\n  currentAmount: stored.nullable().default(null),\n  currency: z.enum(GOAL_CURRENCIES).default('USD'),\n});\ninput: goalInput"
+  },
+  {
+   "name": "allocateSalesOrder",
+   "module": "commercial",
+   "action": "Allocating stock",
+   "roles": "owner, operations, logistics, sales",
+   "input": "const int64 = z.string().regex(/^-?\\d+$/, 'Fixed-point integer expected');\nconst allocateInput = z.object({\n  number: z.string().regex(/^SO-\\d{2}-\\d{4}$/),\n  /** Given allocations replace the suggestion; empty takes the oldest stock first. */\n  allocations: z.array(z.object({ lineId: z.string().min(1), lotNumber: z.string().min(1), rollNumber: z.string().optional(), locationId: z.string().min(1), quantity: int64 })).max(500).optional(),\n});\ninput: allocateInput"
+  },
+  {
+   "name": "createSalesOrder",
+   "module": "commercial",
+   "action": "Taking orders",
+   "roles": "owner, operations, sales",
+   "input": "const int64 = z.string().regex(/^-?\\d+$/, 'Fixed-point integer expected');\nconst orderLineInput = z.object({ skuCode: z.string().min(1), quantity: int64, unitPrice: int64 });\nconst date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst orderInput = z.object({\n  customerId: z.string().min(1),\n  contactId: z.string().optional(),\n  currency: z.string().regex(/^[A-Z]{3}$/),\n  incotermCode: z.string().regex(/^[A-Z]{3}$/).optional(),\n  namedPlace: z.string().max(120).optional(),\n  paymentTerms: z.string().max(120).optional(),\n  requestedDelivery: date.optional(),\n  shipToName: z.string().max(200).optional(),\n  shipToAddress: z.string().max(1000).optional(),\n  notes: z.string().max(4000).optional(),\n  lines: z.array(orderLineInput).min(1).max(100),\n  /** Confirmed straight away: the customer's order is in hand. */\n  confirm: z.boolean().default(true),\n});\ninput: orderInput"
+  },
+  {
+   "name": "recordInvoice",
+   "module": "commercial",
+   "action": "Recording invoices",
+   "roles": "owner, operations, sales, finance",
+   "input": "const date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst int64 = z.string().regex(/^-?\\d+$/, 'Fixed-point integer expected');\nconst invoiceInput = z.object({ number: z.string().regex(/^SO-\\d{2}-\\d{4}$/), invoiceNumber: z.string().min(1).max(80), amount: int64, currency: z.string().regex(/^[A-Z]{3}$/).optional(), issuedOn: date.optional(), dueOn: date.optional(), paidOn: date.nullable().optional(), paidAmount: int64.nullable().optional(), externalId: z.string().max(120).optional() });\ninput: invoiceInput"
+  },
+  {
+   "name": "saveQuote",
+   "module": "commercial",
+   "action": "Quoting",
+   "roles": "owner, operations, sales",
+   "input": "const int64 = z.string().regex(/^-?\\d+$/, 'Fixed-point integer expected');\nconst quoteLineInput = z.object({ skuCode: z.string().min(1), quantity: int64, unitPrice: int64, leadTimeDays: z.number().int().min(0).max(365).optional(), note: z.string().max(200).optional() });\nconst date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst quoteInput = z.object({\n  number: z.string().regex(/^QUO-\\d{2}-\\d{4}$/).optional(),\n  customerId: z.string().min(1),\n  contactId: z.string().optional(),\n  currency: z.string().regex(/^[A-Z]{3}$/),\n  incotermCode: z.string().regex(/^[A-Z]{3}$/).optional(),\n  namedPlace: z.string().max(120).optional(),\n  paymentTerms: z.string().max(120).optional(),\n  validUntil: date.optional(),\n  notes: z.string().max(4000).optional(),\n  lines: z.array(quoteLineInput).min(1).max(100),\n});\ninput: quoteInput"
+  },
+  {
+   "name": "shipSalesOrder",
+   "module": "commercial",
+   "action": "Shipping orders",
+   "roles": "owner, operations, logistics, sales",
+   "input": "const date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst shipInput = z.object({\n  number: z.string().regex(/^SO-\\d{2}-\\d{4}$/),\n  mode: z.enum(['courier', 'air', 'sea', 'road']).default('courier'),\n  destinationId: z.string().optional(),\n  departure: date.optional(),\n  carrier: z.string().max(120).optional(),\n  tracking: z.string().max(120).optional(),\n  note: z.string().max(1000).optional(),\n});\ninput: shipInput"
+  },
+  {
+   "name": "transitionQuote",
+   "module": "commercial",
+   "action": "Moving quotes",
+   "roles": "owner, operations, sales",
+   "input": "const date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst quoteTransition = z.object({ number: z.string().regex(/^QUO-\\d{2}-\\d{4}$/), to: z.enum(['sent', 'accepted', 'declined']), reason: z.string().max(500).optional(), requestedDelivery: date.optional() });\ninput: quoteTransition"
+  },
+  {
+   "name": "transitionSalesOrder",
+   "module": "commercial",
+   "action": "Moving orders",
+   "roles": "owner, operations, sales",
+   "input": "const orderTransition = z.object({ number: z.string().regex(/^SO-\\d{2}-\\d{4}$/), to: z.enum(['confirmed', 'cancelled', 'closed']), reason: z.string().max(500).optional() });\ninput: orderTransition"
+  },
+  {
+   "name": "upsertCustomerProfile",
+   "module": "commercial",
+   "action": "Editing customer terms",
+   "roles": "owner, operations, sales",
+   "input": "const profileInput = z.object({\n  companyId: z.string().min(1),\n  type: z.enum(['designer', 'atelier', 'salon', 'manufacturer', 'distributor', 'wholesaler']).nullable().optional(),\n  tier: z.enum(['standard', 'preferred', 'key']).default('standard'),\n  paymentTerms: z.string().max(120).nullable().optional(),\n  currency: z.string().regex(/^[A-Z]{3}$/).nullable().optional(),\n  notes: z.string().max(4000).nullable().optional(),\n});\ninput: profileInput"
+  },
+  {
+   "name": "connectorStatus",
+   "module": "connectors",
+   "action": "Reading connectors",
+   "roles": "owner, operations",
+   "input": ""
+  },
+  {
+   "name": "createApiToken",
+   "module": "connectors",
+   "action": "Issuing tokens",
+   "roles": "owner",
+   "input": "const createTokenInput = z.object({\n  name: z.string().trim().min(1).max(120),\n  role: z.enum(['owner', 'operations', 'purchasing', 'qc', 'logistics', 'sales', 'marketing', 'finance', 'viewer']),\n  expiresInDays: z.number().int().min(1).max(730).optional(),\n});\ninput: createTokenInput"
+  },
+  {
+   "name": "revokeApiToken",
+   "module": "connectors",
+   "action": "Revoking tokens",
+   "roles": "owner",
+   "input": "input: z.object({ id: z.string().min(1) })"
+  },
+  {
+   "name": "saveConnector",
+   "module": "connectors",
+   "action": "Changing connectors",
+   "roles": "owner",
+   "input": "const settingsInput = z.object({\n  key: z.enum(CONNECTOR_KEYS),\n  settings: z.record(z.string(), z.union([z.string().max(255), z.number(), z.boolean()])),\n});\ninput: settingsInput"
+  },
+  {
+   "name": "sendDocumentEmail",
+   "module": "connectors",
+   "action": "",
+   "roles": "any signed-in role",
+   "input": "const sendInput = z.object({\n  kind: z.enum(['purchase-order', 'packing-list', 'roll-labels', 'shipment-packing-list', 'quote']),\n  number: z.string().regex(/^[A-Z]{2,4}-\\d{2}-\\d{4}$/),\n  to: z.string().trim().email().max(255),\n  subject: z.string().trim().min(1).max(200),\n  message: z.string().trim().max(4000).default(''),\n});\ninput: sendInput"
+  },
+  {
+   "name": "allocateShipmentCosts_",
+   "module": "costing",
+   "action": "Allocating landed cost",
+   "roles": "owner, operations, finance",
+   "input": "const shipmentNumber = z.string().regex(/^SHP-\\d{2}-\\d{4}$/);\nconst allocateInput = z.object({\n  number: shipmentNumber,\n  kind: z.enum(['estimate', 'final']),\n  /** Overrides of the default basis per category. */\n  rules: z.record(z.enum(['freight', 'origin_charges', 'insurance', 'duty', 'tax', 'brokerage', 'local_delivery', 'other']), z.enum(['value', 'quantity', 'gross_weight', 'cbm'])).optional(),\n});\ninput: allocateInput"
+  },
+  {
+   "name": "recordCustomsEntry",
+   "module": "costing",
+   "action": "Recording customs",
+   "roles": "owner, operations, logistics",
+   "input": "const shipmentNumber = z.string().regex(/^SHP-\\d{2}-\\d{4}$/);\nconst currency = z.string().regex(/^[A-Z]{3}$/);\nconst date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst int64 = z.string().regex(/^-?\\d+$/, 'Fixed-point integer expected');\nconst customsInput = z.object({\n  number: shipmentNumber,\n  countryCode: z.string().regex(/^[A-Z]{2}$/).nullable().optional(),\n  brokerId: z.string().nullable().optional(),\n  entryNumber: z.string().max(80).nullable().optional(),\n  declaredValue: int64.nullable().optional(),\n  declaredCurrency: currency.nullable().optional(),\n  duties: int64.nullable().optional(),\n  taxes: int64.nullable().optional(),\n  state: z.enum(['preparing', 'submitted', 'held', 'cleared']),\n  submittedOn: date.nullable().optional(),\n  clearedOn: date.nullable().optional(),\n  note: z.string().max(2000).nullable().optional(),\n});\ninput: customsInput"
+  },
+  {
+   "name": "recordShipmentCost",
+   "module": "costing",
+   "action": "Recording shipment costs",
+   "roles": "owner, operations, logistics, finance",
+   "input": "const shipmentNumber = z.string().regex(/^SHP-\\d{2}-\\d{4}$/);\nconst rate = z.string().regex(/^\\d+(\\.\\d{1,8})?$/, 'A decimal rate');\nconst currency = z.string().regex(/^[A-Z]{3}$/);\nconst date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst int64 = z.string().regex(/^-?\\d+$/, 'Fixed-point integer expected');\nconst costInput = z.object({\n  number: shipmentNumber,\n  /** Set to change or remove an existing cost. */\n  id: z.string().optional(),\n  remove: z.boolean().optional(),\n  category: z.enum(['freight', 'origin_charges', 'insurance', 'duty', 'tax', 'brokerage', 'local_delivery', 'other']).optional(),\n  kind: z.enum(['estimate', 'actual']).optional(),\n  amount: int64.optional(),\n  currency: currency.optional(),\n  /** Given when the invoice fixed it; otherwise the recorded rate for the day. */\n  fxRateToBase: rate.optional(),\n  vendorId: z.string().nullable().optional(),\n  invoiceRef: z.string().max(80).nullable().optional(),\n  invoiceDate: date.nullable().optional(),\n  isRecoverable: z.boolean().optional(),\n  note: z.string().max(2000).nullable().optional(),\n});\ninput: costInput"
+  },
+  {
+   "name": "setFxRate",
+   "module": "costing",
+   "action": "Recording rates",
+   "roles": "owner, operations, logistics, finance",
+   "input": "const rate = z.string().regex(/^\\d+(\\.\\d{1,8})?$/, 'A decimal rate');\nconst currency = z.string().regex(/^[A-Z]{3}$/);\nconst date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst fxInput = z.object({ base: currency, quote: currency, rateDate: date, rate, source: z.string().max(40).optional() });\ninput: fxInput"
+  },
+  {
+   "name": "recordDevelopmentDecision",
+   "module": "development",
+   "action": "Recording decisions",
+   "roles": "purchasing, finance, qc",
+   "input": "const decisionInput = z.object({ number: z.string().regex(/^DEV-\\d{2}-\\d{4}$/), note: z.string().min(1).max(4000) });\ninput: decisionInput"
+  },
+  {
+   "name": "saveBrandAsset",
+   "module": "development",
+   "action": "Keeping the Brand Centre",
+   "roles": "owner, marketing",
+   "input": "const brandAssetInput = z.object({ id: z.string().optional(), kind: z.enum(BRAND_ASSET_KINDS), title: z.string().min(1).max(160), summary: z.string().max(8000).default(''), documentId: z.string().nullable().default(null), colourHex: z.string().regex(/^#[0-9A-Fa-f]{6}$/).nullable().default(null), colourName: z.string().max(80).default(''), paletteNumber: z.string().max(4).default(''), tags: z.array(z.string().max(40)).default([]), collectionCode: z.string().nullable().default(null), status: z.enum(BRAND_ASSET_STATUSES).default('draft'), sort: z.number().int().default(0) });\ninput: brandAssetInput"
+  },
+  {
+   "name": "saveCollection",
+   "module": "development",
+   "action": "Keeping collections",
+   "roles": "owner, operations, marketing",
+   "input": "const date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst collectionInput = z.object({ code: z.string().regex(/^[A-Z0-9-]{2,16}$/), name: z.string().min(1).max(120), season: z.string().max(40).default(''), year: z.number().int().min(2020).max(2100).nullable().default(null), theme: z.string().max(4000).default(''), targetLaunch: date.nullable().default(null), status: z.enum(COLLECTION_STATUSES).default('planning'), moodDocumentId: z.string().nullable().default(null) });\ninput: collectionInput"
+  },
+  {
+   "name": "saveDevelopmentCosting",
+   "module": "development",
+   "action": "Keeping costings",
+   "roles": "owner, operations, finance",
+   "input": "const currency = z.string().regex(/^[A-Z]{3}$/);\nconst stored = z.string().regex(/^\\d+$/, 'Fixed-point amount expected');\nconst costingInput = z.object({ id: z.string().optional(), number: z.string(), basis: z.enum(COSTING_BASES), currency: currency.default('USD'), unitCost: stored, packagingCost: stored.default('0'), freightCost: stored.default('0'), dutyCost: stored.default('0'), otherCost: stored.default('0'), quantity: stored.nullable().default(null), plannedPrice: stored.nullable().default(null), wholesalePrice: stored.nullable().default(null), sourcingId: z.string().nullable().default(null), notes: z.string().max(4000).default('') });\ninput: costingInput"
+  },
+  {
+   "name": "saveDevelopmentPart",
+   "module": "development",
+   "action": "Keeping the dossier",
+   "roles": "owner, operations, marketing",
+   "input": "const partInput = z.discriminatedUnion('kind', [\n  z.object({ kind: z.literal('material'), id: z.string().optional(), number: z.string(), role: z.string().min(1).max(40), name: z.string().min(1).max(160), specification: z.string().max(4000).default(''), skuCode: z.string().nullable().default(null), supplierId: z.string().nullable().default(null), status: z.enum(PART_STATUSES).default('proposed'), notes: z.string().max(2000).default('') }),\n  z.object({ kind: z.literal('variant'), id: z.string().optional(), number: z.string(), code: z.string().min(1).max(16), name: z.string().min(1).max(120), shadeCode: z.string().nullable().default(null), colourHex: z.string().regex(/^#[0-9A-Fa-f]{6}$/).nullable().default(null), colourName: z.string().max(80).default(''), sizeLabel: z.string().max(40).default(''), dimensions: z.record(z.string(), z.string()).default({}), status: z.enum(PART_STATUSES).default('proposed'), sort: z.number().int().default(0) }),\n  z.object({ kind: z.literal('packaging'), id: z.string().optional(), number: z.string(), component: z.string().min(1).max(60), specification: z.string().max(4000).default(''), material: z.string().max(120).default(''), dimensions: z.record(z.string(), z.string()).default({}), supplierId: z.string().nullable().default(null), status: z.enum(PART_STATUSES).default('proposed') }),\n]);\ninput: partInput"
+  },
+  {
+   "name": "saveDevelopmentProduct",
+   "module": "development",
+   "action": "Keeping development products",
+   "roles": "owner, operations, marketing",
+   "input": "const currency = z.string().regex(/^[A-Z]{3}$/);\nconst date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst stored = z.string().regex(/^\\d+$/, 'Fixed-point amount expected');\nconst productInput = z.object({\n  number: z.string().regex(/^DEV-\\d{2}-\\d{4}$/).optional(),\n  categoryCode: z.string().min(1),\n  collectionCode: z.string().nullable().default(null),\n  name: z.string().min(1).max(160),\n  workingTitle: z.string().max(160).default(''),\n  description: z.string().max(8000).default(''),\n  intent: z.string().max(4000).default(''),\n  priority: z.enum(PRIORITIES).default('normal'),\n  ownerUid: z.string().nullable().default(null),\n  targetLaunch: date.nullable().default(null),\n  budgetAmount: stored.nullable().default(null),\n  budgetCurrency: currency.default('USD'),\n  specs: z.record(z.string(), z.string()).default({}),\n});\ninput: productInput"
+  },
+  {
+   "name": "saveDevelopmentSample",
+   "module": "development",
+   "action": "",
+   "roles": "any signed-in role",
+   "input": "const currency = z.string().regex(/^[A-Z]{3}$/);\nconst date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst stored = z.string().regex(/^\\d+$/, 'Fixed-point amount expected');\nconst sampleInput = z.object({ id: z.string().optional(), number: z.string(), kind: z.enum(SAMPLE_KINDS).default('proto'), supplierId: z.string().nullable().default(null), factoryId: z.string().nullable().default(null), requestedOn: date.nullable().default(null), receivedOn: date.nullable().default(null), verdict: z.enum(SAMPLE_VERDICTS).default('pending'), findings: z.string().max(8000).default(''), costAmount: stored.nullable().default(null), costCurrency: currency.default('USD') });\ninput: sampleInput"
+  },
+  {
+   "name": "saveDevelopmentSourcing",
+   "module": "development",
+   "action": "Keeping sourcing",
+   "roles": "owner, operations, purchasing",
+   "input": "const currency = z.string().regex(/^[A-Z]{3}$/);\nconst date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst stored = z.string().regex(/^\\d+$/, 'Fixed-point amount expected');\nconst sourcingInput = z.object({ id: z.string().optional(), number: z.string(), supplierId: z.string().min(1), factoryId: z.string().nullable().default(null), kind: z.enum(SOURCING_KINDS).default('odm'), status: z.enum(SOURCING_STATUSES).default('candidate'), moq: stored.nullable().default(null), leadTimeDays: z.number().int().min(0).nullable().default(null), sampleLeadDays: z.number().int().min(0).nullable().default(null), unitCost: stored.nullable().default(null), currency: currency.default('USD'), sampleCost: stored.nullable().default(null), developmentCost: stored.nullable().default(null), toolingCost: stored.nullable().default(null), paymentTerms: z.string().max(120).default(''), incoterm: z.string().regex(/^[A-Z]{3}$/).nullable().default(null), namedPlace: z.string().max(120).default(''), quotationDocumentId: z.string().nullable().default(null), quotedOn: date.nullable().default(null), validUntil: date.nullable().default(null), notes: z.string().max(4000).default(''), select: z.boolean().default(false) });\ninput: sourcingInput"
+  },
+  {
+   "name": "saveProductCategory",
+   "module": "development",
+   "action": "Keeping product categories",
+   "roles": "owner, operations, marketing",
+   "input": "const specField = z.object({ key: z.string().min(1).max(40), label: z.string().min(1).max(80), kind: z.enum(['text', 'number', 'select']), unit: z.string().max(16).optional(), options: z.array(z.string()).optional() });\nconst categoryInput = z.object({ code: z.string().regex(/^[A-Z0-9]{2,16}$/), name: z.string().min(1).max(80), description: z.string().max(2000).default(''), parentCode: z.string().nullable().default(null), specSchema: z.array(specField).default([]), sort: z.number().int().default(0), status: z.enum(['active', 'archived']).default('active') });\ninput: categoryInput"
+  },
+  {
+   "name": "transitionDevelopment",
+   "module": "development",
+   "action": "Approving production",
+   "roles": "owner",
+   "input": "const transitionInput = z.object({ number: z.string().regex(/^DEV-\\d{2}-\\d{4}$/), to: z.enum(DEVELOPMENT_STAGES), note: z.string().max(2000).default(''), decision: z.enum(APPROVAL_DECISIONS).default('approved') });\ninput: transitionInput"
+  },
+  {
+   "name": "fileGeneratedDocument",
+   "module": "documents",
+   "action": "",
+   "roles": "any signed-in role",
+   "input": "const input = z.object({ kind: z.enum(['purchase-order', 'packing-list', 'roll-labels', 'shipment-packing-list', 'quote']), number: z.string().regex(/^[A-Z]{2,4}-\\d{2}-\\d{4}$/) });\ninput: input"
+  },
+  {
+   "name": "markInquiry",
+   "module": "intake",
+   "action": "Handling inquiries",
+   "roles": "owner, operations, sales, marketing",
+   "input": "input: z.object({ reference: z.string().min(1), state: z.enum(['new', 'handled']) })"
+  },
+  {
+   "name": "createStockLocation",
+   "module": "inventory",
+   "action": "Adding stock locations",
+   "roles": "owner, operations, logistics",
+   "input": "const locationInput = z.object({\n  name: z.string().min(1).max(120),\n  kind: z.enum(['physical', 'at_supplier', 'in_transit', 'customer', 'scrap', 'adjustment', 'samples']).default('physical'),\n  placeId: z.string().optional(),\n  zone: z.string().max(80).optional(),\n  isDefault: z.boolean().default(false),\n});\ninput: locationInput"
+  },
+  {
+   "name": "receiveShipment",
+   "module": "inventory",
+   "action": "Receiving",
+   "roles": "owner, operations, logistics",
+   "input": "const date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst int64 = z.string().regex(/^-?\\d+$/, 'Fixed-point integer expected');\nconst receiveInput = z.object({\n  number: z.string().regex(/^SHP-\\d{2}-\\d{4}$/),\n  locationId: z.string().min(1),\n  receivedOn: date.optional(),\n  note: z.string().max(2000).optional(),\n  /** Per line: what was counted. Rolls by number where the lot is roll-tracked; otherwise metres. */\n  lines: z.array(z.object({ shipmentLineId: z.string().min(1), receivedQuantity: int64.optional(), rollNumbers: z.array(z.string()).max(500).optional(), note: z.string().max(500).optional() })).min(1).max(200),\n});\ninput: receiveInput"
+  },
+  {
+   "name": "recordStockMovement",
+   "module": "inventory",
+   "action": "Moving stock",
+   "roles": "owner, operations, logistics",
+   "input": "const int64 = z.string().regex(/^-?\\d+$/, 'Fixed-point integer expected');\nconst movementInput = z.object({\n  kind: z.enum(['transfer', 'adjust', 'sample_cut', 'scrap', 'return']),\n  lotNumber: z.string().regex(/^LOT-\\d{2}-\\d{4}$/),\n  rollNumber: z.string().optional(),\n  quantity: int64.optional(),\n  fromLocationId: z.string().optional(),\n  toLocationId: z.string().optional(),\n  note: z.string().min(2).max(1000),\n});\ninput: movementInput"
+  },
+  {
+   "name": "setReorderPolicy",
+   "module": "inventory",
+   "action": "Setting reorder points",
+   "roles": "owner, operations, purchasing",
+   "input": "const int64 = z.string().regex(/^-?\\d+$/, 'Fixed-point integer expected');\nconst reorderInput = z.object({ skuCode: z.string().min(1), locationId: z.string().nullable().optional(), reorderPoint: int64, targetLevel: int64 });\ninput: reorderInput"
+  },
+  {
+   "name": "assignHandlingUnits",
+   "module": "logistics",
+   "action": "Loading shipments",
+   "roles": "owner, operations, logistics",
+   "input": "const shipmentNumber = z.string().regex(/^SHP-\\d{2}-\\d{4}$/);\nconst unitsInput = z.object({ number: shipmentNumber, unitNumbers: z.array(z.string().regex(/^(CTN|PLT)-\\d{2}-\\d{4}$/)).min(1).max(500) });\ninput: unitsInput"
+  },
+  {
+   "name": "bookShipment",
+   "module": "logistics",
+   "action": "Booking shipments",
+   "roles": "owner, operations, logistics",
+   "input": "const shipmentNumber = z.string().regex(/^SHP-\\d{2}-\\d{4}$/);\nconst numberInput = z.object({ number: shipmentNumber, reason: z.string().max(500).optional() });\ninput: numberInput"
+  },
+  {
+   "name": "cancelShipment",
+   "module": "logistics",
+   "action": "Cancelling shipments",
+   "roles": "owner, operations, logistics",
+   "input": "const shipmentNumber = z.string().regex(/^SHP-\\d{2}-\\d{4}$/);\nconst numberInput = z.object({ number: shipmentNumber, reason: z.string().max(500).optional() });\ninput: numberInput"
+  },
+  {
+   "name": "createShipment",
+   "module": "logistics",
+   "action": "Opening shipments",
+   "roles": "owner, operations, logistics",
+   "input": "const legInput = z.object({\n  type: z.enum(['pickup', 'consolidation', 'export_handling', 'main_carriage', 'customs', 'local_delivery']),\n  mode: z.enum(['sea', 'air', 'courier', 'road']).optional(),\n  fromLocationId: z.string().optional(),\n  toLocationId: z.string().optional(),\n  providerId: z.string().optional(),\n  plannedEtd: date,\n  plannedEta: date,\n});\nconst date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst createInput = z.object({\n  flow: z.enum(['inbound', 'outbound', 'direct', 'transfer']),\n  mode: z.enum(['sea', 'air', 'courier', 'road']),\n  loadType: z.enum(['fcl', 'lcl', 'none']),\n  incotermCode: z.string().regex(/^[A-Z]{3}$/).optional(),\n  namedPlace: z.string().max(120).optional(),\n  originId: z.string().min(1),\n  destinationId: z.string().min(1),\n  forwarderId: z.string().optional(),\n  consigneeName: z.string().max(200).optional(),\n  notes: z.string().max(4000).optional(),\n  /** The departure the usual legs are laid out from, when no legs are given. */\n  departure: date.optional(),\n  legs: z.array(legInput).max(20).default([]),\n});\ninput: createInput"
+  },
+  {
+   "name": "removeHandlingUnits",
+   "module": "logistics",
+   "action": "Unloading shipments",
+   "roles": "owner, operations, logistics",
+   "input": "const shipmentNumber = z.string().regex(/^SHP-\\d{2}-\\d{4}$/);\nconst unitsInput = z.object({ number: shipmentNumber, unitNumbers: z.array(z.string().regex(/^(CTN|PLT)-\\d{2}-\\d{4}$/)).min(1).max(500) });\ninput: unitsInput"
+  },
+  {
+   "name": "updateLeg",
+   "module": "logistics",
+   "action": "Updating legs",
+   "roles": "owner, operations, logistics",
+   "input": "const shipmentNumber = z.string().regex(/^SHP-\\d{2}-\\d{4}$/);\nconst date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst legUpdateInput = z.object({\n  number: shipmentNumber,\n  legId: z.string().min(1),\n  etd: date.nullable().optional(),\n  eta: date.nullable().optional(),\n  atd: date.nullable().optional(),\n  ata: date.nullable().optional(),\n  vessel: z.string().max(120).nullable().optional(),\n  voyage: z.string().max(80).nullable().optional(),\n  providerId: z.string().nullable().optional(),\n  note: z.string().max(2000).nullable().optional(),\n});\ninput: legUpdateInput"
+  },
+  {
+   "name": "updateShipment",
+   "module": "logistics",
+   "action": "Editing shipments",
+   "roles": "owner, operations, logistics",
+   "input": "const shipmentNumber = z.string().regex(/^SHP-\\d{2}-\\d{4}$/);\nconst detailsInput = z.object({\n  number: shipmentNumber,\n  incotermCode: z.string().regex(/^[A-Z]{3}$/).nullable().optional(),\n  namedPlace: z.string().max(120).nullable().optional(),\n  forwarderId: z.string().nullable().optional(),\n  consigneeName: z.string().max(200).nullable().optional(),\n  notes: z.string().max(4000).nullable().optional(),\n  references: z.array(z.object({ type: z.enum(['booking', 'mbl', 'hbl', 'awb', 'container', 'seal', 'tracking']), value: z.string().min(1).max(120) })).max(50).optional(),\n});\ninput: detailsInput"
+  },
+  {
+   "name": "actOnMail",
+   "module": "mail",
+   "action": "",
+   "roles": "any signed-in role",
+   "input": "const date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/);\nconst target = z.object({ entityType: z.enum(['purchase_order', 'production_run', 'lot', 'inspection', 'corrective_action', 'shipment', 'receipt', 'sales_order', 'quote', 'development_product', 'inquiry', 'supplier', 'customer']), entityId: z.string().trim().min(1).max(80) });\nconst actKinds = z.discriminatedUnion('kind', [\n  z.object({ kind: z.literal('link_record'), messageId: z.string().min(1), target }),\n  z.object({ kind: z.literal('create_task'), messageId: z.string().min(1), title: z.string().trim().min(1).max(200), details: z.string().max(2000).default(''), dueOn: date.nullable().default(null), assigneeUid: z.string().max(128).nullable().default(null), target: target.nullable().default(null) }),\n  z.object({ kind: z.literal('create_inquiry'), messageId: z.string().min(1), inquiryKind: z.enum(['sample_request', 'wholesale', 'contact']), name: z.string().trim().min(1).max(160), company: z.string().trim().max(200).default(''), country: z.string().trim().max(120).default('') }),\n  z.object({ kind: z.literal('log_interaction'), messageId: z.string().min(1), customerId: z.string().min(1), summary: z.string().trim().min(1).max(4000), nextStep: z.string().max(200).default(''), nextOn: date.nullable().default(null), taskForNextStep: z.boolean().default(false) }),\n  z.object({ kind: z.literal('file_attachment'), messageId: z.string().min(1), attachmentId: z.string().min(1), documentKind: z.enum(['commercial_invoice', 'packing_list', 'bill_of_lading', 'air_waybill', 'certificate_of_origin', 'certificate', 'inspection_report', 'technical_sheet', 'quotation', 'purchase_order', 'contract', 'photo', 'other']), title: z.string().trim().min(1).max(200), target }),\n  z.object({ kind: z.literal('create_company'), messageId: z.string().min(1), legalName: z.string().trim().min(1).max(200), role: z.enum(['supplier', 'odm', 'customer', 'freight_forwarder', 'customs_broker', 'carrier', 'inspection_agency']), contactName: z.string().trim().min(1).max(160), countryCode: z.string().length(2).nullable().default(null) }),\n  z.object({ kind: z.literal('mark_done'), messageId: z.string().min(1) }),\n  z.object({ kind: z.literal('ignore'), messageId: z.string().min(1) }),\n  z.object({ kind: z.literal('reopen'), messageId: z.string().min(1) }),\n]);\nconst actInput = z.intersection(actKinds, z.object({ proposalId: z.string().optional() }));\ninput: actInput"
+  },
+  {
+   "name": "classifyMailNow",
+   "module": "mail",
+   "action": "Sorting mail with the classifier",
+   "roles": "owner, operations",
+   "input": "input: z.object({ messageId: z.string().min(1) })"
+  },
+  {
+   "name": "connectMailbox",
+   "module": "mail",
+   "action": "Connecting the mailbox",
+   "roles": "owner",
+   "input": "const connectInput = z.object({ backfillDays: z.union([z.literal(0), z.literal(30), z.literal(90)]).default(30) });\ninput: connectInput"
+  },
+  {
+   "name": "decideMailAction",
+   "module": "mail",
+   "action": "",
+   "roles": "any signed-in role",
+   "input": "input: z.object({ actionId: z.string().min(1), decision: z.enum(['accept', 'dismiss']), reason: z.string().max(200).default('') })"
+  },
+  {
+   "name": "disconnectMailbox",
+   "module": "mail",
+   "action": "Disconnecting the mailbox",
+   "roles": "owner",
+   "input": ""
+  },
+  {
+   "name": "getMailAttachment",
+   "module": "mail",
+   "action": "",
+   "roles": "any signed-in role",
+   "input": "input: z.object({ id: z.string().min(1) })"
+  },
+  {
+   "name": "importMailMessage",
+   "module": "mail",
+   "action": "Importing mail",
+   "roles": "owner, operations",
+   "input": "const importInput = z.object({ filename: z.string().max(255).default('message.eml'), base64: z.string().min(1).max(14_000_000) });\ninput: importInput"
+  },
+  {
+   "name": "mailStatus",
+   "module": "mail",
+   "action": "Reading the mailbox status",
+   "roles": "owner, operations",
+   "input": ""
+  },
+  {
+   "name": "saveMailRule",
+   "module": "mail",
+   "action": "Changing mail rules",
+   "roles": "owner",
+   "input": "const ruleInput = z.object({\n  id: z.string().optional(),\n  match: z\n    .object({ fromAddress: z.string().trim().max(255).optional(), fromDomain: z.string().trim().max(255).optional(), subjectContains: z.string().trim().max(200).optional(), listId: z.string().trim().max(255).optional() })\n    .refine((match) => Object.values(match).some((value) => value), 'A rule needs at least one condition.'),\n  category: z.enum(MAIL_CATEGORY_KEYS as [string, ...string[]]).nullable().default(null),\n  audience: z.enum(MAIL_AUDIENCES).nullable().default(null),\n  ownerRole: z.enum(ROLES).nullable().default(null),\n  skipModel: z.boolean().default(false),\n  ignore: z.boolean().default(false),\n  sort: z.number().int().min(0).max(10_000).default(100),\n  archive: z.boolean().default(false),\n});\ninput: ruleInput"
+  },
+  {
+   "name": "sortMailMessage",
+   "module": "mail",
+   "action": "Sorting mail",
+   "roles": "owner, operations",
+   "input": "const sortInput = z.object({\n  messageId: z.string().min(1),\n  category: z.enum(MAIL_CATEGORY_KEYS as [string, ...string[]]),\n  audience: z.enum(MAIL_AUDIENCES),\n  ownerRole: z.enum(ROLES).nullable().default(null),\n});\ninput: sortInput"
+  },
+  {
+   "name": "syncMailboxNow",
+   "module": "mail",
+   "action": "Syncing the mailbox",
+   "roles": "owner, operations",
+   "input": ""
+  },
+  {
+   "name": "cancelPurchaseOrder",
+   "module": "manufacturing",
+   "action": "Cancelling purchase orders",
+   "roles": "owner, operations",
+   "input": "const numberInput = z.object({ number: z.string().min(1) });\ninput: numberInput.extend({ reason: z.string().min(1).max(400) })"
+  },
+  {
+   "name": "confirmPurchaseOrder",
+   "module": "manufacturing",
+   "action": "Confirming purchase orders",
+   "roles": "owner, operations, purchasing",
+   "input": "const numberInput = z.object({ number: z.string().min(1) });\ninput: numberInput"
+  },
+  {
+   "name": "createProductionRun",
+   "module": "manufacturing",
+   "action": "Opening production runs",
+   "roles": "owner, operations, purchasing",
+   "input": "const date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst createRunInput = z.object({\n  purchaseOrderNumber: z.string().min(1),\n  templateId: z.string().optional(),\n  plannedStart: date,\n  factoryId: z.string().optional(),\n  notes: z.string().max(4000).optional(),\n});\ninput: createRunInput"
+  },
+  {
+   "name": "createPurchaseOrder",
+   "module": "manufacturing",
+   "action": "Creating purchase orders",
+   "roles": "owner, operations, purchasing",
+   "input": "const int64 = z.string().regex(/^-?\\d+$/, 'Fixed-point integer expected');\nconst lineInput = z.object({\n  skuCode: z.string().min(1),\n  supplierItemId: z.string().optional(),\n  quantity: int64,\n  uom: z.string().min(1).max(8),\n  unitPrice: int64,\n  overTolerancePercent: z.number().int().min(0).max(50).optional(),\n  underTolerancePercent: z.number().int().min(0).max(50).optional(),\n  requestedExFactory: date.optional(),\n});\nconst date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst createPoInput = z.object({\n  supplierId: z.string().min(1),\n  factoryId: z.string().optional(),\n  legalEntityId: z.string().optional(),\n  currency: z.string().regex(/^[A-Z]{3}$/),\n  incotermCode: z.string().optional(),\n  namedPlace: z.string().max(120).optional(),\n  paymentTerms: z.string().max(200).optional(),\n  requestedExFactory: date.optional(),\n  notes: z.string().max(4000).optional(),\n  lines: z.array(lineInput).min(1).max(100),\n  /** Deposit share on order; the balance falls due before shipment. */\n  depositPercent: z.number().int().min(0).max(100).default(30),\n});\ninput: createPoInput"
+  },
+  {
+   "name": "issuePurchaseOrder",
+   "module": "manufacturing",
+   "action": "Issuing purchase orders",
+   "roles": "owner, operations, purchasing",
+   "input": "const numberInput = z.object({ number: z.string().min(1) });\ninput: numberInput"
+  },
+  {
+   "name": "packHandlingUnit",
+   "module": "manufacturing",
+   "action": "Packing",
+   "roles": "owner, operations, purchasing, qc",
+   "input": "const date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst int64 = z.string().regex(/^-?\\d+$/, 'Fixed-point integer expected');\nconst packInput = z.object({\n  runNumber: z.string().min(1),\n  kind: z.enum(['carton', 'pallet']),\n  rollNumbers: z.array(z.string().min(1)).max(500).default([]),\n  /** Quantities of lots that are not tracked by roll. */\n  loose: z.array(z.object({ lotNumber: z.string().min(1), quantity: int64 })).max(50).default([]),\n  marks: z.string().max(120).optional(),\n  lengthCm: z.number().int().positive().optional(),\n  widthCm: z.number().int().positive().optional(),\n  heightCm: z.number().int().positive().optional(),\n  grossWeightG: z.number().int().nonnegative().optional(),\n  netWeightG: z.number().int().nonnegative().optional(),\n  packedOn: date.optional(),\n  parentNumber: z.string().optional(),\n});\ninput: packInput"
+  },
+  {
+   "name": "recordLot",
+   "module": "manufacturing",
+   "action": "Recording lots",
+   "roles": "owner, operations, purchasing, qc",
+   "input": "const rollInput = z.object({\n  measuredLength: int64,\n  usableWidthCm: z.number().int().positive().optional(),\n  weightG: z.number().int().nonnegative().optional(),\n  grade: z.string().max(8).optional(),\n  defectPoints: z.number().int().nonnegative().optional(),\n});\nconst date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst int64 = z.string().regex(/^-?\\d+$/, 'Fixed-point integer expected');\nconst recordLotInput = z.object({\n  runNumber: z.string().min(1),\n  skuCode: z.string().min(1),\n  millLotRef: z.string().max(80).optional(),\n  producedOn: date.optional(),\n  /** For SKUs that are not tracked by roll; otherwise the rolls add up to it. */\n  producedQuantity: int64.optional(),\n  rolls: z.array(rollInput).max(500).optional(),\n});\ninput: recordLotInput"
+  },
+  {
+   "name": "setLotQuality",
+   "module": "manufacturing",
+   "action": "Releasing lots",
+   "roles": "owner, qc",
+   "input": "const lotQualityInput = z.object({\n  number: z.string().min(1),\n  state: z.enum(['pending', 'on_hold', 'released', 'rejected']),\n  note: z.string().min(3).max(2000),\n});\ninput: lotQualityInput"
+  },
+  {
+   "name": "updateMilestone",
+   "module": "manufacturing",
+   "action": "Updating milestones",
+   "roles": "owner, operations, purchasing, qc",
+   "input": "const date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst updateMilestoneInput = z.object({\n  runNumber: z.string().min(1),\n  milestoneId: z.string().min(1),\n  state: z.enum(['pending', 'in_progress', 'done', 'skipped', 'blocked']).optional(),\n  forecastEnd: date.nullable().optional(),\n  actualStart: date.nullable().optional(),\n  actualEnd: date.nullable().optional(),\n  delayReason: z.string().max(80).nullable().optional(),\n  note: z.string().max(2000).nullable().optional(),\n});\ninput: updateMilestoneInput"
+  },
+  {
+   "name": "createCorrectiveAction",
+   "module": "quality",
+   "action": "Opening corrective actions",
+   "roles": "owner, operations, qc",
+   "input": "const date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/);\nconst actionInput = z.object({\n  title: z.string().trim().min(1).max(200),\n  description: z.string().max(4000).optional(),\n  inspectionNumber: z.string().optional(),\n  lotNumber: z.string().optional(),\n  supplierId: z.string().optional(),\n  ownerName: z.string().max(160).optional(),\n  dueOn: date.optional(),\n});\ninput: actionInput"
+  },
+  {
+   "name": "createInspection",
+   "module": "quality",
+   "action": "Opening inspections",
+   "roles": "owner, operations, qc",
+   "input": "const date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/);\nconst createInput = z.object({\n  type: z.enum(['lab_dip', 'inline', 'pre_shipment', 'receiving']),\n  /** A lot number or a run number. */\n  subject: z.string().regex(/^(LOT|RUN)-\\d{2}-\\d{4}$/),\n  templateId: z.string().optional(),\n  scheduledOn: date.optional(),\n  location: z.string().max(160).optional(),\n  inspectorName: z.string().max(160).optional(),\n  sampleSize: z.string().max(80).optional(),\n});\ninput: createInput"
+  },
+  {
+   "name": "recordInspection",
+   "module": "quality",
+   "action": "Recording inspections",
+   "roles": "owner, operations, qc",
+   "input": "const date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/);\nconst int64 = z.string().regex(/^-?\\d+$/);\nconst recordInput = z.object({\n  number: z.string().min(1),\n  performedOn: date.optional(),\n  location: z.string().max(160).optional(),\n  sampleSize: z.string().max(80).optional(),\n  note: z.string().max(4000).optional(),\n  checks: z.array(z.object({ id: z.string().min(1), outcome: z.enum(['pending', 'pass', 'fail', 'not_applicable']).optional(), measured: int64.nullable().optional(), note: z.string().max(1000).nullable().optional() })).max(100).default([]),\n  readings: z.array(z.object({ rollNumber: z.string().optional(), illuminant: z.string().max(16).default('D65'), lStar: z.number().int(), aStar: z.number().int(), bStar: z.number().int(), deltaE: z.number().int().min(0), visualGrade: z.string().max(16).optional(), standardRef: z.string().max(80).optional() })).max(200).default([]),\n  defects: z.array(z.object({ rollNumber: z.string().optional(), type: z.string().min(1).max(80), points: z.number().int().min(1).max(4), positionM: int64.optional(), sizeCm: z.number().int().positive().optional(), note: z.string().max(1000).optional() })).max(500).default([]),\n  /** Ids of readings or defects to remove. */\n  removeReadings: z.array(z.string()).max(200).default([]),\n  removeDefects: z.array(z.string()).max(500).default([]),\n});\ninput: recordInput"
+  },
+  {
+   "name": "signOffInspection",
+   "module": "quality",
+   "action": "Signing off inspections",
+   "roles": "owner, qc",
+   "input": "const signOffInput = z.object({\n  number: z.string().min(1),\n  disposition: z.enum(['release', 'rework', 'reject', 'accept_with_concession']),\n  concession: z.string().max(2000).default(''),\n  note: z.string().max(2000).default(''),\n});\ninput: signOffInput"
+  },
+  {
+   "name": "submitInspection",
+   "module": "quality",
+   "action": "Submitting inspections",
+   "roles": "owner, operations, qc",
+   "input": "input: z.object({ number: z.string().min(1) })"
+  },
+  {
+   "name": "updateCorrectiveAction",
+   "module": "quality",
+   "action": "Updating corrective actions",
+   "roles": "owner, operations, qc",
+   "input": "const date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/);\nconst updateActionInput = z.object({\n  number: z.string().min(1),\n  state: z.enum(['open', 'in_progress', 'verification', 'closed']).optional(),\n  rootCause: z.string().max(4000).optional(),\n  action: z.string().max(4000).optional(),\n  ownerName: z.string().max(160).optional(),\n  dueOn: date.nullable().optional(),\n  note: z.string().max(2000).optional(),\n});\ninput: updateActionInput"
+  },
+  {
+   "name": "logInteraction",
+   "module": "relationships",
+   "action": "Logging interactions",
+   "roles": "owner, operations, sales, marketing",
+   "input": "const date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst interactionInput = z.object({\n  customerId: z.string().min(1),\n  contactId: z.string().optional(),\n  opportunityId: z.string().optional(),\n  kind: z.enum(INTERACTION_KINDS),\n  occurredAt: z.string().datetime().optional(),\n  summary: z.string().min(1).max(4000),\n  nextStep: z.string().max(200).default(''),\n  nextOn: date.nullable().default(null),\n  /** When set, the next step becomes a task for the person logging it. */\n  taskForNextStep: z.boolean().default(false),\n});\ninput: interactionInput"
+  },
+  {
+   "name": "saveOpportunity",
+   "module": "relationships",
+   "action": "Keeping the pipeline",
+   "roles": "owner, operations, sales, marketing",
+   "input": "const date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst stored = z.string().regex(/^\\d+$/, 'Fixed-point amount expected');\nconst opportunityInput = z.object({\n  id: z.string().optional(),\n  customerId: z.string().min(1),\n  title: z.string().min(1).max(160),\n  stage: z.enum(OPPORTUNITY_STAGES).default('lead'),\n  source: z.enum(OPPORTUNITY_SOURCES).nullable().default(null),\n  value: stored.nullable().default(null),\n  currency: z.string().regex(/^[A-Z]{3}$/).default('EUR'),\n  expectedClose: date.nullable().default(null),\n  ownerUid: z.string().optional(),\n  quoteNumber: z.string().regex(/^QUO-\\d{2}-\\d{4}$/).nullable().default(null),\n  lostReason: z.string().max(200).default(''),\n  notes: z.string().max(4000).default(''),\n});\ninput: opportunityInput"
+  },
+  {
+   "name": "savePriceList",
+   "module": "relationships",
+   "action": "Keeping price lists",
+   "roles": "owner, operations, sales, finance",
+   "input": "const stored = z.string().regex(/^\\d+$/, 'Fixed-point amount expected');\nconst priceLineInput = z.object({ skuCode: z.string().min(1).optional(), productCode: z.string().min(1).optional(), minQuantity: stored.default('0'), unitPrice: stored }).refine((line) => Boolean(line.skuCode) !== Boolean(line.productCode), { message: 'A line prices one SKU or one product.' });\nconst date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst priceListInput = z.object({\n  code: z.string().regex(/^[A-Z0-9-]{2,16}$/, 'A code of 2 to 16 capitals, digits or hyphens'),\n  name: z.string().min(1).max(80),\n  currency: z.string().regex(/^[A-Z]{3}$/),\n  tier: z.enum(['standard', 'preferred', 'key']).nullable().default(null),\n  validFrom: date.nullable().default(null),\n  validTo: date.nullable().default(null),\n  isDefault: z.boolean().default(false),\n  notes: z.string().max(2000).default(''),\n  lines: z.array(priceLineInput).max(1000),\n});\ninput: priceListInput"
+  },
+  {
+   "name": "inviteUser",
+   "module": "users",
+   "action": "Inviting people",
+   "roles": "owner",
+   "input": "const inviteInput = z.object({\n  email: z.string().trim().email().max(255),\n  name: z.string().trim().min(1).max(160),\n  role: z.enum(STAFF_ROLES),\n  locale: z.string().trim().max(16).optional(),\n  timeZone: z.string().trim().max(64).optional(),\n});\ninput: inviteInput"
+  },
+  {
+   "name": "setUserRole",
+   "module": "users",
+   "action": "Changing roles",
+   "roles": "owner",
+   "input": "const setRoleInput = z.object({\n  uid: z.string().trim().min(1).max(128),\n  role: z.enum(STAFF_ROLES),\n});\ninput: setRoleInput"
+  }
+ ]
+}

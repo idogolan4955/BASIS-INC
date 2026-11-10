@@ -311,6 +311,13 @@ Each module folder owns its screens, loading and error states, and module-specif
 | `/development/collections` | Collections | Development module roles |
 | `/development/categories` | Categories and their specification schemas | Development module roles |
 
+### Module 20 BASIS AI (2026-11-10)
+
+| Path | Screen | Access |
+|---|---|---|
+| `/ai` | A new conversation: examples to start from, what waits for approval in other conversations | Every staff role |
+| `/ai/:threadId` | One conversation: the person's instructions, the assistant's answers with links to records, what it read, proposed actions with Approve and run / Reject and their outcome | The conversation's owner only |
+
 ### Module 19 Mail (2026-11-07)
 
 | Path | Screen | Access |

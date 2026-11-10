@@ -65,6 +65,7 @@ Gateway behaviour:
 | 14 | **Analytics** | Analysis | Supply (lead times, on-time, QC) · Logistics (transit times, cost per metre) · Commercial (conversion, repeat, customer value) · Inventory (ageing, turns) |
 | 15 | **Settings** | Configuration | Users & roles · Legal entities · Reference data · Number sequences · Templates · Alert rules · Audit log |
 | 19 | **Mail** | The company mailbox, sorted into the records and work it concerns ([MAIL_PLAN](MAIL_PLAN.md)) | Inbox (needs a decision, sorted, done, ignored) · Message · Rules · the Mail tab on record sheets |
+| 20 | **BASIS AI** | Instructions in plain words: the assistant reads the system as the person and proposes actions that wait for their approval | Conversations · the transcript with what was read · proposed actions with Approve and Reject · what waits for approval across conversations |
 
 Layer mapping: Gateway = the launchpad. **Operations** layer = modules 01–06. **Logistics** layer = 07, with 13. **Growth** layer = 08–10. **Brand / Web** management = 11. Shared = 12, 14, 15.
 
@@ -196,8 +197,9 @@ Modules not expanded here follow the same pattern: ledgers at the top, sheets be
 | 17 Goals | ● | ○ | – | – | – | – | – | ○ |
 | 18 Development | ● | ● | ◐ | ◐ | – | ○ | ● | ○ |
 | 19 Mail | ● | ● | ● | ○ | ● | ● | ● | ○ |
+| 20 BASIS AI | ● | ● | ● | ● | ● | ● | ● | ● |
 
-● manage · ◐ limited / own scope · ○ read · – hidden. Purchase costs, landed costs and supplier identity require `cost:view` regardless of module access. In 19 Mail each role reads only the audiences its role may (`MAIL_AUDIENCE_READERS`, [MAIL_PLAN](MAIL_PLAN.md) §6): supplier mail stays with the cost roles, forwarder mail with logistics and the cost roles, customer mail with the commercial roles, and unsorted mail with the owner.
+● manage · ◐ limited / own scope · ○ read · – hidden. Purchase costs, landed costs and supplier identity require `cost:view` regardless of module access. In 19 Mail each role reads only the audiences its role may (`MAIL_AUDIENCE_READERS`, [MAIL_PLAN](MAIL_PLAN.md) §6): supplier mail stays with the cost roles, forwarder mail with logistics and the cost roles, customer mail with the commercial roles, and unsorted mail with the owner. In 20 BASIS AI everyone has their own conversations, but the assistant reads only what the person's role reads and proposes only what it may run: its access is the person's, never more.
 
 ### A8. Vocabulary
 

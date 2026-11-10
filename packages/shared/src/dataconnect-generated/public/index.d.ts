@@ -39,6 +39,21 @@ export interface ApiToken_Key {
   __typename?: 'ApiToken_Key';
 }
 
+export interface AssistantAction_Key {
+  id: UUIDString;
+  __typename?: 'AssistantAction_Key';
+}
+
+export interface AssistantMessage_Key {
+  id: UUIDString;
+  __typename?: 'AssistantMessage_Key';
+}
+
+export interface AssistantThread_Key {
+  id: UUIDString;
+  __typename?: 'AssistantThread_Key';
+}
+
 export interface AuditEvent_Key {
   id: UUIDString;
   __typename?: 'AuditEvent_Key';

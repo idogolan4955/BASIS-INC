@@ -479,12 +479,35 @@ export interface ApiToken_Key {
   __typename?: 'ApiToken_Key';
 }
 
+export interface ArchiveAssistantThreadData {
+  assistantThread_updateMany: number;
+}
+
+export interface ArchiveAssistantThreadVariables {
+  id: UUIDString;
+}
+
 export interface ArchiveCompanyData {
   company_update?: Company_Key | null;
 }
 
 export interface ArchiveCompanyVariables {
   id: UUIDString;
+}
+
+export interface AssistantAction_Key {
+  id: UUIDString;
+  __typename?: 'AssistantAction_Key';
+}
+
+export interface AssistantMessage_Key {
+  id: UUIDString;
+  __typename?: 'AssistantMessage_Key';
+}
+
+export interface AssistantThread_Key {
+  id: UUIDString;
+  __typename?: 'AssistantThread_Key';
 }
 
 export interface AuditEvent_Key {
@@ -733,6 +756,42 @@ export interface GetAllocationRunData {
 }
 
 export interface GetAllocationRunVariables {
+  id: UUIDString;
+}
+
+export interface GetAssistantThreadData {
+  assistantThreads: ({
+    id: UUIDString;
+    title: string;
+    createdAt: TimestampString;
+    lastActivityAt: TimestampString;
+    messages: ({
+      id: UUIDString;
+      seq: number;
+      role: AssistantMessageRole;
+      content: unknown;
+      meta?: unknown | null;
+      createdAt: TimestampString;
+    } & AssistantMessage_Key)[];
+    actions: ({
+      id: UUIDString;
+      toolUseId: string;
+      command: string;
+      input: unknown;
+      summary: string;
+      state: AssistantActionState;
+      decidedBy?: {
+        name: string;
+      };
+      decidedAt?: TimestampString | null;
+      result?: unknown | null;
+      error?: string | null;
+      createdAt: TimestampString;
+    } & AssistantAction_Key)[];
+  } & AssistantThread_Key)[];
+}
+
+export interface GetAssistantThreadVariables {
   id: UUIDString;
 }
 
@@ -2658,6 +2717,15 @@ export interface ListApiTokensData {
   } & ApiToken_Key)[];
 }
 
+export interface ListAssistantThreadsData {
+  assistantThreads: ({
+    id: UUIDString;
+    title: string;
+    createdAt: TimestampString;
+    lastActivityAt: TimestampString;
+  } & AssistantThread_Key)[];
+}
+
 export interface ListBoardNotesData {
   boardNotes: ({
     id: UUIDString;
@@ -3948,6 +4016,19 @@ export interface ListOpportunitiesData {
       number: string;
     };
   } & Opportunity_Key)[];
+}
+
+export interface ListPendingAssistantActionsData {
+  assistantActions: ({
+    id: UUIDString;
+    command: string;
+    summary: string;
+    createdAt: TimestampString;
+    thread: {
+      id: UUIDString;
+      title: string;
+    } & AssistantThread_Key;
+  } & AssistantAction_Key)[];
 }
 
 export interface ListPriceListsData {
@@ -5377,6 +5458,54 @@ export interface User_Key {
   uid: string;
   __typename?: 'User_Key';
 }
+
+interface ListAssistantThreadsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListAssistantThreadsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListAssistantThreadsData, undefined>;
+  operationName: string;
+}
+export const listAssistantThreadsRef: ListAssistantThreadsRef;
+
+export function listAssistantThreads(options?: ExecuteQueryOptions): QueryPromise<ListAssistantThreadsData, undefined>;
+export function listAssistantThreads(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListAssistantThreadsData, undefined>;
+
+interface GetAssistantThreadRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetAssistantThreadVariables): QueryRef<GetAssistantThreadData, GetAssistantThreadVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetAssistantThreadVariables): QueryRef<GetAssistantThreadData, GetAssistantThreadVariables>;
+  operationName: string;
+}
+export const getAssistantThreadRef: GetAssistantThreadRef;
+
+export function getAssistantThread(vars: GetAssistantThreadVariables, options?: ExecuteQueryOptions): QueryPromise<GetAssistantThreadData, GetAssistantThreadVariables>;
+export function getAssistantThread(dc: DataConnect, vars: GetAssistantThreadVariables, options?: ExecuteQueryOptions): QueryPromise<GetAssistantThreadData, GetAssistantThreadVariables>;
+
+interface ListPendingAssistantActionsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListPendingAssistantActionsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListPendingAssistantActionsData, undefined>;
+  operationName: string;
+}
+export const listPendingAssistantActionsRef: ListPendingAssistantActionsRef;
+
+export function listPendingAssistantActions(options?: ExecuteQueryOptions): QueryPromise<ListPendingAssistantActionsData, undefined>;
+export function listPendingAssistantActions(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListPendingAssistantActionsData, undefined>;
+
+interface ArchiveAssistantThreadRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ArchiveAssistantThreadVariables): MutationRef<ArchiveAssistantThreadData, ArchiveAssistantThreadVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ArchiveAssistantThreadVariables): MutationRef<ArchiveAssistantThreadData, ArchiveAssistantThreadVariables>;
+  operationName: string;
+}
+export const archiveAssistantThreadRef: ArchiveAssistantThreadRef;
+
+export function archiveAssistantThread(vars: ArchiveAssistantThreadVariables): MutationPromise<ArchiveAssistantThreadData, ArchiveAssistantThreadVariables>;
+export function archiveAssistantThread(dc: DataConnect, vars: ArchiveAssistantThreadVariables): MutationPromise<ArchiveAssistantThreadData, ArchiveAssistantThreadVariables>;
 
 interface ListBoardNotesRef {
   /* Allow users to create refs without passing in DataConnect */

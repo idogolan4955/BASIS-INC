@@ -13,7 +13,7 @@ import {
   type MailCategory,
   type Role,
 } from '@basis/shared';
-import { defineSecret } from 'firebase-functions/params';
+import { ANTHROPIC_API_KEY, anthropicClient, anthropicKey } from '../anthropic';
 import { z } from 'zod';
 import { graphql } from '../lib';
 
@@ -22,13 +22,10 @@ import { graphql } from '../lib';
 // written by strangers; the model only proposes, a person decides. It may
 // raise who reads a message, never lower it below what the facts set.
 
-export const ANTHROPIC_API_KEY = defineSecret('ANTHROPIC_API_KEY');
+export { ANTHROPIC_API_KEY };
 export const MODEL = 'claude-opus-5-5';
 
-const secretValue = () => {
-  const value = process.env[ANTHROPIC_API_KEY.name]?.trim() ?? '';
-  return value === 'unset' ? '' : value;
-};
+const secretValue = anthropicKey;
 export const classifierReady = () => Boolean(secretValue());
 
 const PROPOSAL_KINDS = ['create_task', 'link_record', 'create_inquiry', 'log_interaction', 'file_attachment', 'create_company'] as const;
@@ -204,7 +201,7 @@ let client: Anthropic | null = null;
 export async function callClassifier(input: ClassifyInput['message'], candidates: readonly Candidate[]): Promise<{ output: ClassifierOutput; usage: Record<string, number>; model: string } | null> {
   const key = secretValue();
   if (!key) throw new Error('ANTHROPIC_API_KEY is not set.');
-  client ??= new Anthropic({ apiKey: key, maxRetries: 2, timeout: 90_000 });
+  client ??= anthropicClient({ maxRetries: 2, timeout: 90_000 });
   const body = trimQuoted(input.bodyText ?? '');
   // Long mail is sent whole up to a limit; beyond it, the beginning and the end with the gap stated.
   const LIMIT = 14_000;

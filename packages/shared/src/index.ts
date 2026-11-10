@@ -28,3 +28,4 @@ export * from './relationships';
 export * from './development';
 export * from './development-catalog';
 export * from './mail';
+export * from './assistant';

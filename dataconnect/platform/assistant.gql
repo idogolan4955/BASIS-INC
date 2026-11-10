@@ -1,0 +1,60 @@
+# BASIS AI. Each person reads only their own threads; messages and actions
+# are written by the assistant functions.
+
+query ListAssistantThreads @auth(level: USER) {
+  assistantThreads(where: { owner: { uid: { eq_expr: "auth.uid" } }, archivedAt: { isNull: true } }, orderBy: { lastActivityAt: DESC }, limit: 60) {
+    id
+    title
+    createdAt
+    lastActivityAt
+  }
+}
+
+query GetAssistantThread($id: UUID!) @auth(level: USER) {
+  assistantThreads(where: { id: { eq: $id }, owner: { uid: { eq_expr: "auth.uid" } } }, limit: 1) {
+    id
+    title
+    createdAt
+    lastActivityAt
+    messages: assistantMessages_on_thread(orderBy: { seq: ASC }, limit: 400) {
+      id
+      seq
+      role
+      content
+      meta
+      createdAt
+    }
+    actions: assistantActions_on_thread(orderBy: { createdAt: ASC }, limit: 200) {
+      id
+      toolUseId
+      command
+      input
+      summary
+      state
+      decidedBy {
+        name
+      }
+      decidedAt
+      result
+      error
+      createdAt
+    }
+  }
+}
+
+query ListPendingAssistantActions @auth(level: USER) {
+  assistantActions(where: { state: { eq: proposed }, thread: { owner: { uid: { eq_expr: "auth.uid" } } } }, orderBy: { createdAt: DESC }, limit: 100) {
+    id
+    command
+    summary
+    createdAt
+    thread {
+      id
+      title
+    }
+  }
+}
+
+mutation ArchiveAssistantThread($id: UUID!) @auth(level: USER) {
+  assistantThread_updateMany(where: { id: { eq: $id }, owner: { uid: { eq_expr: "auth.uid" } } }, data: { archivedAt_expr: "request.time" })
+}

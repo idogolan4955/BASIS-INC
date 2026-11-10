@@ -17,6 +17,7 @@ import {
   Receipt,
   SealCheck,
   SlidersHorizontal,
+  Sparkle,
   Swatches,
   Target,
   type Icon,
@@ -44,6 +45,7 @@ export const MODULE_ICONS: Record<ModuleKey, Icon> = {
   goals: Target,
   development: PencilRuler,
   mail: EnvelopeSimple,
+  ai: Sparkle,
 };
 
 const GROUPS: readonly { readonly label: string; readonly keys: readonly ModuleKey[] }[] = [

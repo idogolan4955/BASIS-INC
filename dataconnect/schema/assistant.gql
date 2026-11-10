@@ -1,0 +1,53 @@
+# BASIS AI: the staff assistant. A thread is one person's conversation; its
+# messages are the exact content exchanged with the model, kept so a thread
+# can be resumed append-only. The assistant reads through the connector as the
+# person and never changes anything itself: every change it wants is an
+# action that waits for that person's approval, then runs the platform's own
+# function as them.
+
+type AssistantThread @table {
+  owner: User!
+  title: String! @col(dataType: "varchar(160)")
+  createdAt: Timestamp! @default(expr: "request.time")
+  lastActivityAt: Timestamp! @default(expr: "request.time")
+  archivedAt: Timestamp
+}
+
+enum AssistantMessageRole {
+  user
+  assistant
+}
+
+type AssistantMessage @table {
+  thread: AssistantThread!
+  # Order within the thread, from 1.
+  seq: Int!
+  role: AssistantMessageRole!
+  # The content blocks as sent to or received from the model, unchanged.
+  content: Any!
+  # Set on assistant messages: model, stop reason, token usage.
+  meta: Any
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+enum AssistantActionState {
+  proposed
+  rejected
+  executed
+  failed
+}
+
+type AssistantAction @table {
+  thread: AssistantThread!
+  # The tool call that proposed it.
+  toolUseId: String! @col(dataType: "varchar(80)")
+  command: String! @col(dataType: "varchar(80)")
+  input: Any!
+  summary: String!
+  state: AssistantActionState!
+  decidedBy: User
+  decidedAt: Timestamp
+  result: Any
+  error: String
+  createdAt: Timestamp! @default(expr: "request.time")
+}

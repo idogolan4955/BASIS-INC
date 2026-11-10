@@ -489,6 +489,65 @@ const connectorConfig = {
 };
 exports.connectorConfig = connectorConfig;
 
+const listAssistantThreadsRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListAssistantThreads');
+}
+listAssistantThreadsRef.operationName = 'ListAssistantThreads';
+exports.listAssistantThreadsRef = listAssistantThreadsRef;
+
+exports.listAssistantThreads = function listAssistantThreads(dcOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(listAssistantThreadsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getAssistantThreadRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetAssistantThread', inputVars);
+}
+getAssistantThreadRef.operationName = 'GetAssistantThread';
+exports.getAssistantThreadRef = getAssistantThreadRef;
+
+exports.getAssistantThread = function getAssistantThread(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getAssistantThreadRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const listPendingAssistantActionsRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListPendingAssistantActions');
+}
+listPendingAssistantActionsRef.operationName = 'ListPendingAssistantActions';
+exports.listPendingAssistantActionsRef = listPendingAssistantActionsRef;
+
+exports.listPendingAssistantActions = function listPendingAssistantActions(dcOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(listPendingAssistantActionsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const archiveAssistantThreadRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ArchiveAssistantThread', inputVars);
+}
+archiveAssistantThreadRef.operationName = 'ArchiveAssistantThread';
+exports.archiveAssistantThreadRef = archiveAssistantThreadRef;
+
+exports.archiveAssistantThread = function archiveAssistantThread(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(archiveAssistantThreadRef(dcInstance, inputVars));
+}
+;
+
 const listBoardNotesRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();

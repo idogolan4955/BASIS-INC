@@ -114,6 +114,10 @@ export const FUNCTION_NAMES = {
   decideMailAction: 'decideMailAction',
   /** Callable, owner and operations: run the alert rules now. */
   evaluateAlerts: 'evaluateAlerts',
+  /** Callable, every staff role: BASIS AI answers in a thread, reading as the caller and proposing actions. */
+  askAssistant: 'askAssistant',
+  /** Callable: approve or reject an action BASIS AI proposed; approval runs it as the caller. */
+  decideAssistantAction: 'decideAssistantAction',
   /** Scheduled: consume domain events, evaluate alert rules. */
   sweepEvents: 'sweepEvents',
 } as const;

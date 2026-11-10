@@ -256,6 +256,7 @@ Rules write to `Alert` with a dedupe key, severity and state (`open`, `acknowled
 | Messaging (email, WhatsApp) | Customer and supplier interaction history. Today: documents emailed through the email connector (Resend or Postmark) and logged as `Message`; WhatsApp through the share sheet | Growth |
 | Inbound mail (Gmail API) and the mail classifier (Claude) | The company mailbox read in, sorted, and turned into proposed actions on records; designed in [MAIL_PLAN](MAIL_PLAN.md) | P11 |
 | Personal AI assistant (MCP) | `apps/assistant`: an MCP server acting through `/api/**` with an API token issued in Settings; the same functions and role checks as the screens | Phase 4 |
+| BASIS AI (Claude, Anthropic API) | The assistant inside the platform, module 20: see §17 | P13 |
 | Document generation | Purchase orders, packing lists, roll labels, technical sheets as PDF | Manufacturing / Logistics |
 
 Each is a module in `functions/src` behind an interface typed in `@basis/shared`, so a provider can be replaced without touching screens.
@@ -319,6 +320,19 @@ WebGL, video and long scroll sequences are lazy, capability-gated and have stati
 | O5 | Reachability from mainland China: Google services are generally blocked there, which affects factory-side users (inspectors, suppliers) | Verify with a real factory-side user before the QC phase. Fallback: factory-side flows served entirely through the site's own origin (`/api/**` → functions), with no direct Google endpoints in the browser | Factory-side QC rollout |
 | O6 | Relationship between BASIS and the Fabrica system | Fully independent: separate project, database and repository | Nothing now |
 | O7 | Accounting system to integrate with | Deferred | Orders phase |
+
+
+## 17. BASIS AI — the assistant inside the platform
+
+Module 20 at `/ai`. A person writes an instruction; the assistant answers in a thread that is theirs alone.
+
+- **Model.** `claude-opus-5-5` at effort `medium` through the Anthropic API (`@anthropic-ai/sdk` in `functions`), with the server-side refusal fallback (`fallbacks: "default"`). The key is the Functions secret `ANTHROPIC_API_KEY`, set by the owner. A key that is not scoped to one Anthropic workspace also needs `ANTHROPIC_WORKSPACE_ID` (a plain parameter, not a secret). Model and effort are constants in `packages/shared/src/assistant.ts`.
+- **Reading.** The tool `read` runs any query of the `platform` connector through the Admin SDK's `executeQuery` with `impersonate.authClaims` set to the caller's uid and role, so every `@auth` rule applies exactly as on the screens: cost confidentiality holds in the data the model sees. `read_ledger` returns the computed export ledgers with the caller's columns. Lists are cut at 200 rows with the count kept.
+- **Changing.** The assistant never changes anything. `propose_action` stores an `AssistantAction` (state `proposed`) for any callable function or connector mutation in the catalogue, except accounts, roles, API tokens, connectors and the mailbox connection (`ASSISTANT_EXCLUDED_COMMANDS`). On the page the person approves or rejects it; `decideAssistantAction` claims the action once, runs the platform's own function (`CallableFunction.run` with the caller's identity, as `/api/commands` does) or the connector mutation impersonating the caller, stores the result or the error, writes an audit record, and appends the outcome to the thread for the model to read on the next turn.
+- **The catalogue.** `functions/scripts/assistant-catalog.mjs` reads every connector operation (name, variables, `@auth`, leading comment) and every callable function (the roles in its `requireRole`, the zod source of its input) from the sources into `functions/src/assistant/catalog.json` on every functions build, so the assistant's view of the system cannot drift from the code. The query and command lists sit in the cached system prompt; `describe_action` returns one input schema on demand.
+- **Storage.** `AssistantThread`, `AssistantMessage` (the content blocks exactly as exchanged with the model, kept append-only so a thread resumes with its thinking intact) and `AssistantAction` in `dataconnect/schema/assistant.gql`; each person reads only their own through `dataconnect/platform/assistant.gql`. Token usage is kept on each assistant message.
+- **Progress.** `askAssistant` streams what it is doing (thinking, reading a query, preparing an action) through the callable's chunks; each step is stored as it happens.
+- **Safety.** Text in records, mail and documents is data to the model, never instructions; the tools are the boundary, and no tool reaches beyond the caller's role.
 
 ## The platform as an app
 

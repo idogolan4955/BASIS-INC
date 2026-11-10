@@ -39,6 +39,7 @@ import { Gateway } from './pages/gateway/Gateway';
 import { Hub } from './pages/hub/Hub';
 import { Board } from './pages/board/Board';
 import { Goals } from './pages/goals/Goals';
+import { BasisAi } from './pages/ai/BasisAi';
 import { DevelopmentBoard, DevelopmentProducts } from './pages/development/Development';
 import { Dossier } from './pages/development/Dossier';
 import { BrandCentre, Categories, Collections } from './pages/development/Brand';
@@ -150,6 +151,8 @@ const router = createBrowserRouter([
       { path: 'customers/:id/mail', element: <CompanySheet tab="mail" base="/customers" /> },
       { path: 'board', element: <Board /> },
       { path: 'goals', element: <Goals /> },
+      { path: 'ai', element: <BasisAi /> },
+      { path: 'ai/:threadId', element: <BasisAi /> },
       { path: 'development', element: <DevelopmentBoard /> },
       { path: 'development/products', element: <DevelopmentProducts /> },
       { path: 'development/products/:number', element: <Dossier tab="overview" /> },

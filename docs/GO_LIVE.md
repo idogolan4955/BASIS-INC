@@ -142,3 +142,18 @@ sample build is only for `pnpm --filter @basis/platform dev:sample`.
 
 The Storage emulator needs Java; without it filed documents are regenerated
 on open in development. Production is unaffected.
+
+## BASIS AI (module 20, 2026-11-10)
+
+`ANTHROPIC_API_KEY` is set. The key in it is not scoped to an Anthropic
+workspace, and the API refuses such a key without the workspace named. Either
+of these fixes it (owner):
+
+- In the Anthropic Console, open a workspace, create an API key inside it,
+  and set it: `firebase functions:secrets:set ANTHROPIC_API_KEY`; or
+- keep the key and name the workspace: put `ANTHROPIC_WORKSPACE_ID=wrkspc_…`
+  in `functions/.env.basis-inc` and deploy the functions again.
+
+Set a monthly spend limit on the workspace in the Console. The schema for
+BASIS AI (threads, messages, actions) deploys with `firebase deploy --only
+dataconnect`; read the SQL first, it only creates tables and enums.

@@ -8,6 +8,9 @@ This README will guide you through the process of using the generated JavaScript
 - [**Accessing the connector**](#accessing-the-connector)
   - [*Connecting to the local Emulator*](#connecting-to-the-local-emulator)
 - [**Queries**](#queries)
+  - [*ListAssistantThreads*](#listassistantthreads)
+  - [*GetAssistantThread*](#getassistantthread)
+  - [*ListPendingAssistantActions*](#listpendingassistantactions)
   - [*ListBoardNotes*](#listboardnotes)
   - [*ListGoals*](#listgoals)
   - [*ListFamilies*](#listfamilies)
@@ -110,6 +113,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*ListInteractions*](#listinteractions)
   - [*ListRecentInteractions*](#listrecentinteractions)
 - [**Mutations**](#mutations)
+  - [*ArchiveAssistantThread*](#archiveassistantthread)
   - [*InsertBoardNote*](#insertboardnote)
   - [*EditBoardNote*](#editboardnote)
   - [*MoveBoardNote*](#moveboardnote)
@@ -193,6 +197,339 @@ The following is true for both the action shortcut function and the `QueryRef` f
 - Both functions can be called with or without passing in a `DataConnect` instance as an argument. If no `DataConnect` argument is passed in, then the generated SDK will call `getDataConnect(connectorConfig)` behind the scenes for you.
 
 Below are examples of how to use the `platform` connector's generated functions to execute each query. You can also follow the examples from the [Data Connect documentation](https://firebase.google.com/docs/data-connect/web-sdk#using-queries).
+
+## ListAssistantThreads
+You can execute the `ListAssistantThreads` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+listAssistantThreads(options?: ExecuteQueryOptions): QueryPromise<ListAssistantThreadsData, undefined>;
+
+interface ListAssistantThreadsRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListAssistantThreadsData, undefined>;
+}
+export const listAssistantThreadsRef: ListAssistantThreadsRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+listAssistantThreads(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListAssistantThreadsData, undefined>;
+
+interface ListAssistantThreadsRef {
+  ...
+  (dc: DataConnect): QueryRef<ListAssistantThreadsData, undefined>;
+}
+export const listAssistantThreadsRef: ListAssistantThreadsRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the listAssistantThreadsRef:
+```typescript
+const name = listAssistantThreadsRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ListAssistantThreads` query has no variables.
+### Return Type
+Recall that executing the `ListAssistantThreads` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ListAssistantThreadsData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ListAssistantThreadsData {
+  assistantThreads: ({
+    id: UUIDString;
+    title: string;
+    createdAt: TimestampString;
+    lastActivityAt: TimestampString;
+  } & AssistantThread_Key)[];
+}
+```
+### Using `ListAssistantThreads`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, listAssistantThreads } from '@basis/dataconnect-platform';
+
+
+// Call the `listAssistantThreads()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await listAssistantThreads();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await listAssistantThreads(dataConnect);
+
+console.log(data.assistantThreads);
+
+// Or, you can use the `Promise` API.
+listAssistantThreads().then((response) => {
+  const data = response.data;
+  console.log(data.assistantThreads);
+});
+```
+
+### Using `ListAssistantThreads`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, listAssistantThreadsRef } from '@basis/dataconnect-platform';
+
+
+// Call the `listAssistantThreadsRef()` function to get a reference to the query.
+const ref = listAssistantThreadsRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = listAssistantThreadsRef(dataConnect);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.assistantThreads);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.assistantThreads);
+});
+```
+
+## GetAssistantThread
+You can execute the `GetAssistantThread` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+getAssistantThread(vars: GetAssistantThreadVariables, options?: ExecuteQueryOptions): QueryPromise<GetAssistantThreadData, GetAssistantThreadVariables>;
+
+interface GetAssistantThreadRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetAssistantThreadVariables): QueryRef<GetAssistantThreadData, GetAssistantThreadVariables>;
+}
+export const getAssistantThreadRef: GetAssistantThreadRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getAssistantThread(dc: DataConnect, vars: GetAssistantThreadVariables, options?: ExecuteQueryOptions): QueryPromise<GetAssistantThreadData, GetAssistantThreadVariables>;
+
+interface GetAssistantThreadRef {
+  ...
+  (dc: DataConnect, vars: GetAssistantThreadVariables): QueryRef<GetAssistantThreadData, GetAssistantThreadVariables>;
+}
+export const getAssistantThreadRef: GetAssistantThreadRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getAssistantThreadRef:
+```typescript
+const name = getAssistantThreadRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetAssistantThread` query requires an argument of type `GetAssistantThreadVariables`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetAssistantThreadVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `GetAssistantThread` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetAssistantThreadData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetAssistantThreadData {
+  assistantThreads: ({
+    id: UUIDString;
+    title: string;
+    createdAt: TimestampString;
+    lastActivityAt: TimestampString;
+    messages: ({
+      id: UUIDString;
+      seq: number;
+      role: AssistantMessageRole;
+      content: unknown;
+      meta?: unknown | null;
+      createdAt: TimestampString;
+    } & AssistantMessage_Key)[];
+    actions: ({
+      id: UUIDString;
+      toolUseId: string;
+      command: string;
+      input: unknown;
+      summary: string;
+      state: AssistantActionState;
+      decidedBy?: {
+        name: string;
+      };
+      decidedAt?: TimestampString | null;
+      result?: unknown | null;
+      error?: string | null;
+      createdAt: TimestampString;
+    } & AssistantAction_Key)[];
+  } & AssistantThread_Key)[];
+}
+```
+### Using `GetAssistantThread`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getAssistantThread, GetAssistantThreadVariables } from '@basis/dataconnect-platform';
+
+// The `GetAssistantThread` query requires an argument of type `GetAssistantThreadVariables`:
+const getAssistantThreadVars: GetAssistantThreadVariables = {
+  id: ..., 
+};
+
+// Call the `getAssistantThread()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getAssistantThread(getAssistantThreadVars);
+// Variables can be defined inline as well.
+const { data } = await getAssistantThread({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getAssistantThread(dataConnect, getAssistantThreadVars);
+
+console.log(data.assistantThreads);
+
+// Or, you can use the `Promise` API.
+getAssistantThread(getAssistantThreadVars).then((response) => {
+  const data = response.data;
+  console.log(data.assistantThreads);
+});
+```
+
+### Using `GetAssistantThread`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getAssistantThreadRef, GetAssistantThreadVariables } from '@basis/dataconnect-platform';
+
+// The `GetAssistantThread` query requires an argument of type `GetAssistantThreadVariables`:
+const getAssistantThreadVars: GetAssistantThreadVariables = {
+  id: ..., 
+};
+
+// Call the `getAssistantThreadRef()` function to get a reference to the query.
+const ref = getAssistantThreadRef(getAssistantThreadVars);
+// Variables can be defined inline as well.
+const ref = getAssistantThreadRef({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getAssistantThreadRef(dataConnect, getAssistantThreadVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.assistantThreads);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.assistantThreads);
+});
+```
+
+## ListPendingAssistantActions
+You can execute the `ListPendingAssistantActions` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+listPendingAssistantActions(options?: ExecuteQueryOptions): QueryPromise<ListPendingAssistantActionsData, undefined>;
+
+interface ListPendingAssistantActionsRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListPendingAssistantActionsData, undefined>;
+}
+export const listPendingAssistantActionsRef: ListPendingAssistantActionsRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+listPendingAssistantActions(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListPendingAssistantActionsData, undefined>;
+
+interface ListPendingAssistantActionsRef {
+  ...
+  (dc: DataConnect): QueryRef<ListPendingAssistantActionsData, undefined>;
+}
+export const listPendingAssistantActionsRef: ListPendingAssistantActionsRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the listPendingAssistantActionsRef:
+```typescript
+const name = listPendingAssistantActionsRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ListPendingAssistantActions` query has no variables.
+### Return Type
+Recall that executing the `ListPendingAssistantActions` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ListPendingAssistantActionsData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ListPendingAssistantActionsData {
+  assistantActions: ({
+    id: UUIDString;
+    command: string;
+    summary: string;
+    createdAt: TimestampString;
+    thread: {
+      id: UUIDString;
+      title: string;
+    } & AssistantThread_Key;
+  } & AssistantAction_Key)[];
+}
+```
+### Using `ListPendingAssistantActions`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, listPendingAssistantActions } from '@basis/dataconnect-platform';
+
+
+// Call the `listPendingAssistantActions()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await listPendingAssistantActions();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await listPendingAssistantActions(dataConnect);
+
+console.log(data.assistantActions);
+
+// Or, you can use the `Promise` API.
+listPendingAssistantActions().then((response) => {
+  const data = response.data;
+  console.log(data.assistantActions);
+});
+```
+
+### Using `ListPendingAssistantActions`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, listPendingAssistantActionsRef } from '@basis/dataconnect-platform';
+
+
+// Call the `listPendingAssistantActionsRef()` function to get a reference to the query.
+const ref = listPendingAssistantActionsRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = listPendingAssistantActionsRef(dataConnect);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.assistantActions);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.assistantActions);
+});
+```
 
 ## ListBoardNotes
 You can execute the `ListBoardNotes` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
@@ -13530,6 +13867,115 @@ The following is true for both the action shortcut function and the `MutationRef
 - Both functions can be called with or without passing in a `DataConnect` instance as an argument. If no `DataConnect` argument is passed in, then the generated SDK will call `getDataConnect(connectorConfig)` behind the scenes for you.
 
 Below are examples of how to use the `platform` connector's generated functions to execute each mutation. You can also follow the examples from the [Data Connect documentation](https://firebase.google.com/docs/data-connect/web-sdk#using-mutations).
+
+## ArchiveAssistantThread
+You can execute the `ArchiveAssistantThread` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+archiveAssistantThread(vars: ArchiveAssistantThreadVariables): MutationPromise<ArchiveAssistantThreadData, ArchiveAssistantThreadVariables>;
+
+interface ArchiveAssistantThreadRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ArchiveAssistantThreadVariables): MutationRef<ArchiveAssistantThreadData, ArchiveAssistantThreadVariables>;
+}
+export const archiveAssistantThreadRef: ArchiveAssistantThreadRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+archiveAssistantThread(dc: DataConnect, vars: ArchiveAssistantThreadVariables): MutationPromise<ArchiveAssistantThreadData, ArchiveAssistantThreadVariables>;
+
+interface ArchiveAssistantThreadRef {
+  ...
+  (dc: DataConnect, vars: ArchiveAssistantThreadVariables): MutationRef<ArchiveAssistantThreadData, ArchiveAssistantThreadVariables>;
+}
+export const archiveAssistantThreadRef: ArchiveAssistantThreadRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the archiveAssistantThreadRef:
+```typescript
+const name = archiveAssistantThreadRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ArchiveAssistantThread` mutation requires an argument of type `ArchiveAssistantThreadVariables`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface ArchiveAssistantThreadVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `ArchiveAssistantThread` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ArchiveAssistantThreadData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ArchiveAssistantThreadData {
+  assistantThread_updateMany: number;
+}
+```
+### Using `ArchiveAssistantThread`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, archiveAssistantThread, ArchiveAssistantThreadVariables } from '@basis/dataconnect-platform';
+
+// The `ArchiveAssistantThread` mutation requires an argument of type `ArchiveAssistantThreadVariables`:
+const archiveAssistantThreadVars: ArchiveAssistantThreadVariables = {
+  id: ..., 
+};
+
+// Call the `archiveAssistantThread()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await archiveAssistantThread(archiveAssistantThreadVars);
+// Variables can be defined inline as well.
+const { data } = await archiveAssistantThread({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await archiveAssistantThread(dataConnect, archiveAssistantThreadVars);
+
+console.log(data.assistantThread_updateMany);
+
+// Or, you can use the `Promise` API.
+archiveAssistantThread(archiveAssistantThreadVars).then((response) => {
+  const data = response.data;
+  console.log(data.assistantThread_updateMany);
+});
+```
+
+### Using `ArchiveAssistantThread`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, archiveAssistantThreadRef, ArchiveAssistantThreadVariables } from '@basis/dataconnect-platform';
+
+// The `ArchiveAssistantThread` mutation requires an argument of type `ArchiveAssistantThreadVariables`:
+const archiveAssistantThreadVars: ArchiveAssistantThreadVariables = {
+  id: ..., 
+};
+
+// Call the `archiveAssistantThreadRef()` function to get a reference to the mutation.
+const ref = archiveAssistantThreadRef(archiveAssistantThreadVars);
+// Variables can be defined inline as well.
+const ref = archiveAssistantThreadRef({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = archiveAssistantThreadRef(dataConnect, archiveAssistantThreadVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.assistantThread_updateMany);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.assistantThread_updateMany);
+});
+```
 
 ## InsertBoardNote
 You can execute the `InsertBoardNote` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):

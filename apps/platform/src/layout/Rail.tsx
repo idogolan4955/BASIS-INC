@@ -1,4 +1,4 @@
-import { ROLES, ROLE_LABELS, isRole } from '@basis/shared';
+import { ROLES, ROLE_LABELS, canOpenModule, isRole } from '@basis/shared';
 import { Wordmark, cn } from '@basis/ui';
 import { HouseSimple, type Icon } from '@phosphor-icons/react';
 import { Link, NavLink } from 'react-router';
@@ -46,6 +46,7 @@ export function Rail({ className }: { className?: string }) {
 
       <nav aria-label={t('Modules')} className="flex-1 overflow-y-auto py-3 [scrollbar-color:var(--color-rail-line)_transparent] [scrollbar-width:thin]">
         <RailLink to="/" end icon={HouseSimple} label={t('Gateway')} />
+        {canOpenModule(session.role, 'ai') && <RailLink to="/ai" icon={MODULE_ICONS.ai} label="BASIS AI" number="20" />}
         {groups.map((group) => (
           <div key={group.label} className="mt-3.5">
             <p className="caps px-5 pb-1.5 text-[0.625rem] text-rail-muted">{t(group.label)}</p>

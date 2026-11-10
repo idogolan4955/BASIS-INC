@@ -354,6 +354,22 @@ Designed in [MAIL_PLAN](MAIL_PLAN.md) on 2026-11-07: the company mailbox `basisi
 | Screens: "Claude read it as" with the summary in the interface's language and Urgent; Suggested on the message with Approve, Edit, Reject; the Suggested actions page (`/mail/actions`, by department, oldest first); summaries in the inbox instead of snippets; Sort with Claude; the month's figure in Settings › Connectors › Mail. Sample mode with suggestions on four messages; Hebrew throughout | |
 | Verified against the emulators: sorting without a key refused with what to do; a proposal approved (task created, the same row accepted with its result), approved twice refused, rejected with a reason, edited and accepted through the same row; the status naming the key. The real call to Claude is checked in production with "Sort with Claude" once the key is set | |
 
+### P13 — BASIS AI, the assistant inside the platform (2026-11-10)
+
+Asked for by the owner on 2026-11-10: a bot in the management platform that takes instructions for anything in the system and waits for approval before it does anything, on a page called BASIS AI. Built as module 20 ([SYSTEM_ARCHITECTURE](SYSTEM_ARCHITECTURE.md) §17).
+
+| Done | Remaining |
+|---|---|
+| Schema and connector: threads, messages kept exactly as exchanged with the model, actions; each person reads only their own | Editing a proposed action's input before approving (the function accepts it; the screen does not offer it yet) |
+| `askAssistant` (Opus 5.5, medium effort, refusal fallback, cached system prompt, streamed progress) with `read` (any connector query impersonating the caller), `read_ledger`, `describe_action`, `propose_action`; `decideAssistantAction` running approved actions as the caller, once | Token usage per month in Settings; a monthly spend limit is set in the Anthropic Console |
+| The catalogue built from the sources on every functions build: 99 queries, 39 mutations, 73 commands | The site assistant for customers reuses this core ([CUSTOMER_PORTAL_PLAN](CUSTOMER_PORTAL_PLAN.md) §9) |
+| `/ai`: conversations, transcript with what was read, action cards with Approve and run / Reject, what waits across conversations; rail entry under the Gateway; Hebrew; sample mode with one conversation and a waiting action | |
+| Verified on the emulators: impersonated reads follow `@auth` (costing refused to a viewer), an approved connector mutation and an approved command ran as the owner, an invalid command failed with the function's own message, a rejected action changed nothing, a second approval was refused, another person cannot read the thread. The model loop waits for a workspace-scoped Anthropic key | |
+
+### P12 — Customer portal (XL)
+
+Designed in [CUSTOMER_PORTAL_PLAN](CUSTOMER_PORTAL_PLAN.md) on 2026-11-10, **waiting for the owner's answers** (its §14): one portal under `/account` on the brand site for trade accounts (a customer company with several users) and consumers, kept apart from staff by the reserved `customer` role and a `customer` connector scoped through `auth.uid`; quotes, orders and reorders, shipments, documents, invoices, samples, team and addresses; payments through one processor adapter (Stripe for an entity abroad, an Israeli gateway for the Israeli entity) with Apple Pay and Google Pay; cashback as an append-only ledger with rules by tier and category; a member card in Apple Wallet and Google Wallet with the live balance (a real payment card only later, through an issuer); and an assistant on the site reusing the staff assistant's core with tools per audience. Five slices: accounts and the trade portal, the site assistant, ordering and payments, cashback, the wallet card.
+
 ### P9 — Marketing, analytics, integrations (L, ongoing)
 
 - Campaigns, segments, sample kits, outreach tracking.

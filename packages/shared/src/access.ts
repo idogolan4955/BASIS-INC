@@ -53,6 +53,7 @@ export const MODULE_KEYS = [
   'goals',
   'development',
   'mail',
+  'ai',
 ] as const;
 
 export type ModuleKey = (typeof MODULE_KEYS)[number];
@@ -88,6 +89,7 @@ export const MODULES: readonly ModuleDefinition[] = [
   { key: 'goals', number: '17', name: 'Goals', path: '/goals', summary: 'Company goals by section, with a timeline', phase: 'P9' },
   { key: 'development', number: '18', name: 'Development', path: '/development', summary: 'Brand Centre, collections, the development dossier, sourcing and costing', phase: 'P10' },
   { key: 'mail', number: '19', name: 'Mail', path: '/mail', summary: 'The company mailbox, sorted into the records and work it concerns', phase: 'P11' },
+  { key: 'ai', number: '20', name: 'BASIS AI', path: '/ai', summary: 'Instructions in plain words; the assistant reads the system and proposes actions you approve', phase: 'P13' },
 ];
 
 export type AccessLevel = 'manage' | 'limited' | 'read' | 'none';
@@ -122,6 +124,8 @@ export const MODULE_ACCESS: Record<ModuleKey, Record<Role, AccessLevel>> = {
   development:   { owner: M, operations: M, purchasing: L, qc: L, logistics: N, sales: R, marketing: M, finance: R, viewer: R },
   // Mail: each role reads only the audiences in MAIL_AUDIENCE_READERS (mail.ts); qc reads general mail and finance reads without sorting.
   mail:          { owner: M, operations: M, purchasing: M, qc: R, logistics: M, sales: M, marketing: M, finance: R, viewer: N },
+  // BASIS AI acts as the person: it reads what their role reads and proposes only what their role may do.
+  ai:            { owner: M, operations: M, purchasing: M, qc: M, logistics: M, sales: M, marketing: M, finance: M, viewer: R },
 };
 
 export function moduleAccess(role: Role, module: ModuleKey): AccessLevel {

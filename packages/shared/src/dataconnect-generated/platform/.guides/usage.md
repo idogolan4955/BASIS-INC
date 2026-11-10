@@ -14,8 +14,20 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { listBoardNotes, insertBoardNote, editBoardNote, moveBoardNote, deleteOwnBoardNote, deleteBoardNote, listGoals, listFamilies, listProducts, getProduct } from '@basis/dataconnect-platform';
+import { listAssistantThreads, getAssistantThread, listPendingAssistantActions, archiveAssistantThread, listBoardNotes, insertBoardNote, editBoardNote, moveBoardNote, deleteOwnBoardNote, deleteBoardNote } from '@basis/dataconnect-platform';
 
+
+// Operation ListAssistantThreads: 
+const { data } = await ListAssistantThreads(dataConnect);
+
+// Operation GetAssistantThread:  For variables, look at type GetAssistantThreadVars in ../index.d.ts
+const { data } = await GetAssistantThread(dataConnect, getAssistantThreadVars);
+
+// Operation ListPendingAssistantActions: 
+const { data } = await ListPendingAssistantActions(dataConnect);
+
+// Operation ArchiveAssistantThread:  For variables, look at type ArchiveAssistantThreadVars in ../index.d.ts
+const { data } = await ArchiveAssistantThread(dataConnect, archiveAssistantThreadVars);
 
 // Operation ListBoardNotes: 
 const { data } = await ListBoardNotes(dataConnect);
@@ -34,18 +46,6 @@ const { data } = await DeleteOwnBoardNote(dataConnect, deleteOwnBoardNoteVars);
 
 // Operation DeleteBoardNote:  For variables, look at type DeleteBoardNoteVars in ../index.d.ts
 const { data } = await DeleteBoardNote(dataConnect, deleteBoardNoteVars);
-
-// Operation ListGoals: 
-const { data } = await ListGoals(dataConnect);
-
-// Operation ListFamilies: 
-const { data } = await ListFamilies(dataConnect);
-
-// Operation ListProducts: 
-const { data } = await ListProducts(dataConnect);
-
-// Operation GetProduct:  For variables, look at type GetProductVars in ../index.d.ts
-const { data } = await GetProduct(dataConnect, getProductVars);
 
 
 ```

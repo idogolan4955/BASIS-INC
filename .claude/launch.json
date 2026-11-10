@@ -12,6 +12,22 @@
       "port": 5180
     },
     {
+      "name": "platform-sample-alt",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@basis/platform",
+        "exec",
+        "vite",
+        "--mode",
+        "sample",
+        "--port",
+        "5181",
+        "--strictPort"
+      ],
+      "port": 5181
+    },
+    {
       "name": "emulators",
       "runtimeExecutable": "firebase",
       "runtimeArgs": [
