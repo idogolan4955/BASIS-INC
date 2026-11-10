@@ -57,7 +57,7 @@ export interface InquiryFields {
 }
 
 /** One inquiry with the next INQ number, from the site or from a message in module 19; raised on the Gateway. */
-export async function createInquiryRecord(fields: InquiryFields, source: 'site' | 'email' | 'portal', mailMessageId: string | null, accountId: string | null = null): Promise<string> {
+export async function createInquiryRecord(fields: InquiryFields, source: 'site' | 'email' | 'portal' | 'assistant', mailMessageId: string | null, accountId: string | null = null): Promise<string> {
   const year = new Date().getFullYear();
   const { numberSequence } = await graphql<{ numberSequence: { nextValue: number } | null }>(`query ($year: Int!) { numberSequence(key: { prefix: "INQ", year: $year }) { nextValue } }`, { year });
   const sequence = numberSequence?.nextValue ?? 1;

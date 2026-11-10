@@ -1909,4 +1909,10 @@ export const HE: Record<string, string> = {
   'active': 'פעילים',
   'suspended': 'מושעים',
   '{company} has no portal account yet.': 'ל-{company} עדיין אין חשבון בפורטל.',
+  "Assistant on the site": "העוזר באתר",
+  "On": "פעיל",
+  "Off": "כבוי",
+  "The AI on basis-inc.web.app answers visitors about the fabrics and shades and takes sample requests; signed-in customers can also ask about their own quotes, orders and shipments. It never sends anything without the visitor’s click. Set a monthly spend limit on the Anthropic key in the Anthropic Console.": "הבינה המלאכותית ב-basis-inc.web.app עונה למבקרים על הבדים והגוונים ומקבלת בקשות לדוגמאות; לקוחות מחוברים יכולים לשאול גם על הצעות המחיר, ההזמנות והמשלוחים שלהם. היא אף פעם לא שולחת דבר בלי לחיצה של המבקר. קבעו תקרת הוצאה חודשית למפתח של Anthropic ב-Anthropic Console.",
+  "For visitors who are not signed in": "למבקרים שאינם מחוברים",
+  "For signed-in customers": "ללקוחות מחוברים",
 };

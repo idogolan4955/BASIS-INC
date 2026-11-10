@@ -12,6 +12,12 @@ This document decides who the portal serves, the accounts and how they are kept 
 - Invitations are not emailed yet (no mail provider): whoever invites gets the one-time link to send, with Copy and WhatsApp. The link is valid 14 days; only its hash is stored.
 - `transitionQuote` no longer clears a quote's sent date when it is answered.
 
+**Slice 2 is built (2026-11-10):** the assistant on every page of the brand site (§9). As built, against this plan:
+- Its records are `SiteConversation`, `SiteTurn` and `SiteAction` (the plan's `AssistantConversation` and `AssistantTurn`, renamed beside the staff assistant's `AssistantThread`). An anonymous conversation is held by a key only the visitor's browser has; its hash is stored, and the visitor's address only as a hash.
+- Visitors get the catalogue and the Shade System in the prompt (they are public) and two actions: a sample request and a hand-off to sales. Signed-in customers also read their own quotes, orders, shipments, invoices, sample requests and addresses through the `customer` connector impersonating them, and can answer a quote. Every action is a card the visitor confirms; confirming runs the same path as the site's own forms (`createInquiryRecord`, `askForSamples`, `answerQuote`).
+- A hand-off is an `Inquiry` (`source = assistant`, on the account when signed in) carrying the question and the conversation, not an `Interaction`: inquiries are where sales already answers.
+- App Check is not yet on (it needs reCAPTCHA Enterprise set up in the console by the owner). Until then the limits in the database bound the spend: 20 messages a conversation, 40 an hour from one address, 600 anonymous messages a day across the site, 200 a day for a customer, short messages and a few model calls per answer. The switch is in Settings › Connectors › Assistant on the site, per audience.
+
 ---
 
 ## 1. What the system already has, and what the portal reuses

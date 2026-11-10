@@ -334,6 +334,8 @@ Module 20 at `/ai`. A person writes an instruction; the assistant answers in a t
 - **Progress.** `askAssistant` streams what it is doing (thinking, reading a query, preparing an action) through the callable's chunks; each step is stored as it happens.
 - **Safety.** Text in records, mail and documents is data to the model, never instructions; the tools are the boundary, and no tool reaches beyond the caller's role.
 
+**The assistant on the brand site** (`functions/src/assistant/site.ts`, module of the customer portal) uses the same model and the same rule — reading as the person, changing nothing without their click — with tools per audience: visitors get the public catalogue and the site's own intake; signed-in customers read through the `customer` connector impersonating themselves. Its conversations are `SiteConversation`, `SiteTurn` and `SiteAction`; limits in the database bound the spend until App Check is on ([CUSTOMER_PORTAL_PLAN](CUSTOMER_PORTAL_PLAN.md) §9).
+
 ## The platform as an app
 
 The platform is installable: `apps/platform/public/manifest.webmanifest` (name, icons from `public/icons/`, `start_url: /hub`, standalone display). On a Mac: Safari › File › Add to Dock, or Chrome › Install app. `tools/mac-app/make.sh` also builds a small `~/Applications/BASIS INC.app` (an AppleScript applet with the BASIS icon) that opens the front door in the default browser; the icon set is regenerated from `tools/mac-app/icon-1024.png`, the B in Archivo with the nude swatch, on a transparent ground.

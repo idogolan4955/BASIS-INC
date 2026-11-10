@@ -169,3 +169,12 @@ SQL first, it only creates tables and enums and adds one column. Then
 sign in with email and password, which is already on; the password-reset email
 is Firebase's own. `basis-inc.web.app` is already among the API key's allowed
 referrers.
+
+## The assistant on the site, slice 2 (2026-11-10)
+
+It deploys with the rest (`dataconnect`, `functions`, `hosting:web`) and uses
+the Anthropic key already set. Owner, when convenient: a monthly spend limit on
+the key's workspace in the Anthropic Console, and Firebase App Check with
+reCAPTCHA Enterprise for the site (until then the assistant's own limits bound
+its use). Settings › Connectors › Assistant on the site turns it off for
+visitors, for customers, or both.

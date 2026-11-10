@@ -1,4 +1,4 @@
-import { CONNECTOR_SECRETS, EMAIL_PROVIDERS, EMAIL_PROVIDER_LABEL, ROLES, ROLE_LABELS, type AssistantSettings, type EmailSettings, type MailConnectorSettings, type Role, type WhatsappSettings } from '@basis/shared';
+import { CONNECTOR_SECRETS, EMAIL_PROVIDERS, EMAIL_PROVIDER_LABEL, ROLES, ROLE_LABELS, type AssistantSettings, type EmailSettings, type MailConnectorSettings, type Role, type SiteAssistantSettings, type WhatsappSettings } from '@basis/shared';
 import { MailConnector } from '../../components/MailConnector';
 import { Button, Dialog, Ledger, Panel, SelectField, StatusChip, Td, TextField, Th, Tr, cn } from '@basis/ui';
 import { useState, type FormEvent } from 'react';
@@ -242,13 +242,47 @@ function AssistantConnector({ settings, canEdit }: { settings: AssistantSettings
   );
 }
 
+/** The assistant on the brand site: on or off for visitors and for signed-in customers, without a release. */
+function SiteAssistantConnector({ settings, canEdit }: { settings: SiteAssistantSettings | null; canEdit: boolean }) {
+  const t = useT();
+  const save = useSaveConnector();
+  const [form, setForm] = useState({ anonymous: settings?.anonymous !== false, customers: settings?.customers !== false });
+  const on = form.anonymous || form.customers;
+  return (
+    <Panel title={t('Assistant on the site')} action={<StatusChip tone={on ? 'positive' : 'neutral'}>{on ? t('On') : t('Off')}</StatusChip>}>
+      <p className="mb-4 max-w-2xl text-sm text-ink-soft">{t('The AI on basis-inc.web.app answers visitors about the fabrics and shades and takes sample requests; signed-in customers can also ask about their own quotes, orders and shipments. It never sends anything without the visitor’s click. Set a monthly spend limit on the Anthropic key in the Anthropic Console.')}</p>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          save.mutate({ key: 'site_assistant', settings: { anonymous: form.anonymous, customers: form.customers } });
+        }}
+        className="grid gap-3"
+      >
+        <label className="flex items-center gap-3 text-sm">
+          <input type="checkbox" checked={form.anonymous} disabled={!canEdit} onChange={(event) => setForm({ ...form, anonymous: event.target.checked })} className="size-4 accent-charcoal" />
+          {t('For visitors who are not signed in')}
+        </label>
+        <label className="flex items-center gap-3 text-sm">
+          <input type="checkbox" checked={form.customers} disabled={!canEdit} onChange={(event) => setForm({ ...form, customers: event.target.checked })} className="size-4 accent-charcoal" />
+          {t('For signed-in customers')}
+        </label>
+        {canEdit && (
+          <div className="flex justify-end">
+            <Button type="submit" busy={save.isPending} busyLabel={t('Saving')}>{t('Save')}</Button>
+          </div>
+        )}
+      </form>
+    </Panel>
+  );
+}
+
 export function Settings() {
   const t = useT();
   const session = useRequiredSession();
   const connectors = useConnectors();
   const canEdit = session.role === 'owner';
   const data = connectors.data;
-  const find = <T,>(key: 'email' | 'whatsapp' | 'assistant' | 'mail') => (data?.connectors.find((connector) => connector.key === key)?.settings ?? null) as T | null;
+  const find = <T,>(key: 'email' | 'whatsapp' | 'assistant' | 'mail' | 'site_assistant') => (data?.connectors.find((connector) => connector.key === key)?.settings ?? null) as T | null;
   return (
     <>
       <ModuleTitle number="15" title={t('Settings')}>{t('Connectors: email, WhatsApp, the company mailbox, and the assistant that acts on your behalf.')}</ModuleTitle>
@@ -264,6 +298,7 @@ export function Settings() {
             <WhatsappConnector key={JSON.stringify(find('whatsapp'))} settings={find<WhatsappSettings>('whatsapp')} canEdit={canEdit} />
             <MailConnector key={JSON.stringify(find('mail'))} settings={find<MailConnectorSettings>('mail')} canEdit={canEdit} />
             <AssistantConnector settings={find<AssistantSettings>('assistant')} canEdit={canEdit} />
+            <SiteAssistantConnector key={JSON.stringify(find('site_assistant'))} settings={find<SiteAssistantSettings>('site_assistant')} canEdit={canEdit} />
           </>
         )}
       </div>

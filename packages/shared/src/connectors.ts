@@ -3,7 +3,7 @@ import type { MailConnectorSettings } from './mail';
 
 // How the platform reaches the outside, and who may act through it.
 
-export const CONNECTOR_KEYS = ['email', 'whatsapp', 'assistant', 'mail'] as const;
+export const CONNECTOR_KEYS = ['email', 'whatsapp', 'assistant', 'mail', 'site_assistant'] as const;
 export type ConnectorKey = (typeof CONNECTOR_KEYS)[number];
 
 export const EMAIL_PROVIDERS = ['resend', 'postmark'] as const;
@@ -22,6 +22,12 @@ export interface WhatsappSettings {
   readonly businessNumber: string;
 }
 
+/** The assistant on the brand site, per audience; a missing value means on. */
+export interface SiteAssistantSettings {
+  readonly anonymous: boolean;
+  readonly customers: boolean;
+}
+
 export interface AssistantSettings {
   /** The role the assistant's tokens are issued with; never above the owner's. */
   readonly defaultRole: Role;
@@ -35,11 +41,13 @@ export const CONNECTOR_SECRETS: Record<ConnectorKey, readonly string[]> = {
   // The mailbox's App Password (GMAIL_APP_PASSWORD) is reported by
   // `mailStatus`, one of the functions that hold it; see MAIL_CONNECTOR_SECRETS.
   mail: [],
+  // The Anthropic key (ANTHROPIC_API_KEY) is held by the assistant functions themselves.
+  site_assistant: [],
 };
 
 export interface ConnectorView {
   readonly key: ConnectorKey;
-  readonly settings: EmailSettings | WhatsappSettings | AssistantSettings | MailConnectorSettings | null;
+  readonly settings: EmailSettings | WhatsappSettings | AssistantSettings | MailConnectorSettings | SiteAssistantSettings | null;
   readonly updatedAt: string | null;
   /** Which of the connector's secrets are present where the functions run. */
   readonly secrets: readonly { readonly name: string; readonly present: boolean }[];

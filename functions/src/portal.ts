@@ -342,7 +342,7 @@ export const customerSignedIn = onCall({ region: REGION }, async (request) => {
 
 // ---------------------------------------------------------------- quotes and samples
 
-const answerInput = z.object({
+export const answerInput = z.object({
   number: z.string().regex(/^QUO-\d{2}-\d{4}$/),
   decision: z.enum(['accept', 'decline']),
   reason: z.string().trim().max(500).optional(),
@@ -352,8 +352,12 @@ const answerInput = z.object({
 /** The customer accepts or declines a sent quote; accepting opens the confirmed sales order, as when sales records it. */
 export const respondToQuote = onCall({ region: REGION }, async (request) => {
   const caller = await customerCallerOf(request);
+  return answerQuote(caller, parse(answerInput, request.data));
+});
+
+/** Shared by the portal's button and the site assistant's confirmed proposal. */
+export async function answerQuote(caller: CustomerCaller, input: z.infer<typeof answerInput>): Promise<{ number: string; state: string; orderNumber: string | null }> {
   requireCustomer(caller, 'answer_quote', 'Answering quotes');
-  const input = parse(answerInput, request.data);
   if (!caller.companyId) throw failure('not_found', `No quote ${input.number}.`);
   const { quotes } = await graphql<{ quotes: { number: string; state: string; validUntil: string | null }[] }>(
     `query ($number: String!, $companyId: UUID!) { quotes(where: { number: { eq: $number }, customer: { id: { eq: $companyId } } }, limit: 1) { number state validUntil } }`,
@@ -363,11 +367,10 @@ export const respondToQuote = onCall({ region: REGION }, async (request) => {
   if (!quote) throw failure('not_found', `No quote ${input.number}.`);
   const standing = quoteStanding(quote, todayIn('UTC'));
   if (standing !== 'awaiting_answer') throw failure('invariant_violation', standing === 'expired' ? `${quote.number} is no longer valid. Ask BASIS for a new quote.` : `${quote.number} has already been answered.`);
-  const result = await applyQuoteTransition({ number: quote.number, to: input.decision === 'accept' ? 'accepted' : 'declined', ...(input.reason ? { reason: input.reason } : {}), ...(input.requestedDelivery ? { requestedDelivery: input.requestedDelivery } : {}) }, caller.uid, `in the portal by ${caller.name}`);
-  return result;
-});
+  return applyQuoteTransition({ number: quote.number, to: input.decision === 'accept' ? 'accepted' : 'declined', ...(input.reason ? { reason: input.reason } : {}), ...(input.requestedDelivery ? { requestedDelivery: input.requestedDelivery } : {}) }, caller.uid, `in the portal by ${caller.name}`);
+}
 
-const samplesInput = z.object({
+export const samplesInput = z.object({
   products: z.array(z.string().max(16)).max(20).default([]),
   shades: z.array(z.string().max(8)).max(40).default([]),
   message: z.string().trim().max(4000).optional(),
@@ -376,8 +379,12 @@ const samplesInput = z.object({
 
 export const requestCustomerSamples = onCall({ region: REGION }, async (request) => {
   const caller = await customerCallerOf(request);
+  return askForSamples(caller, parse(samplesInput, request.data), 'portal');
+});
+
+/** Shared by the portal's form and the site assistant's confirmed proposal. */
+export async function askForSamples(caller: CustomerCaller, input: z.infer<typeof samplesInput>, source: 'portal' | 'assistant'): Promise<{ reference: string }> {
   requireCustomer(caller, 'request_samples', 'Requesting samples');
-  const input = parse(samplesInput, request.data);
   if (input.products.length === 0 && input.shades.length === 0 && !input.message) throw failure('validation', 'Choose fabrics or shades, or say what you need.');
   let address: string | null = null;
   if (input.addressId) {
@@ -391,13 +398,13 @@ export const requestCustomerSamples = onCall({ region: REGION }, async (request)
   }
   const reference = await createInquiryRecord(
     { kind: 'sample_request', name: caller.name, company: caller.accountName, email: caller.email, phone: null, country: null, customerType: null, topic: 'portal', message: input.message ?? null, details: { products: input.products, shades: input.shades, volume: null, address, url: null }, context: { page: '/account/samples', portal: true } },
-    'portal',
+    source,
     null,
     caller.accountId,
   );
-  if (caller.companyId) await timeline('customer', caller.companyId, 'portal', caller.uid, `${reference}: samples asked for in the portal by ${caller.name}`);
+  if (caller.companyId) await timeline('customer', caller.companyId, 'portal', caller.uid, `${reference}: samples asked for ${source === 'assistant' ? 'through the site assistant' : 'in the portal'} by ${caller.name}`);
   return { reference };
-});
+}
 
 // ---------------------------------------------------------------- addresses
 

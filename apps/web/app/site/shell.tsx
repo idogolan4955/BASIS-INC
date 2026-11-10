@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation } from 'react-router';
 import { SITE, families, shades } from './catalog';
 import { Eyebrow, Index } from './ui';
+import { SiteAssistant } from '../assistant/widget';
 
 // The site's frame: a quiet top bar, the fabrics index as the menu, and the
 // single primary action, within thumb reach on phones.
@@ -180,6 +181,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
       </div>
 
       <IndexMenu open={menu} onClose={() => setMenu(false)} />
+      <SiteAssistant />
     </div>
   );
 }

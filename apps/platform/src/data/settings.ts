@@ -13,6 +13,7 @@ const sampleConnectors: ConnectorView[] = [
   { key: 'whatsapp', settings: { businessNumber: '' }, updatedAt: null, secrets: [] },
   { key: 'assistant', settings: { defaultRole: 'owner' }, updatedAt: '2026-09-20T09:00:00Z', secrets: [] },
   { key: 'mail', settings: { address: 'basisinc25@gmail.com' }, updatedAt: null, secrets: [] },
+  { key: 'site_assistant', settings: null, updatedAt: null, secrets: [] },
 ];
 
 async function live() {

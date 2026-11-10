@@ -51,3 +51,56 @@ type AssistantAction @table {
   error: String
   createdAt: Timestamp! @default(expr: "request.time")
 }
+
+# ---------------------------------------------------------------- the assistant on the site
+# (docs/CUSTOMER_PORTAL_PLAN.md §9). A conversation on the public site is a
+# visitor's, held by a key only their browser has (stored as its hash), or a
+# signed-in customer's. Turns are kept as exchanged with the model; actions
+# (a sample request, a hand-off to sales, an answer to a quote) wait for the
+# visitor's click, then run the same path as the site's own forms.
+
+enum SiteAudience {
+  anonymous
+  customer
+}
+
+type SiteConversation @table {
+  audience: SiteAudience!
+  account: CustomerAccount
+  uid: String @col(dataType: "varchar(128)")
+  # Anonymous: the SHA-256 of the key the browser holds; never the key itself.
+  sessionHash: String @col(dataType: "varchar(64)")
+  # The SHA-256 of the visitor's address, for the hourly limit; never the address.
+  ipHash: String @col(dataType: "varchar(64)")
+  language: String @col(dataType: "varchar(16)")
+  handedOffAt: Timestamp
+  inquiry: Inquiry
+  createdAt: Timestamp! @default(expr: "request.time")
+  lastActivityAt: Timestamp! @default(expr: "request.time")
+}
+
+type SiteTurn @table {
+  conversation: SiteConversation!
+  seq: Int!
+  role: AssistantMessageRole!
+  content: Any!
+  model: String @col(dataType: "varchar(40)")
+  inputTokens: Int
+  outputTokens: Int
+  cachedTokens: Int
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type SiteAction @table {
+  conversation: SiteConversation!
+  toolUseId: String! @col(dataType: "varchar(80)")
+  # request_samples | talk_to_sales | answer_quote
+  kind: String! @col(dataType: "varchar(24)")
+  input: Any!
+  summary: String!
+  state: AssistantActionState!
+  result: Any
+  error: String
+  decidedAt: Timestamp
+  createdAt: Timestamp! @default(expr: "request.time")
+}

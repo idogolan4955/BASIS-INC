@@ -133,6 +133,10 @@ export const FUNCTION_NAMES = {
   saveCustomerAddress: 'saveCustomerAddress',
   removeCustomerAddress: 'removeCustomerAddress',
   customerDocuments: 'customerDocuments',
+  /** The assistant on the brand site: anonymous visitors and signed-in customers; actions wait for the visitor's click. */
+  siteAssistant: 'siteAssistant',
+  siteAssistantDecide: 'siteAssistantDecide',
+  siteAssistantHistory: 'siteAssistantHistory',
   /** Scheduled: consume domain events, evaluate alert rules. */
   sweepEvents: 'sweepEvents',
 } as const;

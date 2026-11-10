@@ -5262,6 +5262,21 @@ export interface Shipment_Key {
   __typename?: 'Shipment_Key';
 }
 
+export interface SiteAction_Key {
+  id: UUIDString;
+  __typename?: 'SiteAction_Key';
+}
+
+export interface SiteConversation_Key {
+  id: UUIDString;
+  __typename?: 'SiteConversation_Key';
+}
+
+export interface SiteTurn_Key {
+  id: UUIDString;
+  __typename?: 'SiteTurn_Key';
+}
+
 export interface Sku_Key {
   code: string;
   __typename?: 'Sku_Key';

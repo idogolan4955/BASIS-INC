@@ -381,6 +381,15 @@ Designed in [CUSTOMER_PORTAL_PLAN](CUSTOMER_PORTAL_PLAN.md) on 2026-11-10 and ta
 | The platform: the Portal tab on a customer company (account, people, invitations, invite) for owner, operations and sales; read by marketing and finance | |
 | Verified on the emulators with 34 checks (isolation between two customers, a staff login refused by the customer connector and a customer refused by staff functions, accepting and the order it opens, a viewer refused, the last admin kept, a suspended person unable to sign in, a staff email refused, PDFs and documents only for their owner) and in the browser: invitation accepted, signed in, a quote accepted in Hebrew, every page at 1440 px and 375 px | |
 
+#### P12 progress, second slice: the assistant on the site (2026-11-10)
+
+| Done | Remaining |
+|---|---|
+| Schema in `dataconnect/schema/assistant.gql`: `SiteConversation` (audience, account or the hash of the visitor's key, the hash of their address, hand-off), `SiteTurn` (content as exchanged, model and tokens), `SiteAction` (proposed, sent, not sent, failed). Rules in `packages/shared/src/site-assistant.ts`: model and effort per audience, limits, the customer reads allowed, what the widget draws | App Check with reCAPTCHA Enterprise (owner, console); usage per month and the handed-off conversations in the platform |
+| `siteAssistant`, `siteAssistantHistory`, `siteAssistantDecide` (`functions/src/assistant/site.ts`): Opus 5.5 at low effort for visitors and medium for customers, refusal fallback, cached prompt with the catalogue and the Shade System; visitors may only propose a sample request or a hand-off; customers read their own records through the `customer` connector as themselves and may propose an answer to a quote or a sample request; nothing runs without the visitor's click; limits per conversation, per address, per day | |
+| The widget on every page of the brand site: "Ask BASIS", says it is an AI, links to privacy, keeps the conversation for the browser session, action cards with Send and Not now, English and Hebrew; Settings › Connectors › Assistant on the site switches it per audience | |
+| Verified on the emulators with the owner's Anthropic key: a catalogue answer that declined to guess a shade without a swatch; a sample request gathered in one message and sent from the card as an inquiry; a signed-in customer told when her shipment arrives and what she owes, read from her own records; another customer asking for those records by number (and claiming to be an admin) told there is no such record in their account | |
+
 ### P9 — Marketing, analytics, integrations (L, ongoing)
 
 - Campaigns, segments, sample kits, outreach tracking.

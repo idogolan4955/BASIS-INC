@@ -47,6 +47,9 @@ export const ASSISTANT_EXCLUDED_COMMANDS = [
   'saveCustomerAddress',
   'removeCustomerAddress',
   'customerDocuments',
+  'siteAssistant',
+  'siteAssistantDecide',
+  'siteAssistantHistory',
 ] as const;
 
 /** Connector mutations the assistant may never propose. */
