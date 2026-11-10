@@ -94,9 +94,7 @@ export const FUNCTION_NAMES = {
   disconnectMailbox: 'disconnectMailbox',
   syncMailboxNow: 'syncMailboxNow',
   mailStatus: 'mailStatus',
-  /** Pub/Sub on topic gmail-mail: Gmail's change notifications. */
-  onGmailNotification: 'onGmailNotification',
-  /** Scheduled: the catch-up sync and the watch renewal. */
+  /** Scheduled, every five minutes: read what arrived in the mailbox over IMAP. */
   syncMail: 'syncMail',
   /** Callable: a saved .eml stored and sorted like synced mail. */
   importMailMessage: 'importMailMessage',

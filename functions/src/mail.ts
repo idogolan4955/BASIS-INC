@@ -15,14 +15,13 @@ import {
   type Role,
 } from '@basis/shared';
 import { getStorage } from 'firebase-admin/storage';
-import { onMessagePublished } from 'firebase-functions/v2/pubsub';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { onCall, type CallableFunction, type CallableRequest } from 'firebase-functions/v2/https';
 import PostalMime from 'postal-mime';
 import { z } from 'zod';
 import { REGION, audit, callerOf, failure, graphql, requireRole, type Caller } from './lib';
 import { createInquiryRecord } from './intake';
-import { GMAIL_TOPIC, GmailError, MAIL_SECRETS, mailSecretsPresent, mailSettings, messagesAddedSince, profile, rawMessage, searchMessages, stopWatch, watch } from './mail/gmail';
+import { MAIL_SECRETS, checkMailbox, mailSecretsPresent, mailSettings, rawMessage, readSince } from './mail/imap';
 import { companyEntity, existingNumbers, ingestMessage, linkThread, recordTimeline, type Mailbox } from './mail/ingest';
 
 // Module 19, Mail (docs/MAIL_PLAN.md, slice 1): the mailbox connection and
@@ -30,24 +29,25 @@ import { companyEntity, existingNumbers, ingestMessage, linkThread, recordTimeli
 // Every read of a message checks its audience first; every action runs with
 // the caller's role, through the same paths the rest of the platform uses.
 
-const PROJECT = process.env['GCLOUD_PROJECT'] ?? process.env['GOOGLE_CLOUD_PROJECT'] ?? 'basis-inc';
 const IMPORT_ADDRESS = 'imported@mail.basis';
 
 // ---------------------------------------------------------------- mailboxes
 
 interface MailboxRow extends Mailbox {
   readonly state: string;
+  /** The IMAP cursor, `<uidValidity>:<last uid read>`. */
   readonly historyId: string | null;
-  readonly watchExpiresAt: string | null;
 }
 
+const MAILBOX_FIELDS = 'id address provider state historyId';
+
 async function mailboxByAddress(address: string): Promise<MailboxRow | null> {
-  const { mailMailboxes } = await graphql<{ mailMailboxes: MailboxRow[] }>(`query ($address: String!) { mailMailboxes(where: { address: { eq: $address } }, limit: 1) { id address provider state historyId watchExpiresAt } }`, { address: normaliseAddress(address) });
+  const { mailMailboxes } = await graphql<{ mailMailboxes: MailboxRow[] }>(`query ($address: String!) { mailMailboxes(where: { address: { eq: $address } }, limit: 1) { ${MAILBOX_FIELDS} } }`, { address: normaliseAddress(address) });
   return mailMailboxes[0] ?? null;
 }
 
 async function syncedMailbox(): Promise<MailboxRow | null> {
-  const { mailMailboxes } = await graphql<{ mailMailboxes: MailboxRow[] }>(`query { mailMailboxes(where: { provider: { eq: "gmail" }, state: { eq: connected } }, limit: 1) { id address provider state historyId watchExpiresAt } }`);
+  const { mailMailboxes } = await graphql<{ mailMailboxes: MailboxRow[] }>(`query { mailMailboxes(where: { provider: { eq: "gmail" }, state: { eq: connected } }, limit: 1) { ${MAILBOX_FIELDS} } }`);
   return mailMailboxes[0] ?? null;
 }
 
@@ -58,49 +58,27 @@ async function importMailbox(uid: string): Promise<Mailbox> {
   return { id: mailMailbox_insert.id, address: IMPORT_ADDRESS, provider: 'import' };
 }
 
-async function recordSync(mailboxId: string, data: { historyId?: string; lastError: string | null; watchExpiresAt?: string }): Promise<void> {
+async function recordSync(mailboxId: string, data: { historyId?: string; lastError: string | null }): Promise<void> {
   await graphql(
-    `mutation ($id: UUID!, $historyId: String, $lastError: String, $watchExpiresAt: Timestamp) { mailMailbox_update(id: $id, data: { historyId: $historyId, lastError: $lastError, watchExpiresAt: $watchExpiresAt, lastSyncAt_expr: "request.time" }) }`,
-    { id: mailboxId, historyId: data.historyId ?? null, lastError: data.lastError, watchExpiresAt: data.watchExpiresAt ?? null },
+    data.historyId
+      ? `mutation ($id: UUID!, $historyId: String, $lastError: String) { mailMailbox_update(id: $id, data: { historyId: $historyId, lastError: $lastError, lastSyncAt_expr: "request.time" }) }`
+      : `mutation ($id: UUID!, $lastError: String) { mailMailbox_update(id: $id, data: { lastError: $lastError, lastSyncAt_expr: "request.time" }) }`,
+    { id: mailboxId, lastError: data.lastError, ...(data.historyId ? { historyId: data.historyId } : {}) },
   );
 }
 
-/** Reads what Gmail added since the cursor and stores it; the cursor only moves when every message was stored. */
-async function syncMailbox(mailbox: MailboxRow, fallbackDays = 7): Promise<{ stored: number; seen: number }> {
-  let ids: { id: string; threadId: string }[];
-  let historyId: string;
-  try {
-    if (!mailbox.historyId) throw new GmailError(404, 'No cursor yet');
-    ({ ids, historyId } = await messagesAddedSince(mailbox.historyId));
-  } catch (error) {
-    if (!(error instanceof GmailError) || error.status !== 404) throw error;
-    // The cursor is too old (or missing): read the last days by date, idempotently.
-    const current = await profile();
-    ids = await searchMessages(`newer_than:${fallbackDays}d -in:spam -in:trash -in:drafts`, 2000);
-    historyId = current.historyId;
-  }
-  let stored = 0;
-  let failed = 0;
-  // Oldest first, so a thread is opened by its first message.
-  for (const { id } of [...ids].reverse()) {
-    try {
-      const raw = await rawMessage(id);
-      const result = await ingestMessage(mailbox, { providerMessageId: raw.id, providerThreadId: raw.threadId, labelIds: raw.labelIds, internalDate: raw.internalDate, raw: raw.raw });
-      if (result.created) stored += 1;
-    } catch (error) {
-      failed += 1;
-      console.error('mail: a message could not be stored', id, (error as Error).message);
-    }
-  }
-  await recordSync(mailbox.id, failed === 0 ? { historyId, lastError: null } : { lastError: `${failed} message${failed === 1 ? '' : 's'} could not be stored; the next sync tries again.` });
-  return { stored, seen: ids.length };
-}
+/** Messages read per run; a longer history is read over the following runs. */
+const PER_RUN = 400;
 
-async function renewWatch(mailbox: MailboxRow): Promise<string> {
-  const answer = await watch(PROJECT);
-  const expiresAt = new Date(Number(answer.expiration)).toISOString();
-  await graphql(`mutation ($id: UUID!, $at: Timestamp!) { mailMailbox_update(id: $id, data: { watchExpiresAt: $at }) }`, { id: mailbox.id, at: expiresAt });
-  return expiresAt;
+/** Reads what arrived after the cursor and stores it; the cursor moves only past what was stored. */
+async function syncMailbox(mailbox: MailboxRow, days = 7): Promise<{ stored: number; seen: number }> {
+  let stored = 0;
+  const result = await readSince(mailbox.address, mailbox.historyId, days, PER_RUN, async (message) => {
+    const ingested = await ingestMessage(mailbox, { providerMessageId: message.id, providerThreadId: message.threadId, labelIds: message.labelIds, internalDate: message.internalDate, raw: message.raw });
+    if (ingested.created) stored += 1;
+  });
+  await recordSync(mailbox.id, { historyId: result.cursor, lastError: result.failed === 0 ? null : 'A message could not be stored; the next sync tries it again.' });
+  return { stored, seen: result.seen };
 }
 
 const connectInput = z.object({ backfillDays: z.union([z.literal(0), z.literal(30), z.literal(90)]).default(30) });
@@ -111,42 +89,27 @@ export const connectMailbox = onCall({ region: REGION, secrets: MAIL_SECRETS, ti
   const { backfillDays } = connectInput.parse(request.data ?? {});
   const settings = await mailSettings();
   if (!settings.address) throw failure('validation', 'Enter the mailbox address in Settings › Connectors › Mail first.');
-  const account = await profile();
-  if (normaliseAddress(account.emailAddress) !== normaliseAddress(settings.address)) {
-    throw failure('invariant_violation', `The credentials open ${account.emailAddress}, not ${settings.address}. Run \`pnpm mail:connect\` signed in as ${settings.address}.`);
-  }
-  let mailbox = await mailboxByAddress(settings.address);
+  const address = normaliseAddress(settings.address);
+  await checkMailbox(address);
+  let mailbox = await mailboxByAddress(address);
   if (!mailbox) {
-    const { mailMailbox_insert } = await graphql<{ mailMailbox_insert: { id: string } }>(`mutation ($address: String!, $uid: String!) { mailMailbox_insert(data: { address: $address, provider: "gmail", state: connected, connectedByUid: $uid }) }`, { address: normaliseAddress(settings.address), uid: caller.uid });
-    mailbox = { id: mailMailbox_insert.id, address: normaliseAddress(settings.address), provider: 'gmail', state: 'connected', historyId: null, watchExpiresAt: null };
+    const { mailMailbox_insert } = await graphql<{ mailMailbox_insert: { id: string } }>(`mutation ($address: String!, $uid: String!) { mailMailbox_insert(data: { address: $address, provider: "gmail", state: connected, connectedByUid: $uid }) }`, { address, uid: caller.uid });
+    mailbox = { id: mailMailbox_insert.id, address, provider: 'gmail', state: 'connected', historyId: null };
   } else {
     await graphql(`mutation ($id: UUID!) { mailMailbox_update(id: $id, data: { state: connected }) }`, { id: mailbox.id });
   }
-  const watchExpiresAt = await renewWatch(mailbox);
-  let stored = 0;
-  if (backfillDays > 0 && !mailbox.historyId) {
-    const ids = await searchMessages(`newer_than:${backfillDays}d -in:spam -in:trash -in:drafts`, 2000);
-    for (const { id } of [...ids].reverse()) {
-      try {
-        const raw = await rawMessage(id);
-        if ((await ingestMessage(mailbox, { providerMessageId: raw.id, providerThreadId: raw.threadId, labelIds: raw.labelIds, internalDate: raw.internalDate, raw: raw.raw })).created) stored += 1;
-      } catch (error) {
-        console.error('mail: backfill message failed', id, (error as Error).message);
-      }
-    }
-  }
-  await recordSync(mailbox.id, { historyId: mailbox.historyId ?? account.historyId, lastError: null, watchExpiresAt });
-  await audit(caller.uid, 'mail.connect', 'mail_mailbox', mailbox.id, null, { address: mailbox.address, backfillDays, stored });
-  return { mailboxId: mailbox.id, address: mailbox.address, watchExpiresAt, stored };
+  // The first run brings in the history asked for; the scheduled sync reads the rest of it and everything after.
+  const { stored, seen } = await syncMailbox(mailbox, backfillDays);
+  await audit(caller.uid, 'mail.connect', 'mail_mailbox', mailbox.id, null, { address, backfillDays, stored });
+  return { mailboxId: mailbox.id, address, stored, more: seen >= PER_RUN };
 });
 
-export const disconnectMailbox = onCall({ region: REGION, secrets: MAIL_SECRETS }, async (request) => {
+export const disconnectMailbox = onCall({ region: REGION }, async (request) => {
   const caller = callerOf(request);
   requireRole(caller, ['owner'], 'Disconnecting the mailbox');
   const mailbox = await syncedMailbox();
   if (!mailbox) throw failure('not_found', 'No mailbox is connected.');
-  await stopWatch().catch((error) => console.warn('mail: stop failed', (error as Error).message));
-  await graphql(`mutation ($id: UUID!) { mailMailbox_update(id: $id, data: { state: disconnected, watchExpiresAt: null }) }`, { id: mailbox.id });
+  await graphql(`mutation ($id: UUID!) { mailMailbox_update(id: $id, data: { state: disconnected }) }`, { id: mailbox.id });
   await audit(caller.uid, 'mail.disconnect', 'mail_mailbox', mailbox.id, { state: 'connected' }, { state: 'disconnected' });
   return { mailboxId: mailbox.id };
 });
@@ -167,27 +130,14 @@ export const syncMailboxNow = onCall({ region: REGION, secrets: MAIL_SECRETS, ti
 export const mailStatus = onCall({ region: REGION, secrets: MAIL_SECRETS }, async (request) => {
   const caller = callerOf(request);
   requireRole(caller, ['owner', 'operations'], 'Reading the mailbox status');
-  return { secrets: mailSecretsPresent(), topic: `projects/${PROJECT}/topics/${GMAIL_TOPIC}`, emulator: Boolean(process.env['FUNCTIONS_EMULATOR']) };
+  return { secrets: mailSecretsPresent(), emulator: Boolean(process.env['FUNCTIONS_EMULATOR']) };
 });
 
-/** Gmail publishes { emailAddress, historyId } on every change to the mailbox. */
-export const onGmailNotification = onMessagePublished({ topic: GMAIL_TOPIC, region: REGION, secrets: MAIL_SECRETS, timeoutSeconds: 300, memory: '512MiB' }, async (event) => {
-  const data = event.data.message.json as { emailAddress?: string } | undefined;
-  const mailbox = data?.emailAddress ? await mailboxByAddress(data.emailAddress) : null;
-  if (!mailbox || mailbox.state !== 'connected') return;
-  try {
-    await syncMailbox(mailbox);
-  } catch (error) {
-    await recordSync(mailbox.id, { lastError: (error as Error).message.slice(0, 500) });
-  }
-});
-
-/** The catch-up: every ten minutes read what a lost notification may have missed; renew the watch a day before it lapses. */
-export const syncMail = onSchedule({ region: REGION, schedule: 'every 10 minutes', secrets: MAIL_SECRETS, timeoutSeconds: 300, memory: '512MiB' }, async () => {
+/** Every five minutes: read what arrived since the last run. */
+export const syncMail = onSchedule({ region: REGION, schedule: 'every 5 minutes', secrets: MAIL_SECRETS, timeoutSeconds: 300, memory: '512MiB' }, async () => {
   const mailbox = await syncedMailbox();
   if (!mailbox) return;
   try {
-    if (!mailbox.watchExpiresAt || new Date(mailbox.watchExpiresAt).getTime() - Date.now() < 86_400_000) await renewWatch(mailbox);
     await syncMailbox(mailbox);
   } catch (error) {
     await recordSync(mailbox.id, { lastError: (error as Error).message.slice(0, 500) });
@@ -227,7 +177,7 @@ interface MessageRow {
   readonly sentAt: string;
   readonly bodyText: string | null;
   readonly providerMessageId: string;
-  readonly mailbox: { readonly id: string; readonly provider: string };
+  readonly mailbox: { readonly id: string; readonly provider: string; readonly address: string };
   readonly thread: { readonly id: string; readonly audience: MailAudience };
   readonly contact: { readonly id: string } | null;
   readonly company: { readonly id: string; readonly legalName: string; readonly companyRoles_on_company: { readonly kind: string }[] } | null;
@@ -235,7 +185,7 @@ interface MessageRow {
 
 async function readableMessage(caller: Caller, id: string): Promise<MessageRow> {
   const { mailMessage } = await graphql<{ mailMessage: MessageRow | null }>(
-    `query ($id: UUID!) { mailMessage(id: $id) { id audience state category direction fromAddress fromName subject sentAt bodyText providerMessageId mailbox { id provider } thread { id audience } contact { id } company { id legalName companyRoles_on_company { kind } } } }`,
+    `query ($id: UUID!) { mailMessage(id: $id) { id audience state category direction fromAddress fromName subject sentAt bodyText providerMessageId mailbox { id provider address } thread { id audience } contact { id } company { id legalName companyRoles_on_company { kind } } } }`,
     { id },
   );
   // A message outside the caller's audience does not exist for them.
@@ -425,7 +375,7 @@ export const actOnMail = onCall({ region: REGION }, async (request) => {
       // Every message from this address now belongs to the company, and its floor applies to them.
       const floor = audienceFloorForParty([input.role]);
       const { mailMessages } = await graphql<{ mailMessages: MessageRow[] }>(
-        `query ($address: String!) { mailMessages(where: { fromAddress: { eq: $address }, companyId: { isNull: true } }, limit: 500) { id audience state category direction fromAddress fromName subject sentAt bodyText providerMessageId mailbox { id provider } thread { id audience } contact { id } company { id legalName companyRoles_on_company { kind } } } }`,
+        `query ($address: String!) { mailMessages(where: { fromAddress: { eq: $address }, companyId: { isNull: true } }, limit: 500) { id audience state category direction fromAddress fromName subject sentAt bodyText providerMessageId mailbox { id provider address } thread { id audience } contact { id } company { id legalName companyRoles_on_company { kind } } } }`,
         { address: message.fromAddress },
       );
       // Knowing the company sorts what was unsorted: only the owner opens such mail
@@ -578,8 +528,9 @@ export const getMailAttachment = onCall({ region: REGION, secrets: MAIL_SECRETS,
   if (mailAttachment.storagePath) {
     [bytes] = await getStorage().bucket().file(mailAttachment.storagePath).download();
   } else if (message.mailbox.provider === 'gmail') {
-    const raw = await rawMessage(message.providerMessageId);
-    const parsed = await PostalMime.parse(raw.raw, { attachmentEncoding: 'arraybuffer' });
+    const raw = await rawMessage(message.mailbox.address, message.providerMessageId);
+    if (!raw) throw failure('not_found', 'Gmail no longer has this message.');
+    const parsed = await PostalMime.parse(raw, { attachmentEncoding: 'arraybuffer' });
     const attachments = parsed.attachments.filter((attachment) => attachment.disposition !== 'inline' || !attachment.related);
     const found = attachments[mailAttachment.position];
     if (!found) throw failure('not_found', 'Gmail no longer has this attachment.');

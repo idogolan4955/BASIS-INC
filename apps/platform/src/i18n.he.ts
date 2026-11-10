@@ -1810,4 +1810,8 @@ export const HE: Record<string, string> = {
   '{count} attachments': '{count} קבצים מצורפים',
   '{count} messages': '{count} הודעות',
   '{count} new messages.': '{count} הודעות חדשות.',
+  'The company mailbox is read into module 19 every five minutes. The platform opens Gmail read-only: it never sends, moves or deletes mail there. Every message is sorted by its sender, the records it names and its thread, and only the roles its audience allows can read it.': 'תיבת הדואר של החברה נקראת למודול 19 כל חמש דקות. המערכת פותחת את Gmail לקריאה בלבד: היא אף פעם לא שולחת, מזיזה או מוחקת שם מייל. כל הודעה ממוינת לפי השולח, הרשומות שהיא מזכירה והשרשור שלה, ורק התפקידים שהקהל שלה מתיר יכולים לקרוא אותה.',
+  'Signed in to Google as the mailbox: Security › 2-Step Verification on, then App passwords › create one named BASIS. Google shows 16 characters once.': 'מחובר לגוגל בתור תיבת הדואר: אבטחה › אימות דו-שלבי מופעל, ואז סיסמאות לאפליקציות › יצירת סיסמה בשם BASIS. גוגל מציגה 16 תווים פעם אחת.',
+  'In your terminal, paste it when asked:': 'בטרמינל שלך, הדבק אותה כשתתבקש:',
+  'Connected. {count} messages brought in; the rest follows over the next minutes.': 'מחובר. יובאו {count} הודעות; השאר יגיעו בדקות הקרובות.',
 };

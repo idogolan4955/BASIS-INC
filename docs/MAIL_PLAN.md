@@ -13,7 +13,8 @@ This document decides how mail gets in, the entities, the sorting rules and wher
 - Messages can also be **imported** as `.eml` files (owner and operations), into a mailbox of provider `import`. It is the same intake path, used for mail kept in another inbox and for the emulator checks.
 - The raw message and attachments are kept in Storage when Storage is on; until then an attachment is read again from Gmail on demand (`getMailAttachment`), and an imported attachment cannot be opened (the screen says so).
 - In slice 1 a person chooses the actions (link, task, inquiry, interaction, file, company, done, ignore, reopen) through one function, `actOnMail`; each is recorded as an accepted `MailAction`. Proposals and one-click accept arrive with the classifier in slice 2.
-- Functions: `connectMailbox`, `disconnectMailbox`, `syncMailboxNow`, `mailStatus`, `onGmailNotification` (Pub/Sub topic `gmail-mail`), `syncMail` (every 10 minutes: catch-up and watch renewal), `importMailMessage`, `actOnMail`, `sortMailMessage`, `saveMailRule`, `getMailAttachment`. Those that talk to Gmail declare the secrets `GMAIL_CLIENT_SECRET` and `GMAIL_REFRESH_TOKEN`.
+- Functions: `connectMailbox`, `disconnectMailbox`, `syncMailboxNow`, `mailStatus`, `syncMail` (every five minutes), `importMailMessage`, `actOnMail`, `sortMailMessage`, `saveMailRule`, `getMailAttachment`. Those that talk to Gmail declare the secret `GMAIL_APP_PASSWORD`.
+- **How mail gets in changed on 2026-11-10 (owner):** the mailbox is read over **IMAP with a Google App Password** (option C below), the way the owner's other systems read Gmail, instead of the Gmail API with an OAuth client. The platform opens Gmail's *All Mail* read-only every five minutes from a cursor (`<uidValidity>:<last uid>`, kept in `MailMailbox.historyId`), reads at most 400 messages a run, and moves the cursor only past what was stored. Gmail's own ids (`X-GM-MSGID`, `X-GM-THRID`) are the message and thread keys, in the same hex form the Gmail API uses, so a later move to the API keeps every key. There is no Pub/Sub topic, no OAuth client and no `pnpm mail:connect`; `MailMailbox.watchExpiresAt` stays unused. The trade-off accepted: the App Password opens the whole account, and mail arrives within five minutes rather than seconds.
 - Alert rules built: `mail.sync_stalled` and `mail.customer_unanswered`.
 
 ---
@@ -51,7 +52,7 @@ Three ways were weighed. `basisinc25@gmail.com` is a consumer Gmail address (not
 | Owner sets up | An OAuth client in Google Cloud and one consent in the browser (§2.2) | A Postmark account, the inbound address, a Gmail forwarding rule confirmed by code | 2-Step Verification on the mailbox and an app password |
 | Weak points | Gmail's read scopes are "restricted". An app used by its own owner on fewer than 100 accounts may run unverified (Google's personal-use exception): the consent screen shows "Google hasn't verified this app" once. Left in *Testing* status, the authorisation expires every seven days, so the app is published to *In production* without verification. To be re-checked against Google's policy at build time | Mail lives in two places; forwarding breaks silently if Gmail suspends it | Google keeps narrowing password access; polling cost and lag |
 
-**Recommendation: A.** It sees both directions, needs no new vendor, keeps the mail inside Google, and is scoped to reading. The same OAuth client can later be granted `gmail.send` (a "sensitive", not restricted, scope) so replies and documents go out **from `basisinc25@gmail.com` inside the customer's thread** — which would make Resend or Postmark unnecessary for sending and unblock the `EMAIL_API_KEY` wait. That is question 7 in §10.
+**Recommendation at design time: A. Built: C** (owner, 2026-11-10; see the state note above). It sees both directions, needs no new vendor, keeps the mail inside Google, and is scoped to reading. The same OAuth client can later be granted `gmail.send` (a "sensitive", not restricted, scope) so replies and documents go out **from `basisinc25@gmail.com` inside the customer's thread** — which would make Resend or Postmark unnecessary for sending and unblock the `EMAIL_API_KEY` wait. That is question 7 in §10.
 
 ### 2.1 The sync
 
@@ -60,7 +61,14 @@ Three ways were weighed. `basisinc25@gmail.com` is a consumer Gmail address (not
 3. The scheduled sweep renews the watch daily and, every ten minutes, catches up from the stored `historyId` in case a notification was lost. If Gmail says the `historyId` is too old, it re-reads the last seven days by query, again idempotently.
 4. Each stored message emits `mail.received` into the outbox; the sweep's handler runs the sorting (§5). The sorting never blocks storing.
 
-### 2.2 What the owner sets up himself
+### 2.2 What the owner sets up himself (as built, with an App Password)
+
+1. **Google account `basisinc25@gmail.com`:** Security › 2-Step Verification on; then https://myaccount.google.com/apppasswords › create one named BASIS. Google shows sixteen characters once.
+2. **Terminal:** `firebase functions:secrets:set GMAIL_APP_PASSWORD` and paste it; `firebase functions:secrets:set ANTHROPIC_API_KEY` for slice 2.
+3. Deploy the functions, then Settings › Connectors › Mail › Connect.
+
+The OAuth set-up that was designed first, kept for the record:
+
 
 1. **Google Cloud console, project `basis-inc`:** enable the Gmail API; OAuth consent screen *External*, app name BASIS, support email `basisinc25@gmail.com`, scope `gmail.readonly`; publish to *In production* (personal use, unverified). Create an OAuth client of type *Desktop app*. The client id is not secret and goes into Settings › Connectors › Mail; the client secret is.
 2. **Terminal:**
@@ -293,7 +301,7 @@ On record sheets — company, purchase order, production run, shipment, inquiry,
 
 - Read-only scope; the platform cannot send, delete or change mail in Gmail until `gmail.send` is approved (question 7). Revoking access in the Google account stops everything; the platform reports `mail.sync_stalled`.
 - No public endpoint: Gmail → Pub/Sub → function inside the project.
-- Secrets `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN`, `ANTHROPIC_API_KEY`: set only by the owner in the terminal, listed by name in `CONNECTOR_SECRETS`, never stored in the database, never printed.
+- Secrets `GMAIL_APP_PASSWORD` (as built; the OAuth design named `GMAIL_CLIENT_SECRET` and `GMAIL_REFRESH_TOKEN`) and `ANTHROPIC_API_KEY`: set only by the owner in the terminal, listed by name in `CONNECTOR_SECRETS`, never stored in the database, never printed.
 - HTML is never rendered unsandboxed; attachments are never opened by the platform beyond reading PDF text for the classifier.
 - Mail is records, kept like timeline events: nothing is deleted when it is deleted in Gmail. Purging the bodies of spam and newsletters after a period is question 8.
 - Every accept, dismiss, re-sort, audience change and rule change is an `AuditEvent`.

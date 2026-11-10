@@ -15,7 +15,7 @@ import { deleteGoal, reorderGoals, saveGoal } from './boards';
 import { logInteraction, saveOpportunity, savePriceList } from './relationships';
 import { recordDevelopmentDecision, saveBrandAsset, saveCollection, saveDevelopmentCosting, saveDevelopmentPart, saveDevelopmentProduct, saveDevelopmentSample, saveDevelopmentSourcing, saveProductCategory, transitionDevelopment } from './development';
 import { inviteUser, setUserRole } from './users';
-import { actOnMail, connectMailbox, disconnectMailbox, getMailAttachment, importMailMessage, mailStatus, onGmailNotification, saveMailRule, sortMailMessage, syncMail, syncMailboxNow } from './mail';
+import { actOnMail, connectMailbox, disconnectMailbox, getMailAttachment, importMailMessage, mailStatus, saveMailRule, sortMailMessage, syncMail, syncMailboxNow } from './mail';
 
 // Exported names must be exactly the registry in @basis/shared; the type
 // check fails when a function is added on one side only.
@@ -90,7 +90,6 @@ const registry: Record<FunctionName, unknown> = {
   disconnectMailbox,
   syncMailboxNow,
   mailStatus,
-  onGmailNotification,
   syncMail,
   importMailMessage,
   actOnMail,
@@ -100,4 +99,4 @@ const registry: Record<FunctionName, unknown> = {
 };
 void registry;
 
-export { api, evaluateAlerts, inviteUser, setUserRole, sweepEvents, createPurchaseOrder, issuePurchaseOrder, confirmPurchaseOrder, cancelPurchaseOrder, createProductionRun, updateMilestone, recordLot, packHandlingUnit, setLotQuality, fileGeneratedDocument, sendDocumentEmail, createApiToken, revokeApiToken, saveConnector, connectorStatus, markInquiry, createInspection, recordInspection, submitInspection, signOffInspection, createCorrectiveAction, updateCorrectiveAction, createShipment, updateShipment, assignHandlingUnits, removeHandlingUnits, bookShipment, cancelShipment, updateLeg, recordShipmentCost, recordCustomsEntry, setFxRate, allocateShipmentCosts, createStockLocation, receiveShipment, recordStockMovement, setReorderPolicy, upsertCustomerProfile, saveQuote, transitionQuote, createSalesOrder, transitionSalesOrder, allocateSalesOrder, shipSalesOrder, recordInvoice, saveGoal, reorderGoals, deleteGoal, savePriceList, saveOpportunity, logInteraction, saveProductCategory, saveCollection, saveBrandAsset, saveDevelopmentProduct, transitionDevelopment, saveDevelopmentPart, saveDevelopmentSample, saveDevelopmentSourcing, saveDevelopmentCosting, recordDevelopmentDecision, connectMailbox, disconnectMailbox, syncMailboxNow, mailStatus, onGmailNotification, syncMail, importMailMessage, actOnMail, sortMailMessage, saveMailRule, getMailAttachment };
+export { api, evaluateAlerts, inviteUser, setUserRole, sweepEvents, createPurchaseOrder, issuePurchaseOrder, confirmPurchaseOrder, cancelPurchaseOrder, createProductionRun, updateMilestone, recordLot, packHandlingUnit, setLotQuality, fileGeneratedDocument, sendDocumentEmail, createApiToken, revokeApiToken, saveConnector, connectorStatus, markInquiry, createInspection, recordInspection, submitInspection, signOffInspection, createCorrectiveAction, updateCorrectiveAction, createShipment, updateShipment, assignHandlingUnits, removeHandlingUnits, bookShipment, cancelShipment, updateLeg, recordShipmentCost, recordCustomsEntry, setFxRate, allocateShipmentCosts, createStockLocation, receiveShipment, recordStockMovement, setReorderPolicy, upsertCustomerProfile, saveQuote, transitionQuote, createSalesOrder, transitionSalesOrder, allocateSalesOrder, shipSalesOrder, recordInvoice, saveGoal, reorderGoals, deleteGoal, savePriceList, saveOpportunity, logInteraction, saveProductCategory, saveCollection, saveBrandAsset, saveDevelopmentProduct, transitionDevelopment, saveDevelopmentPart, saveDevelopmentSample, saveDevelopmentSourcing, saveDevelopmentCosting, recordDevelopmentDecision, connectMailbox, disconnectMailbox, syncMailboxNow, mailStatus, syncMail, importMailMessage, actOnMail, sortMailMessage, saveMailRule, getMailAttachment };

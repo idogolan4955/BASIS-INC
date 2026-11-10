@@ -32,8 +32,8 @@ export const CONNECTOR_SECRETS: Record<ConnectorKey, readonly string[]> = {
   email: ['EMAIL_API_KEY'],
   whatsapp: [],
   assistant: [],
-  // The mailbox secrets (GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN) are reported
-  // by `mailStatus`, the only functions that hold them; see MAIL_CONNECTOR_SECRETS.
+  // The mailbox's App Password (GMAIL_APP_PASSWORD) is reported by
+  // `mailStatus`, one of the functions that hold it; see MAIL_CONNECTOR_SECRETS.
   mail: [],
 };
 

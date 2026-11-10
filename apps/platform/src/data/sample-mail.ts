@@ -212,7 +212,7 @@ export const sampleMail = {
     return [...current().rules].sort((a, b) => a.sort - b.sort);
   },
   async mailboxes(): Promise<MailboxView[]> {
-    return [{ id: 'mbx-1', address: MAILBOX, provider: 'gmail', state: 'connected', historyId: '1', watchExpiresAt: new Date(now + 5 * 86_400_000).toISOString(), lastSyncAt: ago(0.1), lastError: '' }];
+    return [{ id: 'mbx-1', address: MAILBOX, provider: 'gmail', state: 'connected', historyId: '1', lastSyncAt: ago(0.1), lastError: '' }];
   },
   async act(input: MailActInput, role: Role): Promise<unknown> {
     const message = await this.get(input.messageId, role);

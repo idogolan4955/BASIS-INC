@@ -122,14 +122,12 @@ export interface MailboxView {
   readonly provider: string;
   readonly state: string;
   readonly historyId: string;
-  readonly watchExpiresAt: string | null;
   readonly lastSyncAt: string | null;
   readonly lastError: string;
 }
 
 export interface MailStatusView {
   readonly secrets: readonly { readonly name: string; readonly present: boolean }[];
-  readonly topic: string;
   readonly emulator: boolean;
 }
 
@@ -310,7 +308,7 @@ export function useMailboxes(enabled = true) {
       if (isSample) return (await sample()).mailboxes();
       const { dc, sdk } = await live();
       const { data } = await sdk.listMailMailboxes(dc);
-      return data.mailMailboxes.map((mailbox) => ({ id: mailbox.id, address: mailbox.address, provider: mailbox.provider, state: mailbox.state, historyId: mailbox.historyId ?? '', watchExpiresAt: mailbox.watchExpiresAt ?? null, lastSyncAt: mailbox.lastSyncAt ?? null, lastError: mailbox.lastError ?? '' }));
+      return data.mailMailboxes.map((mailbox) => ({ id: mailbox.id, address: mailbox.address, provider: mailbox.provider, state: mailbox.state, historyId: mailbox.historyId ?? '', lastSyncAt: mailbox.lastSyncAt ?? null, lastError: mailbox.lastError ?? '' }));
     },
   });
 }
@@ -321,7 +319,7 @@ export function useMailStatus(enabled = true) {
     enabled,
     retry: false,
     queryFn: async (): Promise<MailStatusView | null> => {
-      if (isSample) return { secrets: [{ name: 'GMAIL_CLIENT_SECRET', present: false }, { name: 'GMAIL_REFRESH_TOKEN', present: false }], topic: 'projects/basis-inc/topics/gmail-mail', emulator: false };
+      if (isSample) return { secrets: [{ name: 'GMAIL_APP_PASSWORD', present: false }], emulator: false };
       try {
         return await callFunction<Record<string, never>, MailStatusView>(FUNCTION_NAMES.mailStatus, {});
       } catch {

@@ -68,22 +68,14 @@ the prompt with the word `unset`: the functions treat that placeholder as
 no key, the email connector reports the secret as missing, and the real
 value replaces it later with the command above.
 
-Module 19 (Mail, [MAIL_PLAN](MAIL_PLAN.md)) adds two more secrets that the
-mail functions declare. Until the mailbox is connected, give them the same
-placeholder:
+Module 19 (Mail, [MAIL_PLAN](MAIL_PLAN.md)) adds one more secret, the
+mailbox's Google App Password, which the mail functions declare. Create it in
+the Google account `basisinc25@gmail.com` (2-Step Verification on, then
+https://myaccount.google.com/apppasswords) and paste it when asked; until
+then the placeholder `unset` lets the functions deploy:
 
 ```bash
-firebase functions:secrets:set GMAIL_CLIENT_SECRET
-firebase functions:secrets:set GMAIL_REFRESH_TOKEN
-```
-
-The real values come from Google Cloud (the OAuth client's secret) and from
-`pnpm mail:connect --client-id <id>`, which writes the refresh token itself.
-Gmail publishes to the Pub/Sub topic `gmail-mail`, which the functions deploy
-creates; once it exists, allow Gmail to publish to it:
-
-```bash
-gcloud pubsub topics add-iam-policy-binding gmail-mail --project basis-inc --member serviceAccount:gmail-api-push@system.gserviceaccount.com --role roles/pubsub.publisher
+firebase functions:secrets:set GMAIL_APP_PASSWORD
 ```
 
 ## 6. Functions and Storage rules (done 2026-11-07; the mail functions of module 19 are deployed with the next run)

@@ -33,6 +33,7 @@ export const ENTITY_MODULE: Record<string, ModuleKey> = {
   user: 'settings',
   development_product: 'development',
   mail_message: 'mail',
+  mail_mailbox: 'settings',
 };
 
 const ENTITY_PATH: Record<string, string> = {
@@ -64,6 +65,7 @@ const ENTITY_PATH: Record<string, string> = {
   user: '/settings/users',
   development_product: '/development/products',
   mail_message: '/mail',
+  mail_mailbox: '/settings/connectors',
 };
 
 export function moduleForEntity(entityType: string): ModuleKey {

@@ -468,11 +468,10 @@ export function mailCompanyEntity(companyRoles: readonly string[]): 'customer' |
   return companyRoles.includes('customer') && !companyRoles.some((role) => role === 'supplier' || role === 'odm') ? 'customer' : 'supplier';
 }
 
-export const MAIL_CONNECTOR_SECRETS = ['GMAIL_CLIENT_SECRET', 'GMAIL_REFRESH_TOKEN'] as const;
+/** The mailbox is read over IMAP with a Google App Password, set by the owner in the terminal. */
+export const MAIL_CONNECTOR_SECRETS = ['GMAIL_APP_PASSWORD'] as const;
 
 export interface MailConnectorSettings {
-  /** The Google OAuth client id (Desktop app). Not a secret. */
-  readonly clientId: string;
   /** The mailbox the platform reads. */
   readonly address: string;
 }

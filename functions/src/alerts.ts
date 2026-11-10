@@ -490,19 +490,19 @@ export const RULES: Rule[] = [
   {
     key: 'mail.sync_stalled',
     async evaluate(now) {
-      const { mailMailboxes } = await graphql<{ mailMailboxes: { id: string; address: string; lastSyncAt: string | null; watchExpiresAt: string | null; lastError: string | null }[] }>(
-        `query { mailMailboxes(where: { provider: { eq: "gmail" }, state: { eq: connected } }, limit: 10) { id address lastSyncAt watchExpiresAt lastError } }`,
+      const { mailMailboxes } = await graphql<{ mailMailboxes: { id: string; address: string; lastSyncAt: string | null; lastError: string | null }[] }>(
+        `query { mailMailboxes(where: { provider: { eq: "gmail" }, state: { eq: connected } }, limit: 10) { id address lastSyncAt lastError } }`,
       );
       return mailMailboxes.flatMap((mailbox) => {
-        const quiet = !mailbox.lastSyncAt || now.getTime() - Date.parse(mailbox.lastSyncAt) > 3_600_000;
-        const lapsing = !mailbox.watchExpiresAt || Date.parse(mailbox.watchExpiresAt) - now.getTime() < 86_400_000;
-        if (!quiet && !lapsing && !mailbox.lastError) return [];
+        // The sync runs every five minutes; half an hour of silence means it stopped.
+        const quiet = !mailbox.lastSyncAt || now.getTime() - Date.parse(mailbox.lastSyncAt) > 30 * 60_000;
+        if (!quiet && !mailbox.lastError) return [];
         return [
           {
             entityType: 'mail_mailbox',
             entityId: mailbox.id,
             title: `The mailbox ${mailbox.address} is not syncing`,
-            detail: mailbox.lastError ?? (quiet ? 'No sync for over an hour.' : 'Gmail stops sending changes within a day unless the watch is renewed.'),
+            detail: mailbox.lastError ?? 'No sync for over half an hour.',
             severity: quiet ? 'critical' : 'caution',
             ownerRole: 'owner',
             dedupeKey: `mail.sync_stalled:${mailbox.id}`,
