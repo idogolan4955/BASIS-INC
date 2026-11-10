@@ -424,7 +424,7 @@ Each slice ends usable, deployed and in Hebrew.
 |---|---|---|
 | A payment processor account with business verification (Stripe for an entity abroad, or an Israeli gateway for the Israeli entity — §5.2) | Slice 3 | Per-transaction fees; check current pricing with the chosen provider |
 | A domain: **`basis-inc.net`** was found available on Google Cloud Domains at $12 a year (2026-11-05). Proposed: the brand site and `/account` move to it; Apple Pay on the web needs the domain verified | Slice 3 (sooner for brand and email) | $12 a year, plus about $0.20 a month for Cloud DNS |
-| Apple Developer Program | The Apple Wallet pass certificate (and Sign in with Apple) | $99 a year |
+| Apple Developer Program | The Apple Wallet pass certificate (and Sign in with Apple) | Already held: the owner's membership, team `97HE63NNKZ` (the team his other apps are signed with). BASIS gets its own Pass Type ID (`pass.com.basisinc.member`) and its own certificate in that team; nothing is shared with another project's certificates |
 | Google Pay & Wallet Console issuer account | The Google Wallet loyalty card | No fee known; check at sign-up |
 | The Anthropic API key (already planned for the mail classifier) with a monthly spend limit in console.anthropic.com | The assistant | Usage, §9.7 |
 | A lawyer's check | Cashback terms, store credit and gift vouchers, the privacy notice for accounts and the assistant | — |
