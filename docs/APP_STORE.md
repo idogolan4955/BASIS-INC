@@ -2,7 +2,7 @@
 
 The customer portal of the brand site ([CUSTOMER_PORTAL_PLAN](CUSTOMER_PORTAL_PLAN.md)) as an app on the App Store: a trade customer signs in, answers quotes, follows orders and shipments, opens documents, asks for samples and talks to the assistant, and is told on the phone when a quote arrives or a shipment lands. Asked for by the owner on 2026-11-10 ("when you finish building the customer front, open a session for the App Store"). This document is the decision record, the release procedure, and everything that is sent to Apple. Nothing is submitted for review without the owner's explicit yes.
 
-**State (2026-11-11).** Built and run in the iOS Simulator against the emulators; the store listing, screenshots and review notes below are ready. Waiting on the owner for the four steps in §9; the upload to TestFlight follows the first of them.
+**State (2026-11-11).** Built and checked in the iOS Simulator against the emulators (§10); the store listing, the screenshots and the review notes below are ready; the production API keys are set. Not yet uploaded: the archive stopped at Xcode's "No Accounts" — this Mac's Xcode is not signed in to an Apple account, so automatic signing can neither register the App ID nor make profiles. The production schema is waiting on the owner too. The steps that are his alone are §9; the archive, the upload to TestFlight and the production deploys follow them.
 
 ---
 
@@ -24,14 +24,14 @@ The customer portal of the brand site ([CUSTOMER_PORTAL_PLAN](CUSTOMER_PORTAL_PL
 - **Links open in the app** (Universal Links): an invitation link sent by WhatsApp or email, and any `/account` link of `basis-inc.web.app`, open the app at that page. `basisinc://account/…` does the same for links made inside BASIS.
 - **Passwords**: the app and the site share credentials (`webcredentials`), so iCloud Keychain fills a password saved on the site and saves one made in the app.
 - **Documents** open in Quick Look (print, mark up, save to Files) and go straight to the share sheet (Mail, WhatsApp, AirDrop) — fetched with the person's own sign-in, never through a public link.
-- **Native frame**: a numbered tab bar (Overview, Quotes, Orders, Shipments, More), swipe back, no link previews, a launch screen in the site's bone, safe areas respected.
+- **Native frame**: a numbered tab bar (Overview, Quotes, Orders, Shipments, More, mirrored in Hebrew), the assistant and the brand's index as words in the top bar, swipe back, no link previews, a launch screen in the site's bone, safe areas respected.
 - **Without an account**: the fabrics, the Shade System and the applications can be browsed, samples asked for and a trade account applied for, and the assistant answers.
 
 ### 1.2 How it is built
 
 ```
 apps/ios/
-├─ capacitor.config.ts      app id, opens at /account, splash and notification options
+├─ capacitor.config.ts      app id and name, launch screen and notification options
 ├─ scripts/bundle.mjs       builds apps/web for the app into www/ (--local: the emulators)
 ├─ scripts/assets.sh        renders the icon and the launch image from assets/*.html
 ├─ assets/                  icon.html (opaque, full bleed), splash.html
@@ -53,7 +53,7 @@ Plugins: `@capacitor/app` (links), `@capacitor/splash-screen`, `@capacitor/keybo
 
 | Requirement | How |
 |---|---|
-| Account deletion inside the app (5.1.1(v)) | Profile › **Delete my login** (`deleteMyLogin`): removes the Firebase login, the person's `CustomerUser` and `User` rows, their conversations with the assistant and their phones' tokens, at once, after a confirmation. The company's quotes, orders, invoices, documents and timeline stay: they are its business records. Refused only to the last active admin of an account that still has other active people, with what to do ("make a colleague admin first"); a person alone in an account can always delete their login |
+| Account deletion inside the app (5.1.1(v)) | More › Profile › **Delete my login** (`deleteMyLogin`): removes the Firebase login, the person's `CustomerUser` and `User` rows, their conversations with the assistant and their phones' tokens, at once, after a confirmation. The company's quotes, orders, invoices, documents and timeline stay: they are its business records. Refused only to the last active admin of an account that still has other active people, with what to do ("make a colleague admin first"); a person alone in an account can always delete their login |
 | Privacy policy | `https://basis-inc.web.app/legal/privacy`, rewritten 2026-11-11 for accounts, the assistant, notifications, processors and deletion; linked from the store, the assistant and More |
 | Encryption export compliance | Only HTTPS: `ITSAppUsesNonExemptEncryption = NO` in Info.plist, so no question at each upload |
 | Sign in with Apple (4.8) | Not required: no third-party login |
@@ -84,7 +84,7 @@ Plugins: `@capacitor/app` (links), `@capacitor/splash-screen`, `@capacitor/keybo
 
 ## 5. Building, running and releasing
 
-All from the repository root. The Capacitor CLI needs Node 22 (`~/.nvm/versions/node/v22.*`).
+All from the repository root. The Capacitor CLI needs Node 22 (`~/.nvm/versions/node/v22.*`); a fresh checkout runs `pnpm install` and `npx cap sync ios` (from `apps/ios`) before Xcode can build, because the copied web bundle and `capacitor.config.json` are not committed.
 
 ```bash
 # The Simulator against the local emulators (pnpm emulators; pnpm seed:emulator)
@@ -92,14 +92,16 @@ node apps/ios/scripts/bundle.mjs --local && (cd apps/ios && npx cap sync ios)
 xcodebuild -project apps/ios/ios/App/App.xcodeproj -scheme App -configuration Debug \
   -sdk iphonesimulator -destination 'name=iPhone 17 Pro Max' build
 
-# A release for TestFlight (production Firebase)
+# A release for TestFlight (production Firebase); <n> is the next build number
 node apps/ios/scripts/bundle.mjs && (cd apps/ios && npx cap sync ios)
 xcodebuild -project apps/ios/ios/App/App.xcodeproj -scheme App -configuration Release \
-  -destination 'generic/platform=iOS' -archivePath build/BASIS.xcarchive \
+  -destination 'generic/platform=iOS' -archivePath apps/ios/build/BASIS-<n>.xcarchive \
   -allowProvisioningUpdates CURRENT_PROJECT_VERSION=<n> archive
-xcodebuild -exportArchive -archivePath build/BASIS.xcarchive \
-  -exportOptionsPlist apps/ios/ExportOptions.plist -allowProvisioningUpdates
+xcodebuild -exportArchive -archivePath apps/ios/build/BASIS-<n>.xcarchive \
+  -exportOptionsPlist apps/ios/ExportOptions.plist -exportPath apps/ios/build/export-<n> -allowProvisioningUpdates
 ```
+
+A Simulator build must be signed (not `CODE_SIGNING_ALLOWED=NO`), or it carries no `aps-environment` and iOS gives it no push address. `apps/ios/scripts/assets.sh` renders the icon and the launch image again after a change to `apps/ios/assets/*.html`.
 
 `ExportOptions.plist` uploads to App Store Connect (`destination: upload`, method `app-store-connect`) with the Apple account signed in to Xcode on this Mac; no App Store Connect API key is stored anywhere. A build appears in TestFlight after Apple's processing (usually 10–30 minutes); internal testers (the owner) install it with the TestFlight app.
 
@@ -144,7 +146,7 @@ What must be live in production for the app to work, beyond the app itself: the 
 - **Privacy policy URL:** https://basis-inc.web.app/legal/privacy
 - **Category:** Business (primary); no secondary
 - **Copyright:** © 2026 BASIS INC.
-- **Price:** Free; no in-app purchases (goods are ordered and invoiced under trade terms, outside the App Store, as physical goods — guideline 3.1.3(e)… 3.1.5)
+- **Price:** Free; no in-app purchases. Goods are physical and ordered and invoiced under trade terms, which guideline 3.1.5(a) keeps outside in-app purchase
 - **Availability:** all territories
 
 ### 6.2 Hebrew localization
@@ -203,7 +205,7 @@ Not collected: health, financial info, location, sensitive info, contacts, brows
 
 ### 6.5 Screenshots
 
-6.9-inch iPhone (1320 × 2868, iPhone 17 Pro Max Simulator), English and Hebrew, from the emulators' sample trade account (Atelier Lumière), status bar set to 9:41: overview of what is open; a quote awaiting an answer; a shipment's journey; a document in Quick Look; Ask BASIS; the overview in Hebrew. Kept in `apps/ios/store/screenshots/` (not shipped in the app).
+6.9-inch iPhone (1320 × 2868, RGB, iPhone 17 Pro Max Simulator), from the emulators' sample trade account (Atelier Lumière), status bar set to 9:41, in `apps/ios/store/screenshots/` (not shipped in the app). English (U.S.), in this order: `en-01-overview.png` (what is open), `en-02-quote.png` (a quote waiting for an answer), `en-03-shipment.png` (the journey leg by leg), `en-04-document.png` (the quotation in Quick Look), `en-05-assistant.png` (Ask BASIS answering from the account's own shipment). Hebrew localization: `he-01-overview.png`, with the English ones after it until Hebrew versions of the others are taken. Sample names only; nothing from a real customer.
 
 ## 7. App Review information
 
@@ -231,7 +233,26 @@ Version 1.0.0 with the build chosen in TestFlight, the English listing (§6.1) a
 
 ## 9. What only the owner does
 
-1. **Create the app record** in App Store Connect (appstoreconnect.apple.com › Apps › + › New App): platform iOS, name **BASIS** (if taken, **BASIS INC.**), primary language English (U.S.), bundle ID **com.basisinc.customer** (it appears in the list once the first build has been signed), SKU **BASIS-IOS-1**, user access Full. After that the agent uploads the build.
-2. **The APNs key** (§3), uploaded to Firebase.
-3. **Yes to the review account** in production (§7), then set the reviewer's password from the invitation link and enter it in App Review Information with his contact details.
-4. **Submit for Review** — only after reading §8, and only by his decision.
+1. **Sign in to Xcode** on this Mac with the Apple account of team `97HE63NNKZ`: Xcode › Settings › Accounts › **+** › Apple Account. Without it nothing can be signed here (the archive stopped at "No Accounts").
+2. **The App ID** — either let the agent's first archive register it (it does once Xcode is signed in), or register it by hand: developer.apple.com › Certificates, IDs & Profiles › Identifiers › **+** › App IDs › App › description "BASIS", explicit bundle ID **com.basisinc.customer**, capabilities **Associated Domains** and **Push Notifications** › Register.
+3. **Create the app record** in App Store Connect (appstoreconnect.apple.com › Apps › **+** › New App): platform iOS, name **BASIS** (if taken, **BASIS INC.**), primary language English (U.S.), bundle ID **com.basisinc.customer**, SKU **BASIS-IOS-1**, user access Full. After that the agent archives and uploads build 1 to TestFlight.
+4. **The APNs key** (§3), uploaded to Firebase.
+5. **The production schema**, once, from the repository root: `firebase deploy --only dataconnect --project basis-inc`, answering yes to the SQL it shows (only new tables and one new column; [GO_LIVE](GO_LIVE.md)). The agent then deploys the functions and the site.
+6. **Yes to the review account** in production (§7); then he sets the reviewer's password from the invitation link and enters it, with his contact details, in App Store Connect › App Review Information.
+7. **Submit for Review** — only after reading §8, and only by his decision.
+
+## 10. What was checked, and how
+
+In the iOS Simulator (iPhone 17 Pro Max, iOS 26.3) with the app bundled against the local emulators, on 2026-11-11:
+
+| Check | Result |
+|---|---|
+| Launch | The launch screen, then `/account`; signed out, the sign-in |
+| Sign-in | An emulator trade customer signs in; the overview shows what is open |
+| English and Hebrew | Profile › Language switches every page, the tab bar mirrored, the assistant's word in the top bar in Hebrew |
+| Assistant | "When does my shipment to Paris arrive?" answered from the customer's own shipment, its legs and dates (Opus 5.5, cached prompt) |
+| Documents | The quotation opens in Quick Look (print, mark up, Files, share); fetched with the person's token |
+| Invitation link | `basisinc://account/invite/<token>` opens the app at the invitation from a cold start (`https://basis-inc.web.app/account/invite/…` does the same once the association file is live) |
+| Notifications | Permission asked from the Overview's offer; the phone's FCM token stored against the person; the `quote.sent` handler sends through FCM, which answers `third-party-auth-error` until the APNs key is in Firebase; a tapped notification (`simctl push`) opens its quote from a cold start |
+| Deleting a login | Over HTTP against the emulators: a viewer's login, rows and phone token gone, the audit and timeline entries kept without the link, signing in again refused; the last admin of a team with an active buyer refused with what to do |
+| Production key | `capacitor://localhost/` accepted by the web key (sign-in answers "invalid credentials" for a made-up email), other referrers still refused |

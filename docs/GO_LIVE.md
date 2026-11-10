@@ -178,3 +178,18 @@ the key's workspace in the Anthropic Console, and Firebase App Check with
 reCAPTCHA Enterprise for the site (until then the assistant's own limits bound
 its use). Settings › Connectors › Assistant on the site turns it off for
 visitors, for customers, or both.
+
+## The customer app for iPhone (2026-11-11)
+
+Everything about the app is in [APP_STORE](APP_STORE.md); what production needs for it:
+
+- **The pending schema (owner).** The portal (slices 1–2), BASIS AI and the app's `push_device` table are not yet in the production database; the SQL was read on 2026-11-11 and only creates types, tables and indexes and adds `inquiry.account_id`. The agent's migration is refused as a production deploy, so from the repository root:
+
+  ```bash
+  firebase deploy --only dataconnect --project basis-inc
+  ```
+
+  and answer yes when it shows the SQL. Then the functions and the brand site deploy (`firebase deploy --only functions`, then `pnpm --filter @basis/web build && firebase deploy --only hosting:web`); the site then serves `/account` and `/.well-known/apple-app-site-association`.
+- **API keys (done 2026-11-11).** The web key admits `capacitor://localhost/*` (the app's page), with its API list unchanged; the "iOS key (auto created by Firebase)" of the Firebase iOS app `BASIS (iOS)` is restricted to the bundle ID `com.basisinc.customer`.
+- **Notifications (owner).** An APNs key from the Apple Developer account, uploaded to Firebase › Project settings › Cloud Messaging for the app `BASIS (iOS)` ([APP_STORE](APP_STORE.md) §3). Until then FCM answers `third-party-auth-error` and the sweep logs it.
+

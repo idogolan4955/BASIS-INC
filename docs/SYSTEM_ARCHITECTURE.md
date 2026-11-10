@@ -47,7 +47,8 @@ The repository was audited on 2026-10-06 before this document was written.
 basis/
 ├─ apps/
 │  ├─ web/                 Public brand site — prerendered React (Vite)        → Hosting target `web`
-│  └─ platform/            Management platform — React SPA (Vite)              → Hosting target `platform`
+│  ├─ platform/            Management platform — React SPA (Vite)              → Hosting target `platform`
+│  └─ ios/                 The customer app for iPhone — Capacitor 8 around the portal of `web` → App Store
 ├─ packages/
 │  ├─ shared/              Domain: types, zod schemas, enums, state machines, calculations,
 │  │                       permission catalogue · generated Data Connect SDKs (never hand-edited)
@@ -55,7 +56,8 @@ basis/
 ├─ dataconnect/
 │  ├─ schema/              PostgreSQL schema in GraphQL, one file per module
 │  ├─ platform/            Connector for staff: queries and mutations with `@auth` by role
-│  └─ public/              Connector for the website: published catalog and content only
+│  ├─ public/              Connector for the website: published catalog and content only
+│  └─ customer/            Connector for the customer portal: scoped to the signed-in person's account
 ├─ functions/              Cloud Functions v2: commands, alert engine, publishing, intake, REST, PDFs
 ├─ storage.rules
 ├─ firebase.json
@@ -121,7 +123,8 @@ basis/
 ## 5. Boundaries
 
 ```
-apps/web ──────► @basis/ui · @basis/shared (domain + public SDK)   ── never the platform SDK
+apps/web ──────► @basis/ui · @basis/shared (domain + public and customer SDKs) ── never the platform SDK
+apps/ios ──────► the build of apps/web (bundled), Capacitor plugins ── no code of its own beyond the native shell
 apps/platform ─► @basis/ui · @basis/shared (domain + platform SDK)
 functions ─────► @basis/shared (domain)                            ── Admin SDK for data
 @basis/ui ─────► nothing from the data side
@@ -335,6 +338,10 @@ Module 20 at `/ai`. A person writes an instruction; the assistant answers in a t
 - **Safety.** Text in records, mail and documents is data to the model, never instructions; the tools are the boundary, and no tool reaches beyond the caller's role.
 
 **The assistant on the brand site** (`functions/src/assistant/site.ts`, module of the customer portal) uses the same model and the same rule — reading as the person, changing nothing without their click — with tools per audience: visitors get the public catalogue and the site's own intake; signed-in customers read through the `customer` connector impersonating themselves. Its conversations are `SiteConversation`, `SiteTurn` and `SiteAction`; limits in the database bound the spend until App Check is on ([CUSTOMER_PORTAL_PLAN](CUSTOMER_PORTAL_PLAN.md) §9).
+
+## The customer app for iPhone
+
+`apps/ios` is the customer portal of the brand site as an App Store app ([APP_STORE](APP_STORE.md)): a Capacitor 8 shell (Swift Package Manager) around `apps/web` built as a single-page app with `VITE_BASIS_APP=1` and bundled into the app, served at `capacitor://localhost`, opening at `/account`. The app talks to production Firebase like the site (the web API key admits `capacitor://localhost`; the `api` function's CORS too), signs in with `initializeAuth` and IndexedDB persistence, and adds what a browser cannot: notifications through Firebase Cloud Messaging (`PushDevice`, `functions/src/notify.ts`, sent from the outbox in the sweep), Universal Links (`/.well-known/apple-app-site-association` on Hosting), shared web credentials, and documents in Quick Look and the share sheet (`BasisNative.swift`). The site Hosting serves is built without the flag and never loads the app's code.
 
 ## The platform as an app
 

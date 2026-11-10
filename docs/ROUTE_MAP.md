@@ -333,6 +333,9 @@ Client-rendered behind sign-in (Hosting rewrites `/account/**` to the site's SPA
 | `/account/invoices`, `/account/documents` | Invoices and what is outstanding; documents of their quotes, orders and shipments | Every customer user |
 | `/account/samples` | Ask for samples to an address of the account; earlier requests | Asked by buyers and admins |
 | `/account/team`, `/account/addresses` | The team (invite, roles, suspend) and addresses | Read by all; kept by admins |
+| `/account/profile` | The person's own login: name, email, role, member number; language; in the app, notifications; sign out; **Delete my login** (a confirmation, then the login and the person's rows are gone; the company's records stay) | Every customer user, for themself |
+| `/account/more` | In the iPhone app, the fifth tab: the rest of the account's index (invoices to profile, numbered as on the site) and the brand's pages | Every customer user |
+| `/.well-known/apple-app-site-association` | Served by Hosting as JSON: `/account` and `/account/*` open the BASIS app when it is installed; web credentials shared with the app ([APP_STORE](APP_STORE.md)) | Apple's CDN |
 
 ### Customer portal, the staff side (2026-11-10)
 

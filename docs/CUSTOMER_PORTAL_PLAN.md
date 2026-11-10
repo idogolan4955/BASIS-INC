@@ -18,6 +18,11 @@ This document decides who the portal serves, the accounts and how they are kept 
 - A hand-off is an `Inquiry` (`source = assistant`, on the account when signed in) carrying the question and the conversation, not an `Interaction`: inquiries are where sales already answers.
 - App Check is not yet on (it needs reCAPTCHA Enterprise set up in the console by the owner). Until then the limits in the database bound the spend: 20 messages a conversation, 40 an hour from one address, 600 anonymous messages a day across the site, 200 a day for a customer, short messages and a few model calls per answer. The switch is in Settings › Connectors › Assistant on the site, per audience.
 
+**The iPhone app is built (2026-11-11):** the portal as an App Store app, recorded in [APP_STORE](APP_STORE.md). As built, against this plan:
+- `/account/profile` (§10.1's own-profile screen) now exists on the site and in the app: language, sign out, notifications in the app, and **Delete my login** (`deleteMyLogin`), which App Store guideline 5.1.1(v) requires. It removes the login, the person's `CustomerUser` and `User` rows, their site-assistant conversations and their phones; the company's records stay. The last active admin of an account that still has other active people makes a colleague admin first; a person alone in an account may always delete their login (nobody is left without an admin to manage them, and staff can invite again).
+- Notifications are a new table, `PushDevice` (an FCM token per phone, held for the signed-in person, with the app's language), and handlers in the sweep for `quote.sent` (now emitted when a quote is sent) and `shipment.delivered`. They name the record, never an amount.
+- Payments in the app (slice 3): WebKit disables Apple Pay on the web inside a web view that injects scripts, as Capacitor does, so in the app a payment goes through the processor's native payment sheet (a Capacitor plugin of the chosen processor), while the site keeps the processor's web element. The processor's choice (question 2) should weigh its iOS SDK.
+
 ---
 
 ## 1. What the system already has, and what the portal reuses
