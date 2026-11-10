@@ -78,7 +78,7 @@ then the placeholder `unset` lets the functions deploy:
 firebase functions:secrets:set GMAIL_APP_PASSWORD
 ```
 
-## 6. Functions and Storage rules (done 2026-11-07; the mail functions of module 19 are deployed with the next run)
+## 6. Functions and Storage rules (done 2026-11-07; module 19's schema, mail functions and interface deployed 2026-11-10, `GMAIL_APP_PASSWORD` set)
 
 With the secret set, or the `unset` placeholder in place:
 
