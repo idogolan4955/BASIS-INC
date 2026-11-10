@@ -1,0 +1,38 @@
+# The customer portal as staff see it: on a customer's page, who has access to
+# the portal, in which role, and the invitations still open. Written by the
+# portal functions, never from here.
+
+query ListCustomerAccess($companyId: UUID!) @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'sales' || auth.token.role == 'marketing' || auth.token.role == 'finance'") {
+  customerAccounts(where: { company: { id: { eq: $companyId } } }, limit: 1) {
+    id
+    kind
+    displayName
+    memberNumber
+    status
+    currency
+    createdAt
+    users: customerUsers_on_account(orderBy: { createdAt: ASC }, limit: 200) {
+      uid
+      name
+      email
+      role
+      status
+      lastSignInAt
+      createdAt
+      contact {
+        id
+        name
+      }
+    }
+    invitations: customerInvitations_on_account(orderBy: { createdAt: DESC }, limit: 50) {
+      id
+      email
+      name
+      role
+      expiresAt
+      acceptedAt
+      revokedAt
+      createdAt
+    }
+  }
+}

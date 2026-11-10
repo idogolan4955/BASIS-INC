@@ -91,7 +91,7 @@ basis/
 | `packages/ui` in addition to `packages/shared` | Two apps must share one design system |
 | The public site is prerendered to static HTML | A client-rendered SPA is invisible to search and slow to first paint; a brand site cannot be |
 | Schema and connectors split into one file per module from the first day | BASIS has ten modules; single multi-thousand-line files become hard to review |
-| Two connectors (`platform`, `public`) | The website's access is limited by construction to published content |
+| Two connectors (`platform`, `public`), and a third for customers (`customer`) | The website's access is limited by construction to published content; the customer portal's reads admit only the claim `role = customer` and are scoped to the person's own account through `auth.uid` ([CUSTOMER_PORTAL_PLAN](CUSTOMER_PORTAL_PLAN.md) §3.3) |
 | Money and quantities stored as fixed-point integers, not floats | Landed-cost allocation must sum exactly; see §8 |
 | Interface in English, locale-ready | International brand |
 | Local emulators with seeded data as the default development loop | Schema and functions are exercised before production |

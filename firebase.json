@@ -19,6 +19,14 @@
             "functionId": "api",
             "region": "europe-west1"
           }
+        },
+        {
+          "source": "/account",
+          "destination": "/__spa-fallback.html"
+        },
+        {
+          "source": "/account/**",
+          "destination": "/__spa-fallback.html"
         }
       ],
       "headers": [

@@ -1,0 +1,334 @@
+# The customer portal's reads (docs/CUSTOMER_PORTAL_PLAN.md §3.3). Every
+# operation admits only the customer claim and is scoped through the signed-in
+# person's own CustomerUser row (auth.uid, status active), never by an id the
+# browser sends. Fields are chosen for the customer: their prices, never
+# purchase prices, costs, suppliers, factories, lots or internal notes.
+# Writes go through the portal functions, which check the same membership.
+
+query CustomerMe @auth(expr: "auth.token.role == 'customer'") {
+  customerUsers(where: { uid: { eq_expr: "auth.uid" } }, limit: 1) {
+    uid
+    name
+    email
+    role
+    status
+    account {
+      id
+      kind
+      displayName
+      memberNumber
+      currency
+      locale
+      status
+      company {
+        legalName
+        tradingName
+        country {
+          code
+          name
+        }
+      }
+    }
+  }
+}
+
+query CustomerQuotes @auth(expr: "auth.token.role == 'customer'") {
+  quotes(where: { customer: { customerAccounts_on_company: { exist: { status: { eq: active }, customerUsers_on_account: { exist: { uid: { eq_expr: "auth.uid" }, status: { eq: active } } } } } }, state: { in: [sent, accepted, declined, expired] } }, orderBy: { createdAt: DESC }, limit: 200) {
+    number
+    state
+    currency
+    validUntil
+    sentOn
+    createdAt
+    lines: quoteLines_on_quote(orderBy: { lineNo: ASC }) {
+      quantity
+      unitPrice
+    }
+  }
+}
+
+query CustomerQuote($number: String!) @auth(expr: "auth.token.role == 'customer'") {
+  quotes(where: { number: { eq: $number }, customer: { customerAccounts_on_company: { exist: { status: { eq: active }, customerUsers_on_account: { exist: { uid: { eq_expr: "auth.uid" }, status: { eq: active } } } } } }, state: { in: [sent, accepted, declined, expired] } }, limit: 1) {
+    number
+    state
+    currency
+    incoterm {
+      code
+    }
+    namedPlace
+    paymentTerms
+    validUntil
+    sentOn
+    notes
+    createdAt
+    lines: quoteLines_on_quote(orderBy: { lineNo: ASC }) {
+      lineNo
+      quantity
+      unitPrice
+      leadTimeDays
+      note
+      sku { code salesUom product { code name slug } variant { code name widthCm } shade { code name hex } putUp { name rollLengthM widthCm } }
+    }
+    orders: salesOrders_on_quote(limit: 5) {
+      number
+      state
+    }
+  }
+}
+
+query CustomerOrders @auth(expr: "auth.token.role == 'customer'") {
+  salesOrders(where: { customer: { customerAccounts_on_company: { exist: { status: { eq: active }, customerUsers_on_account: { exist: { uid: { eq_expr: "auth.uid" }, status: { eq: active } } } } } }, state: { in: [confirmed, shipped, closed, cancelled] } }, orderBy: { createdAt: DESC }, limit: 200) {
+    number
+    state
+    currency
+    confirmedOn
+    requestedDelivery
+    createdAt
+    lines: salesOrderLines_on_order(orderBy: { lineNo: ASC }) {
+      quantity
+      unitPrice
+    }
+  }
+}
+
+query CustomerOrder($number: String!) @auth(expr: "auth.token.role == 'customer'") {
+  salesOrders(where: { number: { eq: $number }, customer: { customerAccounts_on_company: { exist: { status: { eq: active }, customerUsers_on_account: { exist: { uid: { eq_expr: "auth.uid" }, status: { eq: active } } } } } }, state: { in: [confirmed, shipped, closed, cancelled] } }, limit: 1) {
+    number
+    state
+    currency
+    incoterm {
+      code
+    }
+    namedPlace
+    paymentTerms
+    requestedDelivery
+    shipToName
+    shipToAddress
+    confirmedOn
+    createdAt
+    quote {
+      number
+    }
+    lines: salesOrderLines_on_order(orderBy: { lineNo: ASC }) {
+      lineNo
+      quantity
+      uom
+      unitPrice
+      sku { code salesUom product { code name slug } variant { code name widthCm } shade { code name hex } putUp { name rollLengthM widthCm } }
+      shipped: shipmentLines_on_salesOrderLine {
+        quantity
+        shipment {
+          number
+          state
+        }
+      }
+    }
+    invoices: invoiceRefs_on_order(orderBy: { issuedOn: ASC }) {
+      number
+      amount
+      currency
+      issuedOn
+      dueOn
+      paidOn
+      paidAmount
+    }
+  }
+}
+
+# Shipments addressed to the customer: an order shipped from BASIS names the
+# customer as consignee (shipSalesOrder).
+query CustomerShipments @auth(expr: "auth.token.role == 'customer'") {
+  shipments(where: { state: { ne: cancelled }, consignee: { customerAccounts_on_company: { exist: { status: { eq: active }, customerUsers_on_account: { exist: { uid: { eq_expr: "auth.uid" }, status: { eq: active } } } } } } }, orderBy: { createdAt: DESC }, limit: 200) {
+    number
+    state
+    health
+    mode
+    createdAt
+    destination {
+      name
+      city
+      country {
+        name
+      }
+    }
+    legs: shipmentLegs_on_shipment(orderBy: { sequence: ASC }) {
+      sequence
+      type
+      plannedEta
+      eta
+      ata
+      atd
+    }
+  }
+}
+
+query CustomerShipment($number: String!) @auth(expr: "auth.token.role == 'customer'") {
+  shipments(where: { number: { eq: $number }, state: { ne: cancelled }, consignee: { customerAccounts_on_company: { exist: { status: { eq: active }, customerUsers_on_account: { exist: { uid: { eq_expr: "auth.uid" }, status: { eq: active } } } } } } }, limit: 1) {
+    number
+    state
+    health
+    mode
+    loadType
+    incoterm {
+      code
+    }
+    namedPlace
+    consigneeName
+    # Places by kind and city only: a direct shipment starts at the mill, whose
+    # name is supplier identity.
+    origin {
+      type
+      city
+      locationCode
+      country {
+        name
+      }
+    }
+    destination {
+      name
+      city
+      country {
+        name
+      }
+    }
+    legs: shipmentLegs_on_shipment(orderBy: { sequence: ASC }) {
+      sequence
+      type
+      mode
+      fromLocation {
+        type
+        city
+        locationCode
+      }
+      toLocation {
+        type
+        city
+        locationCode
+      }
+      vessel
+      voyage
+      plannedEtd
+      plannedEta
+      etd
+      eta
+      atd
+      ata
+      provider {
+        legalName
+        tradingName
+      }
+    }
+    references: shipmentReferences_on_shipment {
+      type
+      value
+    }
+  }
+}
+
+# What a shipment carries for the customer, read apart from the journey: one
+# query with both is more than the local emulator's database will plan.
+query CustomerShipmentLines($number: String!) @auth(expr: "auth.token.role == 'customer'") {
+  shipments(where: { number: { eq: $number }, state: { ne: cancelled }, consignee: { customerAccounts_on_company: { exist: { status: { eq: active }, customerUsers_on_account: { exist: { uid: { eq_expr: "auth.uid" }, status: { eq: active } } } } } } }, limit: 1) {
+    number
+    # Only shipSalesOrder puts sales-order lines on a shipment, and only that
+    # order's, on a shipment it addresses to the order's customer; purchase-order
+    # lines (the mill's side) are never selected.
+    lines: shipmentLines_on_shipment(where: { salesOrderLine: { id: { isNull: false } } }) {
+      quantity
+      uom
+      salesOrderLine {
+        lineNo
+        order {
+          number
+        }
+        sku { code salesUom product { code name slug } variant { code name widthCm } shade { code name hex } putUp { name rollLengthM widthCm } }
+      }
+    }
+  }
+}
+
+query CustomerInvoices @auth(expr: "auth.token.role == 'customer'") {
+  invoiceRefs(where: { order: { customer: { customerAccounts_on_company: { exist: { status: { eq: active }, customerUsers_on_account: { exist: { uid: { eq_expr: "auth.uid" }, status: { eq: active } } } } } } } }, orderBy: { issuedOn: DESC }, limit: 300) {
+    number
+    amount
+    currency
+    issuedOn
+    dueOn
+    paidOn
+    paidAmount
+    order {
+      number
+    }
+  }
+}
+
+query CustomerSampleRequests @auth(expr: "auth.token.role == 'customer'") {
+  inquiries(where: { account: { status: { eq: active }, customerUsers_on_account: { exist: { uid: { eq_expr: "auth.uid" }, status: { eq: active } } } } }, orderBy: { createdAt: DESC }, limit: 100) {
+    reference
+    kind
+    state
+    message
+    details
+    createdAt
+  }
+}
+
+query CustomerTeam @auth(expr: "auth.token.role == 'customer'") {
+  customerUsers(where: { account: { status: { eq: active }, customerUsers_on_account: { exist: { uid: { eq_expr: "auth.uid" }, status: { eq: active } } } } }, orderBy: { createdAt: ASC }, limit: 200) {
+    uid
+    name
+    email
+    role
+    status
+    lastSignInAt
+    createdAt
+  }
+}
+
+# Open invitations, for the account's admins only.
+query CustomerInvitations @auth(expr: "auth.token.role == 'customer'") {
+  customerInvitations(
+    where: {
+      acceptedAt: { isNull: true }
+      revokedAt: { isNull: true }
+      account: { status: { eq: active }, customerUsers_on_account: { exist: { uid: { eq_expr: "auth.uid" }, status: { eq: active }, role: { eq: admin } } } }
+    }
+    orderBy: { createdAt: DESC }
+    limit: 100
+  ) {
+    id
+    email
+    name
+    role
+    expiresAt
+    createdAt
+  }
+}
+
+query CustomerAddresses @auth(expr: "auth.token.role == 'customer'") {
+  customerAddresses(where: { account: { status: { eq: active }, customerUsers_on_account: { exist: { uid: { eq_expr: "auth.uid" }, status: { eq: active } } } } }, orderBy: { createdAt: ASC }, limit: 100) {
+    id
+    kind
+    isDefault
+    location {
+      id
+      name
+      addressLine1
+      addressLine2
+      city
+      region
+      postalCode
+      country {
+        code
+        name
+      }
+    }
+  }
+}
+
+query CustomerCountries @auth(expr: "auth.token.role == 'customer'") {
+  countries(orderBy: { name: ASC }, limit: 300) {
+    code
+    name
+  }
+}

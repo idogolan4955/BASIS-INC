@@ -826,6 +826,13 @@
   },
   {
    "kind": "query",
+   "name": "ListCustomerAccess",
+   "module": "portal",
+   "variables": "$companyId: UUID!",
+   "auth": "owner, operations, sales, marketing, finance"
+  },
+  {
+   "kind": "query",
    "name": "GetInspection",
    "module": "quality",
    "variables": "$number: String!",
@@ -1464,6 +1471,83 @@
    "action": "Updating milestones",
    "roles": "owner, operations, purchasing, qc",
    "input": "const date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'Date expected');\nconst updateMilestoneInput = z.object({\n  runNumber: z.string().min(1),\n  milestoneId: z.string().min(1),\n  state: z.enum(['pending', 'in_progress', 'done', 'skipped', 'blocked']).optional(),\n  forecastEnd: date.nullable().optional(),\n  actualStart: date.nullable().optional(),\n  actualEnd: date.nullable().optional(),\n  delayReason: z.string().max(80).nullable().optional(),\n  note: z.string().max(2000).nullable().optional(),\n});\ninput: updateMilestoneInput"
+  },
+  {
+   "name": "acceptCustomerInvitation",
+   "module": "portal",
+   "action": "",
+   "roles": "any signed-in role",
+   "input": "const tokenInput = z.object({ token: z.string().min(20).max(200) });\nconst acceptInput = tokenInput.extend({ name: z.string().trim().min(2).max(160), password: z.string().min(8, 'At least 8 characters').max(128) });\ninput: acceptInput"
+  },
+  {
+   "name": "customerDocuments",
+   "module": "portal",
+   "action": "",
+   "roles": "any signed-in role",
+   "input": ""
+  },
+  {
+   "name": "customerInvitationInfo",
+   "module": "portal",
+   "action": "",
+   "roles": "any signed-in role",
+   "input": "const tokenInput = z.object({ token: z.string().min(20).max(200) });\ninput: tokenInput"
+  },
+  {
+   "name": "customerSignedIn",
+   "module": "portal",
+   "action": "",
+   "roles": "any signed-in role",
+   "input": ""
+  },
+  {
+   "name": "inviteCustomerUser",
+   "module": "portal",
+   "action": "Inviting customers to the portal",
+   "roles": "PORTAL_STAFF_ROLES",
+   "input": "const id = z.string().regex(/^[0-9a-f-]{32,36}$/i);\nconst role = z.enum(CUSTOMER_USER_ROLES);\nconst inviteInput = z.object({\n  /** Staff: the customer company. Customers invite into their own account and leave it out. */\n  companyId: id.optional(),\n  email: z.string().trim().email().max(255),\n  name: z.string().trim().max(160).optional(),\n  contactId: id.optional(),\n  role: role.default('buyer'),\n});\ninput: inviteInput"
+  },
+  {
+   "name": "removeCustomerAddress",
+   "module": "portal",
+   "action": "",
+   "roles": "any signed-in role",
+   "input": ""
+  },
+  {
+   "name": "requestCustomerSamples",
+   "module": "portal",
+   "action": "",
+   "roles": "any signed-in role",
+   "input": "const id = z.string().regex(/^[0-9a-f-]{32,36}$/i);\nconst samplesInput = z.object({\n  products: z.array(z.string().max(16)).max(20).default([]),\n  shades: z.array(z.string().max(8)).max(40).default([]),\n  message: z.string().trim().max(4000).optional(),\n  addressId: id.optional(),\n});\ninput: samplesInput"
+  },
+  {
+   "name": "respondToQuote",
+   "module": "portal",
+   "action": "",
+   "roles": "any signed-in role",
+   "input": "const answerInput = z.object({\n  number: z.string().regex(/^QUO-\\d{2}-\\d{4}$/),\n  decision: z.enum(['accept', 'decline']),\n  reason: z.string().trim().max(500).optional(),\n  requestedDelivery: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).optional(),\n});\ninput: answerInput"
+  },
+  {
+   "name": "revokeCustomerInvitation",
+   "module": "portal",
+   "action": "",
+   "roles": "any signed-in role",
+   "input": "const id = z.string().regex(/^[0-9a-f-]{32,36}$/i);\nconst revokeInput = z.object({ invitationId: id });\ninput: revokeInput"
+  },
+  {
+   "name": "saveCustomerAddress",
+   "module": "portal",
+   "action": "",
+   "roles": "any signed-in role",
+   "input": "const id = z.string().regex(/^[0-9a-f-]{32,36}$/i);\nconst addressInput = z.object({\n  id: id.optional(),\n  kind: z.enum(['ship', 'bill']),\n  name: z.string().trim().min(1).max(160),\n  addressLine1: z.string().trim().min(1).max(200),\n  addressLine2: z.string().trim().max(200).optional(),\n  city: z.string().trim().min(1).max(120),\n  region: z.string().trim().max(120).optional(),\n  postalCode: z.string().trim().max(32).optional(),\n  countryCode: z.string().regex(/^[A-Z]{2}$/),\n  isDefault: z.boolean().default(false),\n});\ninput: addressInput"
+  },
+  {
+   "name": "setCustomerUser",
+   "module": "portal",
+   "action": "",
+   "roles": "any signed-in role",
+   "input": "const role = z.enum(CUSTOMER_USER_ROLES);\nconst setUserInput = z.object({ uid: z.string().min(1).max(128), role: role.optional(), status: z.enum(['active', 'suspended']).optional() });\ninput: setUserInput"
   },
   {
    "name": "createCorrectiveAction",

@@ -35,6 +35,18 @@ export const ASSISTANT_EXCLUDED_COMMANDS = [
   'disconnectMailbox',
   'mailStatus',
   'getMailAttachment',
+  // Customer accounts are opened and changed by a person at a screen; the rest are the customer's own.
+  'inviteCustomerUser',
+  'revokeCustomerInvitation',
+  'setCustomerUser',
+  'customerInvitationInfo',
+  'acceptCustomerInvitation',
+  'customerSignedIn',
+  'respondToQuote',
+  'requestCustomerSamples',
+  'saveCustomerAddress',
+  'removeCustomerAddress',
+  'customerDocuments',
 ] as const;
 
 /** Connector mutations the assistant may never propose. */

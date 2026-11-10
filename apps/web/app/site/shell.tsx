@@ -17,6 +17,7 @@ const PRIMARY = [
 const SECONDARY = [
   { to: '/wholesale', label: 'Wholesale' },
   { to: '/contact', label: 'Contact' },
+  { to: '/account', label: 'Account' },
 ];
 
 function IndexMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -76,6 +77,8 @@ function IndexMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
 
 export function SiteShell({ children }: { children: ReactNode }) {
   const [menu, setMenu] = useState(false);
+  // Signed-in customers ask for samples from their account, with its addresses.
+  const inAccount = useLocation().pathname.startsWith('/account');
   return (
     <div className="flex min-h-dvh flex-col bg-surface text-ink">
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-50 focus:bg-panel focus:px-3 focus:py-2">
@@ -94,6 +97,9 @@ export function SiteShell({ children }: { children: ReactNode }) {
             ))}
           </nav>
           <div className="flex items-center gap-3">
+            <NavLink to="/account" className={({ isActive }) => cn('hidden h-10 items-center px-2 text-[0.9375rem] transition-colors duration-300 md:inline-flex', isActive ? 'text-ink underline decoration-nude-deep underline-offset-[10px]' : 'text-ink-soft hover:text-ink')}>
+              Account
+            </NavLink>
             <Link to="/samples" className="hidden h-10 items-center bg-charcoal px-5 text-[0.9375rem] font-medium text-milk transition-colors duration-300 hover:bg-cocoa md:inline-flex">
               Request samples
             </Link>
@@ -168,7 +174,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
 
       {/* Phones: the single primary action within thumb reach. */}
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-bone/95 p-3 backdrop-blur-[2px] md:hidden">
-        <Link to="/samples" className="flex h-12 items-center justify-center bg-charcoal text-[0.9375rem] font-medium text-milk">
+        <Link to={inAccount ? '/account/samples' : '/samples'} className="flex h-12 items-center justify-center bg-charcoal text-[0.9375rem] font-medium text-milk">
           Request samples
         </Link>
       </div>

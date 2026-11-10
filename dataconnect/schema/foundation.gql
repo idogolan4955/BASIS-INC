@@ -303,4 +303,6 @@ type Inquiry @table {
   # site (the public intake) or email (opened from a message in module 19).
   source: String @col(dataType: "varchar(16)")
   mailMessageId: UUID
+  # Set when a signed-in customer asked in the portal.
+  account: CustomerAccount
 }

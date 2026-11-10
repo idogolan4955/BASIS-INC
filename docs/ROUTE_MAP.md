@@ -318,6 +318,28 @@ Each module folder owns its screens, loading and error states, and module-specif
 | `/ai` | A new conversation: examples to start from, what waits for approval in other conversations | Every staff role |
 | `/ai/:threadId` | One conversation: the person's instructions, the assistant's answers with links to records, what it read, proposed actions with Approve and run / Reject and their outcome | The conversation's owner only |
 
+### Customer portal on the brand site (2026-11-10)
+
+Client-rendered behind sign-in (Hosting rewrites `/account/**` to the site's SPA fallback), `noindex`, in English and Hebrew. Every read goes through the `customer` connector scoped to the signed-in person's account.
+
+| Path | Screen | Access |
+|---|---|---|
+| `/account/sign-in`, `/account/reset` | Sign in with email and password; reset by Firebase's own email | Anyone |
+| `/account/invite/:token` | Accept an invitation: name and password; the login opens signed in | The holder of the link |
+| `/account` | What is open: quotes to answer, invoices outstanding, shipments on the way, orders in progress | Every customer user |
+| `/account/quotes`, `/account/quotes/:number` | Quotes as sent; accept (opens the order) or decline; the quotation PDF | Read by all; answered by buyers and admins |
+| `/account/orders`, `/account/orders/:number` | Orders, lines, shipped share, invoices, shipments | Every customer user |
+| `/account/shipments`, `/account/shipments/:number` | The journey leg by leg, references, what it carries, the packing list | Every customer user |
+| `/account/invoices`, `/account/documents` | Invoices and what is outstanding; documents of their quotes, orders and shipments | Every customer user |
+| `/account/samples` | Ask for samples to an address of the account; earlier requests | Asked by buyers and admins |
+| `/account/team`, `/account/addresses` | The team (invite, roles, suspend) and addresses | Read by all; kept by admins |
+
+### Customer portal, the staff side (2026-11-10)
+
+| Path | Screen | Access |
+|---|---|---|
+| `/customers/:id/portal` | The Portal tab on a customer company: its portal account (member number, status, currency, opened), the people with access (role, status, last sign-in; change a role, suspend and restore), the invitations not accepted (new link, withdraw), and Invite to the portal, which opens the account the first time and shows the one-time link once ([CUSTOMER_PORTAL_PLAN](CUSTOMER_PORTAL_PLAN.md) §4) | Owner, operations and sales manage; marketing and finance read |
+
 ### Module 19 Mail (2026-11-07)
 
 | Path | Screen | Access |

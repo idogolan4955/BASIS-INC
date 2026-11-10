@@ -16,4 +16,22 @@ export default [
   route('samples/confirmation', 'routes/confirmation.tsx'),
   route('contact', 'routes/contact.tsx'),
   route('legal/:page', 'routes/legal.tsx'),
+  // The customer portal: client-rendered behind sign-in, never prerendered.
+  route('account/sign-in', 'account/sign-in.tsx'),
+  route('account/reset', 'account/reset.tsx'),
+  route('account/invite/:token', 'account/invite.tsx'),
+  route('account', 'account/frame.tsx', [
+    index('account/overview.tsx'),
+    route('quotes', 'account/quotes.tsx'),
+    route('quotes/:number', 'account/quote.tsx'),
+    route('orders', 'account/orders.tsx'),
+    route('orders/:number', 'account/order.tsx'),
+    route('shipments', 'account/shipments.tsx'),
+    route('shipments/:number', 'account/shipment.tsx'),
+    route('invoices', 'account/invoices.tsx'),
+    route('documents', 'account/documents.tsx'),
+    route('samples', 'account/samples.tsx'),
+    route('team', 'account/team.tsx'),
+    route('addresses', 'account/addresses.tsx'),
+  ]),
 ] satisfies RouteConfig;

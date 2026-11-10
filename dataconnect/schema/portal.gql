@@ -1,0 +1,78 @@
+# The customer portal (docs/CUSTOMER_PORTAL_PLAN.md). A customer account is
+# what a customer signs in to: a trade account is a customer company, a
+# consumer account a person. Its people are customer users (Firebase users
+# with the claim role = customer), each with a role inside the account.
+# Everything the portal reads goes through the `customer` connector, scoped
+# by auth.uid through CustomerUser, never by an id the browser sends.
+
+enum CustomerAccountKind {
+  trade
+  consumer
+}
+
+enum CustomerUserRole {
+  admin
+  buyer
+  viewer
+}
+
+enum CustomerAccountStatus {
+  active
+  suspended
+  closed
+}
+
+type CustomerAccount @table {
+  kind: CustomerAccountKind!
+  # Trade accounts only: the customer company the account is.
+  company: Company
+  # Consumer: the person; trade: the company's trading name.
+  displayName: String! @col(dataType: "varchar(200)")
+  # BM-26-0001, printed on the member card.
+  memberNumber: String! @col(dataType: "varchar(16)") @unique
+  currency: String! @col(dataType: "varchar(3)")
+  locale: String @col(dataType: "varchar(16)")
+  status: CustomerAccountStatus!
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# A signed-in person and the account they belong to. One account per person.
+type CustomerUser @table(key: "uid") {
+  uid: String! @col(dataType: "varchar(128)")
+  account: CustomerAccount!
+  # Trade: the company's contact this person is.
+  contact: Contact
+  name: String! @col(dataType: "varchar(160)")
+  email: String! @col(dataType: "varchar(255)")
+  role: CustomerUserRole!
+  status: UserStatus!
+  invitedByUid: String @col(dataType: "varchar(128)")
+  lastSignInAt: Timestamp
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# A one-time invitation. Only the hash of the token is kept.
+type CustomerInvitation @table {
+  account: CustomerAccount!
+  email: String! @col(dataType: "varchar(255)")
+  name: String @col(dataType: "varchar(160)")
+  contact: Contact
+  role: CustomerUserRole!
+  tokenHash: String! @col(dataType: "varchar(64)") @unique
+  expiresAt: Timestamp!
+  acceptedAt: Timestamp
+  revokedAt: Timestamp
+  createdByUid: String! @col(dataType: "varchar(128)")
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# The account's addresses: a Location row of the company (trade) or of no
+# company (consumer), marked for shipping or billing.
+type CustomerAddress @table {
+  account: CustomerAccount!
+  location: Location!
+  # ship | bill
+  kind: String! @col(dataType: "varchar(8)")
+  isDefault: Boolean!
+  createdAt: Timestamp! @default(expr: "request.time")
+}

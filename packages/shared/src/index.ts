@@ -29,3 +29,4 @@ export * from './development';
 export * from './development-catalog';
 export * from './mail';
 export * from './assistant';
+export * from './portal';

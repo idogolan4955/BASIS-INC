@@ -118,6 +118,21 @@ export const FUNCTION_NAMES = {
   askAssistant: 'askAssistant',
   /** Callable: approve or reject an action BASIS AI proposed; approval runs it as the caller. */
   decideAssistantAction: 'decideAssistantAction',
+  /** Customer portal: staff (owner, operations, sales) or a customer admin invite into an account; the token is shown once. */
+  inviteCustomerUser: 'inviteCustomerUser',
+  revokeCustomerInvitation: 'revokeCustomerInvitation',
+  /** Signed out: what an invitation link is for, and accepting it with a name and a password. */
+  customerInvitationInfo: 'customerInvitationInfo',
+  acceptCustomerInvitation: 'acceptCustomerInvitation',
+  /** Staff or a customer admin: a person's role in the account, or suspend and restore them. */
+  setCustomerUser: 'setCustomerUser',
+  /** Customer: after sign-in (last sign-in), answering a quote, asking for samples, addresses, documents. */
+  customerSignedIn: 'customerSignedIn',
+  respondToQuote: 'respondToQuote',
+  requestCustomerSamples: 'requestCustomerSamples',
+  saveCustomerAddress: 'saveCustomerAddress',
+  removeCustomerAddress: 'removeCustomerAddress',
+  customerDocuments: 'customerDocuments',
   /** Scheduled: consume domain events, evaluate alert rules. */
   sweepEvents: 'sweepEvents',
 } as const;

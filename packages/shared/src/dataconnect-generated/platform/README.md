@@ -85,6 +85,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*ListCompanies*](#listcompanies)
   - [*GetCompany*](#getcompany)
   - [*ListFactories*](#listfactories)
+  - [*ListCustomerAccess*](#listcustomeraccess)
   - [*ListInspections*](#listinspections)
   - [*ListInspectionsFor*](#listinspectionsfor)
   - [*GetInspection*](#getinspection)
@@ -10726,6 +10727,146 @@ console.log(data.factories);
 executeQuery(ref).then((response) => {
   const data = response.data;
   console.log(data.factories);
+});
+```
+
+## ListCustomerAccess
+You can execute the `ListCustomerAccess` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [platform/index.d.ts](./index.d.ts):
+```typescript
+listCustomerAccess(vars: ListCustomerAccessVariables, options?: ExecuteQueryOptions): QueryPromise<ListCustomerAccessData, ListCustomerAccessVariables>;
+
+interface ListCustomerAccessRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListCustomerAccessVariables): QueryRef<ListCustomerAccessData, ListCustomerAccessVariables>;
+}
+export const listCustomerAccessRef: ListCustomerAccessRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+listCustomerAccess(dc: DataConnect, vars: ListCustomerAccessVariables, options?: ExecuteQueryOptions): QueryPromise<ListCustomerAccessData, ListCustomerAccessVariables>;
+
+interface ListCustomerAccessRef {
+  ...
+  (dc: DataConnect, vars: ListCustomerAccessVariables): QueryRef<ListCustomerAccessData, ListCustomerAccessVariables>;
+}
+export const listCustomerAccessRef: ListCustomerAccessRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the listCustomerAccessRef:
+```typescript
+const name = listCustomerAccessRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ListCustomerAccess` query requires an argument of type `ListCustomerAccessVariables`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface ListCustomerAccessVariables {
+  companyId: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `ListCustomerAccess` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ListCustomerAccessData`, which is defined in [platform/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ListCustomerAccessData {
+  customerAccounts: ({
+    id: UUIDString;
+    kind: CustomerAccountKind;
+    displayName: string;
+    memberNumber: string;
+    status: CustomerAccountStatus;
+    currency: string;
+    createdAt: TimestampString;
+    users: ({
+      uid: string;
+      name: string;
+      email: string;
+      role: CustomerUserRole;
+      status: UserStatus;
+      lastSignInAt?: TimestampString | null;
+      createdAt: TimestampString;
+      contact?: {
+        id: UUIDString;
+        name: string;
+      } & Contact_Key;
+    } & CustomerUser_Key)[];
+    invitations: ({
+      id: UUIDString;
+      email: string;
+      name?: string | null;
+      role: CustomerUserRole;
+      expiresAt: TimestampString;
+      acceptedAt?: TimestampString | null;
+      revokedAt?: TimestampString | null;
+      createdAt: TimestampString;
+    } & CustomerInvitation_Key)[];
+  } & CustomerAccount_Key)[];
+}
+```
+### Using `ListCustomerAccess`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, listCustomerAccess, ListCustomerAccessVariables } from '@basis/dataconnect-platform';
+
+// The `ListCustomerAccess` query requires an argument of type `ListCustomerAccessVariables`:
+const listCustomerAccessVars: ListCustomerAccessVariables = {
+  companyId: ..., 
+};
+
+// Call the `listCustomerAccess()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await listCustomerAccess(listCustomerAccessVars);
+// Variables can be defined inline as well.
+const { data } = await listCustomerAccess({ companyId: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await listCustomerAccess(dataConnect, listCustomerAccessVars);
+
+console.log(data.customerAccounts);
+
+// Or, you can use the `Promise` API.
+listCustomerAccess(listCustomerAccessVars).then((response) => {
+  const data = response.data;
+  console.log(data.customerAccounts);
+});
+```
+
+### Using `ListCustomerAccess`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, listCustomerAccessRef, ListCustomerAccessVariables } from '@basis/dataconnect-platform';
+
+// The `ListCustomerAccess` query requires an argument of type `ListCustomerAccessVariables`:
+const listCustomerAccessVars: ListCustomerAccessVariables = {
+  companyId: ..., 
+};
+
+// Call the `listCustomerAccessRef()` function to get a reference to the query.
+const ref = listCustomerAccessRef(listCustomerAccessVars);
+// Variables can be defined inline as well.
+const ref = listCustomerAccessRef({ companyId: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = listCustomerAccessRef(dataConnect, listCustomerAccessVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.customerAccounts);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.customerAccounts);
 });
 ```
 

@@ -158,3 +158,14 @@ If a key without a workspace is ever set again, either of these fixes it
 Set a monthly spend limit on the workspace in the Console. The schema for
 BASIS AI (threads, messages, actions) deploys with `firebase deploy --only
 dataconnect`; read the SQL first, it only creates tables and enums.
+
+## Customer portal, slice 1 (2026-11-10)
+
+`firebase deploy --only dataconnect` creates the portal's tables (customer
+accounts, users, invitations, addresses) and adds `Inquiry.account`: read the
+SQL first, it only creates tables and enums and adds one column. Then
+`firebase deploy --only functions`, then the hosting of both sites
+(`hosting:web` serves `/account/**` from the site's SPA fallback). Customers
+sign in with email and password, which is already on; the password-reset email
+is Firebase's own. `basis-inc.web.app` is already among the API key's allowed
+referrers.

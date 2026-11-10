@@ -21,6 +21,7 @@ import { NotFound } from '../NotFound';
 import { useT } from '../../i18n';
 import { CustomerOrders } from './CustomerOrders';
 import { CustomerRelationship } from './CustomerRelationship';
+import { CustomerPortal } from './CustomerPortal';
 
 function NewContactDialog({ companyId, open, onClose }: { companyId: string; open: boolean; onClose: () => void }) {
   const t = useT();
@@ -236,7 +237,7 @@ function Places({ company }: { company: CompanyDetail }) {
   );
 }
 
-export function CompanySheet({ tab, base }: { tab: 'overview' | 'contacts' | 'places' | 'orders' | 'relationship' | 'mail'; base: '/suppliers' | '/customers' }) {
+export function CompanySheet({ tab, base }: { tab: 'overview' | 'contacts' | 'places' | 'orders' | 'relationship' | 'portal' | 'mail'; base: '/suppliers' | '/customers' }) {
   const t = useT();
   const session = useRequiredSession();
   const { id = '' } = useParams();
@@ -277,6 +278,7 @@ export function CompanySheet({ tab, base }: { tab: 'overview' | 'contacts' | 'pl
         <NavLink to={`${path}/places`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Factories and locations')}</NavLink>
         {base === '/customers' && <NavLink to={`${path}/orders`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Orders')}</NavLink>}
         {base === '/customers' && <NavLink to={`${path}/relationship`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Relationship')}</NavLink>}
+        {base === '/customers' && data.roles.includes('customer') && <NavLink to={`${path}/portal`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Portal')}</NavLink>}
         {canOpenModule(session.role, 'mail') && <NavLink to={`${path}/mail`} className={({ isActive }) => sheetTabClass(isActive)}>{t('Mail')}</NavLink>}
       </SheetTabs>
       <div className="px-5 py-6 lg:px-8">
@@ -285,6 +287,7 @@ export function CompanySheet({ tab, base }: { tab: 'overview' | 'contacts' | 'pl
         {tab === 'places' && <Places company={data} />}
         {tab === 'orders' && <CustomerOrders company={data} manage={manage} />}
         {tab === 'relationship' && <CustomerRelationship company={data} manage={manage} />}
+        {tab === 'portal' && <CustomerPortal company={data} />}
         {tab === 'mail' && <MailPanel entityType={mailCompanyEntity(data.roles)} entityId={data.id} />}
       </div>
       {manage && <EditCompanyDialog key={`${data.id}-${editing}`} company={data} open={editing} onClose={() => setEditing(false)} />}

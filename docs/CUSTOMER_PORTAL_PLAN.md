@@ -4,7 +4,13 @@ How BASIS customers get a site of their own: they sign in, see and manage everyt
 
 This document decides who the portal serves, the accounts and how they are kept apart from staff, what a customer can do, how payments work, the cashback ledger, what "a digital credit card" can honestly mean, the assistant, the screens, the schema, the permissions and the order of the build (§12). It ends with what the owner must open or buy (§13) and the questions for the owner (§14). Nothing is built beyond it until the owner approves it. What is already in the system is reused, never duplicated.
 
-**State.** Designed 2026-11-10; waiting for the owner's answers to §14.
+**State.** Designed 2026-11-10. The owner asked for it to be built the same day ("when you finish building the customer front, open a session for the App Store"), which is taken as approval with the proposed answers to §14, as with the department plans before it: trade first, invitation-only for trade, the cashback and card proposals, Opus for the site assistant. The selling entity and the processor (question 2) and the domain (question 6) still wait for him and gate slice 3.
+
+**Slice 1 is built (2026-11-10):** accounts, users and invitations; the `customer` connector; the portal under `/account` on the brand site (sign-in, invitation, password reset, overview, quotes with accept and decline and the quotation PDF, orders, shipments, invoices, documents, samples, team, addresses) in English and Hebrew; the Portal tab on the customer's page in the platform. As built, against this plan:
+- Shipments reach the customer through `Shipment.consignee`, which `shipSalesOrder` sets to the order's customer and which only that function sets; only it puts sales-order lines on a shipment, so a consignee's shipment carries only their goods. A shipment's lines are read by their own query: one query with the journey and the lines is more than the local emulator's database plans. Places on a shipment show their kind and city, never their name (a direct shipment starts at the mill).
+- Documents are listed and opened through functions (`customerDocuments`, `/api/customer/files/<id>`, the customer branch of `/api/pdf/*`), not the connector, because a document is linked to a record by its number: the function finds the person's own records first. Commercial invoices only on their own orders; papers of a direct shipment and inspection reports never; a shipment's papers only when every line on it is theirs.
+- Invitations are not emailed yet (no mail provider): whoever invites gets the one-time link to send, with Copy and WhatsApp. The link is valid 14 days; only its hash is stored.
+- `transitionQuote` no longer clears a quote's sent date when it is answered.
 
 ---
 

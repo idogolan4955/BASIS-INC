@@ -26,3 +26,15 @@
     }
   }
 }
+
+/* The portal in Hebrew: the mono caps the site uses for labels carry words
+   here, not codes, so they are set in the sans, right to left, untracked.
+   Codes, numbers and amounts keep the mono: they are marked dir="ltr". */
+[lang='he'] .code:not([dir='ltr']) {
+  direction: rtl;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-stretch: normal;
+  font-weight: 600;
+  letter-spacing: 0;
+}

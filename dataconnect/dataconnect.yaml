@@ -12,3 +12,4 @@ schema:
 connectorDirs:
   - ./platform
   - ./public
+  - ./customer

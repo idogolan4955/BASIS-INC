@@ -57,16 +57,16 @@ export interface InquiryFields {
 }
 
 /** One inquiry with the next INQ number, from the site or from a message in module 19; raised on the Gateway. */
-export async function createInquiryRecord(fields: InquiryFields, source: 'site' | 'email', mailMessageId: string | null): Promise<string> {
+export async function createInquiryRecord(fields: InquiryFields, source: 'site' | 'email' | 'portal', mailMessageId: string | null, accountId: string | null = null): Promise<string> {
   const year = new Date().getFullYear();
   const { numberSequence } = await graphql<{ numberSequence: { nextValue: number } | null }>(`query ($year: Int!) { numberSequence(key: { prefix: "INQ", year: $year }) { nextValue } }`, { year });
   const sequence = numberSequence?.nextValue ?? 1;
   await graphql(`mutation ($year: Int!, $next: Int!) { numberSequence_upsert(data: { prefix: "INQ", year: $year, nextValue: $next }) }`, { year, next: sequence + 1 });
   const reference = formatBusinessNumber({ prefix: 'INQ', year, sequence });
   await graphql(
-    `mutation ($reference: String!, $kind: String!, $name: String!, $company: String, $email: String!, $phone: String, $country: String, $customerType: String, $topic: String, $message: String, $details: Any, $context: Any, $source: String!, $mailMessageId: UUID) {
-      inquiry_insert(data: { reference: $reference, kind: $kind, name: $name, company: $company, email: $email, phone: $phone, country: $country, customerType: $customerType, topic: $topic, message: $message, details: $details, context: $context, state: "new", source: $source, mailMessageId: $mailMessageId }) }`,
-    { ...fields, reference, source, mailMessageId },
+    `mutation ($reference: String!, $kind: String!, $name: String!, $company: String, $email: String!, $phone: String, $country: String, $customerType: String, $topic: String, $message: String, $details: Any, $context: Any, $source: String!, $mailMessageId: UUID, $accountId: UUID) {
+      inquiry_insert(data: { reference: $reference, kind: $kind, name: $name, company: $company, email: $email, phone: $phone, country: $country, customerType: $customerType, topic: $topic, message: $message, details: $details, context: $context, state: "new", source: $source, mailMessageId: $mailMessageId, accountId: $accountId }) }`,
+    { ...fields, reference, source, mailMessageId, accountId },
   );
   await emit('inquiry.received', 'inquiry', reference, { kind: fields.kind, country: fields.country, source });
   return reference;

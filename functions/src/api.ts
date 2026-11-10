@@ -6,6 +6,8 @@ import { renderPackingList, renderPurchaseOrder, renderRollLabels, renderQuote, 
 import { EXPORT_FORMATS, isAssistantCommand, isExportLedger, type ExportFormat } from '@basis/shared';
 import type { CallableFunction, CallableRequest } from 'firebase-functions/v2/https';
 import { graphql } from './lib';
+import { customerFile, customerMayRender, httpCustomerOf } from './portal';
+import { getStorage } from 'firebase-admin/storage';
 
 // Plain HTTP, behind Hosting's /api/** rewrite. Public intake, webhooks,
 // exports and PDFs join this router as their modules are built.
@@ -48,8 +50,14 @@ export const api = onRequest({ region: REGION, cors: [/^http:\/\/localhost:\d+$/
       return;
     }
     try {
-      const caller = await httpCallerOf(request.get('authorization'));
-      requireRole(caller, route.roles, route.action);
+      // A customer opens only their own quotes and the packing lists of shipments that carry only their goods.
+      const customer = await httpCustomerOf(request.get('authorization'));
+      if (customer) {
+        if (!(await customerMayRender(customer, pdf[1]!, pdf[2]!))) throw new HttpsError('not-found', `No document ${pdf[2]} in your account.`);
+      } else {
+        const caller = await httpCallerOf(request.get('authorization'));
+        requireRole(caller, route.roles, route.action);
+      }
       const { pdf: buffer, filename } = await route.render(pdf[2]!);
       response.set('Content-Type', 'application/pdf');
       response.set('Content-Disposition', `inline; filename="${filename}"`);
@@ -62,6 +70,30 @@ export const api = onRequest({ region: REGION, cors: [/^http:\/\/localhost:\d+$/
       }
       console.error('pdf', error);
       response.status(500).json({ error: 'internal', message: 'The document could not be rendered.' });
+    }
+    return;
+  }
+
+  // /customer/files/<id>: a filed document, for the customer whose record it is on.
+  const file = path.match(/^\/customer\/files\/([0-9a-f-]{32,36})$/i);
+  if (request.method === 'GET' && file) {
+    try {
+      const customer = await httpCustomerOf(request.get('authorization'));
+      if (!customer) throw new HttpsError('permission-denied', 'Sign in to your BASIS account first.');
+      const found = await customerFile(customer, file[1]!);
+      if (!found) throw new HttpsError('not-found', 'No such document in your account.');
+      const [bytes] = await getStorage().bucket().file(found.storagePath).download();
+      response.set('Content-Type', found.mimeType);
+      response.set('Content-Disposition', `inline; filename="${found.title.replace(/[^\w .()-]+/g, '_')}"`);
+      response.set('Cache-Control', 'private, no-store');
+      response.send(bytes);
+    } catch (error) {
+      if (error instanceof HttpsError) {
+        response.status(STATUS[error.code] ?? 500).json({ error: error.code, message: error.message });
+        return;
+      }
+      console.error('customer file', error);
+      response.status(500).json({ error: 'internal', message: 'The document could not be opened.' });
     }
     return;
   }

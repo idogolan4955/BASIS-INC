@@ -16,6 +16,11 @@
       "types": "./src/dataconnect-generated/public/index.d.ts",
       "import": "./src/dataconnect-generated/public/esm/index.esm.js",
       "default": "./src/dataconnect-generated/public/index.cjs.js"
+    },
+    "./dataconnect/customer": {
+      "types": "./src/dataconnect-generated/customer/index.d.ts",
+      "import": "./src/dataconnect-generated/customer/esm/index.esm.js",
+      "default": "./src/dataconnect-generated/customer/index.cjs.js"
     }
   },
   "scripts": {

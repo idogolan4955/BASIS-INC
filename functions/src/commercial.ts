@@ -154,7 +154,16 @@ export const transitionQuote = onCall({ region: REGION }, async (request) => {
   requireRole(caller, SALES, 'Moving quotes');
   const parsed = quoteTransition.safeParse(request.data);
   if (!parsed.success) validationFailure(parsed.error);
-  const input = parsed.data;
+  return applyQuoteTransition(parsed.data, caller.uid);
+});
+
+/**
+ * The transition itself, shared by sales in the platform and by the customer
+ * answering in the portal (`respondToQuote`), who has already been checked as
+ * a member of the quote's account. `byline` names who answered on the timeline.
+ */
+export async function applyQuoteTransition(input: z.infer<typeof quoteTransition>, actorUid: string, byline?: string): Promise<{ number: string; state: string; orderNumber: string | null }> {
+  const caller = { uid: actorUid };
   const { quotes } = await graphql<{ quotes: QuoteRow[] }>(
     `query ($number: String!) { quotes(where: { number: { eq: $number } }, limit: 1) { id number state currency namedPlace paymentTerms validUntil notes customer { id legalName tradingName } contact { id } incoterm { code } quoteLines_on_quote(orderBy: { lineNo: ASC }) { lineNo quantity unitPrice sku { code } } } }`,
     { number: input.number },
@@ -165,7 +174,9 @@ export const transitionQuote = onCall({ region: REGION }, async (request) => {
   if (!allowed[input.to]!.includes(quote.state)) throw failure('invariant_violation', `${quote.number} is ${quote.state}; it cannot be ${input.to}.`);
   if (quote.quoteLines_on_quote.length === 0) throw failure('invariant_violation', 'A quote with no lines goes nowhere.');
   const customerName = quote.customer.tradingName || quote.customer.legalName;
-  await graphql(`mutation ($id: UUID!, $state: QuoteState!, $sentOn: Date) { quote_update(id: $id, data: { state: $state, sentOn: $sentOn, updatedAt_expr: "request.time" }) }`, { id: quote.id, state: input.to, sentOn: input.to === 'sent' ? today() : null });
+  // The date a quote was sent stays when it is later answered.
+  if (input.to === 'sent') await graphql(`mutation ($id: UUID!, $sentOn: Date!) { quote_update(id: $id, data: { state: sent, sentOn: $sentOn, updatedAt_expr: "request.time" }) }`, { id: quote.id, sentOn: today() });
+  else await graphql(`mutation ($id: UUID!, $state: QuoteState!) { quote_update(id: $id, data: { state: $state, updatedAt_expr: "request.time" }) }`, { id: quote.id, state: input.to });
   let orderNumber: string | null = null;
   if (input.to === 'accepted') {
     orderNumber = await allocateNumber('SO');
@@ -186,9 +197,9 @@ export const transitionQuote = onCall({ region: REGION }, async (request) => {
   if (input.to === 'sent') await fileGenerated('quote', quote.number, caller.uid);
   await followQuote(quote.id, input.to, orderNumber);
   await audit(caller.uid, `quote.${input.to}`, 'quote', quote.number, { state: quote.state }, { state: input.to, order: orderNumber, reason: input.reason ?? null });
-  await timeline('quote', quote.number, 'status_changed', caller.uid, `${input.to[0]!.toUpperCase()}${input.to.slice(1)}${orderNumber ? `; ${orderNumber} opened` : ''}${input.reason ? `: ${input.reason}` : ''}`);
+  await timeline('quote', quote.number, 'status_changed', caller.uid, `${input.to[0]!.toUpperCase()}${input.to.slice(1)}${byline ? ` ${byline}` : ''}${orderNumber ? `; ${orderNumber} opened` : ''}${input.reason ? `: ${input.reason}` : ''}`);
   return { number: quote.number, state: input.to, orderNumber };
-});
+}
 
 // ---------------------------------------------------------------- orders
 

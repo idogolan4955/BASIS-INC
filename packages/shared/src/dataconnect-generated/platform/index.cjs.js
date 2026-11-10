@@ -95,6 +95,19 @@ const CostingBasis = {
 }
 exports.CostingBasis = CostingBasis;
 
+const CustomerAccountKind = {
+  trade: "trade",
+  consumer: "consumer",
+}
+exports.CustomerAccountKind = CustomerAccountKind;
+
+const CustomerAccountStatus = {
+  active: "active",
+  suspended: "suspended",
+  closed: "closed",
+}
+exports.CustomerAccountStatus = CustomerAccountStatus;
+
 const CustomerTier = {
   standard: "standard",
   preferred: "preferred",
@@ -2187,6 +2200,21 @@ exports.upsertSupplierProfileRef = upsertSupplierProfileRef;
 exports.upsertSupplierProfile = function upsertSupplierProfile(dcOrVars, vars) {
   const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
   return executeMutation(upsertSupplierProfileRef(dcInstance, inputVars));
+}
+;
+
+const listCustomerAccessRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListCustomerAccess', inputVars);
+}
+listCustomerAccessRef.operationName = 'ListCustomerAccess';
+exports.listCustomerAccessRef = listCustomerAccessRef;
+
+exports.listCustomerAccess = function listCustomerAccess(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(listCustomerAccessRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
 

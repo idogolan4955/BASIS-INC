@@ -148,6 +148,7 @@ const router = createBrowserRouter([
       { path: 'customers/:id/places', element: <CompanySheet tab="places" base="/customers" /> },
       { path: 'customers/:id/orders', element: <CompanySheet tab="orders" base="/customers" /> },
       { path: 'customers/:id/relationship', element: <CompanySheet tab="relationship" base="/customers" /> },
+      { path: 'customers/:id/portal', element: <CompanySheet tab="portal" base="/customers" /> },
       { path: 'customers/:id/mail', element: <CompanySheet tab="mail" base="/customers" /> },
       { path: 'board', element: <Board /> },
       { path: 'goals', element: <Goals /> },

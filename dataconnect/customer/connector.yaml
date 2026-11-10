@@ -1,0 +1,5 @@
+connectorId: customer
+generate:
+  javascriptSdk:
+    outputDir: ../../packages/shared/src/dataconnect-generated/customer
+    package: "@basis/dataconnect-customer"

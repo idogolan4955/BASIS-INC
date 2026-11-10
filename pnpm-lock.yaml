@@ -109,6 +109,9 @@ importers:
       '@fontsource/permanent-marker':
         specifier: ^5.3.0
         version: 5.3.0
+      firebase:
+        specifier: ^12.19.0
+        version: 12.19.0
       isbot:
         specifier: ^5
         version: 5.2.2

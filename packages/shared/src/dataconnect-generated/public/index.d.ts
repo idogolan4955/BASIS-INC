@@ -124,9 +124,29 @@ export interface Currency_Key {
   __typename?: 'Currency_Key';
 }
 
+export interface CustomerAccount_Key {
+  id: UUIDString;
+  __typename?: 'CustomerAccount_Key';
+}
+
+export interface CustomerAddress_Key {
+  id: UUIDString;
+  __typename?: 'CustomerAddress_Key';
+}
+
+export interface CustomerInvitation_Key {
+  id: UUIDString;
+  __typename?: 'CustomerInvitation_Key';
+}
+
 export interface CustomerProfile_Key {
   id: UUIDString;
   __typename?: 'CustomerProfile_Key';
+}
+
+export interface CustomerUser_Key {
+  uid: string;
+  __typename?: 'CustomerUser_Key';
 }
 
 export interface CustomsEntry_Key {
