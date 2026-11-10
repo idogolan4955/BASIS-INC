@@ -14,38 +14,38 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { listQuotes, getQuote, listSalesOrders, getSalesOrder, stockForSku, listSalesOrdersFor, listProductCategories, listCollections, listBrandAssets, listDevelopmentProducts } from '@basis/dataconnect-platform';
+import { listBoardNotes, insertBoardNote, editBoardNote, moveBoardNote, deleteOwnBoardNote, deleteBoardNote, listGoals, listFamilies, listProducts, getProduct } from '@basis/dataconnect-platform';
 
 
-// Operation ListQuotes: 
-const { data } = await ListQuotes(dataConnect);
+// Operation ListBoardNotes: 
+const { data } = await ListBoardNotes(dataConnect);
 
-// Operation GetQuote:  For variables, look at type GetQuoteVars in ../index.d.ts
-const { data } = await GetQuote(dataConnect, getQuoteVars);
+// Operation InsertBoardNote:  For variables, look at type InsertBoardNoteVars in ../index.d.ts
+const { data } = await InsertBoardNote(dataConnect, insertBoardNoteVars);
 
-// Operation ListSalesOrders: 
-const { data } = await ListSalesOrders(dataConnect);
+// Operation EditBoardNote:  For variables, look at type EditBoardNoteVars in ../index.d.ts
+const { data } = await EditBoardNote(dataConnect, editBoardNoteVars);
 
-// Operation GetSalesOrder:  For variables, look at type GetSalesOrderVars in ../index.d.ts
-const { data } = await GetSalesOrder(dataConnect, getSalesOrderVars);
+// Operation MoveBoardNote:  For variables, look at type MoveBoardNoteVars in ../index.d.ts
+const { data } = await MoveBoardNote(dataConnect, moveBoardNoteVars);
 
-// Operation StockForSku:  For variables, look at type StockForSkuVars in ../index.d.ts
-const { data } = await StockForSku(dataConnect, stockForSkuVars);
+// Operation DeleteOwnBoardNote:  For variables, look at type DeleteOwnBoardNoteVars in ../index.d.ts
+const { data } = await DeleteOwnBoardNote(dataConnect, deleteOwnBoardNoteVars);
 
-// Operation ListSalesOrdersFor:  For variables, look at type ListSalesOrdersForVars in ../index.d.ts
-const { data } = await ListSalesOrdersFor(dataConnect, listSalesOrdersForVars);
+// Operation DeleteBoardNote:  For variables, look at type DeleteBoardNoteVars in ../index.d.ts
+const { data } = await DeleteBoardNote(dataConnect, deleteBoardNoteVars);
 
-// Operation ListProductCategories: 
-const { data } = await ListProductCategories(dataConnect);
+// Operation ListGoals: 
+const { data } = await ListGoals(dataConnect);
 
-// Operation ListCollections: 
-const { data } = await ListCollections(dataConnect);
+// Operation ListFamilies: 
+const { data } = await ListFamilies(dataConnect);
 
-// Operation ListBrandAssets: 
-const { data } = await ListBrandAssets(dataConnect);
+// Operation ListProducts: 
+const { data } = await ListProducts(dataConnect);
 
-// Operation ListDevelopmentProducts: 
-const { data } = await ListDevelopmentProducts(dataConnect);
+// Operation GetProduct:  For variables, look at type GetProductVars in ../index.d.ts
+const { data } = await GetProduct(dataConnect, getProductVars);
 
 
 ```

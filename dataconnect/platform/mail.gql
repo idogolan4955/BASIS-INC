@@ -40,6 +40,12 @@ query ListMailGeneral @auth(expr: "auth.token.role == 'owner' || auth.token.role
     mailActions_on_message(where: { state: { eq: proposed } }, limit: 20) {
       id
     }
+    mailClassifications_on_message(orderBy: { createdAt: DESC }, limit: 1) {
+      method
+      summary
+      summaryHe
+      urgency
+    }
   }
 }
 
@@ -101,6 +107,8 @@ query GetMailGeneral($id: UUID!) @auth(expr: "auth.token.role == 'owner' || auth
       summary
       summaryHe
       confidence
+      urgency
+      model
       createdAt
     }
     mailActions_on_message(orderBy: { createdAt: DESC }, limit: 50) {
@@ -137,6 +145,36 @@ query GetMailGeneral($id: UUID!) @auth(expr: "auth.token.role == 'owner' || auth
         fromName
         snippet
         sentAt
+      }
+    }
+  }
+}
+
+query ListMailProposalsGeneral @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'qc' || auth.token.role == 'logistics' || auth.token.role == 'sales' || auth.token.role == 'marketing' || auth.token.role == 'finance'") {
+  mailActions(where: { state: { eq: proposed }, audience: { eq: general } }, orderBy: { createdAt: ASC }, limit: 500) {
+    id
+    kind
+    targetType
+    targetId
+    payload
+    version
+    createdAt
+    message {
+      id
+      subject
+      fromAddress
+      fromName
+      sentAt
+      ownerRole
+      category
+      company {
+        legalName
+        tradingName
+      }
+      mailClassifications_on_message(orderBy: { createdAt: DESC }, limit: 1) {
+        summary
+        summaryHe
+        urgency
       }
     }
   }
@@ -199,6 +237,12 @@ query ListMailCommercial @auth(expr: "auth.token.role == 'owner' || auth.token.r
     mailActions_on_message(where: { state: { eq: proposed } }, limit: 20) {
       id
     }
+    mailClassifications_on_message(orderBy: { createdAt: DESC }, limit: 1) {
+      method
+      summary
+      summaryHe
+      urgency
+    }
   }
 }
 
@@ -260,6 +304,8 @@ query GetMailCommercial($id: UUID!) @auth(expr: "auth.token.role == 'owner' || a
       summary
       summaryHe
       confidence
+      urgency
+      model
       createdAt
     }
     mailActions_on_message(orderBy: { createdAt: DESC }, limit: 50) {
@@ -296,6 +342,36 @@ query GetMailCommercial($id: UUID!) @auth(expr: "auth.token.role == 'owner' || a
         fromName
         snippet
         sentAt
+      }
+    }
+  }
+}
+
+query ListMailProposalsCommercial @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'sales' || auth.token.role == 'marketing' || auth.token.role == 'finance'") {
+  mailActions(where: { state: { eq: proposed }, audience: { eq: commercial } }, orderBy: { createdAt: ASC }, limit: 500) {
+    id
+    kind
+    targetType
+    targetId
+    payload
+    version
+    createdAt
+    message {
+      id
+      subject
+      fromAddress
+      fromName
+      sentAt
+      ownerRole
+      category
+      company {
+        legalName
+        tradingName
+      }
+      mailClassifications_on_message(orderBy: { createdAt: DESC }, limit: 1) {
+        summary
+        summaryHe
+        urgency
       }
     }
   }
@@ -358,6 +434,12 @@ query ListMailSupply @auth(expr: "auth.token.role == 'owner' || auth.token.role 
     mailActions_on_message(where: { state: { eq: proposed } }, limit: 20) {
       id
     }
+    mailClassifications_on_message(orderBy: { createdAt: DESC }, limit: 1) {
+      method
+      summary
+      summaryHe
+      urgency
+    }
   }
 }
 
@@ -419,6 +501,8 @@ query GetMailSupply($id: UUID!) @auth(expr: "auth.token.role == 'owner' || auth.
       summary
       summaryHe
       confidence
+      urgency
+      model
       createdAt
     }
     mailActions_on_message(orderBy: { createdAt: DESC }, limit: 50) {
@@ -455,6 +539,36 @@ query GetMailSupply($id: UUID!) @auth(expr: "auth.token.role == 'owner' || auth.
         fromName
         snippet
         sentAt
+      }
+    }
+  }
+}
+
+query ListMailProposalsSupply @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'purchasing' || auth.token.role == 'finance'") {
+  mailActions(where: { state: { eq: proposed }, audience: { eq: supply } }, orderBy: { createdAt: ASC }, limit: 500) {
+    id
+    kind
+    targetType
+    targetId
+    payload
+    version
+    createdAt
+    message {
+      id
+      subject
+      fromAddress
+      fromName
+      sentAt
+      ownerRole
+      category
+      company {
+        legalName
+        tradingName
+      }
+      mailClassifications_on_message(orderBy: { createdAt: DESC }, limit: 1) {
+        summary
+        summaryHe
+        urgency
       }
     }
   }
@@ -517,6 +631,12 @@ query ListMailLogistics @auth(expr: "auth.token.role == 'owner' || auth.token.ro
     mailActions_on_message(where: { state: { eq: proposed } }, limit: 20) {
       id
     }
+    mailClassifications_on_message(orderBy: { createdAt: DESC }, limit: 1) {
+      method
+      summary
+      summaryHe
+      urgency
+    }
   }
 }
 
@@ -578,6 +698,8 @@ query GetMailLogistics($id: UUID!) @auth(expr: "auth.token.role == 'owner' || au
       summary
       summaryHe
       confidence
+      urgency
+      model
       createdAt
     }
     mailActions_on_message(orderBy: { createdAt: DESC }, limit: 50) {
@@ -614,6 +736,36 @@ query GetMailLogistics($id: UUID!) @auth(expr: "auth.token.role == 'owner' || au
         fromName
         snippet
         sentAt
+      }
+    }
+  }
+}
+
+query ListMailProposalsLogistics @auth(expr: "auth.token.role == 'owner' || auth.token.role == 'operations' || auth.token.role == 'logistics' || auth.token.role == 'purchasing' || auth.token.role == 'finance'") {
+  mailActions(where: { state: { eq: proposed }, audience: { eq: logistics } }, orderBy: { createdAt: ASC }, limit: 500) {
+    id
+    kind
+    targetType
+    targetId
+    payload
+    version
+    createdAt
+    message {
+      id
+      subject
+      fromAddress
+      fromName
+      sentAt
+      ownerRole
+      category
+      company {
+        legalName
+        tradingName
+      }
+      mailClassifications_on_message(orderBy: { createdAt: DESC }, limit: 1) {
+        summary
+        summaryHe
+        urgency
       }
     }
   }
@@ -676,6 +828,12 @@ query ListMailOwner @auth(expr: "auth.token.role == 'owner'") {
     mailActions_on_message(where: { state: { eq: proposed } }, limit: 20) {
       id
     }
+    mailClassifications_on_message(orderBy: { createdAt: DESC }, limit: 1) {
+      method
+      summary
+      summaryHe
+      urgency
+    }
   }
 }
 
@@ -737,6 +895,8 @@ query GetMailOwner($id: UUID!) @auth(expr: "auth.token.role == 'owner'") {
       summary
       summaryHe
       confidence
+      urgency
+      model
       createdAt
     }
     mailActions_on_message(orderBy: { createdAt: DESC }, limit: 50) {
@@ -773,6 +933,36 @@ query GetMailOwner($id: UUID!) @auth(expr: "auth.token.role == 'owner'") {
         fromName
         snippet
         sentAt
+      }
+    }
+  }
+}
+
+query ListMailProposalsOwner @auth(expr: "auth.token.role == 'owner'") {
+  mailActions(where: { state: { eq: proposed }, audience: { eq: owner } }, orderBy: { createdAt: ASC }, limit: 500) {
+    id
+    kind
+    targetType
+    targetId
+    payload
+    version
+    createdAt
+    message {
+      id
+      subject
+      fromAddress
+      fromName
+      sentAt
+      ownerRole
+      category
+      company {
+        legalName
+        tradingName
+      }
+      mailClassifications_on_message(orderBy: { createdAt: DESC }, limit: 1) {
+        summary
+        summaryHe
+        urgency
       }
     }
   }

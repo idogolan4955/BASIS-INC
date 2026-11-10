@@ -58,6 +58,15 @@ export function MailConnector({ settings, canEdit }: { settings: MailConnectorSe
             </div>
           ))
         )}
+        {status.data?.classifier && (
+          <p className="mt-1 text-[0.8125rem] text-ink-soft">
+            {t('Smart sorting by {model}: {count} messages this month, about {cost}.', {
+              model: status.data.classifier.model,
+              count: status.data.classifier.month.messages,
+              cost: `USD ${Math.floor(status.data.classifier.month.microDollars / 1_000_000)}.${String(Math.floor((status.data.classifier.month.microDollars % 1_000_000) / 10_000)).padStart(2, '0')}`,
+            })}
+          </p>
+        )}
         {mailbox && (
           <dl className="mt-2 grid gap-x-8 gap-y-1 text-[0.8125rem] sm:grid-cols-3">
             <div>

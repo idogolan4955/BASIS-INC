@@ -512,6 +512,70 @@ export const RULES: Rule[] = [
     },
   },
   {
+    key: 'mail.decision_waiting',
+    async evaluate(now) {
+      // One alert per department: proposals the classifier made that nobody decided within four hours.
+      const { mailActions } = await graphql<{ mailActions: { createdAt: string; message: { ownerRole: Role | null } }[] }>(
+        `query { mailActions(where: { state: { eq: proposed } }, limit: 2000) { createdAt message { ownerRole } } }`,
+      );
+      const waiting = new Map<Role, number>();
+      for (const action of mailActions) {
+        if (now.getTime() - Date.parse(action.createdAt) < 4 * 3_600_000) continue;
+        const role = action.message.ownerRole ?? 'owner';
+        waiting.set(role, (waiting.get(role) ?? 0) + 1);
+      }
+      return [...waiting.entries()].map(([role, count]) => ({
+        entityType: 'mail_actions',
+        entityId: role,
+        title: `${count} mail proposal${count === 1 ? '' : 's'} wait for a decision`,
+        detail: 'Proposed by the classifier more than four hours ago; accept or dismiss them in Mail › Actions.',
+        severity: count > 10 ? 'critical' : 'caution',
+        ownerRole: role,
+        dedupeKey: `mail.decision_waiting:${role}`,
+      }) satisfies Finding);
+    },
+  },
+  {
+    key: 'mail.unsorted',
+    async evaluate(now) {
+      const { mailMessages } = await graphql<{ mailMessages: { id: string }[] }>(
+        `query ($before: Timestamp!) { mailMessages(where: { state: { eq: needs_review }, direction: { eq: inbound }, receivedAt: { le: $before } }, limit: 1000) { id } }`,
+        { before: new Date(now.getTime() - 86_400_000).toISOString() },
+      );
+      if (mailMessages.length === 0) return [];
+      return [
+        {
+          entityType: 'mail_inbox',
+          entityId: 'decide',
+          title: `${mailMessages.length} message${mailMessages.length === 1 ? '' : 's'} unsorted for a day`,
+          detail: 'Neither the facts nor the classifier could sort them; they stay with the owner until someone does.',
+          severity: 'caution',
+          ownerRole: 'owner',
+          dedupeKey: 'mail.unsorted',
+        } satisfies Finding,
+      ];
+    },
+  },
+  {
+    key: 'mail.phishing_suspect',
+    async evaluate() {
+      const { mailMessages } = await graphql<{ mailMessages: { id: string; state: string }[] }>(
+        `query { mailMessages(where: { category: { eq: "phishing_suspect" }, direction: { eq: inbound } }, limit: 200) { id state } }`,
+      );
+      return mailMessages
+        .filter((message) => message.state !== 'done' && message.state !== 'ignored')
+        .map((message) => ({
+          entityType: 'mail_message',
+          entityId: message.id,
+          title: 'A message looks like phishing',
+          detail: 'It asks for a payment, credentials or changed bank details. Do not act on it before checking with the sender by phone.',
+          severity: 'critical',
+          ownerRole: 'owner',
+          dedupeKey: `mail.phishing_suspect:${message.id}`,
+        }) satisfies Finding);
+    },
+  },
+  {
     key: 'mail.customer_unanswered',
     async evaluate(now) {
       const { mailThreads } = await graphql<{ mailThreads: { id: string; subject: string | null; lastInboundAt: string | null; lastOutboundAt: string | null; mailMessages_on_thread: { id: string; state: string; company: { legalName: string; tradingName: string | null } | null }[] }[] }>(

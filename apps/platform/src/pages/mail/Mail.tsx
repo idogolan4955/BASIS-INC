@@ -1,9 +1,9 @@
-import { MAIL_AUDIENCES, MAIL_AUDIENCE_LABEL, MAIL_CATEGORIES, MAIL_CATEGORY_KEYS, ROLES, ROLE_LABELS, entityPath, isMailCategory, type MailAudience, type MailCategory, type MailRuleView, type Role } from '@basis/shared';
+import { MAIL_ACTION_LABEL, MAIL_AUDIENCES, MAIL_AUDIENCE_LABEL, MAIL_CATEGORIES, MAIL_CATEGORY_KEYS, ROLES, ROLE_LABELS, entityPath, isMailActionKind, isMailCategory, isRole, type MailAudience, type MailCategory, type MailRuleView, type Role } from '@basis/shared';
 import { Button, CheckField, Dialog, Ledger, Panel, PanelEmpty, SelectField, StatusChip, Td, TextField, Th, Tr, sheetTabClass } from '@basis/ui';
 import { Paperclip } from '@phosphor-icons/react';
 import { useMemo, useRef, useState, type FormEvent } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router';
-import { useImportMail, useMail, useMailRules, useSaveMailRule, type MailRow } from '../../data/mail';
+import { Link, NavLink, useNavigate, useParams } from 'react-router';
+import { useDecideProposal, useImportMail, useMail, useMailProposals, useMailRules, useSaveMailRule, type MailProposalView, type MailRow } from '../../data/mail';
 import { useLocale, useT } from '../../i18n';
 import { useRequiredSession } from '../../session';
 import { ModuleTitle } from '../products/ProductsIndex';
@@ -39,12 +39,68 @@ export function formatMailDate(iso: string, locale: string): string {
     : date.toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-GB', { day: '2-digit', month: 'short' });
 }
 
-export function MailTabs({ active }: { active: 'inbox' | 'rules' }) {
+/** One proposal in words: what would be done, on which record, and why. */
+export function ProposalLine({ kind, payload, targetType, targetId, attachments = [] }: { kind: string; payload: Record<string, unknown>; targetType: string | null; targetId: string | null; attachments?: readonly { id: string; filename: string }[] }) {
+  const t = useT();
+  const value = (key: string) => (typeof payload[key] === 'string' ? (payload[key] as string) : '');
+  const target =
+    targetType && targetId ? (
+      <Link to={entityPath(targetType, targetId)} className="underline decoration-line-strong underline-offset-4 hover:decoration-ink" onClick={(event) => event.stopPropagation()}>
+        {targetType === 'supplier' || targetType === 'customer' ? t(ENTITY_LABEL[targetType] ?? targetType) : <span className="code" dir="ltr">{targetId}</span>}
+      </Link>
+    ) : null;
+  const what = (() => {
+    switch (kind) {
+      case 'create_task':
+        return (
+          <>
+            {t('Task')}: <span className="font-medium" dir="auto">{value('title')}</span>
+            {value('dueOn') && <span className="code ms-2 text-ink-muted">{value('dueOn')}</span>}
+          </>
+        );
+      case 'file_attachment':
+        return (
+          <>
+            {t('File')} <span className="code" dir="ltr">{attachments.find((attachment) => attachment.id === value('attachmentId'))?.filename ?? value('title')}</span>
+          </>
+        );
+      case 'create_inquiry':
+        return <>{t('Open an inquiry')}: <span className="font-medium" dir="auto">{value('name')}</span></>;
+      case 'log_interaction':
+        return <>{t('Log on the customer')}</>;
+      case 'create_company':
+        return (
+          <>
+            {t('Add the sender as a company')}: <span className="font-medium" dir="auto">{value('legalName')}</span>
+          </>
+        );
+      default:
+        return <>{t(isMailActionKind(kind) ? MAIL_ACTION_LABEL[kind] : kind)}</>;
+    }
+  })();
+  return (
+    <div>
+      <p>
+        {what}
+        {target && (
+          <>
+            {' · '}
+            {target}
+          </>
+        )}
+      </p>
+      {value('reason') && <p className="mt-0.5 text-[0.8125rem] text-ink-muted" dir="auto">{value('reason')}</p>}
+    </div>
+  );
+}
+
+export function MailTabs({ active }: { active: 'inbox' | 'actions' | 'rules' }) {
   const t = useT();
   const session = useRequiredSession();
   return (
     <nav aria-label={t('Mail sections')} className="flex gap-6 border-b border-line bg-panel px-5 lg:px-8">
       <NavLink to="/mail" end className={() => sheetTabClass(active === 'inbox')}>{t('Inbox')}</NavLink>
+      <NavLink to="/mail/actions" className={() => sheetTabClass(active === 'actions')}>{t('Suggested actions')}</NavLink>
       {session.role === 'owner' && <NavLink to="/mail/rules" className={() => sheetTabClass(active === 'rules')}>{t('Rules')}</NavLink>}
     </nav>
   );
@@ -110,11 +166,12 @@ function References({ row }: { row: MailRow }) {
 
 export function Inbox() {
   const t = useT();
+  const { view: initialView } = useParams();
   const { locale } = useLocale();
   const session = useRequiredSession();
   const mail = useMail();
   const navigate = useNavigate();
-  const [view, setView] = useState<View>('decide');
+  const [view, setView] = useState<View>(initialView === 'new' || initialView === 'done' || initialView === 'ignored' ? initialView : 'decide');
   const [department, setDepartment] = useState<Role | ''>('');
   const [category, setCategory] = useState<MailCategory | ''>('');
   const [search, setSearch] = useState('');
@@ -206,11 +263,13 @@ export function Inbox() {
                       </Link>
                       <span className="block truncate text-[0.8125rem] text-ink-muted" dir="auto">
                         {row.attachmentCount > 0 && <Paperclip aria-label={t('{count} attachments', { count: row.attachmentCount })} className="me-1 inline size-3.5 align-[-2px]" />}
-                        {row.snippet}
+                        {(locale === 'he' ? row.summaryHe : row.summary) || row.snippet}
                       </span>
                     </Td>
                     <Td className="align-top">
                       {row.state === 'needs_review' ? <StatusChip tone="caution">{t('Unsorted')}</StatusChip> : <span className="text-ink-soft">{t(categoryLabel(row.category))}</span>}
+                      {row.urgency === 'high' && <StatusChip tone="critical" className="ms-2">{t('Urgent')}</StatusChip>}
+                      {row.openProposals > 0 && <span className="code ms-2 text-ink-muted">{t('{count} suggested', { count: row.openProposals })}</span>}
                       {row.messageCount > 1 && <span className="code ms-2 text-ink-muted">×{row.messageCount}</span>}
                     </Td>
                     <Td className="align-top">
@@ -222,6 +281,87 @@ export function Inbox() {
             </Ledger>
           )}
         </Panel>
+      </div>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------- suggested actions
+
+function ProposalRow({ proposal }: { proposal: MailProposalView }) {
+  const t = useT();
+  const { locale } = useLocale();
+  const decide = useDecideProposal();
+  const [error, setError] = useState<string | null>(null);
+  const run = (decision: 'accept' | 'dismiss') => {
+    setError(null);
+    decide.mutate({ actionId: proposal.id, decision }, { onError: (failure) => setError(failure.message) });
+  };
+  return (
+    <li className="grid gap-3 px-5 py-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
+      <div className="min-w-0">
+        <p className="flex flex-wrap items-baseline gap-x-3 text-[0.8125rem] text-ink-muted">
+          <span className="font-medium text-ink">{proposal.message.from}</span>
+          <Link to={`/mail/${proposal.message.id}`} className="truncate underline decoration-line-strong underline-offset-4 hover:decoration-ink" dir="auto">{proposal.message.subject || t('(no subject)')}</Link>
+          <span className="code">{formatMailDate(proposal.message.sentAt, locale)}</span>
+          {proposal.message.urgency === 'high' && <StatusChip tone="critical">{t('Urgent')}</StatusChip>}
+        </p>
+        {(proposal.message.summary || proposal.message.summaryHe) && <p className="mt-1 text-[0.8125rem] text-ink-soft" dir="auto">{locale === 'he' && proposal.message.summaryHe ? proposal.message.summaryHe : proposal.message.summary}</p>}
+        <div className="mt-2 text-sm">
+          <ProposalLine kind={proposal.kind} payload={proposal.payload} targetType={proposal.targetType} targetId={proposal.targetId} />
+        </div>
+        {error && <p role="alert" className="mt-1 text-[0.8125rem] font-medium text-critical">{error}</p>}
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <Button size="sm" variant="primary" busy={decide.isPending && decide.variables?.decision === 'accept'} busyLabel={t('Saving')} onClick={() => run('accept')}>{t('Approve')}</Button>
+        <Link to={`/mail/${proposal.message.id}`} className="inline-flex h-8 items-center border border-line-strong px-3 text-[0.8125rem] hover:border-charcoal">{t('Edit')}</Link>
+        <Button size="sm" variant="quiet" busy={decide.isPending && decide.variables?.decision === 'dismiss'} busyLabel={t('Saving')} onClick={() => run('dismiss')}>{t('Reject')}</Button>
+      </div>
+    </li>
+  );
+}
+
+/** Every open proposal the role may read, by department, oldest first: the morning's mail cleared in one place. */
+export function MailActions() {
+  const t = useT();
+  const { filter } = useParams();
+  const proposals = useMailProposals();
+  const department = filter && isRole(filter) ? filter : '';
+  const rows = (proposals.data ?? []).filter((proposal) => !department || (proposal.message.ownerRole ?? 'owner') === department);
+  const groups = new Map<string, MailProposalView[]>();
+  for (const proposal of rows) {
+    const key = proposal.message.ownerRole ?? 'owner';
+    groups.set(key, [...(groups.get(key) ?? []), proposal]);
+  }
+  return (
+    <>
+      <ModuleTitle number="19" title={t('Mail')}>{t('What Claude suggests doing with the mail. Approve does it as you, Reject drops it, Edit opens the message.')}</ModuleTitle>
+      <MailTabs active="actions" />
+      <div className="flex flex-col gap-4 px-5 py-6 lg:px-8">
+        {department && (
+          <p className="text-sm text-ink-soft">
+            {t('Showing {department} only.', { department: t(ROLE_LABELS[department]) })} <Link to="/mail/actions" className="underline underline-offset-4">{t('Show all')}</Link>
+          </p>
+        )}
+        {proposals.isPending ? (
+          <p className="text-ink-muted">{t('Loading suggestions')}</p>
+        ) : proposals.error ? (
+          <p className="text-critical">{t('Suggestions could not be loaded.')} {proposals.error.message}</p>
+        ) : rows.length === 0 ? (
+          <Panel title={t('Suggested actions')} count={0}>
+            <p className="text-ink-muted">{t('Nothing waits for a decision. New mail is read every five minutes.')}</p>
+          </Panel>
+        ) : (
+          [...groups.entries()].map(([role, list]) => (
+            <Panel key={role} title={t(isRole(role) ? ROLE_LABELS[role] : role)} count={list.length} flush>
+              <ul className="divide-y divide-line">
+                {list.map((proposal) => (
+                  <ProposalRow key={proposal.id} proposal={proposal} />
+                ))}
+              </ul>
+            </Panel>
+          ))
+        )}
       </div>
     </>
   );

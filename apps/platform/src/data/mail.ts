@@ -38,6 +38,10 @@ export interface MailRow {
   readonly messageCount: number;
   readonly links: readonly MailLinkView[];
   readonly openProposals: number;
+  /** The classifier's one-sentence summary, in English and Hebrew, when it has read the message. */
+  readonly summary: string;
+  readonly summaryHe: string;
+  readonly urgency: 'low' | 'normal' | 'high' | null;
 }
 
 export interface MailAttachmentView {
@@ -58,6 +62,10 @@ export interface MailClassificationView {
   readonly ownerRole: Role | null;
   readonly basis: string;
   readonly summary: string;
+  readonly summaryHe: string;
+  readonly confidence: number | null;
+  readonly urgency: string | null;
+  readonly model: string;
   readonly createdAt: string;
 }
 
@@ -70,6 +78,31 @@ export interface MailActionView {
   readonly resultType: string | null;
   readonly resultId: string | null;
   readonly decidedAt: string | null;
+  readonly payload: Record<string, unknown>;
+  readonly version: number;
+  readonly error: string;
+  readonly dismissReason: string;
+}
+
+/** An open proposal with the message it came from, for the Actions screen. */
+export interface MailProposalView {
+  readonly id: string;
+  readonly kind: string;
+  readonly targetType: string | null;
+  readonly targetId: string | null;
+  readonly payload: Record<string, unknown>;
+  readonly createdAt: string;
+  readonly message: {
+    readonly id: string;
+    readonly subject: string;
+    readonly from: string;
+    readonly sentAt: string;
+    readonly ownerRole: Role | null;
+    readonly category: string;
+    readonly summary: string;
+    readonly summaryHe: string;
+    readonly urgency: string | null;
+  };
 }
 
 export interface MailThreadMessage {
@@ -128,6 +161,7 @@ export interface MailboxView {
 
 export interface MailStatusView {
   readonly secrets: readonly { readonly name: string; readonly present: boolean }[];
+  readonly classifier?: { readonly model: string; readonly month: { readonly messages: number; readonly microDollars: number } };
   readonly emulator: boolean;
 }
 
@@ -164,6 +198,9 @@ function rowOf(row: any): MailRow {
     messageCount: row.thread.messageCount,
     links: (row.thread.mailLinks_on_thread ?? []).map((link: any) => ({ entityType: link.entityType, entityId: link.entityId })),
     openProposals: (row.mailActions_on_message ?? []).filter((action: any) => !action.state || action.state === 'proposed').length,
+    summary: (row.mailClassifications_on_message ?? []).find((entry: any) => entry.summary)?.summary ?? '',
+    summaryHe: (row.mailClassifications_on_message ?? []).find((entry: any) => entry.summaryHe)?.summaryHe ?? '',
+    urgency: (row.mailClassifications_on_message ?? []).find((entry: any) => entry.urgency)?.urgency ?? null,
   };
 }
 
@@ -181,8 +218,8 @@ function detailOf(row: any): MailDetail {
     companyRoles: row.company?.companyRoles_on_company?.map((role: any) => role.kind) ?? [],
     contactId: row.contact?.id ?? null,
     attachments: row.mailAttachments_on_message.map((attachment: any) => ({ id: attachment.id, position: attachment.position, filename: attachment.filename, mimeType: attachment.mimeType, sizeBytes: attachment.sizeBytes, documentId: attachment.document?.id ?? null, documentTitle: attachment.document?.title ?? '' })),
-    classifications: row.mailClassifications_on_message.map((entry: any) => ({ id: entry.id, method: entry.method, category: entry.category, audience: entry.audience, ownerRole: entry.ownerRole ?? null, basis: entry.basis ?? '', summary: entry.summary ?? '', createdAt: entry.createdAt })),
-    actions: row.mailActions_on_message.map((action: any) => ({ id: action.id, kind: action.kind, targetType: action.targetType ?? null, targetId: action.targetId ?? null, state: action.state, resultType: action.resultType ?? null, resultId: action.resultId ?? null, decidedAt: action.decidedAt ?? null })),
+    classifications: row.mailClassifications_on_message.map((entry: any) => ({ id: entry.id, method: entry.method, category: entry.category, audience: entry.audience, ownerRole: entry.ownerRole ?? null, basis: entry.basis ?? '', summary: entry.summary ?? '', summaryHe: entry.summaryHe ?? '', confidence: entry.confidence ?? null, urgency: entry.urgency ?? null, model: entry.model ?? '', createdAt: entry.createdAt })),
+    actions: row.mailActions_on_message.map((action: any) => ({ id: action.id, kind: action.kind, targetType: action.targetType ?? null, targetId: action.targetId ?? null, state: action.state, resultType: action.resultType ?? null, resultId: action.resultId ?? null, decidedAt: action.decidedAt ?? null, payload: (action.payload ?? {}) as Record<string, unknown>, version: action.version, error: action.error ?? '', dismissReason: action.dismissReason ?? '' })),
     thread: {
       id: row.thread.id,
       subject: row.thread.subject ?? '',
@@ -233,6 +270,49 @@ const FOR: Record<MailAudience, (l: Live, entityType: string, entityId: string) 
   logistics: async ({ dc, sdk }, entityType, entityId) => (await sdk.listMailForLogistics(dc, { entityType, entityId })).data.mailLinks.map(threadLinkOf),
   owner: async ({ dc, sdk }, entityType, entityId) => (await sdk.listMailForOwner(dc, { entityType, entityId })).data.mailLinks.map(threadLinkOf),
 };
+
+/* eslint-disable @typescript-eslint/no-explicit-any -- same shape across the five reads */
+const proposalOf = (row: any): MailProposalView => ({
+  id: row.id,
+  kind: row.kind,
+  targetType: row.targetType ?? null,
+  targetId: row.targetId ?? null,
+  payload: (row.payload ?? {}) as Record<string, unknown>,
+  createdAt: row.createdAt,
+  message: {
+    id: row.message.id,
+    subject: row.message.subject ?? '',
+    from: row.message.company ? row.message.company.tradingName || row.message.company.legalName : row.message.fromName || row.message.fromAddress,
+    sentAt: row.message.sentAt,
+    ownerRole: row.message.ownerRole ?? null,
+    category: row.message.category ?? 'other',
+    summary: row.message.mailClassifications_on_message[0]?.summary ?? '',
+    summaryHe: row.message.mailClassifications_on_message[0]?.summaryHe ?? '',
+    urgency: row.message.mailClassifications_on_message[0]?.urgency ?? null,
+  },
+});
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+const PROPOSALS: Record<MailAudience, (l: Live) => Promise<MailProposalView[]>> = {
+  general: async ({ dc, sdk }) => (await sdk.listMailProposalsGeneral(dc)).data.mailActions.map(proposalOf),
+  commercial: async ({ dc, sdk }) => (await sdk.listMailProposalsCommercial(dc)).data.mailActions.map(proposalOf),
+  supply: async ({ dc, sdk }) => (await sdk.listMailProposalsSupply(dc)).data.mailActions.map(proposalOf),
+  logistics: async ({ dc, sdk }) => (await sdk.listMailProposalsLogistics(dc)).data.mailActions.map(proposalOf),
+  owner: async ({ dc, sdk }) => (await sdk.listMailProposalsOwner(dc)).data.mailActions.map(proposalOf),
+};
+
+export function useMailProposals() {
+  const session = useRequiredSession();
+  return useQuery({
+    queryKey: ['mail', 'proposals', session.role],
+    queryFn: async (): Promise<MailProposalView[]> => {
+      if (isSample) return (await sample()).proposals(session.role);
+      const l = await live();
+      const parts = await Promise.all(audiencesFor(session.role).map((audience) => PROPOSALS[audience](l)));
+      return parts.flat().sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    },
+  });
+}
 
 export function useMail() {
   const session = useRequiredSession();
@@ -319,7 +399,7 @@ export function useMailStatus(enabled = true) {
     enabled,
     retry: false,
     queryFn: async (): Promise<MailStatusView | null> => {
-      if (isSample) return { secrets: [{ name: 'GMAIL_APP_PASSWORD', present: false }], emulator: false };
+      if (isSample) return { secrets: [{ name: 'GMAIL_APP_PASSWORD', present: false }, { name: 'ANTHROPIC_API_KEY', present: false }], classifier: { model: 'claude-opus-5-5', month: { messages: 4, microDollars: 96_000 } }, emulator: false };
       try {
         return await callFunction<Record<string, never>, MailStatusView>(FUNCTION_NAMES.mailStatus, {});
       } catch {
@@ -339,6 +419,9 @@ export type MailActInput =
   | { kind: 'create_company'; messageId: string; legalName: string; role: string; contactName: string; countryCode: string | null }
   | { kind: 'mark_done' | 'ignore' | 'reopen'; messageId: string };
 
+/** The same inputs, with the proposal they accept when a person edited one first. */
+export type MailActWithProposal = MailActInput & { proposalId?: string };
+
 function useMailMutation<TInput>(run: (input: TInput, role: Role) => Promise<unknown>) {
   const client = useQueryClient();
   const session = useRequiredSession();
@@ -353,7 +436,18 @@ function useMailMutation<TInput>(run: (input: TInput, role: Role) => Promise<unk
 }
 
 export function useActOnMail() {
-  return useMailMutation<MailActInput>(async (input, role) => (isSample ? (await sample()).act(input, role) : callFunction(FUNCTION_NAMES.actOnMail, input)));
+  return useMailMutation<MailActWithProposal>(async (input, role) => (isSample ? (await sample()).act(input, role) : callFunction(FUNCTION_NAMES.actOnMail, input)));
+}
+
+export function useDecideProposal() {
+  return useMailMutation<{ actionId: string; decision: 'accept' | 'dismiss'; reason?: string }>(async (input, role) => (isSample ? (await sample()).decide(input, role) : callFunction(FUNCTION_NAMES.decideMailAction, input)));
+}
+
+export function useClassifyNow() {
+  return useMailMutation<{ messageId: string }>(async (input) => {
+    if (isSample) throw new Error('Sample mode has no classifier; its suggestions are already in place.');
+    return callFunction(FUNCTION_NAMES.classifyMailNow, input);
+  });
 }
 
 export function useSortMail() {

@@ -42,7 +42,7 @@ import { Goals } from './pages/goals/Goals';
 import { DevelopmentBoard, DevelopmentProducts } from './pages/development/Development';
 import { Dossier } from './pages/development/Dossier';
 import { BrandCentre, Categories, Collections } from './pages/development/Brand';
-import { Inbox, MailRules } from './pages/mail/Mail';
+import { Inbox, MailActions, MailRules } from './pages/mail/Mail';
 import { MessageSheet } from './pages/mail/MessageSheet';
 import { SessionProvider, useSessionState } from './session';
 import { LocaleProvider } from './i18n';
@@ -92,6 +92,9 @@ const router = createBrowserRouter([
       { path: 'settings/connectors/:id', element: <Settings /> },
       { path: 'mail', element: <Inbox /> },
       { path: 'mail/rules', element: <MailRules /> },
+      { path: 'mail/actions', element: <MailActions /> },
+      { path: 'mail/actions/:filter', element: <MailActions /> },
+      { path: 'mail/inbox/:view', element: <Inbox /> },
       { path: 'mail/:id', element: <MessageSheet /> },
       { path: 'customers/inquiries', element: <Inquiries /> },
       { path: 'customers/pipeline', element: <Pipeline /> },

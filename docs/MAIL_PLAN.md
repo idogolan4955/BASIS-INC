@@ -17,6 +17,8 @@ This document decides how mail gets in, the entities, the sorting rules and wher
 - **How mail gets in changed on 2026-11-10 (owner):** the mailbox is read over **IMAP with a Google App Password** (option C below), the way the owner's other systems read Gmail, instead of the Gmail API with an OAuth client. The platform opens Gmail's *All Mail* read-only every five minutes from a cursor (`<uidValidity>:<last uid>`, kept in `MailMailbox.historyId`), reads at most 400 messages a run, and moves the cursor only past what was stored. Gmail's own ids (`X-GM-MSGID`, `X-GM-THRID`) are the message and thread keys, in the same hex form the Gmail API uses, so a later move to the API keeps every key. There is no Pub/Sub topic, no OAuth client and no `pnpm mail:connect`; `MailMailbox.watchExpiresAt` stays unused. The trade-off accepted: the App Password opens the whole account, and mail arrives within five minutes rather than seconds.
 - Alert rules built: `mail.sync_stalled` and `mail.customer_unanswered`.
 
+**Slice 2 is built** (2026-11-10): the classifier of §5.3 with the proposals of §4 for link, task, inquiry, interaction, attachment and company (milestone, leg and sourcing-quote proposals wait for slice 3 with PDF reading). It runs every five minutes on what arrived (20 a run, 400 a day at most) and on demand with "Sort with Claude". Approve runs the same path as doing it by hand; Edit opens the hand dialog prefilled; Reject records why. The Actions screen is `/mail/actions` ("Suggested actions"). Who reads a message after the model: the category's floor combined with the facts' floor when the message was unsorted, otherwise only ever narrower; bank details or phishing keep it with the owner.
+
 ---
 
 ## 1. What the system already has, and what mail reuses

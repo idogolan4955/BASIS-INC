@@ -1,5 +1,5 @@
 import { MAIL_CATEGORIES, canReadAudience, combineAudiences, isMailCategory, type MailAudience, type MailRuleView, type Role } from '@basis/shared';
-import type { MailActInput, MailActionView, MailDetail, MailRow, MailThreadLinkView, MailboxView } from './mail';
+import type { MailActInput, MailActionView, MailDetail, MailProposalView, MailRow, MailThreadLinkView, MailboxView } from './mail';
 
 // Sample mail for design review: the companies, orders and shipments of the
 // other sample stores, sorted the way the facts would sort them. Changes made
@@ -114,6 +114,9 @@ function build(): Store {
     messageCount: 0,
     links: [],
     openProposals: 0,
+    summary: '',
+    summaryHe: '',
+    urgency: null,
     to: seed.to,
     cc: [],
     replyTo: '',
@@ -125,7 +128,7 @@ function build(): Store {
     companyRoles: seed.companyRoles,
     contactId: seed.companyId ? `${seed.companyId}-contact` : null,
     attachments: seed.attachments.map((attachment, position) => ({ id: `${seed.id}-att-${position}`, position, ...attachment, documentId: null, documentTitle: '' })),
-    classifications: [{ id: `${seed.id}-cls`, method: seed.basis === 'rule' ? 'rules' : 'rules', category: seed.category, audience: seed.audience, ownerRole: isMailCategory(seed.category) ? MAIL_CATEGORIES[seed.category].ownerRole : null, basis: seed.basis, summary: '', createdAt: ago(seed.hoursAgo) }],
+    classifications: [{ id: `${seed.id}-cls`, method: 'rules', category: seed.category, audience: seed.audience, ownerRole: isMailCategory(seed.category) ? MAIL_CATEGORIES[seed.category].ownerRole : null, basis: seed.basis, summary: '', summaryHe: '', confidence: null, urgency: null, model: '', createdAt: ago(seed.hoursAgo) }],
     actions: [],
     thread: { id: seed.threadId, subject: seed.subject, messageCount: 0, lastInboundAt: null, lastOutboundAt: null, links: [], messages: [] },
   }));
@@ -135,6 +138,15 @@ function build(): Store {
     sequence: 1,
   };
   for (const seed of seeds) for (const link of seed.links) addLink(store, seed.threadId, link.entityType, link.entityId, link.basis);
+  // What the classifier would have said and proposed, so the review screens have something to show.
+  for (const [id, ai] of Object.entries(SAMPLE_AI)) {
+    store.messages = store.messages.map((message) => {
+      if (message.id !== id) return message;
+      const classification = { id: `${id}-ai`, method: 'model' as const, category: ai.category, audience: ai.audience, ownerRole: isMailCategory(ai.category) ? MAIL_CATEGORIES[ai.category].ownerRole : null, basis: 'model', summary: ai.summary, summaryHe: ai.summaryHe, confidence: ai.confidence, urgency: ai.urgency, model: 'claude-opus-5-5', createdAt: ago(0.5) };
+      const actions = ai.proposals.map<MailActionView>((proposal, index) => ({ id: `${id}-p${index}`, kind: proposal.kind, targetType: proposal.target?.entityType ?? null, targetId: proposal.target?.entityId ?? null, state: 'proposed', resultType: null, resultId: null, decidedAt: null, payload: proposal, version: 1, error: '', dismissReason: '' }));
+      return { ...message, category: ai.category, audience: ai.audience, ownerRole: classification.ownerRole, state: message.state === 'needs_review' ? 'sorted' : message.state, summary: ai.summary, summaryHe: ai.summaryHe, urgency: ai.urgency, classifications: [classification, ...message.classifications], actions, openProposals: actions.length };
+    });
+  }
   refreshThreads(store);
   return store;
 }
@@ -168,6 +180,54 @@ function refreshThreads(store: Store): void {
   });
 }
 
+const inDays = (days: number) => new Date(now + days * 86_400_000).toISOString().slice(0, 10);
+
+interface SampleAi {
+  readonly category: string;
+  readonly audience: MailAudience;
+  readonly urgency: 'low' | 'normal' | 'high';
+  readonly confidence: number;
+  readonly summary: string;
+  readonly summaryHe: string;
+  readonly proposals: readonly (Record<string, unknown> & { kind: string; target?: { entityType: string; entityId: string } | null })[];
+}
+
+const SAMPLE_AI: Record<string, SampleAi> = {
+  'mail-1': {
+    category: 'supplier_production', audience: 'supply', urgency: 'high', confidence: 92,
+    summary: 'Jinyu sent the second Skin 02 lab dip for PO-26-0041 and moved the end of dyeing from 12 to 18 November; they need approval to start bulk.',
+    summaryHe: 'ג׳ינְיוּ שלחו את דוגמת הצבע השנייה ל-Skin 02 עבור PO-26-0041 ודחו את סיום הצביעה מ-12 ל-18 בנובמבר; הם צריכים אישור כדי להתחיל ייצור.',
+    proposals: [
+      { kind: 'create_task', title: 'Approve the Skin 02 lab dip, round 2', details: '', dueOn: inDays(1), assigneeUid: null, target: { entityType: 'purchase_order', entityId: 'PO-26-0041' }, reason: 'The mill waits for approval to start bulk dyeing' },
+      { kind: 'file_attachment', attachmentId: 'mail-1-att-0', documentKind: 'photo', title: 'Lab dip SK02 round 2', target: { entityType: 'purchase_order', entityId: 'PO-26-0041' }, reason: 'The lab dip photo belongs on the order' },
+    ],
+  },
+  'mail-3': {
+    category: 'logistics', audience: 'logistics', urgency: 'high', confidence: 95,
+    summary: 'Marlin confirmed the LCL booking for SHP-26-0014: MSC Aurora leaves Ningbo on 21 Nov, arrives Hamburg 22 Dec, cargo cut-off 18 Nov; the draft BL is attached for checking.',
+    summaryHe: 'מרלין אישרו את הזמנת המקום ב-LCL עבור SHP-26-0014: MSC Aurora יוצאת מנינגבו ב-21 בנובמבר ומגיעה להמבורג ב-22 בדצמבר, סגירת מטען ב-18 בנובמבר; טיוטת שטר המטען מצורפת לבדיקה.',
+    proposals: [
+      { kind: 'file_attachment', attachmentId: 'mail-3-att-0', documentKind: 'bill_of_lading', title: 'Draft BL SHP-26-0014', target: { entityType: 'shipment', entityId: 'SHP-26-0014' }, reason: 'The draft bill of lading for the shipment' },
+      { kind: 'create_task', title: 'Check the draft BL before the cargo cut-off', details: '', dueOn: inDays(2), assigneeUid: null, target: { entityType: 'shipment', entityId: 'SHP-26-0014' }, reason: 'The forwarder asks for a check before 18 Nov' },
+    ],
+  },
+  'mail-4': {
+    category: 'customer_correspondence', audience: 'commercial', urgency: 'normal', confidence: 90,
+    summary: 'Maison Avelline wants to reorder about 300 m of Powermesh in Skin 02, delivered to Paris before the end of January, and asks for a quotation with the lead time.',
+    summaryHe: 'מזון אבלין רוצים להזמין שוב כ-300 מטר Powermesh בגוון Skin 02, עם אספקה לפריז עד סוף ינואר, ומבקשים הצעת מחיר עם זמן אספקה.',
+    proposals: [
+      { kind: 'create_task', title: 'Send Maison Avelline a quotation for 300 m Powermesh Skin 02', details: '', dueOn: inDays(1), assigneeUid: null, target: { entityType: 'customer', entityId: 'co-avelline' }, reason: 'The customer asks for a quotation' },
+      { kind: 'log_interaction', customerId: 'co-avelline', summary: 'Asked to reorder about 300 m of Powermesh Skin 02 for Paris before the end of January.', nextStep: '', nextOn: null, taskForNextStep: false, reason: 'A reorder request worth recording' },
+    ],
+  },
+  'mail-5': {
+    category: 'customer_inquiry', audience: 'commercial', urgency: 'normal', confidence: 88,
+    summary: 'A bridal studio in Haifa that makes about 40 gowns a year asks for a sample card of the illusion stretch mesh in the skin shades.',
+    summaryHe: 'סטודיו לכלות בחיפה שמייצר כ-40 שמלות בשנה מבקש כרטיס דוגמאות של Illusion Stretch Mesh בגווני העור.',
+    proposals: [{ kind: 'create_inquiry', inquiryKind: 'sample_request', name: 'Hila Ben-David', company: 'Lumière Bridal Studio', country: 'Israel', reason: 'A new studio asks for samples' }],
+  },
+};
+
 let store: Store | null = null;
 const current = () => (store ??= build());
 
@@ -182,7 +242,7 @@ function update(id: string, change: (message: MailDetail) => MailDetail): void {
 }
 
 function record(message: MailDetail, kind: string, target: { entityType: string; entityId: string } | null, result: { type: string; id: string } | null): MailActionView {
-  return { id: `act-${current().sequence++}`, kind, targetType: target?.entityType ?? null, targetId: target?.entityId ?? null, state: 'accepted', resultType: result?.type ?? null, resultId: result?.id ?? null, decidedAt: new Date().toISOString() };
+  return { id: `act-${current().sequence++}`, kind, targetType: target?.entityType ?? null, targetId: target?.entityId ?? null, state: 'accepted', resultType: result?.type ?? null, resultId: result?.id ?? null, decidedAt: new Date().toISOString(), payload: {}, version: 1, error: '', dismissReason: '' };
 }
 
 export const sampleMail = {
@@ -258,9 +318,14 @@ export const sampleMail = {
         action = record(message, input.kind, null, null);
       }
     }
-    update(message.id, (entry) => ({ ...entry, actions: [action, ...entry.actions] }));
+    const proposalId = (input as { proposalId?: string }).proposalId;
+    update(message.id, (entry) =>
+      proposalId
+        ? { ...entry, actions: entry.actions.map((candidate) => (candidate.id === proposalId ? { ...candidate, state: 'accepted', decidedAt: new Date().toISOString() } : candidate)), openProposals: Math.max(0, entry.openProposals - 1) }
+        : { ...entry, actions: [action, ...entry.actions] },
+    );
     refreshThreads(s);
-    return { actionId: action.id };
+    return { actionId: proposalId ?? action.id };
   },
   async sort(input: { messageId: string; category: string; audience: MailAudience; ownerRole: Role | null }, role: Role): Promise<unknown> {
     const message = await this.get(input.messageId, role);
@@ -272,7 +337,7 @@ export const sampleMail = {
       audience: input.audience,
       ownerRole,
       state: entry.state === 'needs_review' ? 'sorted' : entry.state,
-      classifications: [{ id: `cls-${current().sequence++}`, method: 'person', category: input.category, audience: input.audience, ownerRole, basis: '', summary: '', createdAt: new Date().toISOString() }, ...entry.classifications],
+      classifications: [{ id: `cls-${current().sequence++}`, method: 'person', category: input.category, audience: input.audience, ownerRole, basis: '', summary: '', summaryHe: '', confidence: null, urgency: null, model: '', createdAt: new Date().toISOString() }, ...entry.classifications],
     }));
     return { messageId: message.id };
   },
@@ -285,6 +350,38 @@ export const sampleMail = {
     const rule: MailRuleView = { id: input.id ?? `rule-${s.sequence++}`, match: input.match, category: input.category ?? null, audience: input.audience ?? null, ownerRole: input.ownerRole ?? null, skipModel: input.skipModel ?? false, ignore: input.ignore ?? false, sort: input.sort ?? 100 };
     s.rules = [...s.rules.filter((entry) => entry.id !== rule.id), rule];
     return { id: rule.id };
+  },
+  async proposals(role: Role): Promise<MailProposalView[]> {
+    return current()
+      .messages.filter((message) => canReadAudience(role, message.audience))
+      .flatMap((message) =>
+        message.actions
+          .filter((action) => action.state === 'proposed')
+          .map((action) => ({
+            id: action.id,
+            kind: action.kind,
+            targetType: action.targetType,
+            targetId: action.targetId,
+            payload: action.payload,
+            createdAt: message.classifications[0]?.createdAt ?? message.sentAt,
+            message: { id: message.id, subject: message.subject, from: message.companyName || message.fromName || message.fromAddress, sentAt: message.sentAt, ownerRole: message.ownerRole, category: message.category, summary: message.summary, summaryHe: message.summaryHe, urgency: message.urgency },
+          })),
+      );
+  },
+  async decide(input: { actionId: string; decision: 'accept' | 'dismiss'; reason?: string }, role: Role): Promise<unknown> {
+    const message = current().messages.find((entry) => entry.actions.some((action) => action.id === input.actionId));
+    const action = message?.actions.find((entry) => entry.id === input.actionId);
+    if (!message || !action || !canReadAudience(role, message.audience)) throw new Error('No such proposal.');
+    if (action.state !== 'proposed') throw new Error('This proposal was already decided.');
+    if (input.decision === 'dismiss') {
+      update(message.id, (entry) => ({ ...entry, actions: entry.actions.map((candidate) => (candidate.id === action.id ? { ...candidate, state: 'dismissed', dismissReason: input.reason ?? '', decidedAt: new Date().toISOString() } : candidate)), openProposals: entry.openProposals - 1 }));
+      return { state: 'dismissed' };
+    }
+    const { reason: _reason, ...payload } = action.payload;
+    await this.act({ ...(payload as object), kind: action.kind, messageId: message.id } as MailActInput, role);
+    // `act` recorded a new accepted row; the proposal itself becomes that decision.
+    update(message.id, (entry) => ({ ...entry, actions: entry.actions.filter((candidate, index) => !(index === 0 && candidate.state === 'accepted' && candidate.kind === action.kind)).map((candidate) => (candidate.id === action.id ? { ...candidate, state: 'accepted', decidedAt: new Date().toISOString() } : candidate)), openProposals: entry.openProposals - 1 }));
+    return { state: 'accepted' };
   },
   async importFile(_input: { filename: string; base64: string }, _role: Role): Promise<unknown> {
     throw new Error('Sample mode does not read files; importing works on the live platform.');

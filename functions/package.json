@@ -12,6 +12,7 @@
     "serve": "pnpm build && firebase emulators:start --only functions,auth,dataconnect"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
     "@fontsource/archivo": "^5.3.0",
     "@fontsource/eb-garamond": "^5.3.0",
     "@fontsource/martian-mono": "^5.3.0",

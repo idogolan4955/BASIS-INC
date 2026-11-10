@@ -106,6 +106,12 @@ export const FUNCTION_NAMES = {
   saveMailRule: 'saveMailRule',
   /** Callable: an attachment's bytes after the audience check. */
   getMailAttachment: 'getMailAttachment',
+  /** Scheduled, every five minutes: the classifier (Claude) sorts new mail and proposes actions. */
+  classifyMail: 'classifyMail',
+  /** Callable, owner and operations: sort one message with the classifier now. */
+  classifyMailNow: 'classifyMailNow',
+  /** Callable: accept or dismiss a proposed action. */
+  decideMailAction: 'decideMailAction',
   /** Callable, owner and operations: run the alert rules now. */
   evaluateAlerts: 'evaluateAlerts',
   /** Scheduled: consume domain events, evaluate alert rules. */

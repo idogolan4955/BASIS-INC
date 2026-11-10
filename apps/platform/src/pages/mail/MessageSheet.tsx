@@ -21,13 +21,13 @@ import { Button, CheckField, Dialog, EmptyState, LabelHeader, Ledger, Panel, Pan
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
 import { DOCUMENT_KIND_LABEL } from '../../data/documents';
-import { fetchMailAttachment, useActOnMail, useMailMessage, useSortMail, type MailActInput, type MailDetail, type MailLinkView } from '../../data/mail';
+import { fetchMailAttachment, useActOnMail, useClassifyNow, useDecideProposal, useMailMessage, useSortMail, type MailActInput, type MailActionView, type MailDetail, type MailLinkView } from '../../data/mail';
 import { useCompanies } from '../../data/parties';
 import { useStaff } from '../../data/tasks';
 import { saveFile } from '../../lib/documents';
 import { useLocale, useT } from '../../i18n';
 import { useRequiredSession } from '../../session';
-import { ENTITY_LABEL, MailTabs, categoryLabel, mailStateLabel, mailStateTone } from './Mail';
+import { ENTITY_LABEL, MailTabs, ProposalLine, categoryLabel, mailStateLabel, mailStateTone } from './Mail';
 
 // One message: what it says, what it is about, and what a person does from it.
 // Every action runs through the function that does that thing elsewhere in
@@ -43,7 +43,7 @@ const COMPANY_ROLES: readonly Role[] = ['owner', 'operations', 'purchasing', 'sa
 const FILING: readonly Role[] = ['owner', 'operations', 'purchasing', 'qc', 'logistics', 'sales'];
 const SORTING: readonly Role[] = ['owner', 'operations'];
 
-type DialogKind = 'link' | 'task' | 'inquiry' | 'interaction' | 'company' | 'sort' | { file: string };
+type DialogKind = 'link' | 'task' | 'inquiry' | 'interaction' | 'company' | 'sort' | { file: string } | { edit: MailActionView };
 
 function ErrorLine({ error }: { error: string | null }) {
   return error ? (
@@ -131,20 +131,25 @@ function TargetFields({ value, onChange, allowNone = false, defaultLinks }: { va
   );
 }
 
-function useAct(onDone: () => void) {
+/** The values a proposal suggested, to start an edit from. */
+const proposed = (proposal: MailActionView | undefined) => (proposal?.payload ?? {}) as Record<string, unknown>;
+const text = (value: unknown, fallback = '') => (typeof value === 'string' ? value : fallback);
+const targetOf = (value: unknown): MailLinkView | null => (value && typeof value === 'object' && 'entityType' in value && 'entityId' in value ? (value as MailLinkView) : null);
+
+function useAct(onDone: () => void, proposal?: MailActionView) {
   const act = useActOnMail();
   const [error, setError] = useState<string | null>(null);
   const run = (input: MailActInput) => {
     setError(null);
-    act.mutate(input, { onSuccess: onDone, onError: (failure) => setError(failure.message) });
+    act.mutate(proposal ? { ...input, proposalId: proposal.id } : input, { onSuccess: onDone, onError: (failure) => setError(failure.message) });
   };
   return { run, error, busy: act.isPending };
 }
 
-function LinkDialog({ message, onClose }: { message: MailDetail; onClose: () => void }) {
+function LinkDialog({ message, onClose, proposal }: { message: MailDetail; onClose: () => void; proposal?: MailActionView }) {
   const t = useT();
-  const { run, error, busy } = useAct(onClose);
-  const [target, setTarget] = useState<MailLinkView | null>(null);
+  const { run, error, busy } = useAct(onClose, proposal);
+  const [target, setTarget] = useState<MailLinkView | null>(targetOf(proposed(proposal)['target']));
   return (
     <ActionDialog open onClose={onClose} title={t('Link to a record')} description={t('The thread appears on the record’s Mail tab and its timeline.')} submitLabel={t('Link')} busy={busy} onSubmit={() => target?.entityId && run({ kind: 'link_record', messageId: message.id, target })}>
       <TargetFields value={target} onChange={setTarget} defaultLinks={[]} />
@@ -153,13 +158,14 @@ function LinkDialog({ message, onClose }: { message: MailDetail; onClose: () => 
   );
 }
 
-function TaskDialog({ message, onClose }: { message: MailDetail; onClose: () => void }) {
+function TaskDialog({ message, onClose, proposal }: { message: MailDetail; onClose: () => void; proposal?: MailActionView }) {
   const t = useT();
   const staff = useStaff();
-  const { run, error, busy } = useAct(onClose);
+  const { run, error, busy } = useAct(onClose, proposal);
+  const suggested = proposed(proposal);
   const records = message.thread.links.filter((link) => link.entityType !== 'customer' && link.entityType !== 'supplier');
-  const [form, setForm] = useState({ title: message.subject.replace(/^(re|fw|fwd|aw|tr):\s*/i, '').slice(0, 200), details: '', dueOn: '', assigneeUid: '' });
-  const [target, setTarget] = useState<MailLinkView | null>(records[0] ? { entityType: records[0].entityType, entityId: records[0].entityId } : null);
+  const [form, setForm] = useState({ title: text(suggested['title'], message.subject.replace(/^(re|fw|fwd|aw|tr):\s*/i, '')).slice(0, 200), details: text(suggested['details']), dueOn: text(suggested['dueOn']), assigneeUid: '' });
+  const [target, setTarget] = useState<MailLinkView | null>(proposal ? targetOf(suggested['target']) : records[0] ? { entityType: records[0].entityType, entityId: records[0].entityId } : null);
   // A person who may not read this mail gets the task only on a record they can open.
   const readers = (staff.data ?? []).filter((person) => (ROLES as readonly string[]).includes(person.role));
   return (
@@ -189,10 +195,11 @@ function TaskDialog({ message, onClose }: { message: MailDetail; onClose: () => 
   );
 }
 
-function InquiryDialog({ message, onClose }: { message: MailDetail; onClose: () => void }) {
+function InquiryDialog({ message, onClose, proposal }: { message: MailDetail; onClose: () => void; proposal?: MailActionView }) {
   const t = useT();
-  const { run, error, busy } = useAct(onClose);
-  const [form, setForm] = useState({ inquiryKind: 'contact' as 'sample_request' | 'wholesale' | 'contact', name: message.fromName || message.fromAddress, company: message.companyName, country: '' });
+  const { run, error, busy } = useAct(onClose, proposal);
+  const suggested = proposed(proposal);
+  const [form, setForm] = useState({ inquiryKind: text(suggested['inquiryKind'], 'contact') as 'sample_request' | 'wholesale' | 'contact', name: text(suggested['name'], message.fromName || message.fromAddress), company: text(suggested['company'], message.companyName), country: text(suggested['country']) });
   return (
     <ActionDialog
       open
@@ -216,10 +223,10 @@ function InquiryDialog({ message, onClose }: { message: MailDetail; onClose: () 
   );
 }
 
-function InteractionDialog({ message, onClose }: { message: MailDetail; onClose: () => void }) {
+function InteractionDialog({ message, onClose, proposal }: { message: MailDetail; onClose: () => void; proposal?: MailActionView }) {
   const t = useT();
-  const { run, error, busy } = useAct(onClose);
-  const [form, setForm] = useState({ summary: `${message.subject}`.slice(0, 400), nextStep: '', nextOn: '', taskForNextStep: false });
+  const { run, error, busy } = useAct(onClose, proposal);
+  const [form, setForm] = useState({ summary: text(proposed(proposal)['summary'], message.subject).slice(0, 4000), nextStep: '', nextOn: '', taskForNextStep: false });
   if (!message.companyId) return null;
   return (
     <ActionDialog
@@ -240,14 +247,15 @@ function InteractionDialog({ message, onClose }: { message: MailDetail; onClose:
   );
 }
 
-function FileDialog({ message, attachmentId, onClose }: { message: MailDetail; attachmentId: string; onClose: () => void }) {
+function FileDialog({ message, attachmentId, onClose, proposal }: { message: MailDetail; attachmentId: string; onClose: () => void; proposal?: MailActionView }) {
   const t = useT();
-  const { run, error, busy } = useAct(onClose);
+  const { run, error, busy } = useAct(onClose, proposal);
+  const suggested = proposed(proposal);
   const attachment = message.attachments.find((entry) => entry.id === attachmentId);
   const records = message.thread.links.filter((link) => link.entityType !== 'customer' && link.entityType !== 'supplier');
   const guess = /\b(bl|b\/l|bill of lading)\b/i.test(attachment?.filename ?? '') ? 'bill_of_lading' : /invoice|\bci\b/i.test(attachment?.filename ?? '') ? 'commercial_invoice' : /packing/i.test(attachment?.filename ?? '') ? 'packing_list' : /quot|offer|price/i.test(attachment?.filename ?? '') ? 'quotation' : /\.(jpe?g|png|heic|webp)$/i.test(attachment?.filename ?? '') ? 'photo' : 'other';
-  const [form, setForm] = useState({ documentKind: guess, title: (attachment?.filename ?? '').replace(/\.[a-z0-9]+$/i, '').replace(/[_-]+/g, ' ').slice(0, 200) });
-  const [target, setTarget] = useState<MailLinkView | null>(records[0] ? { entityType: records[0].entityType, entityId: records[0].entityId } : null);
+  const [form, setForm] = useState({ documentKind: text(suggested['documentKind'], guess), title: text(suggested['title'], (attachment?.filename ?? '').replace(/\.[a-z0-9]+$/i, '').replace(/[_-]+/g, ' ')).slice(0, 200) });
+  const [target, setTarget] = useState<MailLinkView | null>(proposal ? targetOf(suggested['target']) : records[0] ? { entityType: records[0].entityType, entityId: records[0].entityId } : null);
   if (!attachment) return null;
   return (
     <ActionDialog
@@ -271,11 +279,12 @@ function FileDialog({ message, attachmentId, onClose }: { message: MailDetail; a
   );
 }
 
-function CompanyDialog({ message, onClose }: { message: MailDetail; onClose: () => void }) {
+function CompanyDialog({ message, onClose, proposal }: { message: MailDetail; onClose: () => void; proposal?: MailActionView }) {
   const t = useT();
-  const { run, error, busy } = useAct(onClose);
+  const { run, error, busy } = useAct(onClose, proposal);
+  const suggested = proposed(proposal);
   const domain = message.fromAddress.split('@')[1] ?? '';
-  const [form, setForm] = useState({ legalName: '', role: 'supplier', contactName: message.fromName || message.fromAddress.split('@')[0] || '', countryCode: '' });
+  const [form, setForm] = useState({ legalName: text(suggested['legalName']), role: text(suggested['role'], 'supplier'), contactName: text(suggested['contactName'], message.fromName || message.fromAddress.split('@')[0] || ''), countryCode: '' });
   return (
     <ActionDialog
       open
@@ -361,6 +370,7 @@ function Body({ message }: { message: MailDetail }) {
   const hasHistory = fresh.length < message.bodyText.trim().length;
   return (
     <Panel title={t('Message')}>
+      <AiSummary message={message} />
       <dl className="mb-4 grid gap-1 text-[0.8125rem] text-ink-soft">
         <div className="flex gap-2">
           <dt className="caps w-10 shrink-0 text-ink-muted">{t('To')}</dt>
@@ -467,12 +477,90 @@ function Records({ message, companyName, canLink, onLink }: { message: MailDetai
   );
 }
 
+/** What the classifier read the message as, in the interface's language. */
+function AiSummary({ message }: { message: MailDetail }) {
+  const t = useT();
+  const { locale } = useLocale();
+  const latest = message.classifications.find((entry) => entry.method === 'model');
+  if (!latest || !(latest.summary || latest.summaryHe)) return null;
+  return (
+    <div className="mb-4 border-s-2 border-nude bg-bone px-4 py-3 text-sm">
+      <p className="caps mb-1 flex items-center gap-3 text-ink-muted">
+        {t('Claude read it as')}
+        {latest.urgency === 'high' && <StatusChip tone="critical">{t('Urgent')}</StatusChip>}
+      </p>
+      <p dir="auto">{locale === 'he' && latest.summaryHe ? latest.summaryHe : latest.summary}</p>
+    </div>
+  );
+}
+
+function Proposals({ message, canDecide, onEdit }: { message: MailDetail; canDecide: boolean; onEdit: (proposal: MailActionView) => void }) {
+  const t = useT();
+  const decide = useDecideProposal();
+  const [error, setError] = useState<string | null>(null);
+  const open = message.actions.filter((action) => action.state === 'proposed');
+  if (open.length === 0) return null;
+  const run = (actionId: string, decision: 'accept' | 'dismiss') => {
+    setError(null);
+    decide.mutate({ actionId, decision }, { onError: (failure) => setError(failure.message) });
+  };
+  return (
+    <Panel title={t('Suggested')} count={open.length} flush>
+      {error && (
+        <p role="alert" className="px-5 pt-3 text-[0.8125rem] font-medium text-critical">
+          {error}
+        </p>
+      )}
+      <ul className="divide-y divide-line">
+        {open.map((proposal, index) => (
+          <li key={proposal.id} className="px-5 py-3 text-sm">
+            <ProposalLine kind={proposal.kind} payload={proposal.payload} targetType={proposal.targetType} targetId={proposal.targetId} attachments={message.attachments} />
+            {proposal.error && <p className="mt-1 text-[0.8125rem] text-critical">{proposal.error}</p>}
+            {canDecide && (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <Button size="sm" variant={index === 0 ? 'primary' : 'secondary'} busy={decide.isPending && decide.variables?.actionId === proposal.id && decide.variables.decision === 'accept'} busyLabel={t('Saving')} onClick={() => run(proposal.id, 'accept')}>
+                  {t('Approve')}
+                </Button>
+                <Button size="sm" onClick={() => onEdit(proposal)}>{t('Edit')}</Button>
+                <Button size="sm" variant="quiet" onClick={() => run(proposal.id, 'dismiss')}>{t('Reject')}</Button>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
+}
+
 function Sorting({ message, canSort, onSort }: { message: MailDetail; canSort: boolean; onSort: () => void }) {
   const t = useT();
   const { locale } = useLocale();
   const BASIS: Record<string, string> = { rule: 'By your rule', thread: 'As its thread', noise: 'A newsletter or automatic message', sender: 'By the sender’s company', reference: 'By the records it names', none: 'Nothing known: kept for the owner' };
+  const classify = useClassifyNow();
+  const [error, setError] = useState<string | null>(null);
+  const canClassify = canSort && message.direction === 'inbound';
   return (
-    <Panel title={t('Sorting')} action={canSort ? <Button size="sm" onClick={onSort}>{t('Change')}</Button> : undefined} flush>
+    <Panel
+      title={t('Sorting')}
+      action={
+        canSort ? (
+          <span className="flex gap-2">
+            {canClassify && (
+              <Button size="sm" busy={classify.isPending} busyLabel={t('Reading')} onClick={() => { setError(null); classify.mutate({ messageId: message.id }, { onError: (failure) => setError(failure.message) }); }}>
+                {t('Sort with Claude')}
+              </Button>
+            )}
+            <Button size="sm" onClick={onSort}>{t('Change')}</Button>
+          </span>
+        ) : undefined
+      }
+      flush
+    >
+      {error && (
+        <p role="alert" className="px-5 pt-3 text-[0.8125rem] font-medium text-critical">
+          {error}
+        </p>
+      )}
       <ul className="divide-y divide-line">
         {message.classifications.map((entry) => (
           <li key={entry.id} className="px-5 py-3 text-sm">
@@ -481,7 +569,7 @@ function Sorting({ message, canSort, onSort }: { message: MailDetail; canSort: b
               <span className="text-ink-muted"> · {t('read by')} {t(MAIL_AUDIENCE_LABEL[entry.audience])}{entry.ownerRole ? ` · ${t(ROLE_LABELS[entry.ownerRole])}` : ''}</span>
             </p>
             <p className="mt-0.5 text-[0.8125rem] text-ink-muted">
-              {entry.method === 'person' ? t('Sorted by a person') : entry.method === 'model' ? t('Sorted by the classifier') : t(BASIS[entry.basis] ?? 'By the facts')} · <span className="code">{fullDate(entry.createdAt, locale)}</span>
+              {entry.method === 'person' ? t('Sorted by a person') : entry.method === 'model' ? (entry.confidence !== null ? t('Sorted by Claude, {confidence}% sure', { confidence: entry.confidence }) : t('Sorted by Claude')) : t(BASIS[entry.basis] ?? 'By the facts')} · <span className="code">{fullDate(entry.createdAt, locale)}</span>
             </p>
           </li>
         ))}
@@ -539,6 +627,26 @@ function History({ message }: { message: MailDetail }) {
       </ul>
     </Panel>
   );
+}
+
+/** Edit a proposal in the dialog that does the same thing by hand; saving accepts it. */
+function EditProposal({ message, proposal, onClose }: { message: MailDetail; proposal: MailActionView; onClose: () => void }) {
+  switch (proposal.kind) {
+    case 'link_record':
+      return <LinkDialog message={message} proposal={proposal} onClose={onClose} />;
+    case 'create_task':
+      return <TaskDialog message={message} proposal={proposal} onClose={onClose} />;
+    case 'create_inquiry':
+      return <InquiryDialog message={message} proposal={proposal} onClose={onClose} />;
+    case 'log_interaction':
+      return <InteractionDialog message={message} proposal={proposal} onClose={onClose} />;
+    case 'file_attachment':
+      return <FileDialog message={message} attachmentId={typeof proposal.payload['attachmentId'] === 'string' ? proposal.payload['attachmentId'] : ''} proposal={proposal} onClose={onClose} />;
+    case 'create_company':
+      return <CompanyDialog message={message} proposal={proposal} onClose={onClose} />;
+    default:
+      return null;
+  }
 }
 
 export function MessageSheet() {
@@ -627,6 +735,7 @@ export function MessageSheet() {
           <Thread message={data} />
         </div>
         <div className="flex min-w-0 flex-col gap-4">
+          <Proposals message={data} canDecide={acting} onEdit={(proposal) => setDialog({ edit: proposal })} />
           {acting && (
             <Panel title={t('From this message')}>
               <div className="flex flex-col items-start gap-2">
@@ -648,7 +757,8 @@ export function MessageSheet() {
       {dialog === 'interaction' && <InteractionDialog message={data} onClose={close} />}
       {dialog === 'company' && <CompanyDialog message={data} onClose={close} />}
       {dialog === 'sort' && <SortDialog message={data} role={role} onClose={close} />}
-      {dialog && typeof dialog === 'object' && <FileDialog message={data} attachmentId={dialog.file} onClose={close} />}
+      {dialog && typeof dialog === 'object' && 'file' in dialog && <FileDialog message={data} attachmentId={dialog.file} onClose={close} />}
+      {dialog && typeof dialog === 'object' && 'edit' in dialog && <EditProposal message={data} proposal={dialog.edit} onClose={close} />}
     </>
   );
 }

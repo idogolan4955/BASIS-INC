@@ -3,11 +3,13 @@ import {
   MAIL_AUDIENCES,
   MAIL_CATEGORY_KEYS,
   MAIL_CATEGORIES,
+  MAIL_NOISE_CATEGORIES,
   ROLES,
   audienceFloorForParty,
   canReadAudience,
   combineAudiences,
   isAtLeastAsRestrictive,
+  isMailCategory,
   moduleAccess,
   normaliseAddress,
   sortByFacts,
@@ -19,7 +21,9 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { onCall, type CallableFunction, type CallableRequest } from 'firebase-functions/v2/https';
 import PostalMime from 'postal-mime';
 import { z } from 'zod';
-import { REGION, audit, callerOf, failure, graphql, requireRole, type Caller } from './lib';
+import Anthropic from '@anthropic-ai/sdk';
+import { REGION, audit, callerOf, emit, failure, graphql, requireRole, type Caller } from './lib';
+import { ANTHROPIC_API_KEY, MODEL, audienceAfterModel, callClassifier, candidatesFor, categoryAfterModel, classifierReady, isNoise, microDollars, type Candidate, type ClassifierOutput, type ClassifyInput } from './mail/classify';
 import { createInquiryRecord } from './intake';
 import { MAIL_SECRETS, checkMailbox, mailSecretsPresent, mailSettings, rawMessage, readSince } from './mail/imap';
 import { companyEntity, existingNumbers, ingestMessage, linkThread, recordTimeline, type Mailbox } from './mail/ingest';
@@ -127,10 +131,18 @@ export const syncMailboxNow = onCall({ region: REGION, secrets: MAIL_SECRETS, ti
   }
 });
 
-export const mailStatus = onCall({ region: REGION, secrets: MAIL_SECRETS }, async (request) => {
+export const mailStatus = onCall({ region: REGION, secrets: [...MAIL_SECRETS, ANTHROPIC_API_KEY] }, async (request) => {
   const caller = callerOf(request);
   requireRole(caller, ['owner', 'operations'], 'Reading the mailbox status');
-  return { secrets: mailSecretsPresent(), emulator: Boolean(process.env['FUNCTIONS_EMULATOR']) };
+  const monthStart = new Date();
+  monthStart.setUTCDate(1);
+  monthStart.setUTCHours(0, 0, 0, 0);
+  const { mailClassifications } = await graphql<{ mailClassifications: { usage: Record<string, number> | null }[] }>(`query ($since: Timestamp!) { mailClassifications(where: { method: { eq: model }, createdAt: { ge: $since } }, limit: 10000) { usage } }`, { since: monthStart.toISOString() });
+  return {
+    secrets: [...mailSecretsPresent(), { name: ANTHROPIC_API_KEY.name, present: classifierReady() }],
+    classifier: { model: MODEL, month: { messages: mailClassifications.length, microDollars: mailClassifications.reduce((sum, row) => sum + microDollars(row.usage ?? {}), 0) } },
+    emulator: Boolean(process.env['FUNCTIONS_EMULATOR']),
+  };
 });
 
 /** Every five minutes: read what arrived since the last run. */
@@ -195,7 +207,16 @@ async function readableMessage(caller: Caller, id: string): Promise<MessageRow> 
 
 const canAct = (role: Role) => moduleAccess(role, 'mail') === 'manage' || moduleAccess(role, 'mail') === 'limited';
 
-async function recordAction(messageId: string, audience: MailAudience, kind: string, uid: string, target: { type: string; id: string } | null, payload: unknown, result: { type: string; id: string } | null): Promise<string> {
+async function recordAction(messageId: string, audience: MailAudience, kind: string, uid: string, target: { type: string; id: string } | null, payload: unknown, result: { type: string; id: string } | null, proposalId: string | null = null): Promise<string> {
+  if (proposalId) {
+    // A proposal accepted (as proposed or edited): the same row records what was done.
+    await graphql(
+      `mutation ($id: UUID!, $targetType: String, $targetId: String, $audience: MailAudience!, $resultType: String, $resultId: String, $uid: String!, $version: Int!) {
+        mailAction_update(id: $id, data: { state: accepted, targetType: $targetType, targetId: $targetId, audience: $audience, resultType: $resultType, resultId: $resultId, decidedByUid: $uid, decidedAt_expr: "request.time", error: null, version: $version }) }`,
+      { id: proposalId, targetType: target?.type ?? null, targetId: target?.id ?? null, audience, resultType: result?.type ?? null, resultId: result?.id ?? null, uid, version: 2 },
+    );
+    return proposalId;
+  }
   const { mailAction_insert } = await graphql<{ mailAction_insert: { id: string } }>(
     `mutation ($messageId: UUID!, $kind: String!, $targetType: String, $targetId: String, $payload: Any, $audience: MailAudience!, $resultType: String, $resultId: String, $uid: String!) {
       mailAction_insert(data: { messageId: $messageId, kind: $kind, targetType: $targetType, targetId: $targetId, payload: $payload, audience: $audience, state: accepted, resultType: $resultType, resultId: $resultId, decidedByUid: $uid, decidedAt_expr: "request.time", version: 1 }) }`,
@@ -231,7 +252,7 @@ const TARGETS = {
 const target = z.object({ entityType: z.enum(['purchase_order', 'production_run', 'lot', 'inspection', 'corrective_action', 'shipment', 'receipt', 'sales_order', 'quote', 'development_product', 'inquiry', 'supplier', 'customer']), entityId: z.string().trim().min(1).max(80) });
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
-const actInput = z.discriminatedUnion('kind', [
+const actKinds = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('link_record'), messageId: z.string().min(1), target }),
   z.object({ kind: z.literal('create_task'), messageId: z.string().min(1), title: z.string().trim().min(1).max(200), details: z.string().max(2000).default(''), dueOn: date.nullable().default(null), assigneeUid: z.string().max(128).nullable().default(null), target: target.nullable().default(null) }),
   z.object({ kind: z.literal('create_inquiry'), messageId: z.string().min(1), inquiryKind: z.enum(['sample_request', 'wholesale', 'contact']), name: z.string().trim().min(1).max(160), company: z.string().trim().max(200).default(''), country: z.string().trim().max(120).default('') }),
@@ -242,6 +263,8 @@ const actInput = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('ignore'), messageId: z.string().min(1) }),
   z.object({ kind: z.literal('reopen'), messageId: z.string().min(1) }),
 ]);
+const actInput = z.intersection(actKinds, z.object({ proposalId: z.string().optional() }));
+export type MailActInput = z.infer<typeof actInput>;
 
 
 /** The callable functions run as the caller, with their own role checks. */
@@ -259,11 +282,21 @@ function requireModule(caller: Caller, entityType: string, action: string): void
 
 export const actOnMail = onCall({ region: REGION }, async (request) => {
   const caller = callerOf(request);
-  if (!canAct(caller.role)) throw failure('forbidden', `Acting on mail is not available to the ${caller.role} role.`);
   const parsed = actInput.safeParse(request.data);
   if (!parsed.success) throw failure('validation', parsed.error.issues[0]?.message ?? 'Check the fields.');
-  const input = parsed.data;
+  return performMailAction(caller, parsed.data);
+});
+
+/** What a person does from a message, chosen by them or accepted from a proposal. */
+async function performMailAction(caller: Caller, input: MailActInput): Promise<Record<string, unknown>> {
+  if (!canAct(caller.role)) throw failure('forbidden', `Acting on mail is not available to the ${caller.role} role.`);
   const message = await readableMessage(caller, input.messageId);
+  const proposalId = input.proposalId ?? null;
+  if (proposalId) {
+    const { mailAction } = await graphql<{ mailAction: { state: string; message: { id: string } } | null }>(`query ($id: UUID!) { mailAction(id: $id) { state message { id } } }`, { id: proposalId });
+    if (!mailAction || mailAction.message.id !== message.id) throw failure('not_found', 'No such proposal on this message.');
+    if (mailAction.state !== 'proposed') throw failure('conflict', 'This proposal was already decided.');
+  }
   const subject = message.subject ?? '(no subject)';
 
   switch (input.kind) {
@@ -272,7 +305,7 @@ export const actOnMail = onCall({ region: REGION }, async (request) => {
       if (!(await recordExists(input.target.entityType, input.target.entityId))) throw failure('not_found', `No ${input.target.entityType.replace(/_/g, ' ')} ${input.target.entityId}.`);
       const added = await linkThread(message.thread.id, message.id, input.target.entityType, input.target.entityId, 'person', caller.uid);
       if (added) await recordTimeline(input.target.entityType, input.target.entityId, 'mail_linked', `Mail linked: ${subject.slice(0, 160)}`, caller.uid);
-      const id = await recordAction(message.id, message.audience, input.kind, caller.uid, { type: input.target.entityType, id: input.target.entityId }, null, null);
+      const id = await recordAction(message.id, message.audience, input.kind, caller.uid, { type: input.target.entityType, id: input.target.entityId }, null, null, proposalId);
       await audit(caller.uid, 'mail.link', 'mail_message', message.id, null, input.target);
       return { actionId: id, linked: added };
     }
@@ -296,7 +329,7 @@ export const actOnMail = onCall({ region: REGION }, async (request) => {
         await linkThread(message.thread.id, message.id, input.target.entityType, input.target.entityId, 'person', caller.uid);
         await recordTimeline(input.target.entityType, input.target.entityId, 'task_created', `Task from mail: ${input.title}`, caller.uid);
       }
-      const id = await recordAction(message.id, message.audience, input.kind, caller.uid, input.target ? { type: input.target.entityType, id: input.target.entityId } : null, { title: input.title, dueOn: input.dueOn }, { type: 'task', id: task_insert.id });
+      const id = await recordAction(message.id, message.audience, input.kind, caller.uid, input.target ? { type: input.target.entityType, id: input.target.entityId } : null, { title: input.title, dueOn: input.dueOn }, { type: 'task', id: task_insert.id }, proposalId);
       await audit(caller.uid, 'mail.task', 'mail_message', message.id, null, { taskId: task_insert.id, title: input.title });
       return { actionId: id, taskId: task_insert.id };
     }
@@ -318,7 +351,7 @@ export const actOnMail = onCall({ region: REGION }, async (request) => {
       await graphql(`mutation ($id: UUID!) { mailMessage_update(id: $id, data: { category: "customer_inquiry", ownerRole: sales, state: sorted }) }`, { id: message.id });
       // Replies in the thread now inherit the inquiry's category.
       await graphql(`mutation ($id: UUID!) { mailThread_update(id: $id, data: { category: "customer_inquiry" }) }`, { id: message.thread.id });
-      const id = await recordAction(message.id, audience, input.kind, caller.uid, null, { inquiryKind: input.inquiryKind }, { type: 'inquiry', id: reference });
+      const id = await recordAction(message.id, audience, input.kind, caller.uid, null, { inquiryKind: input.inquiryKind }, { type: 'inquiry', id: reference }, proposalId);
       await audit(caller.uid, 'mail.inquiry', 'mail_message', message.id, null, { reference });
       return { actionId: id, reference };
     }
@@ -334,7 +367,7 @@ export const actOnMail = onCall({ region: REGION }, async (request) => {
         taskForNextStep: input.taskForNextStep,
       });
       await linkThread(message.thread.id, message.id, 'customer', input.customerId, 'person', caller.uid);
-      const id = await recordAction(message.id, message.audience, input.kind, caller.uid, { type: 'customer', id: input.customerId }, { summary: input.summary.slice(0, 200) }, { type: 'interaction', id: result.id });
+      const id = await recordAction(message.id, message.audience, input.kind, caller.uid, { type: 'customer', id: input.customerId }, { summary: input.summary.slice(0, 200) }, { type: 'interaction', id: result.id }, proposalId);
       return { actionId: id, interactionId: result.id, taskId: result.taskId };
     }
     case 'file_attachment': {
@@ -357,7 +390,7 @@ export const actOnMail = onCall({ region: REGION }, async (request) => {
       await graphql(`mutation ($id: UUID!, $documentId: UUID!) { mailAttachment_update(id: $id, data: { documentId: $documentId }) }`, { id: mailAttachment.id, documentId: document_insert.id });
       await linkThread(message.thread.id, message.id, input.target.entityType, input.target.entityId, 'person', caller.uid);
       await recordTimeline(input.target.entityType, input.target.entityId, 'document_filed', `${input.title} filed from mail`, caller.uid);
-      const id = await recordAction(message.id, message.audience, input.kind, caller.uid, { type: input.target.entityType, id: input.target.entityId }, { attachmentId: mailAttachment.id, documentKind: input.documentKind }, { type: 'document', id: document_insert.id });
+      const id = await recordAction(message.id, message.audience, input.kind, caller.uid, { type: input.target.entityType, id: input.target.entityId }, { attachmentId: mailAttachment.id, documentKind: input.documentKind }, { type: 'document', id: document_insert.id }, proposalId);
       await audit(caller.uid, 'document.file', 'document', document_insert.id, null, { from: 'mail', messageId: message.id, ...input.target });
       return { actionId: id, documentId: document_insert.id };
     }
@@ -400,7 +433,7 @@ export const actOnMail = onCall({ region: REGION }, async (request) => {
         }
         await linkThread(row.thread.id, row.id, companyEntity([input.role]), company_insert.id, 'sender', caller.uid);
       }
-      const id = await recordAction(message.id, message.category === 'other' && caller.role === 'owner' ? bySender.audience : floor ? combineAudiences(message.audience, floor) : message.audience, input.kind, caller.uid, null, { legalName: input.legalName, role: input.role }, { type: companyEntity([input.role]), id: company_insert.id });
+      const id = await recordAction(message.id, message.category === 'other' && caller.role === 'owner' ? bySender.audience : floor ? combineAudiences(message.audience, floor) : message.audience, input.kind, caller.uid, null, { legalName: input.legalName, role: input.role }, { type: companyEntity([input.role]), id: company_insert.id }, proposalId);
       await audit(caller.uid, 'company.create', 'company', company_insert.id, null, { legalName: input.legalName, role: input.role, from: 'mail' });
       return { actionId: id, companyId: company_insert.id };
     }
@@ -414,12 +447,12 @@ export const actOnMail = onCall({ region: REGION }, async (request) => {
           : `mutation ($id: UUID!, $state: MailState!, $uid: String!) { mailMessage_update(id: $id, data: { state: $state, handledByUid: $uid, handledAt: null }) }`,
         { id: message.id, state, uid: caller.uid },
       );
-      const id = await recordAction(message.id, message.audience, input.kind, caller.uid, null, null, null);
+      const id = await recordAction(message.id, message.audience, input.kind, caller.uid, null, null, null, proposalId);
       await audit(caller.uid, `mail.${input.kind}`, 'mail_message', message.id, { state: message.state }, { state });
       return { actionId: id, state };
     }
   }
-});
+}
 
 // ---------------------------------------------------------------- sorting by a person
 
@@ -540,4 +573,185 @@ export const getMailAttachment = onCall({ region: REGION, secrets: MAIL_SECRETS,
   }
   if (bytes.length > 9_000_000) throw failure('invariant_violation', 'The attachment is larger than the platform can hand over; open it in Gmail.');
   return { filename: mailAttachment.filename, mimeType: mailAttachment.mimeType, base64: bytes.toString('base64') };
+});
+
+// ---------------------------------------------------------------- the classifier (slice 2)
+
+const CLASSIFY_FIELDS = `id direction fromAddress fromName to subject sentAt bodyText audience category state flags
+  thread { id audience messageCount category mailLinks_on_thread(limit: 50) { entityType entityId } }
+  company { id legalName companyRoles_on_company { kind } }
+  mailAttachments_on_message(orderBy: { position: ASC }, limit: 30) { id position filename mimeType sizeBytes document { id } }
+  mailClassifications_on_message(orderBy: { createdAt: DESC }, limit: 10) { method basis audience }`;
+
+type ClassifyRow = ClassifyInput['message'] & { direction: string; thread: ClassifyInput['message']['thread'] & { audience: MailAudience } };
+
+const isDate = (value: string | null): value is string => Boolean(value && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value)));
+
+async function mergeFlags(id: string, current: Record<string, unknown> | null, patch: Record<string, unknown>): Promise<void> {
+  await graphql(`mutation ($id: UUID!, $flags: Any) { mailMessage_update(id: $id, data: { flags: $flags }) }`, { id, flags: { ...(current ?? {}), ...patch } });
+}
+
+/** The proposals the model's answer allows, checked against what the platform knows. */
+function proposalsFrom(row: ClassifyRow, output: ClassifierOutput, candidates: readonly Candidate[]): { kind: string; target: { entityType: string; entityId: string } | null; payload: Record<string, unknown> }[] {
+  const linked = new Set(row.thread.mailLinks_on_thread.map((link) => `${link.entityType}:${link.entityId}`));
+  const companyRoles = row.company?.companyRoles_on_company.map((role) => role.kind) ?? [];
+  const proposals: { kind: string; target: { entityType: string; entityId: string } | null; payload: Record<string, unknown> }[] = [];
+  for (const action of output.actions.slice(0, 3)) {
+    const candidate = action.targetRef ? candidates.find((entry) => entry.ref === action.targetRef) : undefined;
+    const target = candidate ? { entityType: candidate.entityType, entityId: candidate.entityId } : null;
+    let payload: Record<string, unknown> | null = null;
+    switch (action.kind) {
+      case 'create_task':
+        if (action.title?.trim()) payload = { kind: 'create_task', title: action.title.trim().slice(0, 200), details: '', dueOn: isDate(action.dueOn) ? action.dueOn : null, assigneeUid: null, target };
+        break;
+      case 'link_record':
+        if (target && !linked.has(`${target.entityType}:${target.entityId}`)) payload = { kind: 'link_record', target };
+        break;
+      case 'file_attachment': {
+        const attachment = action.attachmentNumber ? row.mailAttachments_on_message[action.attachmentNumber - 1] : undefined;
+        if (attachment && !attachment.document && target) payload = { kind: 'file_attachment', attachmentId: attachment.id, documentKind: action.documentKind ?? 'other', title: attachment.filename.replace(/\.[a-z0-9]+$/i, '').replace(/[_-]+/g, ' ').slice(0, 200), target };
+        break;
+      }
+      case 'create_inquiry':
+        if (!row.company) payload = { kind: 'create_inquiry', inquiryKind: action.inquiryKind ?? 'contact', name: (row.fromName || row.fromAddress).slice(0, 160), company: '', country: '' };
+        break;
+      case 'log_interaction':
+        if (row.company && companyRoles.includes('customer')) payload = { kind: 'log_interaction', customerId: row.company.id, summary: output.summary.slice(0, 4000), nextStep: '', nextOn: null, taskForNextStep: false };
+        break;
+      case 'create_company':
+        if (!row.company && action.companyName?.trim() && action.companyRole) payload = { kind: 'create_company', legalName: action.companyName.trim().slice(0, 200), role: action.companyRole, contactName: (row.fromName || row.fromAddress.split('@')[0] || '').slice(0, 160) || 'Contact', countryCode: null };
+        break;
+    }
+    if (!payload) continue;
+    if (proposals.some((entry) => entry.kind === action.kind && JSON.stringify(entry.target) === JSON.stringify(target))) continue;
+    proposals.push({ kind: action.kind, target, payload: { ...payload, reason: action.reason.slice(0, 300) } });
+  }
+  return proposals;
+}
+
+/** Classifies one message and records its proposals. `force` re-sorts a message the model already saw. */
+async function classifyMessage(id: string, force: boolean): Promise<{ status: 'classified' | 'skipped' | 'declined'; proposals?: number }> {
+  const { mailMessage: row } = await graphql<{ mailMessage: ClassifyRow | null }>(`query ($id: UUID!) { mailMessage(id: $id) { ${CLASSIFY_FIELDS} } }`, { id });
+  if (!row || row.direction !== 'inbound') return { status: 'skipped' };
+  const flags = (row.flags ?? {}) as Record<string, unknown>;
+  // Mail the owner's rules keep from the model, and mail with bank details, never leaves the platform.
+  if (flags['skipModel'] || flags['hasBankDetails']) return { status: 'skipped' };
+  if (!force && (flags['modelAt'] || (isMailCategory(row.category) && MAIL_NOISE_CATEGORIES.includes(row.category)))) return { status: 'skipped' };
+  const candidates = await candidatesFor(row);
+  const answer = await callClassifier(row, candidates);
+  if (!answer) {
+    await mergeFlags(row.id, flags, { modelAt: new Date().toISOString(), modelDeclined: true });
+    if (row.state === 'sorted' && row.category === 'other') await graphql(`mutation ($id: UUID!) { mailMessage_update(id: $id, data: { state: needs_review }) }`, { id: row.id });
+    return { status: 'declined' };
+  }
+  const { output } = answer;
+  const category = categoryAfterModel(row, output);
+  const audience = audienceAfterModel(row, output);
+  const ownerRole = MAIL_CATEGORIES[category].ownerRole === null ? null : output.ownerRole;
+  const state = isNoise(category) ? 'ignored' : category === 'other' ? 'needs_review' : row.state === 'needs_review' || row.state === 'received' ? 'sorted' : row.state;
+  const { mailClassification_insert } = await graphql<{ mailClassification_insert: { id: string } }>(
+    `mutation ($messageId: UUID!, $category: String!, $audience: MailAudience!, $ownerRole: Role, $urgency: String, $confidence: Int, $language: String, $summary: String, $summaryHe: String, $model: String, $usage: Any) {
+      mailClassification_insert(data: { messageId: $messageId, method: model, category: $category, audience: $audience, ownerRole: $ownerRole, urgency: $urgency, confidence: $confidence, language: $language, summary: $summary, summaryHe: $summaryHe, basis: "model", model: $model, usage: $usage }) }`,
+    { messageId: row.id, category, audience, ownerRole, urgency: output.urgency, confidence: output.confidence, language: output.language.slice(0, 16), summary: output.summary.slice(0, 400), summaryHe: output.summaryHe.slice(0, 400), model: answer.model.slice(0, 40), usage: answer.usage },
+  );
+  await graphql(`mutation ($id: UUID!, $category: String!, $ownerRole: Role, $state: MailState!) { mailMessage_update(id: $id, data: { category: $category, ownerRole: $ownerRole, state: $state }) }`, { id: row.id, category, ownerRole, state });
+  await mergeFlags(row.id, flags, { modelAt: new Date().toISOString(), urgency: output.urgency, hasPrices: output.hasPrices, hasBankDetails: output.hasBankDetails, phishingSuspect: output.phishingSuspect, modelDeclined: false });
+  if (!row.thread.category || row.thread.category === 'other') await graphql(`mutation ($id: UUID!, $category: String!) { mailThread_update(id: $id, data: { category: $category }) }`, { id: row.thread.id, category });
+  if (audience !== row.audience) await setAudience(row, audience, null);
+  // A re-sort replaces what is still open; what a person decided stays.
+  const { mailActions: open } = await graphql<{ mailActions: { id: string }[] }>(`query ($id: UUID!) { mailActions(where: { message: { id: { eq: $id } }, state: { eq: proposed } }, limit: 50) { id } }`, { id: row.id });
+  for (const action of open) await graphql(`mutation ($id: UUID!) { mailAction_update(id: $id, data: { state: superseded }) }`, { id: action.id });
+  const proposals = isNoise(category) || output.phishingSuspect ? [] : proposalsFrom(row, output, candidates);
+  for (const proposal of proposals) {
+    await graphql(
+      `mutation ($messageId: UUID!, $classificationId: UUID!, $kind: String!, $targetType: String, $targetId: String, $payload: Any, $audience: MailAudience!) {
+        mailAction_insert(data: { messageId: $messageId, classificationId: $classificationId, kind: $kind, targetType: $targetType, targetId: $targetId, payload: $payload, audience: $audience, state: proposed, version: 1 }) }`,
+      { messageId: row.id, classificationId: mailClassification_insert.id, kind: proposal.kind, targetType: proposal.target?.entityType ?? null, targetId: proposal.target?.entityId ?? null, payload: proposal.payload, audience },
+    );
+  }
+  await emit('mail.classified', 'mail_message', row.id, { category, audience, proposals: proposals.length, model: answer.model });
+  return { status: 'classified', proposals: proposals.length };
+}
+
+/** At most this many model calls a day, whatever arrives: a guard on the bill. */
+const DAILY_LIMIT = 400;
+const PER_SWEEP = 20;
+
+async function classifiedToday(): Promise<number> {
+  const since = new Date();
+  since.setUTCHours(0, 0, 0, 0);
+  const { mailClassifications } = await graphql<{ mailClassifications: { id: string }[] }>(`query ($since: Timestamp!) { mailClassifications(where: { method: { eq: model }, createdAt: { ge: $since } }, limit: 1000) { id } }`, { since: since.toISOString() });
+  return mailClassifications.length;
+}
+
+/** Every five minutes: classify what arrived and has not been classified, oldest first. */
+export const classifyMail = onSchedule({ region: REGION, schedule: 'every 5 minutes', secrets: [ANTHROPIC_API_KEY], timeoutSeconds: 540, memory: '512MiB' }, async () => {
+  if (!classifierReady()) return;
+  const left = DAILY_LIMIT - (await classifiedToday());
+  if (left <= 0) return;
+  const since = new Date(Date.now() - 35 * 86_400_000).toISOString();
+  const { mailMessages } = await graphql<{ mailMessages: { id: string; category: string | null; flags: Record<string, unknown> | null }[] }>(
+    `query ($since: Timestamp!) { mailMessages(where: { direction: { eq: inbound }, state: { in: [sorted, needs_review] }, sentAt: { ge: $since } }, orderBy: { sentAt: ASC }, limit: 500) { id category flags } }`,
+    { since },
+  );
+  const waiting = mailMessages.filter((row) => !row.flags?.['modelAt'] && !row.flags?.['skipModel'] && Number(row.flags?.['modelAttempts'] ?? 0) < 3).slice(0, Math.min(PER_SWEEP, left));
+  for (const row of waiting) {
+    try {
+      await classifyMessage(row.id, false);
+    } catch (error) {
+      // Tried again on the next runs, three times at most.
+      console.error('mail: classification failed', row.id, (error as Error).message);
+      await mergeFlags(row.id, row.flags, { modelAttempts: Number(row.flags?.['modelAttempts'] ?? 0) + 1, modelError: (error as Error).message.slice(0, 300) });
+    }
+  }
+});
+
+/** "Sort with AI" on one message, now. */
+export const classifyMailNow = onCall({ region: REGION, secrets: [ANTHROPIC_API_KEY], timeoutSeconds: 120 }, async (request) => {
+  const caller = callerOf(request);
+  requireRole(caller, ['owner', 'operations'], 'Sorting mail with the classifier');
+  const { messageId } = z.object({ messageId: z.string().min(1) }).parse(request.data);
+  const message = await readableMessage(caller, messageId);
+  if (!classifierReady()) throw failure('invariant_violation', 'The classifier has no key. Set it with `firebase functions:secrets:set ANTHROPIC_API_KEY`.');
+  if ((await classifiedToday()) >= DAILY_LIMIT) throw failure('invariant_violation', `The classifier reached today's limit of ${DAILY_LIMIT} messages.`);
+  const { mailMessage } = await graphql<{ mailMessage: { flags: Record<string, unknown> | null } | null }>(`query ($id: UUID!) { mailMessage(id: $id) { flags } }`, { id: message.id });
+  if (mailMessage?.flags?.['skipModel']) throw failure('invariant_violation', 'Your rule keeps this sender from the classifier.');
+  if (mailMessage?.flags?.['hasBankDetails']) throw failure('invariant_violation', 'This message carries bank details and is never sent to the classifier.');
+  try {
+    const result = await classifyMessage(message.id, true);
+    await audit(caller.uid, 'mail.classify', 'mail_message', message.id, null, result);
+    return result;
+  } catch (error) {
+    if (error instanceof Anthropic.APIError) throw failure('external_failure', `The classifier could not answer: ${error.message}`);
+    throw error;
+  }
+});
+
+/** Accept a proposal as it stands, or dismiss it. Editing goes through actOnMail with the proposal's id. */
+export const decideMailAction = onCall({ region: REGION }, async (request) => {
+  const caller = callerOf(request);
+  const parsed = z.object({ actionId: z.string().min(1), decision: z.enum(['accept', 'dismiss']), reason: z.string().max(200).default('') }).safeParse(request.data);
+  if (!parsed.success) throw failure('validation', 'Choose a proposal.');
+  const { actionId, decision, reason } = parsed.data;
+  const { mailAction } = await graphql<{ mailAction: { id: string; state: string; kind: string; payload: Record<string, unknown> | null; message: { id: string } } | null }>(`query ($id: UUID!) { mailAction(id: $id) { id state kind payload message { id } } }`, { id: actionId });
+  if (!mailAction) throw failure('not_found', 'No such proposal.');
+  const message = await readableMessage(caller, mailAction.message.id);
+  if (mailAction.state !== 'proposed') throw failure('conflict', 'This proposal was already decided.');
+  if (!canAct(caller.role)) throw failure('forbidden', `Acting on mail is not available to the ${caller.role} role.`);
+  if (decision === 'dismiss') {
+    await graphql(`mutation ($id: UUID!, $reason: String, $uid: String!) { mailAction_update(id: $id, data: { state: dismissed, dismissReason: $reason, decidedByUid: $uid, decidedAt_expr: "request.time", version: 2 }) }`, { id: actionId, reason: reason || null, uid: caller.uid });
+    await audit(caller.uid, 'mail.proposal.dismiss', 'mail_message', message.id, null, { actionId, kind: mailAction.kind, reason });
+    return { actionId, state: 'dismissed' };
+  }
+  const { reason: _why, ...payload } = mailAction.payload ?? {};
+  const input = actInput.safeParse({ ...payload, kind: mailAction.kind, messageId: message.id, proposalId: actionId });
+  if (!input.success) throw failure('validation', 'This proposal is incomplete; open it with Edit.');
+  try {
+    const result = await performMailAction(caller, input.data);
+    await audit(caller.uid, 'mail.proposal.accept', 'mail_message', message.id, null, { actionId, kind: mailAction.kind });
+    return { ...result, state: 'accepted' };
+  } catch (error) {
+    await graphql(`mutation ($id: UUID!, $error: String) { mailAction_update(id: $id, data: { error: $error }) }`, { id: actionId, error: (error as Error).message.slice(0, 500) });
+    throw error;
+  }
 });
