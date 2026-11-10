@@ -193,3 +193,18 @@ Everything about the app is in [APP_STORE](APP_STORE.md); what production needs 
 - **API keys (done 2026-11-11).** The web key admits `capacitor://localhost/*` (the app's page), with its API list unchanged; the "iOS key (auto created by Firebase)" of the Firebase iOS app `BASIS (iOS)` is restricted to the bundle ID `com.basisinc.customer`.
 - **Notifications (owner).** An APNs key from the Apple Developer account, uploaded to Firebase › Project settings › Cloud Messaging for the app `BASIS (iOS)` ([APP_STORE](APP_STORE.md) §3). Until then FCM answers `third-party-auth-error` and the sweep logs it.
 
+
+## The project's API keys (2026-11-11)
+
+GitHub's secret scanning flags the Firebase API keys in the repository; they
+are public identifiers, not secrets, and the alerts are closed as false
+positives. Each key is restricted in Google Cloud (APIs & Services ›
+Credentials):
+
+| Key | Used by | Restricted to |
+|---|---|---|
+| Browser key, created 2026-10-05 (`AIzaSyDq4B…`) | The platform and the brand site (`apps/platform/src/lib/firebase.ts`, `apps/web/app/account/firebase.ts`) | The BASIS sites, localhost and the iPhone app's `capacitor://localhost`; the Firebase services |
+| iOS key, created 2026-11-10 (`AIzaSyBM6f…`) | The iPhone app (`GoogleService-Info.plist`) | The bundle `com.basisinc.customer`; the Firebase services |
+| Browser key, created 2026-11-07 | Nothing in the code or in any Firebase app config | Since 2026-11-11, the same sites and services as the first key |
+
+A new site must be added to the browser keys' referrers before it can sign in.
