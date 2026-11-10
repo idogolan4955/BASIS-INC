@@ -210,7 +210,7 @@ Not collected: health, financial info, location, sensitive info, contacts, brows
 ## 7. App Review information
 
 - **Sign-in required:** Yes.
-- **Demo account:** a real trade account in production, "BASIS App Review", created through the platform like any customer (a customer company with a few real records: a quote awaiting an answer, an order, an invoice), with two logins invited from its Portal tab: the admin (kept by BASIS) and the reviewer's login as a buyer, so that deleting the reviewer's login is possible without leaving the account without an admin. The owner opens the reviewer's invitation link and sets its password himself, and enters the email and password in App Store Connect › App Review Information. Created only with the owner's yes.
+- **Demo account:** a real trade account in production, "BASIS App Review", created through the platform like any customer (a customer company with a few real records: a quote awaiting an answer, an order, an invoice), with two logins invited from its Portal tab: the admin (kept by BASIS) and the reviewer's login as a buyer, so that deleting the reviewer's login is possible without leaving the account without an admin. The owner opens the reviewer's invitation link and sets its password himself, and enters the email and password in App Store Connect › App Review Information. Approved by the owner on 2026-11-11; created as soon as production has the portal's schema and functions (on 2026-11-11 the database still lacked the portal tables, the portal functions were not deployed and `/account` answered 404).
 - **Notes for the reviewer:**
 
   > BASIS supplies bridal foundation fabrics to the trade (ateliers, designers, manufacturers). Customer accounts are opened by invitation; the demo account is a real trade account set up for review with real records.
@@ -238,7 +238,7 @@ Version 1.0.0 with the build chosen in TestFlight, the English listing (§6.1) a
 3. **Create the app record** in App Store Connect (appstoreconnect.apple.com › Apps › **+** › New App): platform iOS, name **BASIS** (if taken, **BASIS INC.**), primary language English (U.S.), bundle ID **com.basisinc.customer**, SKU **BASIS-IOS-1**, user access Full. After that the agent archives and uploads build 1 to TestFlight.
 4. **The APNs key** (§3), uploaded to Firebase.
 5. **The production schema**, once, from the repository root: `firebase deploy --only dataconnect --project basis-inc`, answering yes to the SQL it shows (only new tables and one new column; [GO_LIVE](GO_LIVE.md)). The agent then deploys the functions and the site.
-6. **Yes to the review account** in production (§7); then he sets the reviewer's password from the invitation link and enters it, with his contact details, in App Store Connect › App Review Information.
+6. **The review account** in production (§7): approved 2026-11-11. Once it exists he sets the reviewer's password from the invitation link and enters it, with his contact details, in App Store Connect › App Review Information.
 7. **Submit for Review** — only after reading §8, and only by his decision.
 
 ## 10. What was checked, and how
