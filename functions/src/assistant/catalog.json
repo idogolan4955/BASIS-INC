@@ -1501,11 +1501,25 @@
    "input": ""
   },
   {
+   "name": "deleteMyLogin",
+   "module": "portal",
+   "action": "",
+   "roles": "any signed-in role",
+   "input": ""
+  },
+  {
    "name": "inviteCustomerUser",
    "module": "portal",
    "action": "Inviting customers to the portal",
    "roles": "PORTAL_STAFF_ROLES",
    "input": "const id = z.string().regex(/^[0-9a-f-]{32,36}$/i);\nconst role = z.enum(CUSTOMER_USER_ROLES);\nconst inviteInput = z.object({\n  /** Staff: the customer company. Customers invite into their own account and leave it out. */\n  companyId: id.optional(),\n  email: z.string().trim().email().max(255),\n  name: z.string().trim().max(160).optional(),\n  contactId: id.optional(),\n  role: role.default('buyer'),\n});\ninput: inviteInput"
+  },
+  {
+   "name": "registerPushDevice",
+   "module": "portal",
+   "action": "",
+   "roles": "any signed-in role",
+   "input": "const pushInput = z.object({\n  token: z.string().min(20).max(512),\n  platform: z.enum(['ios']),\n  locale: z.enum(['en', 'he']),\n  appVersion: z.string().max(32).optional(),\n});\ninput: pushInput"
   },
   {
    "name": "removeCustomerAddress",
@@ -1548,6 +1562,13 @@
    "action": "",
    "roles": "any signed-in role",
    "input": "const role = z.enum(CUSTOMER_USER_ROLES);\nconst setUserInput = z.object({ uid: z.string().min(1).max(128), role: role.optional(), status: z.enum(['active', 'suspended']).optional() });\ninput: setUserInput"
+  },
+  {
+   "name": "unregisterPushDevice",
+   "module": "portal",
+   "action": "",
+   "roles": "any signed-in role",
+   "input": ""
   },
   {
    "name": "createCorrectiveAction",

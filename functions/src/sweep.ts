@@ -1,6 +1,7 @@
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { evaluateRules } from './alerts';
 import { REGION, graphql } from './lib';
+import { NOTIFY_HANDLERS } from './notify';
 
 // The sweep consumes the outbox. Each handler is a small pure decision over
 // an event; alert rules, read-model refreshes and notifications register here
@@ -17,7 +18,10 @@ interface OutboxEvent {
 
 type Handler = (event: OutboxEvent) => Promise<void>;
 
-const HANDLERS: Record<string, Handler> = {};
+const HANDLERS: Record<string, Handler> = {
+  // Customers' phones hear about a sent quote and a delivered shipment.
+  ...NOTIFY_HANDLERS,
+};
 
 export async function sweepOnce(): Promise<{ processed: number }> {
   const { domainEvents } = await graphql<{ domainEvents: OutboxEvent[] }>(

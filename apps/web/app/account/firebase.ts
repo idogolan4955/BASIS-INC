@@ -1,15 +1,17 @@
 import { connectorConfig } from '@basis/shared/dataconnect/customer';
 import { FUNCTIONS_REGION } from '@basis/shared';
 import { getApp, getApps, initializeApp } from 'firebase/app';
-import { browserLocalPersistence, connectAuthEmulator, getAuth, setPersistence } from 'firebase/auth';
+import { browserLocalPersistence, connectAuthEmulator, getAuth, indexedDBLocalPersistence, initializeAuth, setPersistence, type Auth } from 'firebase/auth';
 import { connectDataConnectEmulator, getDataConnect } from 'firebase/data-connect';
 import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
+import { API_BASE, IN_APP, LOCAL } from '../native/platform';
 
 // The portal's Firebase: the same public web configuration as the platform
 // (it ships to every browser and is restricted in Google Cloud to the BASIS
-// origins); what a customer can read is decided by the claim role = customer
-// and by @auth on the `customer` connector, never by hiding this file. The
-// portal is client-only: nothing here runs while the public pages prerender.
+// origins, the iPhone app's capacitor://localhost among them); what a customer
+// can read is decided by the claim role = customer and by @auth on the
+// `customer` connector, never by hiding this file. The portal is client-only:
+// nothing here runs while the public pages prerender.
 
 const config = {
   projectId: 'basis-inc',
@@ -22,18 +24,18 @@ const config = {
 
 const fresh = getApps().length === 0;
 export const app = fresh ? initializeApp(config) : getApp();
-export const auth = getAuth(app);
+// In the app the page is not on a web origin, so sign-in keeps to the
+// persistence it needs and loads no pop-up or redirect frames.
+export const auth: Auth = IN_APP && fresh ? initializeAuth(app, { persistence: [indexedDBLocalPersistence, browserLocalPersistence] }) : getAuth(app);
 export const dataConnect = getDataConnect(app, connectorConfig);
 export const functions = getFunctions(app, FUNCTIONS_REGION);
 
-// Development talks to the local emulators, never to production data.
-if (fresh && import.meta.env.DEV) {
+if (fresh && LOCAL) {
   connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
   connectDataConnectEmulator(dataConnect, '127.0.0.1', 9399);
   connectFunctionsEmulator(functions, '127.0.0.1', 5001);
 }
-void setPersistence(auth, browserLocalPersistence);
+if (!IN_APP) void setPersistence(auth, browserLocalPersistence);
 
-/** The api function: same origin in production, the emulator in development. */
-export const API = import.meta.env.DEV ? 'http://127.0.0.1:5001/basis-inc/europe-west1/api' : '/api';
+export const API = API_BASE;
 export const apiUrl = (path: string) => (path.startsWith('/api') ? `${API}${path.slice(4)}` : path);

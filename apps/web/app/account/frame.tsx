@@ -3,6 +3,7 @@ import { StatusChip, Wordmark, cn } from '@basis/ui';
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { Display, Eyebrow } from '../site/ui';
+import { IN_APP } from '../native/platform';
 import { LocaleSwitch, PortalLocale, useLocale, useT } from './i18n';
 import { PortalSession, signOut, useSession } from './session';
 
@@ -20,6 +21,7 @@ export const SECTIONS = [
   { to: '/account/samples', label: 'Samples' },
   { to: '/account/team', label: 'Team' },
   { to: '/account/addresses', label: 'Addresses' },
+  { to: '/account/profile', label: 'Profile' },
 ] as const;
 
 export const portalMeta = (title: string) => [{ title: `${title} · BASIS INC.` }, { name: 'robots', content: 'noindex, nofollow' }];
@@ -118,62 +120,79 @@ function AccountFrame() {
   if (session.status !== 'ready') return null;
   const { me } = session;
   const company = me.account.company;
+  // In the app the account is named large on the overview; deeper pages keep a single line.
+  const slim = IN_APP && pathname !== '/account';
   return (
-    <div className="px-4 pb-20 pt-10 md:px-12 md:pt-14 lg:px-24">
-      <header className="grid gap-8 border-b border-charcoal/70 pb-8 lg:grid-cols-[1fr_auto] lg:items-end">
-        <div className="min-w-0">
-          <Eyebrow>{me.account.kind === 'trade' ? t('Trade account') : t('Account')}</Eyebrow>
-          <Display as="h1" className="mt-3 break-words text-[clamp(2.5rem,7vw,5.5rem)]">
-            {me.account.displayName}
-          </Display>
-          <p className="mt-4 text-ink-soft">
-            {t('Signed in as {name}', { name: me.name })} · {t(CUSTOMER_ROLE_LABEL[me.role as unknown as keyof typeof CUSTOMER_ROLE_LABEL])}
-          </p>
-        </div>
-        <div className="flex flex-col items-start gap-4 lg:items-end">
-          <dl className="border border-charcoal/70 bg-milk">
-            <div className="border-b border-charcoal/70 px-4 py-1.5">
-              <dt className="code uppercase tracking-[0.18em] text-ink-muted">{t('Member')}</dt>
-            </div>
-            <dd className="code px-4 py-2 text-lg text-ink" dir="ltr">
-              {me.account.memberNumber}
-            </dd>
-            {company?.country && (
-              <dd className="border-t border-line px-4 py-1.5 text-sm text-ink-soft">
-                {company.legalName} · {company.country.name}
-              </dd>
-            )}
-          </dl>
-          <div className="flex items-center gap-4">
-            <LocaleSwitch className="flex" />
-            <button type="button" onClick={() => void signOut()} className="code h-9 uppercase tracking-[0.14em] text-ink-muted underline-offset-4 hover:text-ink hover:underline">
-              {t('Sign out')}
-            </button>
+    <div className={cn('px-4 pb-20 md:px-12 md:pt-14 lg:px-24', slim ? 'pt-5' : 'pt-10')}>
+      {slim ? (
+        <header className="flex items-baseline justify-between gap-4 border-b border-charcoal/70 pb-3">
+          <p className="min-w-0 truncate font-display text-[1.375rem] leading-none">{me.account.displayName}</p>
+          <span className="code shrink-0 text-ink-muted" dir="ltr">
+            {me.account.memberNumber}
+          </span>
+        </header>
+      ) : (
+        <header className="grid gap-8 border-b border-charcoal/70 pb-8 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div className="min-w-0">
+            <Eyebrow>{me.account.kind === 'trade' ? t('Trade account') : t('Account')}</Eyebrow>
+            <Display as="h1" className="mt-3 break-words text-[clamp(2.5rem,7vw,5.5rem)]">
+              {me.account.displayName}
+            </Display>
+            <p className="mt-4 text-ink-soft">
+              {t('Signed in as {name}', { name: me.name })} · {t(CUSTOMER_ROLE_LABEL[me.role as unknown as keyof typeof CUSTOMER_ROLE_LABEL])}
+            </p>
           </div>
-        </div>
-      </header>
-      <div className="mt-8 grid gap-10 lg:grid-cols-[13rem_minmax(0,1fr)]">
-        <nav ref={nav} aria-label={t('Your account')} className="-mx-4 overflow-x-auto px-4 lg:mx-0 lg:overflow-visible lg:px-0">
-          <ol className="flex gap-1 lg:flex-col lg:gap-0 lg:border-t lg:border-line">
-            {SECTIONS.map((section, index) => (
-              <li key={section.to} className="shrink-0">
-                <NavLink
-                  to={section.to}
-                  end={'end' in section}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex h-11 items-center gap-3 whitespace-nowrap border-b-2 px-2 text-[0.9375rem] lg:h-12 lg:border-b lg:border-s-[3px] lg:border-b-line lg:ps-3',
-                      isActive ? 'border-b-charcoal text-ink lg:border-s-nude-deep lg:border-b-line' : 'border-transparent text-ink-soft hover:text-ink lg:border-s-transparent',
-                    )
-                  }
-                >
-                  <span className="code text-ink-muted">{String(index + 1).padStart(2, '0')}</span>
-                  {t(section.label)}
-                </NavLink>
-              </li>
-            ))}
-          </ol>
-        </nav>
+          <div className="flex flex-col items-start gap-4 lg:items-end">
+            <dl className="border border-charcoal/70 bg-milk">
+              <div className="border-b border-charcoal/70 px-4 py-1.5">
+                <dt className="code uppercase tracking-[0.18em] text-ink-muted">{t('Member')}</dt>
+              </div>
+              <dd className="code px-4 py-2 text-lg text-ink" dir="ltr">
+                {me.account.memberNumber}
+              </dd>
+              {company?.country && (
+                <dd className="border-t border-line px-4 py-1.5 text-sm text-ink-soft">
+                  {company.legalName} · {company.country.name}
+                </dd>
+              )}
+            </dl>
+            {/* In the app the language and signing out live in Profile. */}
+            {!IN_APP && (
+              <div className="flex items-center gap-4">
+                <LocaleSwitch className="flex" />
+                <button type="button" onClick={() => void signOut()} className="code h-9 uppercase tracking-[0.14em] text-ink-muted underline-offset-4 hover:text-ink hover:underline">
+                  {t('Sign out')}
+                </button>
+              </div>
+            )}
+          </div>
+        </header>
+      )}
+      <div className={cn('grid gap-10', slim ? 'mt-6' : 'mt-8', !IN_APP && 'lg:grid-cols-[13rem_minmax(0,1fr)]')}>
+        {/* In the app the tabs and More carry the index. */}
+        {!IN_APP && (
+          <nav ref={nav} aria-label={t('Your account')} className="-mx-4 overflow-x-auto px-4 lg:mx-0 lg:overflow-visible lg:px-0">
+            <ol className="flex gap-1 lg:flex-col lg:gap-0 lg:border-t lg:border-line">
+              {SECTIONS.map((section, index) => (
+                <li key={section.to} className="shrink-0">
+                  <NavLink
+                    to={section.to}
+                    end={'end' in section}
+                    className={({ isActive }) =>
+                      cn(
+                        'flex h-11 items-center gap-3 whitespace-nowrap border-b-2 px-2 text-[0.9375rem] lg:h-12 lg:border-b lg:border-s-[3px] lg:border-b-line lg:ps-3',
+                        isActive ? 'border-b-charcoal text-ink lg:border-s-nude-deep lg:border-b-line' : 'border-transparent text-ink-soft hover:text-ink lg:border-s-transparent',
+                      )
+                    }
+                  >
+                    <span className="code text-ink-muted">{String(index + 1).padStart(2, '0')}</span>
+                    {t(section.label)}
+                  </NavLink>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        )}
         <div className="min-w-0">
           <Outlet />
         </div>
@@ -314,8 +333,9 @@ export function AuthFrame({ title, children }: { title: string; children: ReactN
   return (
     <section className="grid gap-12 px-4 py-14 md:px-12 md:py-20 lg:grid-cols-[1fr_minmax(0,28rem)] lg:px-24">
       <div>
-        <Wordmark className="text-base" />
-        <Display as="h1" className="mt-8 text-[clamp(2.5rem,7vw,5.5rem)]">
+        {/* The app's own bar already carries the wordmark. */}
+        {!IN_APP && <Wordmark className="mb-8 text-base" />}
+        <Display as="h1" className="text-[clamp(2.5rem,7vw,5.5rem)]">
           {title}
         </Display>
       </div>

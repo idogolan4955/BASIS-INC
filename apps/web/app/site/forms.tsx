@@ -1,10 +1,9 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
+import { API_BASE as API } from '../native/platform';
 
-// Intake forms post to the api function (same origin in production, the
-// emulator in development). Context travels with every submission: the page
-// it came from and what was selected.
-
-const API = import.meta.env.DEV ? 'http://127.0.0.1:5001/basis-inc/europe-west1/api' : '/api';
+// Intake forms post to the api function (same origin on the site, the site's
+// address from the app, the emulator in development). Context travels with
+// every submission: the page it came from and what was selected.
 
 export type InquiryKind = 'sample_request' | 'wholesale' | 'contact';
 

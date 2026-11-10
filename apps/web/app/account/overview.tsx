@@ -1,5 +1,7 @@
 import { invoiceOutstanding, invoiceStanding, quoteStanding, quoteTotal, shipmentArrival, type LocalDate } from '@basis/shared';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
+import { IN_APP } from '../native/platform';
 import { read, useRead } from './data';
 import { Empty, Failed, Loading, portalMeta } from './frame';
 import { date, money, today } from './format';
@@ -24,6 +26,36 @@ function Line({ title, count, children, to, action }: { title: string; count: nu
         {action}
       </Link>
     </li>
+  );
+}
+
+/** In the app, until the person decides: an offer to be told when a quote or a shipment needs them. */
+function NotificationOffer() {
+  const t = useT();
+  const { locale } = useLocale();
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    void import('../native/push').then(({ pushState }) => pushState()).then((state) => setOpen(state === 'prompt')).catch(() => undefined);
+  }, []);
+  if (!open) return null;
+  const enable = async () => {
+    setBusy(true);
+    try {
+      const { enablePush } = await import('../native/push');
+      await enablePush(locale);
+    } finally {
+      setBusy(false);
+      setOpen(false);
+    }
+  };
+  return (
+    <div className="mb-10 flex flex-wrap items-center justify-between gap-4 border-b border-line pb-4">
+      <p className="max-w-md text-ink-soft">{t('Be told on this iPhone when BASIS sends you a quote and when a shipment arrives.')}</p>
+      <button type="button" onClick={() => void enable()} disabled={busy} className="code h-11 uppercase tracking-[0.14em] underline decoration-nude-deep underline-offset-[6px] disabled:opacity-60">
+        {t('Turn on notifications')}
+      </button>
+    </div>
   );
 }
 
@@ -58,6 +90,7 @@ export default function Overview() {
 
   return (
     <div>
+      {IN_APP && <NotificationOffer />}
       <h2 className="font-display text-[clamp(1.875rem,4vw,2.75rem)] leading-none tracking-[-0.02em]">{t('What is open')}</h2>
       {nothing ? (
         <div className="mt-8">

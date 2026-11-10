@@ -76,3 +76,19 @@ type CustomerAddress @table {
   isDefault: Boolean!
   createdAt: Timestamp! @default(expr: "request.time")
 }
+
+# A phone that receives the portal's notifications (the BASIS app for iPhone,
+# docs/APP_STORE.md): its Firebase Cloud Messaging token, held for the person
+# signed in on it. The token is the key, so a phone that changes hands moves
+# to its new person. Deleting the person deletes their phones.
+type PushDevice @table(key: "token") {
+  token: String! @col(dataType: "varchar(512)")
+  customerUser: CustomerUser!
+  # ios
+  platform: String! @col(dataType: "varchar(16)")
+  # en | he: the language the notifications are written in.
+  locale: String! @col(dataType: "varchar(16)")
+  appVersion: String @col(dataType: "varchar(32)")
+  createdAt: Timestamp! @default(expr: "request.time")
+  lastSeenAt: Timestamp! @default(expr: "request.time")
+}

@@ -33,5 +33,7 @@ export default [
     route('samples', 'account/samples.tsx'),
     route('team', 'account/team.tsx'),
     route('addresses', 'account/addresses.tsx'),
+    route('profile', 'account/profile.tsx'),
+    route('more', 'account/more.tsx'),
   ]),
 ] satisfies RouteConfig;

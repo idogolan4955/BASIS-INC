@@ -9,12 +9,14 @@ import {
   invitationState,
   isRole,
   leavesAnAdmin,
+  loginDeletion,
   quoteStanding,
   todayIn,
   type CustomerAction,
   type CustomerUserRole,
 } from '@basis/shared';
 import { createHash, randomBytes } from 'node:crypto';
+import { logger } from 'firebase-functions';
 import { HttpsError, onCall, type CallableRequest } from 'firebase-functions/v2/https';
 import { z } from 'zod';
 import { applyQuoteTransition } from './commercial';
@@ -338,6 +340,78 @@ export const customerSignedIn = onCall({ region: REGION }, async (request) => {
   const caller = await customerCallerOf(request);
   await graphql(`mutation ($uid: String!) { customerUser_update(key: { uid: $uid }, data: { lastSignInAt_expr: "request.time" }) }`, { uid: caller.uid });
   return { name: caller.name, role: caller.role, accountName: caller.accountName };
+});
+
+// ---------------------------------------------------------------- the app: notifications and deleting a login
+
+const pushInput = z.object({
+  token: z.string().min(20).max(512),
+  platform: z.enum(['ios']),
+  locale: z.enum(['en', 'he']),
+  appVersion: z.string().max(32).optional(),
+});
+
+/** The BASIS app keeps this phone's notification token against the signed-in person (functions/src/notify.ts). */
+export const registerPushDevice = onCall({ region: REGION }, async (request) => {
+  const caller = await customerCallerOf(request);
+  const input = parse(pushInput, request.data);
+  await graphql(
+    `mutation ($token: String!, $uid: String!, $platform: String!, $locale: String!, $appVersion: String) {
+      pushDevice_upsert(data: { token: $token, customerUserUid: $uid, platform: $platform, locale: $locale, appVersion: $appVersion, lastSeenAt_expr: "request.time" }) }`,
+    { token: input.token, uid: caller.uid, platform: input.platform, locale: input.locale, appVersion: input.appVersion ?? null },
+  );
+  return { registered: true };
+});
+
+/** Before signing out: the phone stops receiving the person's notifications. Only their own token goes. */
+export const unregisterPushDevice = onCall({ region: REGION }, async (request) => {
+  if (!request.auth || request.auth.token['role'] !== 'customer') throw failure('forbidden', 'Sign in to your BASIS account first.');
+  const { token } = parse(z.object({ token: z.string().min(20).max(512) }), request.data);
+  await graphql(`mutation ($token: String!, $uid: String!) { pushDevice_deleteMany(where: { token: { eq: $token }, customerUser: { uid: { eq: $uid } } }) }`, { token, uid: request.auth.uid });
+  return { unregistered: true };
+});
+
+/**
+ * A person deletes their own login (App Store guideline 5.1.1(v)): the login
+ * and its password, their place in the account and their User row, their
+ * conversations with the site assistant and their phones' tokens. The
+ * company's quotes, orders, invoices, documents, inquiries and timeline stay:
+ * they are the company's business records with BASIS. The last active admin
+ * of an account with other active people makes a colleague admin first.
+ */
+export const deleteMyLogin = onCall({ region: REGION }, async (request) => {
+  const caller = await customerCallerOf(request);
+  const { customerUser } = await graphql<{ customerUser: { uid: string; name: string; email: string; role: CustomerUserRole; account: { id: string; displayName: string; company: { id: string } | null; customerUsers_on_account: { uid: string; role: CustomerUserRole; status: string }[] } } | null }>(
+    `query ($uid: String!) { customerUser(key: { uid: $uid }) { uid name email role account { id displayName company { id } customerUsers_on_account { uid role status } } } }`,
+    { uid: caller.uid },
+  );
+  if (!customerUser) throw failure('not_found', 'This login has no place in a BASIS account.');
+  if (loginDeletion(customerUser.account.customerUsers_on_account, caller.uid) === 'last_admin') {
+    throw failure('invariant_violation', `You are the last admin of ${customerUser.account.displayName}. Make a colleague admin on the Team page first, then delete your login.`);
+  }
+  // No one can sign in with it from here on, whatever happens next.
+  await auth.updateUser(caller.uid, { disabled: true });
+  await auth.revokeRefreshTokens(caller.uid);
+  // Written while the person still exists (both point at their User row); the
+  // entries keep their words, without the link, once the row is gone.
+  await audit(caller.uid, 'portal.login_deleted', 'customer_account', customerUser.account.id, { email: customerUser.email, role: customerUser.role }, null);
+  if (customerUser.account.company) await timeline('customer', customerUser.account.company.id, 'portal', caller.uid, `${customerUser.name} (${customerUser.email}) deleted their portal login`);
+  await graphql(`mutation ($uid: String!) { siteConversation_deleteMany(where: { uid: { eq: $uid } }) }`, { uid: caller.uid });
+  await graphql(
+    `mutation ($uid: String!) {
+      pushDevice_deleteMany(where: { customerUser: { uid: { eq: $uid } } })
+      customerUser_delete(key: { uid: $uid })
+      user_delete(key: { uid: $uid })
+    }`,
+    { uid: caller.uid },
+  );
+  try {
+    await auth.deleteUser(caller.uid);
+  } catch (error) {
+    // The login stays disabled; nothing of the person is left to reach with it.
+    logger.error('deleteMyLogin: the Auth user could not be deleted', { uid: caller.uid, error: String(error) });
+  }
+  return { deleted: true };
 });
 
 // ---------------------------------------------------------------- quotes and samples

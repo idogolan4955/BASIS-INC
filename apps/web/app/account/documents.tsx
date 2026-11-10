@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { call, openDocument, useRead } from './data';
+import { IN_APP } from '../native/platform';
+import { call, openDocument, shareDocument, useRead } from './data';
 import { Empty, Failed, Loading, PageTitle, portalMeta } from './frame';
 import { Alert } from './fields';
 import { date } from './format';
@@ -28,11 +29,12 @@ export default function Documents() {
   const loaded = useRead(() => call<object, { documents: DocumentRow[] }>('customerDocuments', {}), []);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState('');
-  const open = async (doc: DocumentRow) => {
+  const open = async (doc: DocumentRow, share = false) => {
     setError('');
     setBusy(doc.id);
     try {
-      await openDocument(doc.href);
+      if (share) await shareDocument(doc.href, doc.title);
+      else await openDocument(doc.href, doc.title);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('The document could not be opened.'));
     } finally {
@@ -70,9 +72,16 @@ export default function Documents() {
                       {doc.title}
                       {doc.issuedOn && <span className="ms-2 text-sm text-ink-muted">{date(doc.issuedOn, locale)}</span>}
                     </span>
-                    <button type="button" onClick={() => void open(doc)} disabled={busy === doc.id} className="code uppercase tracking-[0.14em] underline decoration-nude-deep underline-offset-[6px] disabled:opacity-60">
-                      {busy === doc.id ? t('Opening') : t('Open')}
-                    </button>
+                    <span className="flex items-center gap-5">
+                      {IN_APP && (
+                        <button type="button" onClick={() => void open(doc, true)} disabled={busy === doc.id} className="code h-11 uppercase tracking-[0.14em] text-ink-soft underline decoration-line-strong underline-offset-[6px] disabled:opacity-60">
+                          {t('Share')}
+                        </button>
+                      )}
+                      <button type="button" onClick={() => void open(doc)} disabled={busy === doc.id} className="code h-11 uppercase tracking-[0.14em] underline decoration-nude-deep underline-offset-[6px] disabled:opacity-60">
+                        {busy === doc.id ? t('Opening') : t('Open')}
+                      </button>
+                    </span>
                   </li>
                 ))}
               </ul>

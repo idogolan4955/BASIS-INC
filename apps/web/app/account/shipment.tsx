@@ -125,7 +125,7 @@ export default function ShipmentPage() {
           {documents.length > 0 && (
             <div className="grid gap-3">
               {documents.map((doc) => (
-                <Button key={doc.id} variant="secondary" onClick={() => void openDocument(doc.href).catch((caught: unknown) => setError(caught instanceof Error ? caught.message : t('The document could not be opened.')))}>
+                <Button key={doc.id} variant="secondary" onClick={() => void openDocument(doc.href, doc.title).catch((caught: unknown) => setError(caught instanceof Error ? caught.message : t('The document could not be opened.')))}>
                   {doc.title}
                 </Button>
               ))}

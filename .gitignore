@@ -22,3 +22,7 @@ graphify-out/
 
 # Local values for Functions secrets in the emulator; never committed.
 functions/.secret.local
+
+# The iPhone app: the web bundle and its build, made by apps/ios/scripts/bundle.mjs.
+apps/web/build-app/
+apps/ios/www/

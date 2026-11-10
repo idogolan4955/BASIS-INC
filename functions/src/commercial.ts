@@ -193,8 +193,12 @@ export async function applyQuoteTransition(input: z.infer<typeof quoteTransition
     await timeline('sales_order', orderNumber, 'created', caller.uid, `Confirmed from ${quote.number}: ${money(total, quote.currency)} for ${customerName}`);
     await timeline('customer', quote.customer.id, 'order', caller.uid, `${orderNumber} confirmed from ${quote.number}: ${money(total, quote.currency)}`);
   }
-  // The quotation as sent is filed with it; its opportunity follows the quote.
-  if (input.to === 'sent') await fileGenerated('quote', quote.number, caller.uid);
+  // The quotation as sent is filed with it; its opportunity follows the quote;
+  // the customer's people hear about it in the app (functions/src/notify.ts).
+  if (input.to === 'sent') {
+    await fileGenerated('quote', quote.number, caller.uid);
+    await emit('quote.sent', 'quote', quote.number, { customer: customerName });
+  }
   await followQuote(quote.id, input.to, orderNumber);
   await audit(caller.uid, `quote.${input.to}`, 'quote', quote.number, { state: quote.state }, { state: input.to, order: orderNumber, reason: input.reason ?? null });
   await timeline('quote', quote.number, 'status_changed', caller.uid, `${input.to[0]!.toUpperCase()}${input.to.slice(1)}${byline ? ` ${byline}` : ''}${orderNumber ? `; ${orderNumber} opened` : ''}${input.reason ? `: ${input.reason}` : ''}`);

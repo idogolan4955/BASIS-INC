@@ -133,6 +133,11 @@ export const FUNCTION_NAMES = {
   saveCustomerAddress: 'saveCustomerAddress',
   removeCustomerAddress: 'removeCustomerAddress',
   customerDocuments: 'customerDocuments',
+  /** Customer, the iPhone app: this phone's notification token kept against the person, or given up at sign-out. */
+  registerPushDevice: 'registerPushDevice',
+  unregisterPushDevice: 'unregisterPushDevice',
+  /** Customer: delete one's own login (App Store guideline 5.1.1(v)); the company's records stay. */
+  deleteMyLogin: 'deleteMyLogin',
   /** The assistant on the brand site: anonymous visitors and signed-in customers; actions wait for the visitor's click. */
   siteAssistant: 'siteAssistant',
   siteAssistantDecide: 'siteAssistantDecide',

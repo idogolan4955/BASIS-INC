@@ -1,6 +1,8 @@
 import type { CustomerMeData } from '@basis/shared/dataconnect/customer';
 import type { CustomerUserRole } from '@basis/shared';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { IN_APP } from '../native/platform';
+import { useLocale } from './i18n';
 
 // Who is signed in to the portal. A customer login carries the claim
 // role = customer and has an active place in an account; a staff login on
@@ -70,6 +72,13 @@ export function PortalSession({ children }: { children: ReactNode }) {
       stop();
     };
   }, [tick]);
+  // In the app, a signed-in person's phone is registered for their notifications, in their language.
+  const { locale } = useLocale();
+  const ready = session.status === 'ready';
+  useEffect(() => {
+    if (!IN_APP || !ready) return;
+    void import('../native/push').then(({ syncPush }) => syncPush(locale)).catch(() => undefined);
+  }, [ready, locale]);
   return <Context.Provider value={{ session, refresh: () => setTick((value) => value + 1) }}>{children}</Context.Provider>;
 }
 
@@ -82,6 +91,7 @@ export function useMe(): { me: Me; role: CustomerUserRole } {
 }
 
 export async function signOut(): Promise<void> {
+  if (IN_APP) await import('../native/push').then(({ releasePush }) => releasePush());
   const [{ auth }, { signOut: out }] = await Promise.all([import('./firebase'), import('firebase/auth')]);
   await out(auth);
 }

@@ -1,9 +1,11 @@
 import type { SiteActionView, SiteConversationView } from '@basis/shared';
 import { cn } from '@basis/ui';
 import { Fragment, useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router';
 import { call } from '../account/data';
 import { PortalLocale, useLocale, useT } from '../account/i18n';
+import { IN_APP } from '../native/platform';
 
 // The assistant on the brand site (docs/CUSTOMER_PORTAL_PLAN.md §9): a quiet
 // tab at the edge of every page that opens a conversation. It says it is an
@@ -54,7 +56,7 @@ function inline(text: string): ReactNode[] {
 
 function Prose({ text }: { text: string }) {
   return (
-    <div className="space-y-2 text-[0.9375rem] leading-relaxed">
+    <div dir="auto" className="space-y-2 text-[0.9375rem] leading-relaxed">
       {text.trim().split(/\n{2,}/).map((block, index) => {
         const lines = block.split('\n');
         if (lines.every((line) => /^\s*([-*]|\d+\.)\s+/.test(line))) {
@@ -197,7 +199,7 @@ function Panel({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <section dir={dir} lang={locale} aria-label={t('BASIS assistant')} className="fixed inset-x-2 bottom-2 z-40 flex h-[min(85dvh,42rem)] flex-col border border-charcoal/70 bg-milk text-ink shadow-[0_18px_48px_-24px_rgb(43_39_36/0.45)] md:inset-x-auto md:bottom-6 md:end-6 md:w-[26rem]">
+    <section dir={dir} lang={locale} aria-label={t('BASIS assistant')} className={cn('fixed inset-x-2 z-40 flex flex-col border border-charcoal/70 bg-milk text-ink shadow-[0_18px_48px_-24px_rgb(43_39_36/0.45)]', IN_APP ? 'bottom-[calc(0.5rem+env(safe-area-inset-bottom))] h-[min(calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-4rem),42rem)]' : 'bottom-2 h-[min(85dvh,42rem)] md:inset-x-auto md:bottom-6 md:end-6 md:w-[26rem]')}>
       <header className="flex items-start justify-between gap-3 border-b border-charcoal/70 px-4 py-3">
         <div>
           <p className="code uppercase tracking-[0.18em]">{t('BASIS assistant')}</p>
@@ -214,8 +216,8 @@ function Panel({ onClose }: { onClose: () => void }) {
               {t('New')}
             </button>
           )}
-          <button type="button" onClick={onClose} aria-label={t('Close')} className="code h-9 px-2 uppercase tracking-[0.14em] hover:text-ink">
-            ✕
+          <button type="button" onClick={onClose} className="code h-9 px-2 uppercase tracking-[0.14em] hover:text-ink">
+            {t('Close')}
           </button>
         </div>
       </header>
@@ -291,28 +293,40 @@ function Panel({ onClose }: { onClose: () => void }) {
   );
 }
 
-function Launcher() {
+function Launcher({ placement }: { placement: 'float' | 'bar' }) {
   const t = useT();
-  const { dir } = useLocale();
+  const { dir, locale } = useLocale();
   const [open, setOpen] = useState(false);
+  // In the app the assistant is a word in the top bar, beside Index; on the site, a tab at the edge.
+  if (placement === 'bar') {
+    return (
+      <>
+        <button type="button" dir={dir} lang={locale} onClick={() => setOpen(true)} aria-haspopup="dialog" aria-expanded={open} className="code h-11 px-2 uppercase tracking-[0.18em]">
+          {t('Ask BASIS')}
+        </button>
+        {/* Out of the bar's stacking context, so it lies over the tabs. */}
+        {open && createPortal(<Panel onClose={() => setOpen(false)} />, document.body)}
+      </>
+    );
+  }
   return open ? (
     <Panel onClose={() => setOpen(false)} />
   ) : (
-    <button type="button" dir={dir} onClick={() => setOpen(true)} aria-haspopup="dialog" className="fixed bottom-[5.5rem] end-3 z-30 flex h-11 items-center gap-2 border border-charcoal bg-milk px-4 text-[0.875rem] font-medium text-ink shadow-[0_10px_30px_-18px_rgb(43_39_36/0.5)] hover:bg-bone md:bottom-6 md:end-6">
+    <button type="button" dir={dir} onClick={() => setOpen(true)} aria-haspopup="dialog" className={cn('fixed end-3 z-30 flex h-11 items-center gap-2 border border-charcoal bg-milk px-4 text-[0.875rem] font-medium text-ink shadow-[0_10px_30px_-18px_rgb(43_39_36/0.5)] hover:bg-bone', IN_APP ? 'bottom-[calc(4.25rem+env(safe-area-inset-bottom))]' : 'bottom-[5.5rem] md:bottom-6 md:end-6')}>
       <span aria-hidden="true" className="size-2.5 bg-nude-deep" />
       {t('Ask BASIS')}
     </button>
   );
 }
 
-/** Mounted once by the site shell; renders only in the browser. */
-export function SiteAssistant() {
+/** Mounted once by the site shell (or the app's top bar); renders only in the browser. */
+export function SiteAssistant({ placement = 'float' }: { placement?: 'float' | 'bar' }) {
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
   if (!ready) return null;
   return (
     <PortalLocale>
-      <Launcher />
+      <Launcher placement={placement} />
     </PortalLocale>
   );
 }

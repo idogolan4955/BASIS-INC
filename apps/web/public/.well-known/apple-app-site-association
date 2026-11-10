@@ -1,0 +1,16 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["97HE63NNKZ.com.basisinc.customer"],
+        "components": [
+          { "/": "/account", "comment": "The customer account" },
+          { "/": "/account/*", "comment": "Every account page, invitations included" }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["97HE63NNKZ.com.basisinc.customer"]
+  }
+}

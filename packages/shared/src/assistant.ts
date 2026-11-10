@@ -50,6 +50,9 @@ export const ASSISTANT_EXCLUDED_COMMANDS = [
   'siteAssistant',
   'siteAssistantDecide',
   'siteAssistantHistory',
+  'registerPushDevice',
+  'unregisterPushDevice',
+  'deleteMyLogin',
 ] as const;
 
 /** Connector mutations the assistant may never propose. */

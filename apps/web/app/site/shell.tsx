@@ -1,9 +1,11 @@
 import { Wordmark, cn } from '@basis/ui';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Link, NavLink, useLocation } from 'react-router';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router';
 import { SITE, families, shades } from './catalog';
 import { Eyebrow, Index } from './ui';
 import { SiteAssistant } from '../assistant/widget';
+import { PortalLocale, useLocale, useT } from '../account/i18n';
+import { IN_APP } from '../native/platform';
 
 // The site's frame: a quiet top bar, the fabrics index as the menu, and the
 // single primary action, within thumb reach on phones.
@@ -36,7 +38,7 @@ function IndexMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   }, [location.pathname]);
   return (
     <dialog ref={dialog} onClose={onClose} aria-label="Site index" className="m-0 h-dvh max-h-none w-screen max-w-none bg-bone p-0 text-ink backdrop:bg-charcoal/30">
-      <div className="flex min-h-dvh flex-col px-4 pb-28 pt-5 md:px-12">
+      <div className={cn('flex min-h-dvh flex-col px-4 md:px-12', IN_APP ? 'pb-[calc(2rem+env(safe-area-inset-bottom))] pt-[calc(1.25rem+env(safe-area-inset-top))]' : 'pb-28 pt-5')}>
         <div className="flex items-center justify-between">
           <Wordmark className="text-base" />
           <button type="button" onClick={onClose} className="code h-11 px-3 uppercase tracking-[0.18em]">
@@ -76,7 +78,106 @@ function IndexMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   );
 }
 
+// ---------------------------------------------------------------- the iPhone app
+
+/** The account's sections the app keeps at the thumb, numbered as on the site's index. */
+const APP_TABS = [
+  { to: '/account', label: 'Overview', end: true },
+  { to: '/account/quotes', label: 'Quotes' },
+  { to: '/account/orders', label: 'Orders' },
+  { to: '/account/shipments', label: 'Shipments' },
+  { to: '/account/more', label: 'More' },
+] as const;
+
+/** Pages that are a door into the account, drawn without the tabs. */
+const isDoor = (path: string) => path.startsWith('/account/sign-in') || path.startsWith('/account/reset') || path.startsWith('/account/invite');
+
+function AppTabs() {
+  const t = useT();
+  const { dir } = useLocale();
+  const { pathname } = useLocation();
+  const inTabs = APP_TABS.slice(0, 4).some((tab) => ('end' in tab ? pathname === tab.to : pathname.startsWith(tab.to)));
+  return (
+    <nav dir={dir} aria-label={t('Your account')} className="fixed inset-x-0 bottom-0 z-30 border-t border-charcoal/70 bg-bone pb-[env(safe-area-inset-bottom)]">
+      <ol className="grid grid-cols-5">
+        {APP_TABS.map((tab, index) => {
+          const active = tab.to === '/account/more' ? !inTabs : 'end' in tab ? pathname === tab.to : pathname.startsWith(tab.to);
+          return (
+            <li key={tab.to}>
+              <Link
+                to={tab.to}
+                aria-current={active ? 'page' : undefined}
+                className={cn('relative flex h-14 flex-col items-center justify-center gap-0.5 text-[0.8125rem] leading-none', active ? 'text-ink' : 'text-ink-muted')}
+              >
+                {/* The selvedge: the open section's edge, as on the platform's rail. */}
+                <span aria-hidden="true" className={cn('absolute inset-x-3 top-0 h-[3px]', active ? 'bg-nude-deep' : 'bg-transparent')} />
+                <span className="code text-[0.6875rem] text-ink-muted">{String(index + 1).padStart(2, '0')}</span>
+                {t(tab.label)}
+              </Link>
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}
+
+/** The app opens on the account; the brand's pages are reached through the index. */
+function AppShell({ children }: { children: ReactNode }) {
+  const [menu, setMenu] = useState(false);
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const door = isDoor(pathname);
+  useEffect(() => {
+    let stop: (() => void) | undefined;
+    let cancelled = false;
+    void import('../native/bridge').then(({ startApp }) =>
+      startApp((path) => navigate(path)).then((release) => {
+        if (cancelled) release();
+        else stop = release;
+      }),
+    );
+    return () => {
+      cancelled = true;
+      stop?.();
+    };
+  }, [navigate]);
+  return (
+    <div className="flex min-h-dvh flex-col bg-surface text-ink">
+      <header className="sticky top-0 z-30 border-b border-line bg-bone pt-[env(safe-area-inset-top)]">
+        <div className="flex h-14 items-center justify-between px-4">
+          <Link to="/account" aria-label="BASIS INC." className="flex items-center">
+            <Wordmark className="text-base" />
+          </Link>
+          <div className="flex items-center gap-3">
+            {!door && <SiteAssistant placement="bar" />}
+            <button type="button" onClick={() => setMenu(true)} aria-haspopup="dialog" className="code h-11 px-2 uppercase tracking-[0.18em]">
+              Index
+            </button>
+          </div>
+        </div>
+      </header>
+      <main id="main" className={cn('flex-1', door ? 'pb-[env(safe-area-inset-bottom)]' : 'pb-[calc(3.5rem+env(safe-area-inset-bottom))]')}>
+        {children}
+      </main>
+      {!door && (
+        <PortalLocale>
+          <AppTabs />
+        </PortalLocale>
+      )}
+      <IndexMenu open={menu} onClose={() => setMenu(false)} />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- the site
+
 export function SiteShell({ children }: { children: ReactNode }) {
+  if (IN_APP) return <AppShell>{children}</AppShell>;
+  return <Site>{children}</Site>;
+}
+
+function Site({ children }: { children: ReactNode }) {
   const [menu, setMenu] = useState(false);
   // Signed-in customers ask for samples from their account, with its addresses.
   const inAccount = useLocation().pathname.startsWith('/account');

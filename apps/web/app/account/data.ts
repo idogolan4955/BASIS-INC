@@ -2,6 +2,7 @@ import type { FunctionName } from '@basis/shared';
 import type * as CustomerSdk from '@basis/shared/dataconnect/customer';
 import type { DataConnect, QueryRef } from 'firebase/data-connect';
 import { useCallback, useEffect, useState } from 'react';
+import { IN_APP } from '../native/platform';
 
 // Reads go through the `customer` connector, always to the server (the web
 // SDK would otherwise answer from its own cache); writes go through the
@@ -72,12 +73,27 @@ export async function call<TInput, TResult>(name: FunctionName, input: TInput): 
   }
 }
 
-/** Opens a document behind sign-in: fetched with the person's token, shown in a new tab. */
-export async function openDocument(href: string): Promise<void> {
-  const tab = window.open('', '_blank');
+/** A document behind sign-in: its address and the person's own token to fetch it with. */
+async function documentRequest(href: string): Promise<{ url: string; token: string }> {
   const [{ auth, apiUrl }] = await Promise.all([import('./firebase')]);
-  const token = await auth.currentUser?.getIdToken();
-  const response = await fetch(apiUrl(href), { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  const token = (await auth.currentUser?.getIdToken()) ?? '';
+  return { url: apiUrl(href), token };
+}
+
+/**
+ * Opens a document behind sign-in. On the site it is fetched with the
+ * person's token and shown in a new tab; in the app it opens in the
+ * phone's own viewer, which can print it, save it to Files or share it.
+ */
+export async function openDocument(href: string, title?: string): Promise<void> {
+  if (IN_APP) {
+    const [{ nativeDocument }, { url, token }] = await Promise.all([import('../native/bridge'), documentRequest(href)]);
+    await nativeDocument('open', url, token, title ?? href.split('/').pop() ?? 'Document');
+    return;
+  }
+  const tab = window.open('', '_blank');
+  const { url: address, token } = await documentRequest(href);
+  const response = await fetch(address, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
   if (!response.ok) {
     tab?.close();
     const body = (await response.json().catch(() => ({}))) as { message?: string };
@@ -86,4 +102,10 @@ export async function openDocument(href: string): Promise<void> {
   const url = URL.createObjectURL(await response.blob());
   if (tab) tab.location.href = url;
   else window.location.href = url;
+}
+
+/** The app only: the document straight to the share sheet (Mail, WhatsApp, Files, AirDrop). */
+export async function shareDocument(href: string, title: string): Promise<void> {
+  const [{ nativeDocument }, { url, token }] = await Promise.all([import('../native/bridge'), documentRequest(href)]);
+  await nativeDocument('share', url, token, title);
 }

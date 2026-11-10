@@ -885,6 +885,11 @@ export interface PurchaseOrder_Key {
   __typename?: 'PurchaseOrder_Key';
 }
 
+export interface PushDevice_Key {
+  token: string;
+  __typename?: 'PushDevice_Key';
+}
+
 export interface PutUp_Key {
   code: string;
   __typename?: 'PutUp_Key';

@@ -27,7 +27,7 @@ const PDF_ROUTES: Record<string, { roles: readonly (typeof COST_ROLES)[number][]
 
 const STATUS: Record<string, number> = { 'invalid-argument': 400, 'not-found': 404, 'permission-denied': 403, aborted: 409, 'failed-precondition': 412, unavailable: 503 };
 
-export const api = onRequest({ region: REGION, cors: [/^http:\/\/localhost:\d+$/, /\.web\.app$/, /\.firebaseapp\.com$/], memory: '512MiB' }, async (request, response) => {
+export const api = onRequest({ region: REGION, cors: [/^http:\/\/localhost:\d+$/, /\.web\.app$/, /\.firebaseapp\.com$/, /^capacitor:\/\/localhost$/], memory: '512MiB' }, async (request, response) => {
   const path = request.path.replace(/^\/api/, '') || '/';
 
   // Public intake from the site. Sample requests share the endpoint with a kind.

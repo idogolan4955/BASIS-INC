@@ -7,6 +7,8 @@ import { HE } from './i18n.he';
 
 export type Locale = 'en' | 'he';
 const KEY = 'basis.portal.locale';
+/** Every part of the page that speaks the portal's language hears a change at once. */
+const CHANGED = 'basis:locale';
 
 interface LocaleValue {
   readonly locale: Locale;
@@ -19,7 +21,7 @@ const fill = (text: string, vars?: Record<string, string | number>) => (vars ? t
 
 const Context = createContext<LocaleValue>({ locale: 'en', dir: 'ltr', setLocale: () => undefined, t: fill });
 
-function initial(): Locale {
+export function initialLocale(): Locale {
   try {
     const stored = window.localStorage.getItem(KEY);
     if (stored === 'he' || stored === 'en') return stored;
@@ -31,14 +33,19 @@ function initial(): Locale {
 
 export function PortalLocale({ children }: { children: ReactNode }) {
   const [locale, setState] = useState<Locale>('en');
-  useEffect(() => setState(initial()), []);
+  useEffect(() => {
+    setState(initialLocale());
+    const heard = (event: Event) => setState((event as CustomEvent<Locale>).detail);
+    window.addEventListener(CHANGED, heard);
+    return () => window.removeEventListener(CHANGED, heard);
+  }, []);
   const setLocale = useCallback((next: Locale) => {
-    setState(next);
     try {
       window.localStorage.setItem(KEY, next);
     } catch {
       // Not remembered; it still applies now.
     }
+    window.dispatchEvent(new CustomEvent<Locale>(CHANGED, { detail: next }));
   }, []);
   const value = useMemo<LocaleValue>(() => ({ locale, dir: locale === 'he' ? 'rtl' : 'ltr', setLocale, t: (text, vars) => fill(locale === 'he' ? (HE[text] ?? text) : text, vars) }), [locale, setLocale]);
   return <Context.Provider value={value}>{children}</Context.Provider>;

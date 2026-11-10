@@ -4,6 +4,7 @@ import { AuthFrame, Button, PortalRoot, portalMeta } from './frame';
 import { Alert, Field } from './fields';
 import { LocaleSwitch, useT } from './i18n';
 import { useSession } from './session';
+import { IN_APP } from '../native/platform';
 
 export const meta = () => portalMeta('Sign in');
 
@@ -17,6 +18,7 @@ function SignIn() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const next = safeNext(params.get('next'));
+  const deleted = params.get('deleted') === '1';
 
   useEffect(() => {
     if (session.status === 'ready') navigate(next, { replace: true });
@@ -40,6 +42,11 @@ function SignIn() {
 
   return (
     <AuthFrame title={t('Your BASIS account')}>
+      {deleted && (
+        <p role="status" className="mb-6 border-s-[3px] border-nude-deep ps-4 text-ink-soft">
+          {t('Your login has been deleted. The account’s records stay with your company.')}
+        </p>
+      )}
       <form onSubmit={submit} className="grid gap-5 border border-charcoal/70 bg-milk p-6">
         <div className="flex items-center justify-between">
           <p className="code uppercase tracking-[0.18em]">{t('Sign in')}</p>
@@ -61,6 +68,13 @@ function SignIn() {
           {t('Apply for a trade account')}
         </Link>
       </p>
+      {IN_APP && (
+        <p className="mt-3 text-sm text-ink-soft">
+          <Link to="/fabrics" className="underline underline-offset-4">
+            {t('Browse the fabrics and the Shade System')}
+          </Link>
+        </p>
+      )}
     </AuthFrame>
   );
 }

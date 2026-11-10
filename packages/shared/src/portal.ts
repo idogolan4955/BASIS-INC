@@ -54,6 +54,46 @@ export function leavesAnAdmin(users: readonly { uid: string; role: CustomerUserR
   });
 }
 
+export type LoginDeletion = 'allowed' | 'last_admin';
+
+/**
+ * Whether a person may delete their own login. The last active admin of an
+ * account in which other people are still active hands the admin role to a
+ * colleague first, so the team is never left without someone to manage it;
+ * a person alone in their account may always leave (staff can invite again).
+ */
+export function loginDeletion(users: readonly { uid: string; role: CustomerUserRole; status: string }[], uid: string): LoginDeletion {
+  const others = users.filter((user) => user.uid !== uid && user.status === 'active');
+  if (others.length === 0) return 'allowed';
+  return leavesAnAdmin(users, { uid, status: 'deleted' }) ? 'allowed' : 'last_admin';
+}
+
+// ---------------------------------------------------------------- notifications in the app
+
+export type PortalPushKind = 'quote_sent' | 'shipment_arrived';
+export type PushLocale = 'en' | 'he';
+
+/**
+ * What a notification on a customer's phone says, in the language their app
+ * is set to. It names the record, never an amount: a lock screen is not private.
+ */
+export function portalPush(kind: PortalPushKind, facts: { number: string; place?: string | null }, locale: PushLocale): { title: string; body: string; path: string } {
+  const he = locale === 'he';
+  if (kind === 'quote_sent') {
+    return {
+      title: he ? 'הצעת מחיר חדשה מ-BASIS' : 'A new quote from BASIS',
+      body: he ? `${facts.number} מחכה לתשובתך.` : `${facts.number} is ready for your answer.`,
+      path: `/account/quotes/${facts.number}`,
+    };
+  }
+  const place = facts.place?.trim();
+  return {
+    title: he ? 'המשלוח הגיע' : 'Your shipment has arrived',
+    body: he ? `${facts.number} הגיע ליעדו${place ? `, ${place}` : ''}.` : `${facts.number} has arrived${place ? ` in ${place}` : ''}.`,
+    path: `/account/shipments/${facts.number}`,
+  };
+}
+
 // ---------------------------------------------------------------- facts for the customer
 
 interface PricedLine {

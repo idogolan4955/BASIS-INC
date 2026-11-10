@@ -1,4 +1,5 @@
-import { Link } from 'react-router';
+import { Link, Navigate } from 'react-router';
+import { IN_APP } from '../native/platform';
 import { SITE, applications, families, products, shades } from '../site/catalog';
 import { meta as siteMeta } from '../site/shell';
 import { Cta, Display, Eyebrow, Hand, Index, Material, Rule, Section, ShadeCircle } from '../site/ui';
@@ -8,6 +9,8 @@ export function meta() {
 }
 
 export default function Home() {
+  // The app opens on the account; its brand pages are under the index.
+  if (IN_APP) return <Navigate to="/account" replace />;
   return (
     <>
       {/* One screen: what BASIS is. */}

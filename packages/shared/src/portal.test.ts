@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { LocalDate } from './local-date';
-import { customerCan, invitationState, invoiceOutstanding, invoiceStanding, leavesAnAdmin, legsArrived, orderShippedPercent, quoteStanding, quoteTotal, shipmentArrival } from './portal';
+import { customerCan, invitationState, invoiceOutstanding, invoiceStanding, leavesAnAdmin, legsArrived, loginDeletion, orderShippedPercent, portalPush, quoteStanding, quoteTotal, shipmentArrival } from './portal';
 
 const day = (value: string) => value as LocalDate;
 
@@ -30,6 +30,26 @@ describe('customer portal', () => {
     expect(leavesAnAdmin(team, { uid: 'a', status: 'suspended' })).toBe(false);
     expect(leavesAnAdmin(team, { uid: 'b', role: 'admin' })).toBe(true);
     expect(leavesAnAdmin([...team, { uid: 'c', role: 'admin', status: 'active' }], { uid: 'a', role: 'viewer' })).toBe(true);
+  });
+
+  it('lets a person delete their login unless they are the last admin of people still active', () => {
+    const team = [
+      { uid: 'a', role: 'admin' as const, status: 'active' },
+      { uid: 'b', role: 'buyer' as const, status: 'active' },
+    ];
+    expect(loginDeletion(team, 'b')).toBe('allowed');
+    expect(loginDeletion(team, 'a')).toBe('last_admin');
+    expect(loginDeletion([...team, { uid: 'c', role: 'admin', status: 'active' }], 'a')).toBe('allowed');
+    // Alone in the account, or only suspended colleagues left: nobody is stranded.
+    expect(loginDeletion([team[0]!], 'a')).toBe('allowed');
+    expect(loginDeletion([team[0]!, { uid: 'b', role: 'buyer', status: 'suspended' }], 'a')).toBe('allowed');
+  });
+
+  it('writes notifications in the app’s language, naming the record and never an amount', () => {
+    expect(portalPush('quote_sent', { number: 'QUO-26-0012' }, 'en')).toEqual({ title: 'A new quote from BASIS', body: 'QUO-26-0012 is ready for your answer.', path: '/account/quotes/QUO-26-0012' });
+    expect(portalPush('quote_sent', { number: 'QUO-26-0012' }, 'he').body).toBe('QUO-26-0012 מחכה לתשובתך.');
+    expect(portalPush('shipment_arrived', { number: 'SHP-26-0004', place: 'Milan' }, 'en')).toEqual({ title: 'Your shipment has arrived', body: 'SHP-26-0004 has arrived in Milan.', path: '/account/shipments/SHP-26-0004' });
+    expect(portalPush('shipment_arrived', { number: 'SHP-26-0004', place: null }, 'he').body).toBe('SHP-26-0004 הגיע ליעדו.');
   });
 
   it('totals a quote and reads a sent quote past its date as expired', () => {

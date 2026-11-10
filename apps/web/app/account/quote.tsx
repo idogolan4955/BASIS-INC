@@ -57,7 +57,7 @@ export default function QuotePage() {
     }
   };
 
-  const download = () => void openDocument(`/api/pdf/quote/${quote.number}`).catch((caught: unknown) => setError(caught instanceof Error ? caught.message : t('The document could not be opened.')));
+  const download = () => void openDocument(`/api/pdf/quote/${quote.number}`, `Quotation ${quote.number}`).catch((caught: unknown) => setError(caught instanceof Error ? caught.message : t('The document could not be opened.')));
 
   return (
     <div>
