@@ -145,9 +145,10 @@ on open in development. Production is unaffected.
 
 ## BASIS AI (module 20, 2026-11-10)
 
-`ANTHROPIC_API_KEY` is set. The key in it is not scoped to an Anthropic
-workspace, and the API refuses such a key without the workspace named. Either
-of these fixes it (owner):
+`ANTHROPIC_API_KEY` holds the owner's second key (version 2, set
+2026-11-10), which the API accepts; the first was not scoped to a workspace.
+If a key without a workspace is ever set again, either of these fixes it
+(owner):
 
 - In the Anthropic Console, open a workspace, create an API key inside it,
   and set it: `firebase functions:secrets:set ANTHROPIC_API_KEY`; or
