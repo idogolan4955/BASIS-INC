@@ -4,12 +4,13 @@ import './app.css';
 
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import { SiteShell } from './site/shell';
+import { IN_APP } from './native/platform';
 
 // The document shell of the public site: editorial register.
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={IN_APP ? 'app' : undefined}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -17,7 +18,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body className="bg-surface text-ink">
+      <body className={IN_APP ? 'bg-bone text-ink' : 'bg-surface text-ink'}>
         {children}
         <ScrollRestoration />
         <Scripts />

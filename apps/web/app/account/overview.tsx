@@ -2,6 +2,8 @@ import { invoiceOutstanding, invoiceStanding, quoteStanding, quoteTotal, shipmen
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { IN_APP } from '../native/platform';
+import { Group, GroupRow, LargeTitle, useBarTitle } from '../native/ui';
+import { CUSTOMER_ROLE_LABEL } from '@basis/shared';
 import { read, useRead } from './data';
 import { Empty, Failed, Loading, portalMeta } from './frame';
 import { date, money, today } from './format';
@@ -29,6 +31,18 @@ function Line({ title, count, children, to, action }: { title: string; count: nu
   );
 }
 
+/** The overview's large title in the app, the tab's own name. */
+function AppOverviewFrame({ children }: { children: React.ReactNode }) {
+  const t = useT();
+  useBarTitle(t('Overview'));
+  return (
+    <>
+      <LargeTitle>{t('Overview')}</LargeTitle>
+      {children}
+    </>
+  );
+}
+
 /** In the app, until the person decides: an offer to be told when a quote or a shipment needs them. */
 function NotificationOffer() {
   const t = useT();
@@ -49,6 +63,13 @@ function NotificationOffer() {
       setOpen(false);
     }
   };
+  if (IN_APP) {
+    return (
+      <Group footer={t('Be told on this iPhone when BASIS sends you a quote and when a shipment arrives.')}>
+        <GroupRow onClick={() => void enable()} title={<span className="text-nude-deep">{busy ? t('Turning on') : t('Turn on notifications')}</span>} chevron={false} />
+      </Group>
+    );
+  }
   return (
     <div className="mb-10 flex flex-wrap items-center justify-between gap-4 border-b border-line pb-4">
       <p className="max-w-md text-ink-soft">{t('Be told on this iPhone when BASIS sends you a quote and when a shipment arrives.')}</p>
@@ -76,8 +97,8 @@ export default function Overview() {
     },
     [me.uid],
   );
-  if (loaded.loading && !loaded.data) return <Loading />;
-  if (loaded.error) return <Failed message={loaded.error} onRetry={loaded.reload} />;
+  if (loaded.loading && !loaded.data) return IN_APP ? <AppOverviewFrame><Loading /></AppOverviewFrame> : <Loading />;
+  if (loaded.error) return IN_APP ? <AppOverviewFrame><Failed message={loaded.error} onRetry={loaded.reload} /></AppOverviewFrame> : <Failed message={loaded.error} onRetry={loaded.reload} />;
   const data = loaded.data!;
   const waiting = data.quotes.filter((quote) => quoteStanding(quote, now) === 'awaiting_answer');
   const openOrders = data.orders.filter((order) => order.state === 'confirmed' || order.state === 'shipped');
@@ -87,6 +108,79 @@ export default function Overview() {
   const outstanding = new Map<string, bigint>();
   for (const invoice of unpaid) outstanding.set(invoice.currency, (outstanding.get(invoice.currency) ?? 0n) + BigInt(invoiceOutstanding(invoice)));
   const nothing = waiting.length + openOrders.length + moving.length + unpaid.length === 0;
+
+  if (IN_APP) {
+    const role = t(CUSTOMER_ROLE_LABEL[me.role as unknown as keyof typeof CUSTOMER_ROLE_LABEL]);
+    const firstQuote = waiting[0];
+    const firstShipment = moving[0];
+    const shipmentArrives = firstShipment ? shipmentArrival(firstShipment.legs) : null;
+    return (
+      <AppOverviewFrame>
+        <Group>
+          <GroupRow
+            to="/account/profile"
+            title={<span className="font-semibold">{me.account.displayName}</span>}
+            subtitle={`${me.name} · ${role}`}
+            trailing={
+              <span className="code" dir="ltr">
+                {me.account.memberNumber}
+              </span>
+            }
+          />
+        </Group>
+        <NotificationOffer />
+        {nothing ? (
+          <Group header={t('What is open')} footer={t('Nothing is waiting on you. Quotes, orders and shipments appear here as soon as BASIS opens them for you.')}>
+            <GroupRow title={<span className="text-ink-muted">{t('Nothing open')}</span>} />
+          </Group>
+        ) : (
+          <Group header={t('What is open')}>
+            {waiting.length > 0 && (
+              <GroupRow
+                to={waiting.length === 1 ? `/account/quotes/${firstQuote!.number}` : '/account/quotes'}
+                title={t('Quotes to answer')}
+                subtitle={firstQuote ? <span dir="ltr" className="code">{`${firstQuote.number} · ${money(quoteTotal(firstQuote.lines), firstQuote.currency)}`}</span> : undefined}
+                trailing={waiting.length}
+              />
+            )}
+            {unpaid.length > 0 && (
+              <GroupRow
+                to="/account/invoices"
+                title={t('Invoices')}
+                subtitle={
+                  <>
+                    <span dir="ltr" className="inline-block">
+                      {[...outstanding.entries()].map(([currency, amount]) => money(amount.toString(), currency)).join(' · ')}
+                    </span>{' '}
+                    {t('outstanding')}
+                    {overdue.length > 0 && (
+                      <>
+                        {' · '}
+                        <span className="font-medium text-critical">{t('{count} overdue', { count: overdue.length })}</span>
+                      </>
+                    )}
+                  </>
+                }
+                trailing={unpaid.length}
+              />
+            )}
+            {moving.length > 0 && (
+              <GroupRow
+                to={moving.length === 1 ? `/account/shipments/${firstShipment!.number}` : '/account/shipments'}
+                title={t('Shipments on the way')}
+                subtitle={shipmentArrives?.date ? (shipmentArrives.arrived ? t('arrived {date}', { date: date(shipmentArrives.date, locale) }) : t('expected {date}', { date: date(shipmentArrives.date, locale) })) : undefined}
+                trailing={moving.length}
+              />
+            )}
+            {openOrders.length > 0 && <GroupRow to="/account/orders" title={t('Orders in progress')} trailing={openOrders.length} />}
+          </Group>
+        )}
+        <Group footer={t('Ask for swatches of any fabric in any shade; they go out labelled, with their technical sheets.')}>
+          <GroupRow to="/account/samples" title={t('Request samples')} />
+        </Group>
+      </AppOverviewFrame>
+    );
+  }
 
   return (
     <div>

@@ -26,7 +26,22 @@ export default function Quotes() {
           {loaded.data!.quotes.map((quote) => {
             const standing = QUOTE[quoteStanding(quote, now)];
             return (
-              <Row key={quote.number} to={`/account/quotes/${quote.number}`}>
+              <Row
+                key={quote.number}
+                to={`/account/quotes/${quote.number}`}
+                app={{
+                  title: <span className="code" dir="ltr">{quote.number}</span>,
+                  subtitle: (
+                    <>
+                      <span className="code" dir="ltr">
+                        {money(quoteTotal(quote.lines), quote.currency)}
+                      </span>
+                      {quote.validUntil ? ` · ${t('Valid until')} ${date(quote.validUntil, locale)}` : ''}
+                    </>
+                  ),
+                  trailing: <Chip tone={standing.tone}>{t(standing.label)}</Chip>,
+                }}
+              >
                 <Cell code>{quote.number}</Cell>
                 <Cell>{date(quote.sentOn, locale)}</Cell>
                 <Cell>{date(quote.validUntil, locale)}</Cell>

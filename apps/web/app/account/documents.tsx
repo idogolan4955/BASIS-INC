@@ -1,6 +1,8 @@
+import { Export, FileText } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { IN_APP } from '../native/platform';
+import { Group, GroupRow } from '../native/ui';
 import { call, openDocument, shareDocument, useRead } from './data';
 import { Empty, Failed, Loading, PageTitle, portalMeta } from './frame';
 import { Alert } from './fields';
@@ -43,6 +45,54 @@ export default function Documents() {
   };
   const documents = loaded.data?.documents ?? [];
   const groups = [...new Map(documents.map((doc) => [doc.record, documents.filter((item) => item.record === doc.record)])).entries()];
+  if (IN_APP) {
+    return (
+      <div>
+        <PageTitle title={t('Documents')} />
+        {error && (
+          <div className="mx-4 mb-4">
+            <Alert>{t(error)}</Alert>
+          </div>
+        )}
+        {loaded.loading && !loaded.data ? (
+          <Loading />
+        ) : loaded.error ? (
+          <Failed message={loaded.error} onRetry={loaded.reload} />
+        ) : documents.length === 0 ? (
+          <Empty>{t('No documents yet.')}</Empty>
+        ) : (
+          groups.map(([record, docs]) => (
+            <Group
+              key={record}
+              header={
+                <Link to={`/account/${RECORD_PATH[docs[0]!.recordType]}/${record}`} className="inline-flex min-h-8 items-center" dir="ltr">
+                  {record}
+                </Link>
+              }
+            >
+              {docs.map((doc) => (
+                <div key={doc.id} className="app-row items-stretch gap-0 p-0">
+                  <span className="min-w-0 flex-1">
+                    <GroupRow
+                      onClick={() => void open(doc)}
+                      leading={<FileText aria-hidden="true" size={24} weight="light" className="block text-ink-soft" />}
+                      title={doc.title}
+                      subtitle={[t(DOCUMENT_KIND[doc.kind] ?? 'Document'), doc.issuedOn ? date(doc.issuedOn, locale) : ''].filter(Boolean).join(' · ')}
+                      trailing={busy === doc.id ? <span aria-label={t('Opening')} className="app-spinner app-spinner-run block size-4" /> : undefined}
+                      chevron={false}
+                    />
+                  </span>
+                  <button type="button" onClick={() => void open(doc, true)} disabled={busy === doc.id} aria-label={t('Share {title}', { title: doc.title })} className="flex w-12 shrink-0 items-center justify-center text-nude-deep active:opacity-50 disabled:opacity-40">
+                    <Export aria-hidden="true" size={22} />
+                  </button>
+                </div>
+              ))}
+            </Group>
+          ))
+        )}
+      </div>
+    );
+  }
   return (
     <div>
       <PageTitle title={t('Documents')}>{t('Quotations, packing lists, shipping papers and certificates for your quotes, orders and shipments.')}</PageTitle>

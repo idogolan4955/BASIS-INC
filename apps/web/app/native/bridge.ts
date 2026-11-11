@@ -1,5 +1,7 @@
+import { ActionSheet, ActionSheetButtonStyle } from '@capacitor/action-sheet';
 import { App } from '@capacitor/app';
 import { registerPlugin } from '@capacitor/core';
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { appPath } from './platform';
@@ -82,4 +84,21 @@ export async function shareLink(text: string, url: string): Promise<void> {
 
 export async function nativeDocument(action: 'open' | 'share', url: string, token: string, filename: string): Promise<void> {
   await BasisDocument[action]({ url, token, filename });
+}
+
+/** The phone's own touch feedback: a tab changed, a pull let go, something done. */
+export async function haptic(kind: 'select' | 'tap' | 'success' | 'warning'): Promise<void> {
+  if (kind === 'select') await Haptics.selectionChanged();
+  else if (kind === 'tap') await Haptics.impact({ style: ImpactStyle.Light });
+  else await Haptics.notification({ type: kind === 'success' ? NotificationType.Success : NotificationType.Warning });
+}
+
+/** An iOS action sheet; the index of the option chosen, or -1 for Cancel. */
+export async function chooseAction(title: string, options: readonly { title: string; destructive?: boolean }[], cancel: string, message?: string): Promise<number> {
+  const { index } = await ActionSheet.showActions({
+    title,
+    ...(message ? { message } : {}),
+    options: [...options.map((option) => ({ title: option.title, ...(option.destructive ? { style: ActionSheetButtonStyle.Destructive } : {}) })), { title: cancel, style: ActionSheetButtonStyle.Cancel }],
+  });
+  return index < options.length ? index : -1;
 }

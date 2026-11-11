@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { IN_APP } from '../native/platform';
 import { HE } from './i18n.he';
 
 // The portal speaks English and Hebrew; the rest of the site is English.
@@ -56,6 +57,18 @@ export const useT = () => useContext(Context).t;
 
 export function LocaleSwitch({ className }: { className?: string }) {
   const { locale, setLocale } = useLocale();
+  if (IN_APP) {
+    // The app's: a segmented control, each language named in itself.
+    return (
+      <div role="group" aria-label="Language" className="inline-flex rounded-[9px] bg-sand p-0.5">
+        {(['en', 'he'] as const).map((option) => (
+          <button key={option} type="button" lang={option} onClick={() => setLocale(option)} aria-pressed={locale === option} className={`h-8 min-w-20 rounded-[7px] px-3 text-[13px] font-semibold ${locale === option ? 'bg-milk text-ink' : 'text-ink-soft'}`}>
+            {option === 'en' ? 'English' : 'עברית'}
+          </button>
+        ))}
+      </div>
+    );
+  }
   return (
     <div className={className} role="group" aria-label="Language">
       {(['en', 'he'] as const).map((option) => (

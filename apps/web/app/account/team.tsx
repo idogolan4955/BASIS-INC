@@ -50,6 +50,23 @@ export default function Team() {
     });
   };
 
+  // In the app a colleague's row opens the system's action sheet: another role, or suspend and restore.
+  const manage = async (user: { uid: string; name: string; role: string; status: string }) => {
+    const { chooseAction } = await import('../native/bridge');
+    const roles = CUSTOMER_USER_ROLES.filter((option) => option !== user.role);
+    const suspended = user.status === 'suspended';
+    const index = await chooseAction(user.name, [...roles.map((option) => ({ title: t(CUSTOMER_ROLE_LABEL[option]) })), { title: suspended ? t('Restore') : t('Suspend'), destructive: !suspended }], t('Cancel'), `${t(CUSTOMER_ROLE_LABEL[user.role as unknown as CustomerUserRole])} · ${suspended ? t('Suspended') : t('Active')}`);
+    if (index < 0) return;
+    if (index < roles.length) await act(`role-${user.uid}`, () => call('setCustomerUser', { uid: user.uid, role: roles[index] }));
+    else await act(`status-${user.uid}`, () => call('setCustomerUser', { uid: user.uid, status: suspended ? 'active' : 'suspended' }));
+  };
+
+  const withdraw = async (invitation: { id: string; email: string }) => {
+    const { chooseAction } = await import('../native/bridge');
+    const index = await chooseAction(`\u2066${invitation.email}\u2069`, [{ title: t('Withdraw'), destructive: true }], t('Cancel'));
+    if (index === 0) await act(`revoke-${invitation.id}`, () => call('revokeCustomerInvitation', { invitationId: invitation.id }));
+  };
+
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(link);
@@ -73,7 +90,7 @@ export default function Team() {
       </PageTitle>
 
       {link && (
-        <div role="status" className="mb-8 grid gap-3 border border-charcoal/70 bg-milk p-5">
+        <div role="status" className={IN_APP ? 'mx-4 mb-8 grid gap-3 rounded-[10px] bg-milk p-4' : 'mb-8 grid gap-3 border border-charcoal/70 bg-milk p-5'}>
           <p className="code uppercase tracking-[0.18em]">{t('The invitation link')}</p>
           <p className="text-sm text-ink-soft">{t('Send it to your colleague yourself. It works once, for 14 days, and is shown only now.')}</p>
           <p className="code break-all border border-line bg-bone px-3 py-2 text-sm" dir="ltr">
@@ -100,7 +117,7 @@ export default function Team() {
       )}
 
       {inviting && (
-        <form onSubmit={invite} className="mb-10 grid gap-5 border border-charcoal/70 bg-milk p-5 md:grid-cols-2">
+        <form onSubmit={invite} className={IN_APP ? 'mx-4 mb-8 grid gap-5' : 'mb-10 grid gap-5 border border-charcoal/70 bg-milk p-5 md:grid-cols-2'}>
           <Field label={t('Email')} name="email" type="email" required autoComplete="off" dir="ltr" />
           <Field label={t('Name')} name="name" />
           <div className="md:col-span-2">
@@ -125,8 +142,8 @@ export default function Team() {
       )}
 
       {error && (
-        <div className="mb-6">
-          <Alert>{error}</Alert>
+        <div className={IN_APP ? 'mx-4 mb-6' : 'mb-6'}>
+          <Alert>{IN_APP ? t(error) : error}</Alert>
         </div>
       )}
 
@@ -138,7 +155,28 @@ export default function Team() {
         <>
           <Ledger head={[t('Name'), t('Email'), t('Role'), t('Last signed in'), admin ? '' : t('Standing')]}>
             {loaded.data!.users.map((user) => (
-              <Row key={user.uid}>
+              <Row
+                key={user.uid}
+                app={{
+                  title: (
+                    <>
+                      {user.name}
+                      {user.uid === me.uid && <span className="text-ink-muted"> ({t('you')})</span>}
+                    </>
+                  ),
+                  subtitle: (
+                    <>
+                      <span className="block truncate">
+                        <span dir="ltr">{user.email}</span>
+                      </span>
+                      {t(CUSTOMER_ROLE_LABEL[user.role as unknown as CustomerUserRole])}
+                      {user.lastSignInAt ? ` · ${date(user.lastSignInAt, locale)}` : ''}
+                    </>
+                  ),
+                  trailing: <Chip tone={user.status === 'active' ? 'positive' : 'neutral'}>{user.status === 'active' ? t('Active') : t('Suspended')}</Chip>,
+                  onClick: admin && user.uid !== me.uid ? () => void manage(user) : undefined,
+                }}
+              >
                 <Cell>
                   {user.name}
                   {user.uid === me.uid && <span className="ms-2 text-sm text-ink-muted">({t('you')})</span>}
@@ -177,13 +215,20 @@ export default function Team() {
             ))}
           </Ledger>
           {admin && loaded.data!.invitations.length > 0 && (
-            <div className="mt-10">
-              <p className="code mb-3 uppercase tracking-[0.14em] text-ink-muted">{t('Invitations not yet accepted')}</p>
+            <div className={IN_APP ? undefined : 'mt-10'}>
+              <p className={IN_APP ? 'app-section-header mx-8' : 'code mb-3 uppercase tracking-[0.14em] text-ink-muted'}>{t('Invitations not yet accepted')}</p>
               <Ledger head={[t('Email'), t('Role'), t('Expires'), '']}>
                 {loaded.data!.invitations.map((invitation) => {
                   const expired = new Date(invitation.expiresAt).getTime() < Date.now();
                   return (
-                    <Row key={invitation.id}>
+                    <Row
+                      key={invitation.id}
+                      app={{
+                        title: <span dir="ltr">{invitation.email}</span>,
+                        subtitle: `${t(CUSTOMER_ROLE_LABEL[invitation.role as unknown as CustomerUserRole])} · ${expired ? t('Expired') : `${t('Expires')} ${date(invitation.expiresAt, locale)}`}`,
+                        onClick: () => void withdraw(invitation),
+                      }}
+                    >
                       <Cell code>{invitation.email}</Cell>
                       <Cell>{t(CUSTOMER_ROLE_LABEL[invitation.role as unknown as CustomerUserRole])}</Cell>
                       <Cell>{expired ? <Chip tone="neutral">{t('Expired')}</Chip> : date(invitation.expiresAt, locale)}</Cell>

@@ -6,6 +6,8 @@ import { date, money, qty, today } from './format';
 import { useLocale, useT } from './i18n';
 import { INVOICE, ORDER } from './labels';
 import { Lines } from './lines';
+import { IN_APP } from '../native/platform';
+import { Group, GroupRow } from '../native/ui';
 
 export const meta = () => portalMeta('Order');
 
@@ -29,6 +31,83 @@ export default function OrderPage() {
   const shipped = orderShippedPercent(order.lines);
   const shipments = [...new Map(order.lines.flatMap((line) => line.shipped).filter((item) => item.shipment.state !== 'cancelled').map((item) => [item.shipment.number, item.shipment])).values()];
   const now = today() as LocalDate;
+  const lineRows = order.lines.map((line) => {
+    const sent = shippedQuantity(line);
+    // In the app the words run in the page's direction and the quantity is isolated left to right inside them.
+    const extra = IN_APP ? <span className="app-row-subtitle text-nude-deep">{t('{quantity} shipped', { quantity: `\u2066${qty(sent, line.uom)}\u2069` })}</span> : <span className="code mt-1 block text-sm text-nude-deep" dir="ltr">{t('{quantity} shipped', { quantity: qty(sent, line.uom) })}</span>;
+    return { key: line.lineNo, sku: line.sku, quantity: line.quantity, unitPrice: line.unitPrice, uom: line.uom, extra: BigInt(sent) > 0n ? extra : undefined };
+  });
+  if (IN_APP) {
+    return (
+      <div>
+        <Back to="/account/orders">{t('Orders')}</Back>
+        <PageTitle title={t('Order')} record={order.number}>
+          <Chip tone={state.tone}>{t(state.label)}</Chip>
+        </PageTitle>
+        <Group>
+          <div className="app-row flex-col items-stretch gap-2">
+            <span className="flex items-baseline justify-between gap-3">
+              <span className="text-ink-soft">{t('Shipped')}</span>
+              <span className="app-row-value code" dir="ltr">
+                {shipped}%
+              </span>
+            </span>
+            <span aria-hidden="true" className="block h-1.5 w-full overflow-hidden rounded-full bg-charcoal/10">
+              <span className="block h-full rounded-full bg-nude-deep" style={{ width: `${shipped}%` }} />
+            </span>
+          </div>
+        </Group>
+        <Lines currency={order.currency} total={quoteTotal(order.lines)} totalLabel={t('Total')} lines={lineRows} />
+        {shipments.length > 0 && (
+          <Group header={t('Shipments')}>
+            {shipments.map((shipment) => (
+              <GroupRow key={shipment.number} to={`/account/shipments/${shipment.number}`} title={<span className="code" dir="ltr">{shipment.number}</span>} />
+            ))}
+          </Group>
+        )}
+        {order.invoices.length > 0 && (
+          <Group header={t('Invoices')}>
+            {order.invoices.map((invoice) => {
+              const standing = INVOICE[invoiceStanding(invoice, now)];
+              return (
+                <GroupRow
+                  key={invoice.number}
+                  title={<span className="code" dir="ltr">{invoice.number}</span>}
+                  subtitle={t('Due {date}', { date: date(invoice.dueOn, locale) })}
+                  trailing={
+                    <span className="grid justify-items-end gap-1">
+                      <span className="code text-ink" dir="ltr">
+                        {money(invoiceOutstanding(invoice), invoice.currency)}
+                      </span>
+                      <Chip tone={standing.tone}>{t(standing.label)}</Chip>
+                    </span>
+                  }
+                />
+              );
+            })}
+          </Group>
+        )}
+        <Facts
+          header={t('Terms')}
+          rows={[
+            { k: t('Confirmed'), v: date(order.confirmedOn, locale) },
+            { k: t('Wanted by'), v: date(order.requestedDelivery, locale) },
+            { k: t('Delivery terms'), v: <span dir="ltr">{[order.incoterm?.code, order.namedPlace].filter(Boolean).join(' ') || '—'}</span> },
+            { k: t('Payment'), v: order.paymentTerms || '—' },
+          ]}
+        />
+        {(order.shipToName || order.shipToAddress) && (
+          <Group header={t('Ship to')}>
+            <GroupRow title={<bdi>{order.shipToName || order.shipToAddress}</bdi>} subtitle={order.shipToName && order.shipToAddress ? <bdi>{order.shipToAddress}</bdi> : undefined} />
+          </Group>
+        )}
+        <Group>
+          {order.quote && <GroupRow to={`/account/quotes/${order.quote.number}`} title={t('From quote')} trailing={<span className="code" dir="ltr">{order.quote.number}</span>} />}
+          <GroupRow to="/account/documents" title={t('Documents for this order')} />
+        </Group>
+      </div>
+    );
+  }
   return (
     <div>
       <Back to="/account/orders">{t('Orders')}</Back>
@@ -42,15 +121,7 @@ export default function OrderPage() {
       </PageTitle>
       <div className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="min-w-0">
-          <Lines
-            currency={order.currency}
-            total={quoteTotal(order.lines)}
-            totalLabel={t('Total')}
-            lines={order.lines.map((line) => {
-              const sent = shippedQuantity(line);
-              return { key: line.lineNo, sku: line.sku, quantity: line.quantity, unitPrice: line.unitPrice, uom: line.uom, extra: BigInt(sent) > 0n ? <span className="code mt-1 block text-sm text-nude-deep" dir="ltr">{t('{quantity} shipped', { quantity: qty(sent, line.uom) })}</span> : undefined };
-            })}
-          />
+          <Lines currency={order.currency} total={quoteTotal(order.lines)} totalLabel={t('Total')} lines={lineRows} />
           {order.invoices.length > 0 && (
             <div className="mt-10">
               <p className="code mb-3 uppercase tracking-[0.14em] text-ink-muted">{t('Invoices')}</p>

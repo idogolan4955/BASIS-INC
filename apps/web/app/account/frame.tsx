@@ -4,6 +4,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { Display, Eyebrow } from '../site/ui';
 import { IN_APP } from '../native/platform';
+import { Group, GroupRow, LargeTitle, RowCell, SkeletonGroup, ValueRow, isTabRoot, useBarBack, useBarTitle } from '../native/ui';
 import { LocaleSwitch, PortalLocale, useLocale, useT } from './i18n';
 import { PortalSession, signOut, useSession } from './session';
 
@@ -47,6 +48,11 @@ function Directed({ children }: { children: ReactNode }) {
 }
 
 export function Loading({ label }: { label?: string }) {
+  if (IN_APP) return <SkeletonGroup />;
+  return <SiteLoading label={label} />;
+}
+
+function SiteLoading({ label }: { label?: string }) {
   const t = useT();
   return (
     <div role="status" className="px-4 py-24 md:px-12 lg:px-24">
@@ -130,6 +136,8 @@ function AccountFrame() {
     nav.current?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }, [pathname]);
   if (session.status !== 'ready') return null;
+  // In the app the navigation bar names the screen; the account opens the overview.
+  if (IN_APP) return <Outlet />;
   const { me } = session;
   const company = me.account.company;
   // In the app the account is named large on the overview; deeper pages keep a single line.
@@ -223,7 +231,22 @@ export default function AccountLayout() {
 
 // ---------------------------------------------------------------- page parts
 
-export function PageTitle({ title, children, action }: { title: string; children?: ReactNode; action?: ReactNode }) {
+/** In the app: the screen's name in the navigation bar (the record on a pushed screen), large on a tab. */
+function AppPageTitle({ title, record, children, action }: { title: string; record?: string; children?: ReactNode; action?: ReactNode }) {
+  const { pathname } = useLocation();
+  const root = isTabRoot(pathname);
+  useBarTitle(record ?? title);
+  return (
+    <>
+      {root && <LargeTitle>{title}</LargeTitle>}
+      {children ? <div className={cn('mx-4 mb-5 text-[15px] leading-snug text-ink-soft', !root && 'mt-2')}>{children}</div> : !root && <div aria-hidden="true" className="h-5" />}
+      {action && <div className="mx-4 mb-6">{action}</div>}
+    </>
+  );
+}
+
+export function PageTitle({ title, record, children, action }: { title: string; record?: string; children?: ReactNode; action?: ReactNode }) {
+  if (IN_APP) return <AppPageTitle title={title} record={record} action={action}>{children}</AppPageTitle>;
   return (
     <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
       <div>
@@ -236,11 +259,19 @@ export function PageTitle({ title, children, action }: { title: string; children
 }
 
 export function Empty({ children }: { children: ReactNode }) {
+  if (IN_APP) return <p className="mx-8 my-14 text-center text-[15px] leading-snug text-ink-muted">{children}</p>;
   return <p className="border-y border-line py-10 text-ink-soft">{children}</p>;
 }
 
 export function Failed({ message, onRetry }: { message: string; onRetry?: () => void }) {
   const t = useT();
+  if (IN_APP) {
+    return (
+      <Group footer={t(message)}>
+        {onRetry ? <GroupRow onClick={onRetry} title={<span className="text-nude-deep">{t('Try again')}</span>} chevron={false} /> : <GroupRow title={t('This could not be loaded.')} />}
+      </Group>
+    );
+  }
   return (
     <div role="alert" className="border-y border-critical/40 py-6">
       <p className="text-critical">{t(message)}</p>
@@ -259,6 +290,8 @@ export function Chip({ tone, children }: { tone: StatusTone; children: ReactNode
 
 /** A ruled ledger: rows link to the record; numbers in mono. */
 export function Ledger({ head, children }: { head: readonly string[]; children: ReactNode }) {
+  // In the app a ledger is a group of cells; its column heads would only crowd a phone.
+  if (IN_APP) return <Group>{children}</Group>;
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[36rem] border-collapse text-[0.9375rem]">
@@ -277,7 +310,22 @@ export function Ledger({ head, children }: { head: readonly string[]; children: 
   );
 }
 
-export function Row({ to, children }: { to?: string; children: ReactNode }) {
+/** What a ledger row says as an app cell, when its columns would not read well as one line. */
+export interface AppCell {
+  readonly title: ReactNode;
+  readonly subtitle?: ReactNode;
+  readonly trailing?: ReactNode;
+  readonly to?: string;
+  readonly onClick?: () => void;
+}
+
+export function Row({ to, children, app }: { to?: string; children: ReactNode; app?: AppCell }) {
+  if (IN_APP && app) return <GroupRow to={app.to ?? to} onClick={app.onClick} title={app.title} subtitle={app.subtitle} trailing={app.trailing} chevron={app.onClick ? false : undefined} />;
+  if (IN_APP) return <RowCell to={to}>{children}</RowCell>;
+  return <SiteRow to={to}>{children}</SiteRow>;
+}
+
+function SiteRow({ to, children }: { to?: string; children: ReactNode }) {
   const navigate = useNavigate();
   return (
     <tr
@@ -290,6 +338,13 @@ export function Row({ to, children }: { to?: string; children: ReactNode }) {
 }
 
 export function Cell({ children, className, code }: { children: ReactNode; className?: string; code?: boolean }) {
+  if (IN_APP) {
+    return (
+      <span className={code ? 'code' : undefined} dir={code ? 'ltr' : undefined}>
+        {children}
+      </span>
+    );
+  }
   return (
     <td className={cn('px-3 py-3 align-top first:ps-0', code && 'code whitespace-nowrap', className)} dir={code ? 'ltr' : undefined}>
       {children}
@@ -297,7 +352,16 @@ export function Cell({ children, className, code }: { children: ReactNode; class
   );
 }
 
-export function Facts({ rows }: { rows: readonly { k: string; v: ReactNode }[] }) {
+export function Facts({ rows, header }: { rows: readonly { k: string; v: ReactNode }[]; header?: string }) {
+  if (IN_APP) {
+    return (
+      <Group header={header}>
+        {rows.map((row) => (
+          <ValueRow key={row.k} label={row.k} value={row.v} />
+        ))}
+      </Group>
+    );
+  }
   return (
     <dl className="border border-charcoal/70 bg-milk">
       {rows.map((row) => (
@@ -310,7 +374,14 @@ export function Facts({ rows }: { rows: readonly { k: string; v: ReactNode }[] }
   );
 }
 
+function AppBack({ to, label }: { to: string; label: string }) {
+  useBarBack({ to, label });
+  return null;
+}
+
 export function Back({ to, children }: { to: string; children: ReactNode }) {
+  // In the app the way back is the navigation bar's: "‹ Quotes".
+  if (IN_APP) return <AppBack to={to} label={typeof children === 'string' ? children : ''} />;
   return (
     <Link to={to} className="code mb-6 inline-flex h-9 items-center uppercase tracking-[0.14em] text-ink-muted hover:text-ink">
       <span aria-hidden="true" className="me-2 inline-block rtl:-scale-x-100">
@@ -322,6 +393,25 @@ export function Back({ to, children }: { to: string; children: ReactNode }) {
 }
 
 export function Button({ children, onClick, variant = 'primary', busy, disabled, type = 'button', className }: { children: ReactNode; onClick?: () => void; variant?: 'primary' | 'secondary' | 'quiet'; busy?: boolean; disabled?: boolean; type?: 'button' | 'submit'; className?: string }) {
+  if (IN_APP) {
+    return (
+      <button
+        type={type}
+        onClick={onClick}
+        disabled={disabled || busy}
+        aria-busy={busy || undefined}
+        className={cn(
+          variant === 'quiet' ? 'inline-flex min-h-11 items-center px-1 text-[17px] text-nude-deep active:opacity-50' : 'app-button',
+          variant === 'primary' && 'bg-charcoal text-milk',
+          variant === 'secondary' && 'bg-sand/70 text-ink',
+          'disabled:opacity-50',
+          className,
+        )}
+      >
+        {children}
+      </button>
+    );
+  }
   return (
     <button
       type={type}
@@ -342,6 +432,14 @@ export function Button({ children, onClick, variant = 'primary', busy, disabled,
 }
 
 export function AuthFrame({ title, children }: { title: string; children: ReactNode }) {
+  if (IN_APP) {
+    return (
+      <section className="px-4 pt-4">
+        <h1 className="mb-6 px-1 font-display text-[34px] font-medium leading-[1.12] tracking-[-0.02em]">{title}</h1>
+        {children}
+      </section>
+    );
+  }
   return (
     <section className="grid gap-12 px-4 py-14 md:px-12 md:py-20 lg:grid-cols-[1fr_minmax(0,28rem)] lg:px-24">
       <div>

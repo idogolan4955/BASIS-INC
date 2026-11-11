@@ -1,4 +1,5 @@
 import { customerCan } from '@basis/shared';
+import { Check } from '@phosphor-icons/react';
 import { useState, type FormEvent } from 'react';
 import { products, shades } from '../site/catalog';
 import { Hand, Index, ShadeCircle } from '../site/ui';
@@ -9,6 +10,8 @@ import { date } from './format';
 import { useLocale, useT } from './i18n';
 import { SAMPLE_STATE } from './labels';
 import { useMe } from './session';
+import { IN_APP } from '../native/platform';
+import { Group, GroupRow } from '../native/ui';
 
 export const meta = () => portalMeta('Samples');
 
@@ -48,6 +51,88 @@ export default function Samples() {
       setBusy(false);
     }
   };
+
+  if (IN_APP) {
+    const tick = (on: boolean) => (on ? <Check aria-hidden="true" size={20} weight="bold" className="text-nude-deep" /> : undefined);
+    return (
+      <div>
+        <PageTitle title={t('Samples')}>{t('Swatches of any fabric in any shade, labelled with product and shade codes, with their technical sheets.')}</PageTitle>
+        {sent && (
+          <Group>
+            <GroupRow title={t('Received as')} trailing={<span className="code text-ink" dir="ltr">{sent}</span>} subtitle={t('BASIS will confirm when they leave.')} />
+          </Group>
+        )}
+        {loaded.loading && !loaded.data ? (
+          <Loading />
+        ) : loaded.error ? (
+          <Failed message={loaded.error} onRetry={loaded.reload} />
+        ) : (
+          <>
+            {may ? (
+              <form onSubmit={submit}>
+                <Group header={t('Fabrics')}>
+                  {products.map((product) => {
+                    const on = picked.products.includes(product.code);
+                    return <GroupRow key={product.code} onClick={() => toggle('products', product.code)} title={<span role="checkbox" aria-checked={on}>{product.name}</span>} trailing={tick(on)} chevron={false} />;
+                  })}
+                </Group>
+                <Group header={t('Shades')}>
+                  {shades.map((shade) => {
+                    const on = picked.shades.includes(shade.code);
+                    return <GroupRow key={shade.code} onClick={() => toggle('shades', shade.code)} leading={<ShadeCircle shade={shade} size="sm" />} title={<span role="checkbox" aria-checked={on}>{shade.name}</span>} subtitle={<span className="code" dir="ltr">{shade.code}</span>} trailing={tick(on)} chevron={false} />;
+                  })}
+                </Group>
+                <div className="mx-4 mb-7 grid gap-5">
+                  {loaded.data!.addresses.length > 0 ? (
+                    <Choice label={t('Send to')} name="address" value={addressId || loaded.data!.addresses.find((address) => address.isDefault)?.id || ''} onChange={setAddressId}>
+                      {loaded.data!.addresses.map((address) => (
+                        <option key={address.id} value={address.id}>
+                          {[address.location.name, address.location.city, address.location.country?.name].filter(Boolean).join(', ')}
+                        </option>
+                      ))}
+                    </Choice>
+                  ) : (
+                    <p className="px-1 text-[13px] text-ink-muted">{t('No shipping address on the account yet: write it in the note, or ask your admin to add one under Addresses.')}</p>
+                  )}
+                  <Area label={t('Note')} name="message" rows={3} value={message} onChange={setMessage} />
+                  {error && <Alert>{t(error)}</Alert>}
+                  <Button type="submit" busy={busy} disabled={picked.products.length === 0 && picked.shades.length === 0 && !message.trim()}>
+                    {busy ? t('Sending') : t('Request samples')}
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <Group>
+                <GroupRow title={t('A buyer or an admin of your account asks for samples.')} />
+              </Group>
+            )}
+            <Group header={t('Your requests')}>
+              {loaded.data!.requests.length === 0 ? (
+                <GroupRow title={<span className="text-ink-muted">{t('None yet.')}</span>} />
+              ) : (
+                loaded.data!.requests.map((request) => {
+                  const state = SAMPLE_STATE[request.state] ?? { label: request.state, tone: 'neutral' as const };
+                  const details = (request.details ?? {}) as { products?: string[]; shades?: string[] };
+                  return (
+                    <GroupRow
+                      key={request.reference}
+                      title={<span className="code" dir="ltr">{request.reference}</span>}
+                      subtitle={
+                        <>
+                          {date(request.createdAt, locale)} · <span dir="ltr">{[...(details.products ?? []), ...(details.shades ?? [])].join(', ') || '—'}</span>
+                        </>
+                      }
+                      trailing={<Chip tone={state.tone}>{t(state.label)}</Chip>}
+                    />
+                  );
+                })
+              )}
+            </Group>
+          </>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div>

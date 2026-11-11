@@ -12,7 +12,7 @@ The customer portal of the brand site ([CUSTOMER_PORTAL_PLAN](CUSTOMER_PORTAL_PL
 |---|---|---|
 | Technology | **Capacitor 8** around the portal of `apps/web`, in a workspace package `apps/ios` (`@basis/ios`); Swift Package Manager, no CocoaPods | The portal already exists, in English and Hebrew, with its design and its permissions; a second client in Swift would duplicate every screen and every rule. Capacitor gives the web view real native plugins |
 | Bundled or remote | **Bundled.** `apps/ios/scripts/bundle.mjs` builds `apps/web` as a single-page app (`VITE_BASIS_APP=1`, into `apps/web/build-app`, never touching the site Hosting serves) and copies it into the app; data is always live from Firebase over HTTPS | The app starts instantly and draws its frame without a network; nothing breaks if the site is mid-deploy; it is Capacitor's production mode (its `server.url` is "not intended for production"); and App Review sees an app, not a website in a frame (guidelines 2.5.2 and 4.2). The price: a portal change reaches the app with its next build, so the functions stay backward compatible with the version in the store (they only ever add fields and functions) |
-| Where it opens | `/account` (the site's home route sends the app there): signed out, the sign-in; signed in, the overview | It is the customer's account, not the brochure; the brand's pages stay one tap away under Index and More |
+| Where it opens | `/account` (the site's home route sends the app there): signed out, the sign-in; signed in, the overview | It is the customer's account, not the brochure; the brand's pages stay one tap away under More |
 | Devices | **iPhone only**, portrait, light appearance, **iOS 16.4 or later** | The portal is designed at 390 px; an iPad version adds a second set of screenshots and review for little use. Revisit if customers ask. 16.4 because the portal's CSS (Tailwind CSS 4) needs Safari 16.4; every iPhone from the iPhone 8 runs it |
 | Sign-in | Email and password through Firebase Auth, the same logins as the site; no third-party login | Sign in with Apple (guideline 4.8) is required only when a third-party or social login is offered. If Google sign-in is ever added, Sign in with Apple is added with it |
 | Bundle ID | `com.basisinc.customer`, team `97HE63NNKZ` (the owner's membership), automatic signing | BASIS's own App ID, certificates and profiles; nothing shared with another project |
@@ -24,7 +24,14 @@ The customer portal of the brand site ([CUSTOMER_PORTAL_PLAN](CUSTOMER_PORTAL_PL
 - **Links open in the app** (Universal Links): an invitation link sent by WhatsApp or email, and any `/account` link of `basis-inc.web.app`, open the app at that page. `basisinc://account/…` does the same for links made inside BASIS.
 - **Passwords**: the app and the site share credentials (`webcredentials`), so iCloud Keychain fills a password saved on the site and saves one made in the app.
 - **Documents** open in Quick Look (print, mark up, save to Files) and go straight to the share sheet (Mail, WhatsApp, AirDrop) — fetched with the person's own sign-in, never through a public link.
-- **Native frame**: a numbered tab bar (Overview, Quotes, Orders, Shipments, More, mirrored in Hebrew), the assistant and the brand's index as words in the top bar, swipe back, no link previews, a launch screen in the site's bone, safe areas respected.
+- **It looks and behaves like an iPhone app**, not a site in a frame (the owner's review on 2026-11-11: "it feels too much like a website"). Every page of the portal has an app rendering behind `IN_APP`, drawn in the app register of [DESIGN_SYSTEM](DESIGN_SYSTEM.md) §15:
+  - a navigation bar on every screen: on the five tabs a large title that hands over to the inline title as it scrolls under the bar; on a pushed screen the record's number as the title and "‹ Quotes" (the screen it came from) as the back button; the bar and the tab bar translucent over the content, as the system's are;
+  - a tab bar with icons and labels (Overview, Quotes, Orders, Shipments, More; mirrored in Hebrew), the chosen tab filled;
+  - grouped cells instead of ledgers: a quote, an order, a shipment and an invoice are each one cell with its number, a second line and its standing; facts are label-and-value rows; Profile and More read like Settings, with checkmarks for the language and a switch for "use this address unless I choose another";
+  - the system's own controls: answering a quote, signing out, deleting the login, changing a colleague's role and editing or removing an address go through the iOS action sheet; documents open in Quick Look; links are shared through the share sheet;
+  - the assistant as a page sheet (grabber, "Done", swipe down to close) with a Messages-style composer;
+  - pushed screens slide in from the edge and back, tabs cross-fade, the scroll position comes back with the back button, a pull from the top reloads the screen, haptics on a tab change, a choice and a sent answer; skeleton cells while a screen loads; the system font for the interface, text not selectable except fields, answers and addresses;
+  - swipe back from the edge, no link previews, a launch screen in the site's bone, safe areas respected.
 - **Without an account**: the fabrics, the Shade System and the applications can be browsed, samples asked for and a trade account applied for, and the assistant answers.
 
 ### 1.2 How it is built
@@ -45,9 +52,9 @@ apps/ios/
    └─ App/GoogleService-Info.plist  the Firebase iOS app (public configuration, like the web one)
 ```
 
-Inside `apps/web`: `app/native/platform.ts` (the build flag `IN_APP`, the API base, link-to-page), `app/native/bridge.ts` (Capacitor plugins, loaded only by the app's bundle), `app/native/push.ts`; the app's frame in `app/site/shell.tsx` (`AppShell`, `AppTabs`); `account/profile.tsx` and `account/more.tsx`. In the app, sign-in uses `initializeAuth` with IndexedDB persistence (no pop-up resolver), and the functions are called at `https://basis-inc.web.app/api`. The site that Hosting serves is unchanged by all of this.
+Inside `apps/web`: `app/native/platform.ts` (the build flag `IN_APP`, the API base, link-to-page), `app/native/bridge.ts` (Capacitor plugins, loaded only by the app's bundle: links, push, haptics, the action sheet, documents), `app/native/push.ts`; the app's frame in `app/native/shell.tsx` (navigation bar, tab bar, transitions, scroll restoration, pull to refresh) and its parts in `app/native/ui.tsx` (large title, grouped cells, value rows, skeletons, the sheet); every page under `app/account` and the assistant (`app/assistant/widget.tsx`) render their app version behind `IN_APP`, and the register's CSS is the `html.app` part of `app/app.css`. In the app, sign-in uses `initializeAuth` with IndexedDB persistence (no pop-up resolver), and the functions are called at `https://basis-inc.web.app/api`. The site that Hosting serves is unchanged by all of this.
 
-Plugins: `@capacitor/app` (links), `@capacitor/splash-screen`, `@capacitor/keyboard`, `@capacitor-firebase/messaging` (FCM tokens and taps).
+Plugins: `@capacitor/app` (links), `@capacitor/splash-screen`, `@capacitor/keyboard`, `@capacitor-firebase/messaging` (FCM tokens and taps), `@capacitor/haptics`, `@capacitor/action-sheet`.
 
 ## 2. Apple's requirements, and how each is met
 
@@ -207,7 +214,7 @@ Not collected: health, financial info, location, sensitive info, contacts, brows
 
 ### 6.5 Screenshots
 
-6.9-inch iPhone (1320 × 2868, RGB, iPhone 17 Pro Max Simulator), from the emulators' sample trade account (Atelier Lumière), status bar set to 9:41, in `apps/ios/store/screenshots/` (not shipped in the app). English (U.S.), in this order: `en-01-overview.png` (what is open), `en-02-quote.png` (a quote waiting for an answer), `en-03-shipment.png` (the journey leg by leg), `en-04-document.png` (the quotation in Quick Look), `en-05-assistant.png` (Ask BASIS answering from the account's own shipment). Hebrew localization: `he-01-overview.png`, with the English ones after it until Hebrew versions of the others are taken. Sample names only; nothing from a real customer.
+6.9-inch iPhone (1320 × 2868, RGB, iPhone 17 Pro Max Simulator), from the emulators' sample trade account (Atelier Lumière), status bar set to 9:41, in `apps/ios/store/screenshots/` (not shipped in the app). English (U.S.), in this order: `en-01-overview.png` (what is open), `en-02-quote.png` (a quote waiting for an answer), `en-03-shipment.png` (the journey leg by leg), `en-04-document.png` (the quotation in Quick Look), `en-05-assistant.png` (Ask BASIS answering from the account's own shipment). Hebrew localization: `he-01-overview.png`, with the English ones after it until Hebrew versions of the others are taken. Sample names only; nothing from a real customer. Retaken on 2026-11-11 after the app register (§1.1); the first set is in the history of this folder.
 
 ## 7. App Review information
 
@@ -272,6 +279,7 @@ In the iOS Simulator (iPhone 17 Pro Max, iOS 26.3) with the app bundled against 
 | Launch | The launch screen, then `/account`; signed out, the sign-in |
 | Sign-in | An emulator trade customer signs in; the overview shows what is open |
 | English and Hebrew | Profile › Language switches every page, the tab bar mirrored, the assistant's word in the top bar in Hebrew |
+| The app register (2026-11-11) | Every screen in English and in Hebrew after the rework of §1.1: sign-in, Overview, Quotes and a quote (answered through the action sheet), Orders and an order, Shipments and a shipment, Invoices, Documents, Samples (checkmarks), Team as a buyer and as an admin (role and suspension through the action sheet), Addresses (the form, the switch), Profile (language, notifications, sign out and delete through the action sheet), More, a brand page under More, the assistant as a sheet with an answer, the quotation in Quick Look. Found and fixed on the way: in the iOS 26 Simulator the system font of a web view draws Hebrew as empty boxes, so the app sets Hebrew in Heebo (limited to the Hebrew range) ahead of the system font; Latin codes, emails and addresses inside Hebrew lines isolated so their order holds |
 | Assistant | "When does my shipment to Paris arrive?" answered from the customer's own shipment, its legs and dates (Opus 5.5, cached prompt) |
 | Documents | The quotation opens in Quick Look (print, mark up, Files, share); fetched with the person's token |
 | Invitation link | `basisinc://account/invite/<token>` opens the app at the invitation from a cold start (`https://basis-inc.web.app/account/invite/…` does the same once the association file is live) |

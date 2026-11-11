@@ -1,11 +1,12 @@
 import type { SiteActionView, SiteConversationView } from '@basis/shared';
 import { cn } from '@basis/ui';
-import { Fragment, useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
+import { Fragment, useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router';
 import { call } from '../account/data';
 import { PortalLocale, useLocale, useT } from '../account/i18n';
 import { IN_APP } from '../native/platform';
+import { Sheet } from '../native/ui';
 
 // The assistant on the brand site (docs/CUSTOMER_PORTAL_PLAN.md §9): a quiet
 // tab at the edge of every page that opens a conversation. It says it is an
@@ -111,8 +112,8 @@ function ActionCard({ action, onDecide, busy }: { action: SiteActionView; onDeci
   const fields = Object.entries(action.input).filter(([key, value]) => key !== 'addressId' && value !== undefined && value !== null && !(Array.isArray(value) && value.length === 0));
   const reference = action.result && typeof action.result === 'object' ? ((action.result as { reference?: string; orderNumber?: string }).reference ?? (action.result as { orderNumber?: string }).orderNumber) : undefined;
   return (
-    <div className="border border-charcoal/70 bg-bone">
-      <p className="border-b border-charcoal/70 px-3 py-2 text-sm font-medium" dir="auto">
+    <div className={IN_APP ? 'overflow-hidden rounded-[10px] bg-milk' : 'border border-charcoal/70 bg-bone'}>
+      <p className={cn('px-3 py-2 text-sm font-medium', IN_APP ? 'border-b-[0.5px] border-line-strong text-[15px]' : 'border-b border-charcoal/70')} dir="auto">
         {action.summary}
       </p>
       <dl className="grid grid-cols-[minmax(0,6rem)_minmax(0,1fr)] gap-x-3 gap-y-1 px-3 py-2 text-sm">
@@ -127,7 +128,7 @@ function ActionCard({ action, onDecide, busy }: { action: SiteActionView; onDeci
       </dl>
       {action.state === 'proposed' ? (
         <div className="flex gap-2 border-t border-line px-3 py-2">
-          <button type="button" disabled={busy} onClick={() => onDecide('confirm')} className="h-10 bg-charcoal px-4 text-sm font-medium text-milk hover:bg-cocoa disabled:opacity-60">
+          <button type="button" disabled={busy} onClick={() => onDecide('confirm')} className={cn('h-10 bg-charcoal px-4 text-sm font-medium text-milk hover:bg-cocoa disabled:opacity-60', IN_APP && 'h-11 rounded-[10px] text-[15px] font-semibold')}>
             {action.kind === 'answer_quote' ? t('Confirm') : t('Send')}
           </button>
           <button type="button" disabled={busy} onClick={() => onDecide('dismiss')} className="h-10 px-3 text-sm text-ink-soft underline underline-offset-4 disabled:opacity-60">
@@ -155,6 +156,7 @@ function Panel({ onClose }: { onClose: () => void }) {
   const [agreed, setAgreed] = useState(consented);
   const end = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
+  const titleId = useId();
 
   useEffect(() => {
     if (consented()) input.current?.focus();
@@ -219,6 +221,122 @@ function Panel({ onClose }: { onClose: () => void }) {
     setView(null);
     setError('');
   };
+  const agree = () => {
+    giveConsent();
+    setAgreed(true);
+    window.setTimeout(() => input.current?.focus(), 0);
+  };
+
+  if (IN_APP) {
+    return (
+      <Sheet
+        title={t('BASIS assistant')}
+        labelledBy={titleId}
+        onClose={onClose}
+        leading={
+          view ? (
+            <button type="button" onClick={restart} className="app-bar-button ps-0">
+              {t('New')}
+            </button>
+          ) : undefined
+        }
+      >
+        <div className="app-selectable min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4" aria-live="polite">
+          <p className="mb-6 text-[13px] leading-snug text-ink-muted">
+            {t('An AI. It can be wrong; a person in sales is a message away.')}{' '}
+            <Link to="/legal/privacy" onClick={onClose} className="text-nude-deep">
+              {t('Privacy')}
+            </Link>
+          </p>
+          {!view && !asked && (
+            <div>
+              <p className="font-display text-[28px] font-medium leading-[1.1] tracking-[-0.02em] text-ink">{t('How can we help?')}</p>
+              <p className="mt-2 text-[15px] leading-snug text-ink-soft">{t('Ask about the fabrics, the shades, how they behave in a gown, or samples.')}</p>
+            </div>
+          )}
+          {!agreed && (
+            <div className="mt-6 rounded-[10px] bg-milk p-4">
+              <p className="text-[15px] font-semibold text-ink">{t('Before you ask')}</p>
+              <p className="mt-2 text-[15px] leading-snug text-ink-soft">
+                {t('What you write here, and the records of your account the assistant reads to answer you, are sent to Anthropic, the company whose AI model the assistant runs on. Anthropic does not use them to train its models. BASIS keeps the conversation so that a person in sales can pick it up.')}{' '}
+                <Link to="/legal/privacy" onClick={onClose} className="text-nude-deep">
+                  {t('Privacy')}
+                </Link>
+              </p>
+              <button type="button" onClick={agree} className="app-button mt-4 bg-charcoal text-milk">
+                {t('Agree and continue')}
+              </button>
+            </div>
+          )}
+          <ol className="mt-6 space-y-4">
+            {view?.turns.map((turn) =>
+              turn.items.map((item, index) => {
+                if (item.kind === 'text' && item.role === 'user') {
+                  return (
+                    <li key={`${turn.seq}-${index}`} className="flex justify-end">
+                      <span className="max-w-[85%] whitespace-pre-wrap rounded-[18px] bg-sand px-3.5 py-2 text-[17px] leading-snug" dir="auto">
+                        {item.text}
+                      </span>
+                    </li>
+                  );
+                }
+                if (item.kind === 'text') {
+                  return (
+                    <li key={`${turn.seq}-${index}`} className="text-[17px]">
+                      <Prose text={item.text} />
+                    </li>
+                  );
+                }
+                if (item.kind === 'action') {
+                  const action = actions.get(item.toolUseId);
+                  return action ? (
+                    <li key={`${turn.seq}-${index}`}>
+                      <ActionCard action={action} busy={busy} onDecide={(decision) => void decide(action, decision)} />
+                    </li>
+                  ) : null;
+                }
+                return (
+                  <li key={`${turn.seq}-${index}`} className="text-[13px] text-ink-muted">
+                    {t('Looked it up')}
+                  </li>
+                );
+              }),
+            )}
+            {asked && (
+              <li className="flex justify-end">
+                <span className="max-w-[85%] whitespace-pre-wrap rounded-[18px] bg-sand px-3.5 py-2 text-[17px] leading-snug" dir="auto">
+                  {asked}
+                </span>
+              </li>
+            )}
+            {busy && (
+              <li role="status" className="flex items-center gap-2 text-[15px] text-ink-muted">
+                <span aria-hidden="true" className="app-spinner app-spinner-run size-4" />
+                {t('Thinking')}…
+              </li>
+            )}
+          </ol>
+          <div ref={end} />
+        </div>
+        <form onSubmit={(event) => void send(event)} className="shrink-0 border-t-[0.5px] border-line-strong bg-bone px-3 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-2">
+          {error && (
+            <p role="alert" className="mb-2 px-1 text-[13px] text-critical">
+              {t(error)}
+            </p>
+          )}
+          <div className="flex items-end gap-1">
+            <label htmlFor="site-assistant-input" className="sr-only">
+              {t('Your question')}
+            </label>
+            <textarea id="site-assistant-input" ref={input} value={text} onChange={(event) => setText(event.target.value)} onKeyDown={onKey} rows={1} dir="auto" disabled={!agreed} placeholder={t('Write your question')} className="app-field max-h-32 min-h-10 flex-1 resize-none rounded-[18px] px-4 py-2 leading-snug disabled:opacity-50" />
+            <button type="submit" disabled={busy || !agreed || !text.trim()} className="app-bar-button min-h-10 font-semibold disabled:opacity-40">
+              {t('Ask')}
+            </button>
+          </div>
+        </form>
+      </Sheet>
+    );
+  }
 
   return (
     <section dir={dir} lang={locale} aria-label={t('BASIS assistant')} className={cn('fixed inset-x-2 z-40 flex flex-col border border-charcoal/70 bg-milk text-ink shadow-[0_18px_48px_-24px_rgb(43_39_36/0.45)]', IN_APP ? 'bottom-[calc(0.5rem+env(safe-area-inset-bottom))] h-[min(calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-4rem),42rem)]' : 'bottom-2 h-[min(85dvh,42rem)] md:inset-x-auto md:bottom-6 md:end-6 md:w-[26rem]')}>
@@ -261,11 +379,7 @@ function Panel({ onClose }: { onClose: () => void }) {
             </p>
             <button
               type="button"
-              onClick={() => {
-                giveConsent();
-                setAgreed(true);
-                window.setTimeout(() => input.current?.focus(), 0);
-              }}
+              onClick={agree}
               className="mt-4 h-11 bg-charcoal px-4 text-sm font-medium text-milk hover:bg-cocoa"
             >
               {t('Agree and continue')}
@@ -341,11 +455,11 @@ function Launcher({ placement }: { placement: 'float' | 'bar' }) {
   const t = useT();
   const { dir, locale } = useLocale();
   const [open, setOpen] = useState(false);
-  // In the app the assistant is a word in the top bar, beside Index; on the site, a tab at the edge.
+  // In the app the assistant is a button in the navigation bar and opens as a sheet; on the site, a tab at the edge.
   if (placement === 'bar') {
     return (
       <>
-        <button type="button" dir={dir} lang={locale} onClick={() => setOpen(true)} aria-haspopup="dialog" aria-expanded={open} className="code h-11 px-2 uppercase tracking-[0.18em]">
+        <button type="button" dir={dir} lang={locale} onClick={() => setOpen(true)} aria-haspopup="dialog" aria-expanded={open} className="app-bar-button">
           {t('Ask BASIS')}
         </button>
         {/* Out of the bar's stacking context, so it lies over the tabs. */}

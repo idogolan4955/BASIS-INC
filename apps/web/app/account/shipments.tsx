@@ -26,7 +26,24 @@ export default function Shipments() {
             const arrival = shipmentArrival(shipment.legs);
             const health = shipment.state === 'closed' ? { label: 'Delivered', tone: 'positive' as const } : shipment.state === 'booked' ? (HEALTH[shipment.health] ?? HEALTH['on_track']!) : { label: SHIPMENT_STATE[shipment.state] ?? shipment.state, tone: 'neutral' as const };
             return (
-              <Row key={shipment.number} to={`/account/shipments/${shipment.number}`}>
+              <Row
+                key={shipment.number}
+                to={`/account/shipments/${shipment.number}`}
+                app={{
+                  title: <span className="code" dir="ltr">{shipment.number}</span>,
+                  subtitle: (
+                    <>
+                      {[t(MODE[shipment.mode] ?? shipment.mode), [shipment.destination.city, shipment.destination.country?.name].filter(Boolean).join(', ')].filter(Boolean).join(' · ')}
+                      {arrival.date && (
+                        <span className="block">
+                          {arrival.arrived ? t('Arrived') : t('Expected')} {date(arrival.date, locale)}
+                        </span>
+                      )}
+                    </>
+                  ),
+                  trailing: <Chip tone={health.tone}>{t(health.label)}</Chip>,
+                }}
+              >
                 <Cell code>{shipment.number}</Cell>
                 <Cell>{t(MODE[shipment.mode] ?? shipment.mode)}</Cell>
                 <Cell>{[shipment.destination.city, shipment.destination.country?.name].filter(Boolean).join(', ') || '—'}</Cell>

@@ -41,7 +41,29 @@ export default function Invoices() {
             {invoices.map((invoice) => {
               const standing = INVOICE[invoiceStanding(invoice, now)];
               return (
-                <Row key={`${invoice.order.number}-${invoice.number}`}>
+                <Row
+                  key={`${invoice.order.number}-${invoice.number}`}
+                  app={{
+                    to: `/account/orders/${invoice.order.number}`,
+                    title: <span className="code" dir="ltr">{invoice.number}</span>,
+                    subtitle: (
+                      <>
+                        {t('Due {date}', { date: date(invoice.dueOn, locale) })} · {t('Order')}{' '}
+                        <span className="code" dir="ltr">
+                          {invoice.order.number}
+                        </span>
+                      </>
+                    ),
+                    trailing: (
+                      <span className="grid justify-items-end gap-1">
+                        <span className="code text-ink" dir="ltr">
+                          {money(invoiceOutstanding(invoice), invoice.currency)}
+                        </span>
+                        <Chip tone={standing.tone}>{t(standing.label)}</Chip>
+                      </span>
+                    ),
+                  }}
+                >
                   <Cell code>{invoice.number}</Cell>
                   <Cell code>
                     <Link to={`/account/orders/${invoice.order.number}`} className="underline underline-offset-4">

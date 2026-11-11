@@ -39,3 +39,366 @@
   font-weight: 600;
   letter-spacing: 0;
 }
+
+/* ---------------------------------------------------------------- the iPhone app
+   The app's register (docs/DESIGN_SYSTEM.md §15). Only the app's bundle puts
+   the class "app" on <html>; nothing here reaches the site. The system font
+   for the interface, EB Garamond for large titles, the mono for codes; grouped
+   cells on the bone page; the frame never bounces, only the screen scrolls. */
+
+/* Hebrew in the app: the system font in a web view does not always carry the
+   Hebrew script (the iOS 26 Simulator draws empty boxes), and a font listed
+   after it is never consulted. So the Hebrew letters come first, from Heebo,
+   the system's Hebrew stand-in on the site, limited to the Hebrew range; Latin
+   letters fall through to the iPhone's own font. */
+@font-face {
+  font-family: 'BASIS App Hebrew';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../../../packages/ui/node_modules/@fontsource/heebo/files/heebo-hebrew-400-normal.woff2') format('woff2');
+  unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+}
+@font-face {
+  font-family: 'BASIS App Hebrew';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../../../packages/ui/node_modules/@fontsource/heebo/files/heebo-hebrew-500-normal.woff2') format('woff2');
+  unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+}
+@font-face {
+  font-family: 'BASIS App Hebrew';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../../../packages/ui/node_modules/@fontsource/heebo/files/heebo-hebrew-600-normal.woff2') format('woff2');
+  unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+}
+@font-face {
+  font-family: 'BASIS App Hebrew';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../../../packages/ui/node_modules/@fontsource/heebo/files/heebo-hebrew-700-normal.woff2') format('woff2');
+  unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+}
+
+html.app {
+  --font-sans: 'BASIS App Hebrew', -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  height: 100%;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+html.app body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  font-size: 17px;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+html.app input,
+html.app textarea,
+html.app select,
+html.app .app-selectable {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Words set as mono capitals on the site are interface labels here. Codes stay mono: they carry dir="ltr". */
+html.app .code:not([dir='ltr']) {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-stretch: normal;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+html.app .code[dir='ltr'] {
+  font-size: 0.8125rem;
+}
+
+/* The register's parts sit in the components layer, so a screen's utilities can still adjust them. */
+@layer components {
+  .app-frame {
+    position: fixed;
+    inset: 0;
+    background: var(--color-bone);
+  }
+  .app-scroll {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+    padding-top: calc(44px + env(safe-area-inset-top));
+    padding-bottom: calc(49px + env(safe-area-inset-bottom) + 28px);
+  }
+  .app-scroll-door {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 28px);
+  }
+  .app-nav-bar {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    z-index: 30;
+    padding-top: env(safe-area-inset-top);
+    background: color-mix(in oklab, var(--color-bone) 90%, transparent);
+    -webkit-backdrop-filter: saturate(1.4) blur(20px);
+    backdrop-filter: saturate(1.4) blur(20px);
+    border-bottom: 0.5px solid transparent;
+    transition: border-color 200ms;
+  }
+  .app-nav-bar-edge {
+    border-bottom-color: var(--color-line-strong);
+  }
+  .app-bar-button {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    padding-inline: 8px;
+    font-size: 17px;
+    color: var(--color-nude-deep);
+  }
+  .app-bar-button:active {
+    opacity: 0.4;
+  }
+  .app-tab-bar {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 30;
+    padding-bottom: env(safe-area-inset-bottom);
+    background: color-mix(in oklab, var(--color-bone) 92%, transparent);
+    -webkit-backdrop-filter: saturate(1.4) blur(20px);
+    backdrop-filter: saturate(1.4) blur(20px);
+    border-top: 0.5px solid var(--color-line-strong);
+  }
+  .app-tab {
+    display: flex;
+    height: 49px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+  }
+  .app-tab:active {
+    opacity: 0.6;
+  }
+
+  .app-large-title {
+    margin: 4px 16px 10px;
+    font-family: var(--font-display);
+    font-size: 34px;
+    font-weight: 500;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+  }
+
+  .app-section {
+    margin: 0 16px 28px;
+  }
+  .app-section-header {
+    margin: 0 16px 7px;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.3;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--color-stone);
+  }
+  .app-section-footer {
+    margin: 7px 16px 0;
+    font-size: 13px;
+    line-height: 1.35;
+    color: var(--color-stone);
+  }
+  .app-group {
+    overflow: hidden;
+    border-radius: 10px;
+    background: var(--color-milk);
+  }
+  .app-row {
+    position: relative;
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 16px;
+    color: var(--color-charcoal);
+  }
+  .app-row + .app-row::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    inset-inline-start: 16px;
+    inset-inline-end: 0;
+    border-top: 0.5px solid var(--color-line-strong);
+  }
+  .app-row[data-pressable]:active {
+    background: var(--color-sand);
+  }
+  .app-row-title {
+    display: block;
+    font-size: 17px;
+    line-height: 1.3;
+  }
+  .app-row-subtitle {
+    display: block;
+    margin-top: 2px;
+    font-size: 15px;
+    line-height: 1.3;
+    color: var(--color-stone);
+  }
+  .app-row-trailing,
+  .app-row-value {
+    flex-shrink: 0;
+    max-width: 55%;
+    text-align: end;
+    font-size: 17px;
+    color: var(--color-stone);
+  }
+  .app-row-value {
+    color: var(--color-charcoal);
+  }
+
+  .app-skeleton {
+    border-radius: 4px;
+    background: var(--color-linen);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .app-skeleton {
+      animation: app-skeleton 1.2s ease-in-out infinite alternate;
+    }
+  }
+  @keyframes app-skeleton {
+    from { opacity: 1; }
+    to { opacity: 0.45; }
+  }
+
+  .app-pull {
+    display: flex;
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+    transition: height 200ms ease;
+  }
+  .app-spinner {
+    display: block;
+    width: 22px;
+    height: 22px;
+    border-radius: 9999px;
+    border: 2px solid var(--color-line-strong);
+    border-top-color: var(--color-charcoal);
+  }
+  .app-spinner-run {
+    animation: app-spin 700ms linear infinite;
+  }
+  @keyframes app-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .app-scrim {
+    background: rgb(23 19 16 / 0.4);
+    animation: app-fade 250ms ease both;
+  }
+  .app-sheet {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    top: calc(env(safe-area-inset-top) + 10px);
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px 12px 0 0;
+    background: var(--color-bone);
+    transition: transform 250ms cubic-bezier(0.25, 0.9, 0.3, 1);
+    animation: app-sheet-up 380ms cubic-bezier(0.25, 0.9, 0.3, 1) both;
+  }
+  @keyframes app-sheet-up {
+    from { transform: translateY(100%); }
+    to { transform: none; }
+  }
+
+  /* Pushed screens slide in from the trailing edge; the back button slides back; tabs cross-fade. */
+  @media (prefers-reduced-motion: no-preference) {
+    .app-screen[data-motion='push'] { animation: app-push 340ms cubic-bezier(0.25, 0.9, 0.3, 1) both; }
+    .app-screen[data-motion='push'][data-dir='rtl'] { animation-name: app-push-rtl; }
+    .app-screen[data-motion='pop'] { animation: app-pop 300ms cubic-bezier(0.25, 0.9, 0.3, 1) both; }
+    .app-screen[data-motion='pop'][data-dir='rtl'] { animation-name: app-pop-rtl; }
+    .app-screen[data-motion='fade'] { animation: app-fade 180ms ease both; }
+  }
+  @keyframes app-push { from { transform: translateX(30%); opacity: 0.5; } to { transform: none; opacity: 1; } }
+  @keyframes app-push-rtl { from { transform: translateX(-30%); opacity: 0.5; } to { transform: none; opacity: 1; } }
+  @keyframes app-pop { from { transform: translateX(-24%); opacity: 0.6; } to { transform: none; opacity: 1; } }
+  @keyframes app-pop-rtl { from { transform: translateX(24%); opacity: 0.6; } to { transform: none; opacity: 1; } }
+  @keyframes app-fade { from { opacity: 0; } to { opacity: 1; } }
+
+  /* Buttons and fields in the app's register: 50 pt actions, 44 pt fields, the radius of the system's own. */
+  .app-button {
+    display: inline-flex;
+    min-height: 50px;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    padding-inline: 20px;
+    font-size: 17px;
+    font-weight: 600;
+  }
+  .app-button:active {
+    opacity: 0.7;
+  }
+  .app-field {
+    min-height: 44px;
+    width: 100%;
+    border-radius: 10px;
+    border: 0.5px solid var(--color-line-strong);
+    background: var(--color-milk);
+    padding: 10px 12px;
+    font-size: 17px;
+    color: var(--color-charcoal);
+    outline: none;
+  }
+  .app-field:focus {
+    border-color: var(--color-charcoal);
+  }
+
+  /* A checkbox drawn as the system's switch: 51 by 31, the knob crossing to the end when on. */
+  .app-switch {
+    position: relative;
+    flex-shrink: 0;
+    width: 51px;
+    height: 31px;
+    border-radius: 9999px;
+    background: var(--color-line-strong);
+    transition: background-color 200ms ease;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .app-switch::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    inset-inline-start: 2px;
+    width: 27px;
+    height: 27px;
+    border-radius: 9999px;
+    background: var(--color-milk);
+    transition: transform 200ms ease;
+  }
+  .app-switch:checked {
+    background: var(--color-charcoal);
+  }
+  .app-switch:checked::before {
+    transform: translateX(20px);
+  }
+  [dir='rtl'] .app-switch:checked::before {
+    transform: translateX(-20px);
+  }
+}

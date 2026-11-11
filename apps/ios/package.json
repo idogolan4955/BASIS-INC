@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "@capacitor-firebase/messaging": "^8",
+    "@capacitor/action-sheet": "^8",
     "@capacitor/app": "^8",
     "@capacitor/core": "^8",
+    "@capacitor/haptics": "^8",
     "@capacitor/ios": "^8",
     "@capacitor/keyboard": "^8",
     "@capacitor/splash-screen": "^8",

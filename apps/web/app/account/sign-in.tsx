@@ -55,9 +55,9 @@ function SignIn() {
           {t('Your login has been deleted. The account’s records stay with your company.')}
         </p>
       )}
-      <form onSubmit={submit} className="grid gap-5 border border-charcoal/70 bg-milk p-6">
+      <form onSubmit={submit} className={IN_APP ? 'grid gap-5' : 'grid gap-5 border border-charcoal/70 bg-milk p-6'}>
         <div className="flex items-center justify-between">
-          <p className="code uppercase tracking-[0.18em]">{t('Sign in')}</p>
+          {IN_APP ? <span /> : <p className="code uppercase tracking-[0.18em]">{t('Sign in')}</p>}
           <LocaleSwitch className="flex" />
         </div>
         <Field label={t('Email')} name="email" type="email" required autoComplete="email" dir="ltr" />
@@ -66,19 +66,19 @@ function SignIn() {
         <Button type="submit" busy={busy}>
           {busy ? t('Signing in') : t('Sign in')}
         </Button>
-        <Link to="/account/reset" className="text-sm text-ink-soft underline underline-offset-4 hover:text-ink">
+        <Link to="/account/reset" className={IN_APP ? 'justify-self-center py-2 text-[17px] text-nude-deep' : 'text-sm text-ink-soft underline underline-offset-4 hover:text-ink'}>
           {t('Forgot your password?')}
         </Link>
       </form>
-      <p className="mt-6 text-sm text-ink-soft">
+      <p className={IN_APP ? 'mt-10 text-center text-[15px] leading-snug text-ink-muted' : 'mt-6 text-sm text-ink-soft'}>
         {t('Trade accounts are opened by invitation.')}{' '}
-        <Link to="/wholesale" className="underline underline-offset-4">
+        <Link to="/wholesale" className={IN_APP ? 'text-nude-deep' : 'underline underline-offset-4'}>
           {t('Apply for a trade account')}
         </Link>
       </p>
       {IN_APP && (
-        <p className="mt-3 text-sm text-ink-soft">
-          <Link to="/fabrics" className="underline underline-offset-4">
+        <p className="mt-3 text-center text-[15px]">
+          <Link to="/fabrics" className="text-nude-deep">
             {t('Browse the fabrics and the Shade System')}
           </Link>
         </p>

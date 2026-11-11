@@ -1,4 +1,5 @@
 import { shipmentArrival } from '@basis/shared';
+import { FileText } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { call, openDocument, read, useRead } from './data';
@@ -7,6 +8,8 @@ import { Alert } from './fields';
 import { date, qty } from './format';
 import { useLocale, useT } from './i18n';
 import { HEALTH, LEG, MODE, PLACE, REFERENCE, SHIPMENT_STATE } from './labels';
+import { IN_APP } from '../native/platform';
+import { Group, GroupRow } from '../native/ui';
 
 export const meta = () => portalMeta('Shipment');
 
@@ -44,6 +47,77 @@ export default function ShipmentPage() {
   const arrival = shipmentArrival(shipment.legs);
   const standing = shipment.state === 'closed' ? { label: 'Delivered', tone: 'positive' as const } : shipment.state === 'booked' ? (HEALTH[shipment.health] ?? HEALTH['on_track']!) : { label: SHIPMENT_STATE[shipment.state] ?? shipment.state, tone: 'neutral' as const };
   const place = (location: { type: string; city?: string | null; locationCode?: string | null } | null | undefined) => (location ? [t(PLACE[location.type] ?? location.type), location.city, location.locationCode].filter(Boolean).join(' · ') : '—');
+  if (IN_APP) {
+    return (
+      <div>
+        <Back to="/account/shipments">{t('Shipments')}</Back>
+        <PageTitle title={t('Shipment')} record={shipment.number}>
+          <Chip tone={standing.tone}>{t(standing.label)}</Chip>
+        </PageTitle>
+        <Group>
+          <GroupRow title={arrival.arrived ? t('Arrived') : t('Expected')} trailing={<span className="text-ink">{date(arrival.date, locale)}</span>} />
+        </Group>
+        <Group header={t('The journey')}>
+          {shipment.legs.map((leg) => {
+            const done = Boolean(leg.ata);
+            const underway = !done && Boolean(leg.atd);
+            return (
+              <div key={leg.sequence} className="app-row items-start">
+                <span aria-hidden="true" className={`mt-1.5 size-3 shrink-0 ${done ? 'bg-charcoal' : underway ? 'bg-nude-deep' : 'border border-charcoal/50'}`} />
+                <span className="min-w-0 flex-1">
+                  <span className="app-row-title">
+                    {t(LEG[leg.type] ?? leg.type)} <span className="text-ink-muted">· {t(MODE[leg.mode] ?? leg.mode)}</span>
+                  </span>
+                  <span className="app-row-subtitle">
+                    {place(leg.fromLocation)} <span aria-hidden="true" className="inline-block rtl:-scale-x-100">→</span> {place(leg.toLocation)}
+                  </span>
+                  <span className="app-row-subtitle">
+                    {leg.atd ? t('left {date}', { date: date(leg.atd, locale) }) : t('leaves {date}', { date: date(leg.etd ?? leg.plannedEtd, locale) })} · {leg.ata ? t('arrived {date}', { date: date(leg.ata, locale) }) : t('arrives {date}', { date: date(leg.eta ?? leg.plannedEta, locale) })}
+                  </span>
+                </span>
+              </div>
+            );
+          })}
+        </Group>
+        {lines.length > 0 && (
+          <Group header={t('What it carries for you')}>
+            {lines.map((line, index) => (
+              <GroupRow
+                key={index}
+                to={line.salesOrderLine ? `/account/orders/${line.salesOrderLine.order.number}` : undefined}
+                title={line.salesOrderLine?.sku.product.name}
+                subtitle={line.salesOrderLine ? <>{line.salesOrderLine.sku.shade.name} · <span className="code" dir="ltr">{line.salesOrderLine.sku.code}</span></> : undefined}
+                trailing={<span className="code" dir="ltr">{qty(line.quantity, line.uom)}</span>}
+              />
+            ))}
+          </Group>
+        )}
+        {documents.length > 0 && (
+          <Group header={t('Documents')}>
+            {documents.map((doc) => (
+              <GroupRow key={doc.id} onClick={() => void openDocument(doc.href, doc.title).catch((caught: unknown) => setError(caught instanceof Error ? caught.message : t('The document could not be opened.')))} leading={<FileText aria-hidden="true" size={24} weight="light" className="block text-ink-soft" />} title={doc.title} chevron />
+            ))}
+          </Group>
+        )}
+        <Facts
+          header={t('Details')}
+          rows={[
+            { k: t('By'), v: t(MODE[shipment.mode] ?? shipment.mode) },
+            { k: t('From'), v: place(shipment.origin) },
+            { k: t('To'), v: [shipment.destination.name, shipment.destination.city, shipment.destination.country?.name].filter(Boolean).join(', ') },
+            { k: t('Delivery terms'), v: <span dir="ltr">{[shipment.incoterm?.code, shipment.namedPlace].filter(Boolean).join(' ') || '—'}</span> },
+            ...shipment.references.map((reference) => ({ k: t(REFERENCE[reference.type] ?? reference.type), v: <span className="code" dir="ltr">{reference.value}</span> })),
+          ]}
+        />
+        {error && (
+          <div className="mx-4">
+            <Alert>{t(error)}</Alert>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div>
       <Back to="/account/shipments">{t('Shipments')}</Back>

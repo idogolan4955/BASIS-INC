@@ -83,6 +83,8 @@ One set of tokens. Two **registers** select different scales from it.
 
 Both share palette, typefaces, borders, radii, the five signatures and iconography. A register is applied with `data-register="editorial|operational"` at the application root; components read tokens, not hardcoded values.
 
+The customer app for iPhone has a third, the **app register** (§15): the portal's pages drawn the way iOS draws an app, on the same palette.
+
 ## 3. Colour
 
 ### 3.1 Material palette (primitives)
@@ -388,3 +390,21 @@ packages/ui/src/
 - Tokens are declared once in a Tailwind `@theme` block, so they are both CSS custom properties and utilities. The default Tailwind palette is removed; only BASIS colours exist.
 - Components are documented in a living catalogue with every state, in both registers and both themes.
 - Design tokens are the contract with any design tool: values are exported from code, not maintained twice.
+
+## 15. The app register (the iPhone app)
+
+The customer app ([APP_STORE](APP_STORE.md)) carries the portal of the site, and on 2026-11-11 the owner judged that it felt like a website. So the app has a register of its own: the system's idiom (Apple's Human Interface Guidelines) on the BASIS palette. It is applied by the class `app` on `<html>`, which only the app's bundle sets (`IN_APP`); the site never renders any of it. Where it departs from the sections above, it is on purpose, and only here.
+
+| Topic | Rule in the app |
+|---|---|
+| Type | The system font (SF) for the interface: 17 pt body, 15 pt second lines, 13 pt section headers in capitals; **EB Garamond** for the large title of a tab and for display lines (34 pt); **Martian Mono** only for codes, numbers and amounts (`dir="ltr"`). Labels set as mono capitals on the site become 13 pt sans. Hebrew in **Heebo**, ahead of the system font and limited to the Hebrew range (the system font in a web view can lack the Hebrew script) |
+| Navigation | A navigation bar on every screen (large title on the five tabs, the record's number on a pushed screen, "‹ previous screen" as the way back) and a tab bar of five, icon over label, the chosen tab in charcoal with its icon filled. Bars translucent over the content, as the system's are — the one place translucency is not material |
+| Lists | Grouped cells on the bone page: rounded milk groups (radius **10**), hairline separators inset 16 pt, 44 pt minimum height, a chevron when a cell leads somewhere, a checkmark for a choice, a switch for an on/off setting. Ledgers become one cell per record: number, a second line, standing at the end |
+| Actions | Full-width buttons, 50 pt, radius **12**: charcoal for the primary, sand for the secondary; text actions in nude-deep, destructive ones in critical. Confirmations, choices and destructive steps go through the system's action sheet |
+| Sheets | The assistant opens as a page sheet: radius 12 at the top, a grabber, "Done", swipe down to close; its composer is a field with the Messages radius (18) |
+| Status | The swatch chip and its word, as everywhere (§3.3) |
+| Icons | Phosphor: light in cells and in the tab bar, filled for the chosen tab (the iOS convention); always with a label |
+| Motion | A pushed screen slides in from the trailing edge, the back button slides it back, tabs cross-fade (≤ 340 ms, transform and opacity only); a pull from the top reloads; haptics on a tab change, a choice and a sent answer; skeleton cells while loading. `prefers-reduced-motion` removes the slides |
+| Text selection | Off for the interface, on for fields, the assistant's answers, emails and addresses |
+
+Code: `apps/web/app/native/shell.tsx` (the frame), `apps/web/app/native/ui.tsx` (its parts), the `html.app` part of `apps/web/app/app.css`.

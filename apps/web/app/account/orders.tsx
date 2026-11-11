@@ -25,7 +25,22 @@ export default function Orders() {
           {loaded.data!.salesOrders.map((order) => {
             const state = ORDER[order.state] ?? { label: order.state, tone: 'neutral' as const };
             return (
-              <Row key={order.number} to={`/account/orders/${order.number}`}>
+              <Row
+                key={order.number}
+                to={`/account/orders/${order.number}`}
+                app={{
+                  title: <span className="code" dir="ltr">{order.number}</span>,
+                  subtitle: (
+                    <>
+                      <span className="code" dir="ltr">
+                        {money(quoteTotal(order.lines), order.currency)}
+                      </span>
+                      {order.requestedDelivery ? ` · ${t('Wanted by')} ${date(order.requestedDelivery, locale)}` : ''}
+                    </>
+                  ),
+                  trailing: <Chip tone={state.tone}>{t(state.label)}</Chip>,
+                }}
+              >
                 <Cell code>{order.number}</Cell>
                 <Cell>{date(order.confirmedOn, locale)}</Cell>
                 <Cell>{date(order.requestedDelivery, locale)}</Cell>

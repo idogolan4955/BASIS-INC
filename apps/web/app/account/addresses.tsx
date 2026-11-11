@@ -5,6 +5,8 @@ import { Button, Empty, Failed, Loading, PageTitle, portalMeta } from './frame';
 import { Alert, Choice, Field } from './fields';
 import { useT } from './i18n';
 import { useMe } from './session';
+import { IN_APP } from '../native/platform';
+import { Group, GroupRow } from '../native/ui';
 
 export const meta = () => portalMeta('Addresses');
 
@@ -62,6 +64,14 @@ export default function Addresses() {
     }
   };
 
+  // In the app an address opens the system's action sheet: edit it, or remove it.
+  type Listed = NonNullable<typeof loaded.data>['addresses'][number];
+  const manage = async (address: Listed) => {
+    const { chooseAction } = await import('../native/bridge');
+    const index = await chooseAction(address.location.name, [{ title: t('Edit') }, { title: t('Remove'), destructive: true }], t('Cancel'));
+    if (index === 0) setDraft({ id: address.id, kind: address.kind === 'bill' ? 'bill' : 'ship', name: address.location.name, addressLine1: address.location.addressLine1 ?? '', addressLine2: address.location.addressLine2 ?? '', city: address.location.city ?? '', region: address.location.region ?? '', postalCode: address.location.postalCode ?? '', countryCode: address.location.country?.code ?? '', isDefault: address.isDefault });
+    if (index === 1) await remove(address.id);
+  };
   const groups = (['ship', 'bill'] as const).map((kind) => ({ kind, items: (loaded.data?.addresses ?? []).filter((address) => address.kind === kind) }));
 
   return (
@@ -70,7 +80,7 @@ export default function Addresses() {
         {t('Where BASIS ships your goods and samples, and where invoices go.')}
       </PageTitle>
       {draft && (
-        <form onSubmit={save} className="mb-10 grid gap-5 border border-charcoal/70 bg-milk p-5 md:grid-cols-2">
+        <form onSubmit={save} className={IN_APP ? 'mx-4 mb-8 grid gap-5' : 'mb-10 grid gap-5 border border-charcoal/70 bg-milk p-5 md:grid-cols-2'}>
           <Choice label={t('For')} name="kind" value={draft.kind} onChange={(value) => set({ kind: value as Draft['kind'] })}>
             <option value="ship">{t('Shipping')}</option>
             <option value="bill">{t('Invoices')}</option>
@@ -90,7 +100,7 @@ export default function Addresses() {
             ))}
           </Choice>
           <label className="flex items-center gap-3 md:col-span-2">
-            <input type="checkbox" checked={draft.isDefault} onChange={(event) => set({ isDefault: event.target.checked })} className="size-4 accent-charcoal" />
+            <input type="checkbox" checked={draft.isDefault} onChange={(event) => set({ isDefault: event.target.checked })} className={IN_APP ? 'app-switch order-last ms-auto' : 'size-4 accent-charcoal'} />
             {t('Use this one unless I choose another')}
           </label>
           {error && (
@@ -109,8 +119,8 @@ export default function Addresses() {
         </form>
       )}
       {!draft && error && (
-        <div className="mb-6">
-          <Alert>{error}</Alert>
+        <div className={IN_APP ? 'mx-4 mb-6' : 'mb-6'}>
+          <Alert>{IN_APP ? t(error) : error}</Alert>
         </div>
       )}
       {loaded.loading && !loaded.data ? (
@@ -119,6 +129,33 @@ export default function Addresses() {
         <Failed message={loaded.error} onRetry={loaded.reload} />
       ) : loaded.data!.addresses.length === 0 ? (
         <Empty>{admin ? t('No addresses yet. Add where you want goods and samples sent.') : t('No addresses yet. Your account admin adds them.')}</Empty>
+      ) : IN_APP ? (
+        groups.map((group) => (
+          <Group key={group.kind} header={group.kind === 'ship' ? t('Shipping') : t('Invoices')}>
+            {group.items.length === 0 ? (
+              <GroupRow title={<span className="text-ink-muted">{t('None.')}</span>} />
+            ) : (
+              group.items.map((address) => (
+                <GroupRow
+                  key={address.id}
+                  onClick={admin ? () => void manage(address) : undefined}
+                  title={address.location.name}
+                  subtitle={
+                    <>
+                      {/* Each line keeps its own direction (a Latin street inside a Hebrew screen) and the screen's alignment. */}
+                      <span className="block">
+                        <bdi>{[address.location.addressLine1, address.location.addressLine2].filter(Boolean).join(', ')}</bdi>
+                      </span>
+                      <bdi>{[address.location.postalCode, address.location.city, address.location.region, address.location.country?.name].filter(Boolean).join(', ')}</bdi>
+                    </>
+                  }
+                  trailing={address.isDefault ? <span className="text-[15px] text-nude-deep">{t('Default')}</span> : undefined}
+                  chevron={false}
+                />
+              ))
+            )}
+          </Group>
+        ))
       ) : (
         <div className="grid gap-10 md:grid-cols-2">
           {groups.map((group) => (
