@@ -37,6 +37,27 @@ function remember(value: Stored | null) {
   }
 }
 
+// Before anything is sent to the model, the person agrees to it (App Store
+// guideline 5.1.2(i): personal data shared with a third-party AI needs
+// explicit permission). Kept on the device; asked again if storage is cleared.
+const CONSENT = 'basis.site.assistant.consent';
+
+function consented(): boolean {
+  try {
+    return window.localStorage.getItem(CONSENT) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function giveConsent() {
+  try {
+    window.localStorage.setItem(CONSENT, '1');
+  } catch {
+    // Without storage the agreement lasts as long as the page.
+  }
+}
+
 function inline(text: string): ReactNode[] {
   const parts: ReactNode[] = [];
   let last = 0;
@@ -131,11 +152,12 @@ function Panel({ onClose }: { onClose: () => void }) {
   const [asked, setAsked] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [agreed, setAgreed] = useState(consented);
   const end = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    input.current?.focus();
+    if (consented()) input.current?.focus();
     const stored = remembered();
     if (!stored) return;
     call<object, SiteConversationView>('siteAssistantHistory', stored)
@@ -150,7 +172,7 @@ function Panel({ onClose }: { onClose: () => void }) {
   const send = async (event?: FormEvent) => {
     event?.preventDefault();
     const question = text.trim();
-    if (!question || busy) return;
+    if (!question || busy || !agreed) return;
     setBusy(true);
     setError('');
     setAsked(question);
@@ -228,6 +250,28 @@ function Panel({ onClose }: { onClose: () => void }) {
             <p className="mt-3 text-sm">{t('Ask about the fabrics, the shades, how they behave in a gown, or samples.')}</p>
           </div>
         )}
+        {!agreed && (
+          <div className="mt-6 border border-charcoal/70 bg-bone p-4">
+            <p className="code uppercase tracking-[0.18em] text-ink">{t('Before you ask')}</p>
+            <p className="mt-2 text-sm text-ink-soft">
+              {t('What you write here, and the records of your account the assistant reads to answer you, are sent to Anthropic, the company whose AI model the assistant runs on. Anthropic does not use them to train its models. BASIS keeps the conversation so that a person in sales can pick it up.')}{' '}
+              <Link to="/legal/privacy" className="underline underline-offset-2">
+                {t('Privacy')}
+              </Link>
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                giveConsent();
+                setAgreed(true);
+                window.setTimeout(() => input.current?.focus(), 0);
+              }}
+              className="mt-4 h-11 bg-charcoal px-4 text-sm font-medium text-milk hover:bg-cocoa"
+            >
+              {t('Agree and continue')}
+            </button>
+          </div>
+        )}
         <ol className="space-y-4">
           {view?.turns.map((turn) =>
             turn.items.map((item, index) => {
@@ -283,8 +327,8 @@ function Panel({ onClose }: { onClose: () => void }) {
           <label htmlFor="site-assistant-input" className="sr-only">
             {t('Your question')}
           </label>
-          <textarea id="site-assistant-input" ref={input} value={text} onChange={(event) => setText(event.target.value)} onKeyDown={onKey} rows={2} dir="auto" placeholder={t('Write your question')} className="max-h-40 min-h-[2.75rem] flex-1 resize-none border border-charcoal/40 bg-milk px-3 py-2 text-base outline-none focus:border-charcoal" />
-          <button type="submit" disabled={busy || !text.trim()} className="h-11 bg-charcoal px-4 text-sm font-medium text-milk hover:bg-cocoa disabled:opacity-50">
+          <textarea id="site-assistant-input" ref={input} value={text} onChange={(event) => setText(event.target.value)} onKeyDown={onKey} rows={2} dir="auto" disabled={!agreed} placeholder={t('Write your question')} className="max-h-40 min-h-[2.75rem] flex-1 resize-none border border-charcoal/40 bg-milk px-3 py-2 text-base outline-none focus:border-charcoal disabled:opacity-50" />
+          <button type="submit" disabled={busy || !agreed || !text.trim()} className="h-11 bg-charcoal px-4 text-sm font-medium text-milk hover:bg-cocoa disabled:opacity-50">
             {t('Ask')}
           </button>
         </div>

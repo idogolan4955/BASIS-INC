@@ -30,6 +30,13 @@ export const SITE_LIMITS = {
 export const SITE_CUSTOMER_READS = ['CustomerMe', 'CustomerQuotes', 'CustomerQuote', 'CustomerOrders', 'CustomerOrder', 'CustomerShipments', 'CustomerShipment', 'CustomerShipmentLines', 'CustomerInvoices', 'CustomerSampleRequests', 'CustomerAddresses'] as const;
 export type SiteCustomerRead = (typeof SITE_CUSTOMER_READS)[number];
 
+/** A visitor's conversation is deleted this long after its last message (the privacy page says so); a customer's goes with their login. */
+export const VISITOR_CONVERSATION_DAYS = 90;
+
+export function visitorConversationCutoff(now: Date = new Date()): string {
+  return new Date(now.getTime() - VISITOR_CONVERSATION_DAYS * 86_400_000).toISOString();
+}
+
 export const SITE_ACTIONS = ['request_samples', 'talk_to_sales', 'answer_quote'] as const;
 export type SiteActionKind = (typeof SITE_ACTIONS)[number];
 

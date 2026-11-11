@@ -13,7 +13,7 @@ The customer portal of the brand site ([CUSTOMER_PORTAL_PLAN](CUSTOMER_PORTAL_PL
 | Technology | **Capacitor 8** around the portal of `apps/web`, in a workspace package `apps/ios` (`@basis/ios`); Swift Package Manager, no CocoaPods | The portal already exists, in English and Hebrew, with its design and its permissions; a second client in Swift would duplicate every screen and every rule. Capacitor gives the web view real native plugins |
 | Bundled or remote | **Bundled.** `apps/ios/scripts/bundle.mjs` builds `apps/web` as a single-page app (`VITE_BASIS_APP=1`, into `apps/web/build-app`, never touching the site Hosting serves) and copies it into the app; data is always live from Firebase over HTTPS | The app starts instantly and draws its frame without a network; nothing breaks if the site is mid-deploy; it is Capacitor's production mode (its `server.url` is "not intended for production"); and App Review sees an app, not a website in a frame (guidelines 2.5.2 and 4.2). The price: a portal change reaches the app with its next build, so the functions stay backward compatible with the version in the store (they only ever add fields and functions) |
 | Where it opens | `/account` (the site's home route sends the app there): signed out, the sign-in; signed in, the overview | It is the customer's account, not the brochure; the brand's pages stay one tap away under Index and More |
-| Devices | **iPhone only**, portrait, light appearance | The portal is designed at 390 px; an iPad version adds a second set of screenshots and review for little use. Revisit if customers ask |
+| Devices | **iPhone only**, portrait, light appearance, **iOS 16.4 or later** | The portal is designed at 390 px; an iPad version adds a second set of screenshots and review for little use. Revisit if customers ask. 16.4 because the portal's CSS (Tailwind CSS 4) needs Safari 16.4; every iPhone from the iPhone 8 runs it |
 | Sign-in | Email and password through Firebase Auth, the same logins as the site; no third-party login | Sign in with Apple (guideline 4.8) is required only when a third-party or social login is offered. If Google sign-in is ever added, Sign in with Apple is added with it |
 | Bundle ID | `com.basisinc.customer`, team `97HE63NNKZ` (the owner's membership), automatic signing | BASIS's own App ID, certificates and profiles; nothing shared with another project |
 | Name | **BASIS** on the home screen. In the store, "BASIS" if free; else "BASIS INC." | App Store names are unique across the store |
@@ -58,6 +58,8 @@ Plugins: `@capacitor/app` (links), `@capacitor/splash-screen`, `@capacitor/keybo
 | Encryption export compliance | Only HTTPS: `ITSAppUsesNonExemptEncryption = NO` in Info.plist, so no question at each upload |
 | Sign in with Apple (4.8) | Not required: no third-party login |
 | Demo account (2.1) | A real trade account in production for App Review, with a few real records (§7); never a demo-only code path |
+| Personal data to a third-party AI (5.1.2(i)) | Before the first question the assistant shows what is sent to Anthropic and why, and nothing is sent until the person taps **Agree and continue** (kept on the device; the privacy page says the same) |
+| Privacy policy content (5.1.1(i)) | The page names what is collected and why, every processor and that they protect it as the page does, how long each kind of data is kept (a visitor's assistant conversations 90 days, deleted by the sweep), and how to withdraw consent and delete |
 | Minimum functionality (4.2) | §1.1 |
 | Privacy manifest | `PrivacyInfo.xcprivacy`: no tracking, the collected types of §6.4, `UserDefaults` reason CA92.1 |
 | Push entitlement and associated domains | `App.entitlements`; Xcode's automatic signing adds Push Notifications and Associated Domains to the App ID |
@@ -241,7 +243,27 @@ Version 1.0.0 with the build chosen in TestFlight, the English listing (§6.1) a
 6. **The review account** in production (§7): approved 2026-11-11. Once it exists he sets the reviewer's password from the invitation link and enters it, with his contact details, in App Store Connect › App Review Information.
 7. **Submit for Review** — only after reading §8, and only by his decision.
 
-## 10. What was checked, and how
+## 10. The pre-review audit (2026-11-11)
+
+Asked for by the owner before anything is submitted: the app checked against the App Store Review Guidelines and Apple's technical requirements, every gap fixed and checked again.
+
+| Area | Guideline | Result |
+|---|---|---|
+| Completeness, no placeholders, no crashes | 2.1 | Pass. No placeholder text in the portal; the app survives a missing backend: signed in it says "BASIS could not be reached" with Try again (it used to say the account was closed), and sign-in says the same instead of "wrong password". Production must be deployed and the review account made before submitting (§9) |
+| Accurate metadata, screenshots of the app itself | 2.3 | Pass. Screenshots are the app with sample data; name, subtitle and keywords name no other company |
+| Software requirements | 2.5 | Pass. Public APIs only; WebKit for web content; no UIWebView anywhere in the binary; no code downloaded; arm64, iOS 16.4+, IPv6-safe Firebase endpoints |
+| Payments | 3.1.5(a) | Pass. No digital goods; physical goods are invoiced outside the app |
+| Design and minimum functionality | 4.0, 4.2 | Pass, with the native features of §1.1. Risk noted: a reviewer may judge an invitation-only business app better suited to unlisted distribution; the public catalogue, samples, the trade application and the assistant answer that, and unlisted distribution is the fallback |
+| Push notifications | 4.5.4 | Pass. Asked for in context, never required, transactional only, no amounts on the lock screen |
+| Login services | 4.8 | Pass. No third-party login |
+| Privacy policy, permission, deletion | 5.1.1 | Pass after fixes: the policy now states retention, the processors' protection and how to withdraw consent; account deletion in the app (§2) |
+| Third-party AI | 5.1.2(i) | **Fixed**: explicit consent before anything is sent to Anthropic |
+| Privacy manifests | — | Pass. The app's own manifest, and each bundled SDK (Capacitor, Cordova, Firebase, Google utilities, nanopb, Promises) ships its own |
+| Export compliance | — | Pass. `ITSAppUsesNonExemptEncryption = NO` |
+
+Defects found and fixed in the same pass: invitation links made in the app pointed at `capacitor://localhost` instead of `https://basis-inc.web.app` (now the site's address, shared through the phone's share sheet); the password-reset email's return address had the same fault; an optional field left empty reached the functions as `null` and was refused, so "Invite a colleague" without a name failed on the site and in the app alike (the portal functions now treat `null` as absent); the minimum iOS was raised from 15.0 to 16.4.
+
+## 11. What was checked, and how
 
 In the iOS Simulator (iPhone 17 Pro Max, iOS 26.3) with the app bundled against the local emulators, on 2026-11-11:
 
@@ -256,3 +278,8 @@ In the iOS Simulator (iPhone 17 Pro Max, iOS 26.3) with the app bundled against 
 | Notifications | Permission asked from the Overview's offer; the phone's FCM token stored against the person; the `quote.sent` handler sends through FCM, which answers `third-party-auth-error` until the APNs key is in Firebase; a tapped notification (`simctl push`) opens its quote from a cold start |
 | Deleting a login | Over HTTP against the emulators: a viewer's login, rows and phone token gone, the audit and timeline entries kept without the link, signing in again refused; the last admin of a team with an active buyer refused with what to do |
 | Production key | `capacitor://localhost/` accepted by the web key (sign-in answers "invalid credentials" for a made-up email), other referrers still refused |
+| Consent to the assistant | The first open shows what goes to Anthropic, with the input disabled; after **Agree and continue** the question can be asked (Hebrew checked) |
+| No connection | Backend stopped: signed in, the app says BASIS could not be reached, with Try again; signing in says the same |
+| Invitation from the app | An admin invites without a name; the link is `https://basis-inc.web.app/account/invite/…` and opens the share sheet |
+| Smallest screen | iPhone SE (3rd generation, 375 × 667, no home indicator): the sign-in and the top bar fit |
+| Release build | Release for iPhone with the production bundle: builds clean, minimum iOS 16.4, iPhone only, arm64 |

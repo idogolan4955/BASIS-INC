@@ -218,8 +218,8 @@ It answers in the visitor's language — Hebrew and English first, and the custo
 
 ### 9.6 Conversations and privacy
 
-- Conversations are stored (`AssistantConversation`, `AssistantTurn`: audience, account if signed in, the turns, tool calls, token usage) so a hand-off carries its context and usage can be measured. Anonymous conversations are deleted after 90 days (proposed); a customer's stay with their account and are visible to them; staff see a conversation only when it was handed off, or with the owner role.
-- The widget says it is an AI assistant, that conversations are kept to answer and improve service, and links to the privacy page. Conversation content goes to Anthropic's API under its commercial terms (API inputs are not used for training).
+- Conversations are stored (`AssistantConversation`, `AssistantTurn`: audience, account if signed in, the turns, tool calls, token usage) so a hand-off carries its context and usage can be measured. Anonymous conversations are deleted 90 days after their last message (by the sweep, since 2026-11-11); a customer's stay until their login is deleted and are visible to them; staff see a conversation only when it was handed off, or with the owner role.
+- The widget says it is an AI assistant and links to the privacy page, and before the first question it asks the person to agree that what they write, and the records it reads for them, go to Anthropic (App Store guideline 5.1.2(i)); nothing is sent before they agree. Conversation content goes to Anthropic's API under its commercial terms (API inputs are not used for training).
 
 ### 9.7 Cost — an estimate
 

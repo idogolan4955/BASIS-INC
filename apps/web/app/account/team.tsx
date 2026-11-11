@@ -6,6 +6,7 @@ import { Alert, Choice, Field } from './fields';
 import { date } from './format';
 import { useLocale, useT } from './i18n';
 import { useMe } from './session';
+import { IN_APP, siteOrigin } from '../native/platform';
 
 export const meta = () => portalMeta('Team');
 
@@ -43,7 +44,7 @@ export default function Team() {
     const form = new FormData(event.currentTarget);
     void act('invite', async () => {
       const result = await call<object, { token: string }>('inviteCustomerUser', { email: String(form.get('email') ?? '').trim(), name: String(form.get('name') ?? '').trim() || undefined, role: newRole });
-      setLink(invitationLink(window.location.origin, result.token));
+      setLink(invitationLink(siteOrigin(), result.token));
       setCopied(false);
       setInviting(false);
     });
@@ -78,14 +79,23 @@ export default function Team() {
           <p className="code break-all border border-line bg-bone px-3 py-2 text-sm" dir="ltr">
             {link}
           </p>
-          <div className="flex flex-wrap gap-3">
-            <Button variant="secondary" onClick={() => void copy()}>
-              {copied ? t('Copied') : t('Copy the link')}
-            </Button>
-            <a href={`https://wa.me/?text=${encodeURIComponent(link)}`} target="_blank" rel="noreferrer" className="inline-flex h-12 items-center border border-charcoal px-6 font-medium hover:bg-sand/60">
-              {t('Send on WhatsApp')}
-            </a>
-          </div>
+          {IN_APP ? (
+            // The phone's own share sheet: Messages, WhatsApp, Mail, or Copy.
+            <div className="flex flex-wrap gap-3">
+              <Button variant="secondary" onClick={() => void import('../native/bridge').then(({ shareLink }) => shareLink(t('Your invitation to BASIS'), link)).catch(() => undefined)}>
+                {t('Share the link')}
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              <Button variant="secondary" onClick={() => void copy()}>
+                {copied ? t('Copied') : t('Copy the link')}
+              </Button>
+              <a href={`https://wa.me/?text=${encodeURIComponent(link)}`} target="_blank" rel="noreferrer" className="inline-flex h-12 items-center border border-charcoal px-6 font-medium hover:bg-sand/60">
+                {t('Send on WhatsApp')}
+              </a>
+            </div>
+          )}
         </div>
       )}
 

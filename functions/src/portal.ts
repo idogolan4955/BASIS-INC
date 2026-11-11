@@ -41,8 +41,14 @@ function validationFailure(error: z.ZodError): never {
   throw failure('validation', 'Check the details.', details);
 }
 
+/** The callable client sends a field left empty as null; for the portal's inputs, null and absent mean the same. */
+function withoutNulls(data: unknown): unknown {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return data;
+  return Object.fromEntries(Object.entries(data).filter(([, value]) => value !== null));
+}
+
 function parse<T extends z.ZodTypeAny>(schema: T, data: unknown): z.infer<T> {
-  const parsed = schema.safeParse(data);
+  const parsed = schema.safeParse(withoutNulls(data));
   if (!parsed.success) validationFailure(parsed.error);
   return parsed.data;
 }

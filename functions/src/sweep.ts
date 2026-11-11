@@ -1,3 +1,4 @@
+import { visitorConversationCutoff } from '@basis/shared';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { evaluateRules } from './alerts';
 import { REGION, graphql } from './lib';
@@ -44,7 +45,17 @@ export async function sweepOnce(): Promise<{ processed: number }> {
   return { processed: domainEvents.length };
 }
 
+/** Visitors' conversations with the site assistant are kept 90 days after their last message. */
+export async function pruneVisitorConversations(now: Date = new Date()): Promise<number> {
+  const { siteConversation_deleteMany } = await graphql<{ siteConversation_deleteMany: number }>(
+    `mutation ($cutoff: Timestamp!) { siteConversation_deleteMany(where: { audience: { eq: anonymous }, lastActivityAt: { lt: $cutoff } }) }`,
+    { cutoff: visitorConversationCutoff(now) },
+  );
+  return siteConversation_deleteMany;
+}
+
 export const sweepEvents = onSchedule({ region: REGION, schedule: 'every 10 minutes' }, async () => {
   await sweepOnce();
   await evaluateRules();
+  await pruneVisitorConversations();
 });

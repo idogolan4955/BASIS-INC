@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { AuthFrame, Button, PortalRoot, portalMeta } from './frame';
 import { Field } from './fields';
 import { useLocale, useT } from './i18n';
+import { siteOrigin } from '../native/platform';
 
 export const meta = () => portalMeta('Reset your password');
 
@@ -18,7 +19,7 @@ function Reset() {
     try {
       const [{ auth }, { sendPasswordResetEmail }] = await Promise.all([import('./firebase'), import('firebase/auth')]);
       auth.languageCode = locale;
-      await sendPasswordResetEmail(auth, email, { url: `${window.location.origin}/account/sign-in` });
+      await sendPasswordResetEmail(auth, email, { url: `${siteOrigin()}/account/sign-in` });
     } catch {
       // The answer is the same whether or not the address has an account.
     } finally {

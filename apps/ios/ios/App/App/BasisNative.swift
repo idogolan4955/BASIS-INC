@@ -26,6 +26,7 @@ public class BasisDocumentPlugin: CAPPlugin, CAPBridgedPlugin, QLPreviewControll
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "open", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "share", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "shareLink", returnType: CAPPluginReturnPromise),
     ]
 
     private var previewing: URL?
@@ -45,6 +46,24 @@ public class BasisDocumentPlugin: CAPPlugin, CAPBridgedPlugin, QLPreviewControll
             let sheet = UIActivityViewController(activityItems: [file], applicationActivities: nil)
             if let view = self.bridge?.viewController?.view {
                 // An anchor for the popover on larger screens.
+                sheet.popoverPresentationController?.sourceView = view
+                sheet.popoverPresentationController?.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.maxY - 80, width: 1, height: 1)
+            }
+            self.bridge?.viewController?.present(sheet, animated: true)
+            call.resolve()
+        }
+    }
+
+    /// A link for someone else (an invitation): Messages, WhatsApp, Mail or Copy.
+    @objc func shareLink(_ call: CAPPluginCall) {
+        guard let address = call.getString("url"), let url = URL(string: address), url.scheme == "https" else {
+            call.reject("The link is not valid.")
+            return
+        }
+        let text = call.getString("text") ?? ""
+        DispatchQueue.main.async {
+            let sheet = UIActivityViewController(activityItems: text.isEmpty ? [url] : [text, url], applicationActivities: nil)
+            if let view = self.bridge?.viewController?.view {
                 sheet.popoverPresentationController?.sourceView = view
                 sheet.popoverPresentationController?.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.maxY - 80, width: 1, height: 1)
             }

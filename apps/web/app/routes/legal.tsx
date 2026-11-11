@@ -43,20 +43,26 @@ const PAGES: Record<string, LegalPage> = {
       {
         heading: 'The assistant',
         body: [
-          'The assistant on the site and in the app is an AI. What you write to it and what it answers are kept so that it can follow the conversation and so that a person in sales can pick it up; when you are signed in it reads only your own account’s records. Conversations are processed by Anthropic’s API under its commercial terms, which do not use them to train models. For visitors who are not signed in, the network address is kept only as a one-way hash, to limit use.',
+          'The assistant on the site and in the app is an AI. Before your first question it asks you to agree that what you write, and the records of your account it reads to answer you, are sent to Anthropic, the company whose model it runs on; Anthropic processes them under its commercial terms and does not use them to train models. What you write and what it answers are kept so that it can follow the conversation and so that a person in sales can pick it up; when you are signed in it reads only your own account’s records. For visitors who are not signed in, the network address is kept only as a one-way hash, to limit use.',
         ],
       },
       {
         heading: 'Who processes it',
         body: [
-          'Google Cloud and Firebase host the site, the database, sign-in, our functions and notifications, in the European Union (europe-west1). Anthropic runs the assistant’s model. Apple delivers notifications to iPhones. Carriers deliver samples and an email service carries our replies. No one else receives your data, and none of it is sold.',
+          'Google Cloud and Firebase host the site, the database, sign-in, our functions and notifications, in the European Union (europe-west1). Anthropic runs the assistant’s model. Apple delivers notifications to iPhones. Carriers deliver samples and an email service carries our replies. Each of them processes the data only to provide its service to BASIS, under terms that protect it at least as well as this page describes. No one else receives your data, and none of it is sold.',
+        ],
+      },
+      {
+        heading: 'How long it is kept',
+        body: [
+          'Your login, until you delete it. Your devices’ notification tokens, until you sign out on that device or delete your login. A signed-in customer’s conversations with the assistant, until the login is deleted; a visitor’s, for 90 days after its last message. Messages sent through the forms, and your company’s quotes, orders, invoices and shipping documents, for as long as the law requires business and tax records to be kept.',
         ],
       },
       {
         heading: 'Deleting your login',
         body: [
           'In the account, open Profile and choose Delete my login, on the site or in the app. It removes your login and its password, your name and email from our list of logins, your conversations with the assistant and your devices’ notification tokens, at once. Your company’s quotes, orders, invoices and documents stay with your company, because they are business and tax records. The last admin of an account that still has other people in it makes a colleague admin first.',
-          'You can also ask what we hold on you, ask for it to be corrected, or ask for it to be deleted, by writing to us through the contact page.',
+          'You can withdraw what you agreed to at any time: turn notifications off in the iPhone’s Settings, stop using the assistant, and ask us to delete its past conversations. You can also ask what we hold on you, ask for it to be corrected, or ask for it to be deleted, by writing to us through the contact page.',
         ],
       },
     ],

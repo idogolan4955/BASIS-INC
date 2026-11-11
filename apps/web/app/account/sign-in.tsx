@@ -34,7 +34,15 @@ function SignIn() {
       await signInWithEmailAndPassword(auth, String(form.get('email') ?? '').trim(), String(form.get('password') ?? ''));
     } catch (caught) {
       const code = typeof caught === 'object' && caught && 'code' in caught ? String((caught as { code: unknown }).code) : '';
-      setError(code === 'auth/user-disabled' ? t('This login is suspended. Ask your account admin or BASIS.') : code === 'auth/too-many-requests' ? t('Too many attempts. Wait a few minutes or reset your password.') : t('The email or the password is not right.'));
+      setError(
+        code === 'auth/user-disabled'
+          ? t('This login is suspended. Ask your account admin or BASIS.')
+          : code === 'auth/too-many-requests'
+            ? t('Too many attempts. Wait a few minutes or reset your password.')
+            : code === 'auth/network-request-failed'
+              ? t('BASIS could not be reached. Check the connection and try again.')
+              : t('The email or the password is not right.'),
+      );
     } finally {
       setBusy(false);
     }

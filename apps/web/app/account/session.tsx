@@ -15,6 +15,8 @@ export type Session =
   | { readonly status: 'signed_out' }
   | { readonly status: 'not_customer'; readonly email: string }
   | { readonly status: 'inactive'; readonly email: string }
+  /** Signed in, but BASIS could not be asked who they are (no connection, or the service is down). */
+  | { readonly status: 'unreachable'; readonly email: string }
   | { readonly status: 'ready'; readonly me: Me; readonly role: CustomerUserRole };
 
 const Context = createContext<{ session: Session; refresh: () => void }>({ session: { status: 'loading' }, refresh: () => undefined });
@@ -39,7 +41,14 @@ export function PortalSession({ children }: { children: ReactNode }) {
           setSession({ status: 'signed_out' });
           return;
         }
-        const token = await user.getIdTokenResult();
+        let token: Awaited<ReturnType<typeof user.getIdTokenResult>>;
+        try {
+          token = await user.getIdTokenResult();
+        } catch {
+          // An expired token cannot be renewed without a connection.
+          setSession({ status: 'unreachable', email: user.email ?? '' });
+          return;
+        }
         if (token.claims['role'] !== 'customer') {
           setSession({ status: 'not_customer', email: user.email ?? '' });
           return;
@@ -63,7 +72,8 @@ export function PortalSession({ children }: { children: ReactNode }) {
             // Without storage it is recorded on every load, which is harmless.
           }
         } catch {
-          setSession({ status: 'inactive', email: user.email ?? '' });
+          // The read itself failed: that says nothing about the account, only about the way to it.
+          setSession({ status: 'unreachable', email: user.email ?? '' });
         }
       });
     })();

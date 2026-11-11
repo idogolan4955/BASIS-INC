@@ -10,6 +10,7 @@ import { appPath } from './platform';
 interface BasisDocumentPlugin {
   open(options: { url: string; token: string; filename: string }): Promise<void>;
   share(options: { url: string; token: string; filename: string }): Promise<void>;
+  shareLink(options: { text: string; url: string }): Promise<void>;
 }
 
 /** apps/ios/ios/App/App/BasisNative.swift */
@@ -72,6 +73,11 @@ export async function forgetPushToken(): Promise<void> {
 export async function appVersion(): Promise<string> {
   const info = await App.getInfo();
   return `${info.version} (${info.build})`;
+}
+
+/** A link for someone else (an invitation) through the phone's share sheet. */
+export async function shareLink(text: string, url: string): Promise<void> {
+  await BasisDocument.shareLink({ text, url });
 }
 
 export async function nativeDocument(action: 'open' | 'share', url: string, token: string, filename: string): Promise<void> {

@@ -311,4 +311,13 @@ export const HE: Record<string, string> = {
   "The Shade System": "מערכת הגוונים",
   "Your login has been deleted. The account’s records stay with your company.": "ההתחברות שלכם נמחקה. הרשומות של החשבון נשארות אצל החברה שלכם.",
   "Browse the fabrics and the Shade System": "עיון בבדים ובמערכת הגוונים",
+  // Consent to the assistant, an unreachable BASIS, sharing an invitation.
+  "Before you ask": "לפני שאתם שואלים",
+  "What you write here, and the records of your account the assistant reads to answer you, are sent to Anthropic, the company whose AI model the assistant runs on. Anthropic does not use them to train its models. BASIS keeps the conversation so that a person in sales can pick it up.": "מה שתכתבו כאן, והרשומות של החשבון שלכם שהעוזר קורא כדי לענות, נשלחים ל-Anthropic, החברה שמודל הבינה המלאכותית של העוזר שלה. Anthropic לא משתמשת בהם כדי לאמן את המודלים שלה. BASIS שומרת את השיחה כדי שאדם ממחלקת המכירות יוכל להמשיך אותה.",
+  "Agree and continue": "מסכימים וממשיכים",
+  "BASIS could not be reached.": "לא הצלחנו להתחבר ל-BASIS.",
+  "Check the connection and try again. Nothing in your account has changed.": "בדקו את החיבור ונסו שוב. שום דבר בחשבון שלכם לא השתנה.",
+  "BASIS could not be reached. Check the connection and try again.": "לא הצלחנו להתחבר ל-BASIS. בדקו את החיבור ונסו שוב.",
+  "Share the link": "שיתוף הקישור",
+  "Your invitation to BASIS": "ההזמנה שלכם ל-BASIS",
 };

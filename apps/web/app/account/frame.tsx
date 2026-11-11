@@ -67,7 +67,7 @@ function Notice({ title, children }: { title: string; children: ReactNode }) {
 }
 
 function AccountGate() {
-  const { session } = useSession();
+  const { session, refresh } = useSession();
   const t = useT();
   const location = useLocation();
   const navigate = useNavigate();
@@ -85,6 +85,18 @@ function AccountGate() {
           </a>
           <button type="button" onClick={() => void signOut()} className="inline-flex h-12 items-center border border-charcoal px-6 font-medium hover:bg-sand/60">
             {t('Sign out')}
+          </button>
+        </div>
+      </Notice>
+    );
+  }
+  if (session.status === 'unreachable') {
+    return (
+      <Notice title={t('BASIS could not be reached.')}>
+        <p>{t('Check the connection and try again. Nothing in your account has changed.')}</p>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <button type="button" onClick={refresh} className="inline-flex h-12 items-center bg-charcoal px-6 font-medium text-milk hover:bg-cocoa">
+            {t('Try again')}
           </button>
         </div>
       </Notice>

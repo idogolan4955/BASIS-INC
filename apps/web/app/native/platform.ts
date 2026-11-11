@@ -9,6 +9,11 @@ export const IN_APP = import.meta.env.VITE_BASIS_APP === '1';
 /** Where the site lives: the app's bundle calls its functions there. */
 export const SITE_ORIGIN = 'https://basis-inc.web.app';
 
+/** The address links for other people are built on: the site's own, also inside the app (whose page is capacitor://localhost). */
+export function siteOrigin(): string {
+  return IN_APP ? SITE_ORIGIN : window.location.origin;
+}
+
 /** Development, and an app bundle made with --local, talk to the emulators, never to production data. */
 export const LOCAL = import.meta.env.DEV || import.meta.env.VITE_BASIS_LOCAL === '1';
 
